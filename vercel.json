@@ -1,0 +1,6 @@
+{
+  "buildCommand": "cd hr-system-frontend && npm install && npm run build",
+  "outputDirectory": "hr-system-frontend/dist",
+  "devCommand": "cd hr-system-frontend && npm run dev",
+  "installCommand": "cd hr-system-frontend && npm install"
+}

@@ -1,0 +1,9 @@
+{
+  "name": "tic-hr-register-workspace",
+  "private": true,
+  "scripts": {
+    "dev": "npm run dev --prefix hr-system-frontend",
+    "build": "npm run build --prefix hr-system-frontend",
+    "preview": "npm run preview --prefix hr-system-frontend"
+  }
+}

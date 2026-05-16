@@ -1,0 +1,18 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run HR Frontend Dev Server",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"dev",
+				"--prefix",
+				"hr-system-frontend"
+			],
+			"isBackground": true,
+			"group": "build"
+		}
+	]
+}
