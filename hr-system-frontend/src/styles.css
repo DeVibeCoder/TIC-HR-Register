@@ -622,10 +622,7 @@ h2 { margin: 0; color: #111; font-size: 0.95rem; line-height: 1.2; }
 
 .summary-card,
 .compact-panel,
-.employee-workspace,
-.module-table-card,
-.structured-list,
-.activity-board {
+.module-table-card {
   border: 1px solid rgba(148, 163, 184, 0.55);
   border-radius: 22px;
   background: linear-gradient(180deg, var(--surface-strong), var(--surface-soft));
@@ -691,11 +688,7 @@ h2 { margin: 0; color: #111; font-size: 0.95rem; line-height: 1.2; }
   justify-content: space-between;
   gap: 6px;
   margin-bottom: 0;
-  padding: 8px 10px 6px;
-  border: 1px solid rgba(148, 163, 184, 0.55);
-  border-bottom: 0;
-  border-radius: 12px 12px 0 0;
-  background: linear-gradient(135deg, rgba(148, 163, 184, 0.65), rgba(239, 246, 255, 0.75));
+  padding: 8px 4px 6px;
 }
 
 .table-actions-left,
@@ -706,12 +699,8 @@ h2 { margin: 0; color: #111; font-size: 0.95rem; line-height: 1.2; }
   grid-template-columns: minmax(280px, 1fr) 210px 180px;
   gap: 8px;
   margin-bottom: 0;
-  padding: 6px 10px 10px;
-  border: 1px solid rgba(148, 163, 184, 0.55);
-  border-top: 0;
-  border-radius: 0 0 12px 12px;
-  background: linear-gradient(180deg, rgba(239, 246, 255, 0.82), rgba(248, 250, 252, 0.92));
-  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.07);
+  padding: 6px 4px 12px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.35);
   flex-shrink: 0;
 }
 
@@ -741,9 +730,6 @@ h2 { margin: 0; color: #111; font-size: 0.95rem; line-height: 1.2; }
   flex: 1;
   min-height: 0;
   overflow: auto;
-  border: 1px solid rgba(148, 163, 184, 0.6);
-  border-radius: 16px;
-  background: rgba(248, 250, 252, 0.92);
 }
 
 .module-table-card { min-height: 360px; max-height: 360px; overflow: auto; padding: 12px; }
@@ -1248,6 +1234,25 @@ h2 { margin: 0; color: #111; font-size: 0.95rem; line-height: 1.2; }
 .login-demo-note strong {
   color: rgba(204, 251, 241, 0.55);
   font-weight: 700;
+}
+
+.login-error {
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-align: center;
+  animation: login-shake 0.32s ease;
+}
+
+@keyframes login-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-5px); }
+  60% { transform: translateX(5px); }
 }
 
 /* Footer */

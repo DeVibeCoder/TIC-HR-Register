@@ -2845,7 +2845,18 @@ function PendingTasksModal({ employees, onClose }: { employees: Employee[]; onCl
 }
 
 function LoginPage({ onLogin }: { onLogin: () => void }) {
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); onLogin() }
+  const [loginUser, setLoginUser] = useState('')
+  const [loginPass, setLoginPass] = useState('')
+  const [loginError, setLoginError] = useState(false)
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (loginUser === 'admin' && loginPass === 'Admin@Pending') {
+      setLoginError(false)
+      onLogin()
+    } else {
+      setLoginError(true)
+    }
+  }
   return (
     <main className="login-shell">
       {/* Background decorative grid */}
@@ -2891,19 +2902,19 @@ function LoginPage({ onLogin }: { onLogin: () => void }) {
 
             <label className="login-field">
               <span>Username</span>
-              <input defaultValue="admin" autoComplete="username" />
+              <input value={loginUser} onChange={(e) => { setLoginUser(e.target.value); setLoginError(false) }} autoComplete="username" />
             </label>
 
             <label className="login-field">
               <span>Password</span>
-              <input type="password" defaultValue="admin" autoComplete="current-password" />
+              <input type="password" value={loginPass} onChange={(e) => { setLoginPass(e.target.value); setLoginError(false) }} autoComplete="current-password" />
             </label>
+
+            {loginError && <p className="login-error">Invalid username or password.</p>}
 
             <button className="login-btn" type="submit">
               Sign In →
             </button>
-
-            <p className="login-demo-note">Demo credentials: <strong>admin</strong> / <strong>admin</strong></p>
           </form>
         </div>
       </div>
