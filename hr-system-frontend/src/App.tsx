@@ -610,7 +610,11 @@ function EmployeesPage({ employees, onAdd, onEdit, onExport, onImport, onTemplat
   const [sortAsc, setSortAsc] = useState(true)
 
   const departments = useMemo(() => ['All Sections', ...Array.from(new Set(employees.map((employee) => employee.department))).sort()], [employees])
-  const nationalityList = useMemo(() => ['All Nationalities', ...Array.from(new Set(employees.map((employee) => employee.nationality))).sort()], [employees])
+  const nationalityList = useMemo(() => {
+    const deptSet = new Set(departmentsList)
+    const validNats = Array.from(new Set(employees.map((e) => e.nationality).filter((n) => n && !deptSet.has(n)))).sort()
+    return ['All Nationalities', ...validNats]
+  }, [employees])
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) { setSortAsc((prev) => !prev) } else { setSortKey(key); setSortAsc(true) }
