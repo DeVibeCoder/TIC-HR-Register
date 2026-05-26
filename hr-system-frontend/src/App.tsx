@@ -384,8 +384,33 @@ function downloadCsv(filename: string, rows: string[][]) {
   URL.revokeObjectURL(url)
 }
 
-function parseCsv(text: string) {
-  return text.split(/\r?\n/).filter(Boolean).map((line) => line.split(',').map((value) => value.replace(/^"|"$/g, '').replaceAll('""', '"').trim()))
+function parseCsv(text: string): string[][] {
+  const rows: string[][] = []
+  for (const line of text.split(/\r?\n/)) {
+    if (!line.trim()) continue
+    const fields: string[] = []
+    let i = 0
+    while (i <= line.length) {
+      if (i === line.length) { fields.push(''); break }
+      if (line[i] === '"') {
+        // quoted field — commas inside are literal
+        let field = ''; i++
+        while (i < line.length) {
+          if (line[i] === '"' && line[i + 1] === '"') { field += '"'; i += 2 }
+          else if (line[i] === '"') { i++; break }
+          else { field += line[i++] }
+        }
+        fields.push(field.trim())
+        if (line[i] === ',') i++; else break
+      } else {
+        const end = line.indexOf(',', i)
+        if (end === -1) { fields.push(line.slice(i).trim()); break }
+        fields.push(line.slice(i, end).trim()); i = end + 1
+      }
+    }
+    rows.push(fields)
+  }
+  return rows
 }
 
 function OverviewPage({ employees, leaveRequests, activeLeaves, leaveHistory }: { employees: Employee[]; leaveRequests: LeaveRequestRecord[]; activeLeaves: ActiveLeaveRecord[]; leaveHistory: LeaveHistoryRecord[] }) {
@@ -3050,6 +3075,21 @@ function App() {
   const [terminationDetails, setTerminationDetails] = useState<EnhancedTerminationRecord | CompletedTerminationRecord | null>(null)
 
   // Persist all data to localStorage on every change
+  // One-time fix: repair employees whose designation had a comma causing CSV to
+  // split it and write the second half (e.g. "BLASTING & PAINTING") into nationality
+  useEffect(() => {
+    setEmployees((prev) => {
+      const fixes: Record<string, Partial<Employee>> = {
+        '57785': { nationality: 'SRI LANKAN', designation: 'SITE MANAGER, BLASTING & PAINTING' },
+        '56251': { nationality: 'SRI LANKAN', designation: 'SENIOR MANAGER, ENGINEERING AND MAINTENANCE' },
+      }
+      const needsFix = prev.some((e) => fixes[e.employeeId] && e.nationality !== 'SRI LANKAN')
+      if (!needsFix) return prev
+      return prev.map((e) => fixes[e.employeeId] && e.nationality !== 'SRI LANKAN' ? { ...e, ...fixes[e.employeeId] } : e)
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   useEffect(() => { localStorage.setItem('tic_employees', JSON.stringify(employees)) }, [employees])
   useEffect(() => { localStorage.setItem('tic_leave_req', JSON.stringify(leaveRequests)) }, [leaveRequests])
   useEffect(() => { localStorage.setItem('tic_leave_active', JSON.stringify(activeLeaves)) }, [activeLeaves])
