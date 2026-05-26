@@ -3341,7 +3341,7 @@ function App() {
         aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
       >
-        {sidebarCollapsed ? '›' : '‹'}
+        <span className="sidebar-edge-pip" aria-hidden="true">{sidebarCollapsed ? '›' : '‹'}</span>
       </button>
 
       <div className="workspace">
