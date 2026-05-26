@@ -690,22 +690,6 @@ function EmployeesPage({ employees, onAdd, onEdit, onExport, onImport, onTemplat
         </div>
         <div className="employee-table-shell">
           <table className="data-table employee-table">
-            <colgroup>
-              <col style={{ width: '38px' }} />
-              <col style={{ width: '82px' }} />
-              <col style={{ width: '320px' }} />
-              <col style={{ width: '155px' }} />
-              <col style={{ width: '155px' }} />
-              <col style={{ width: '110px' }} />
-              <col style={{ width: '108px' }} />
-              <col style={{ width: '100px' }} />
-              <col style={{ width: '108px' }} />
-              <col style={{ width: '98px' }} />
-              <col style={{ width: '108px' }} />
-              <col style={{ width: '46px' }} />
-              <col style={{ width: '96px' }} />
-              <col style={{ width: '56px' }} />
-            </colgroup>
             <thead>
               <tr>
                 <th>#</th>
@@ -729,7 +713,7 @@ function EmployeesPage({ employees, onAdd, onEdit, onExport, onImport, onTemplat
                 <tr className={`${recordStatus(employee) === 'Pending' ? 'pending-row' : ''} status-row-${employee.siteStatus.toLowerCase().replaceAll(' ', '-')}`} key={`${employee.employeeId}-${employee.fullName}`}>
                   <td>{pageSize === 'All' ? index + 1 : (safePage - 1) * pageSize + index + 1}</td>
                   <td className="col-empid">{employee.employeeId || 'Pending'}</td>
-                  <td className="col-name">{employee.fullName}</td>
+                  <td><div className="col-name">{employee.fullName}</div></td>
                   <td>{employee.department}</td>
                   <td className="col-desig">{employee.designation}</td>
                   <td>{employee.nationality}</td>

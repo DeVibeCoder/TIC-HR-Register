@@ -4417,13 +4417,13 @@ button.step-pill:hover { filter: brightness(0.98); }
 .sort-indicator { font-size: 0.65rem; opacity: 0.7; margin-left: 2px; }
 
 /* ── Employee table font + column widths ─────────────────── */
-/* table-layout:fixed + colgroup widths = guaranteed pixel-exact columns */
-.employee-table { font-size: 0.75rem; table-layout: fixed; width: 1580px; }
-.employee-table th { font-size: 0.68rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.employee-table td { padding: 6px 10px; overflow: hidden; }
-/* Full name cell: allow wrapping so long names break over 2 lines */
-.employee-table .col-name { white-space: normal; line-height: 1.4; word-break: break-word; overflow: visible; }
-.employee-table .col-desig { white-space: normal; line-height: 1.35; word-break: break-word; overflow: visible; }
+.employee-table { font-size: 0.75rem; min-width: 1700px; }
+.employee-table th { font-size: 0.68rem; }
+.employee-table td { padding: 6px 10px; }
+.employee-table .col-empid { width: 78px; min-width: 78px; max-width: 82px; }
+/* col-name is a <div> inside <td>: forces the cell to this exact width */
+.col-name { width: 280px; white-space: normal; line-height: 1.4; word-break: break-word; }
+.employee-table .col-desig { min-width: 130px; max-width: 180px; white-space: normal; line-height: 1.35; }
 
 /* ── Employee search wider ───────────────────────────────── */
 .employee-toolbar { grid-template-columns: 2fr 1fr 1fr 1fr 0.5fr !important; }
