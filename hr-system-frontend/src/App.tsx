@@ -620,7 +620,7 @@ function EmployeesPage({ employees, onAdd, onEdit, onExport, onImport, onTemplat
   onShowTasks: () => void
 }) {
   const [query, setQuery] = useState('')
-  const [department, setDepartment] = useState('All Departments')
+  const [department, setDepartment] = useState('All Sections')
   const [status, setStatus] = useState('All Statuses')
   const [nationality, setNationality] = useState('All Nationalities')
   const [page, setPage] = useState(1)
@@ -628,7 +628,7 @@ function EmployeesPage({ employees, onAdd, onEdit, onExport, onImport, onTemplat
   const [sortKey, setSortKey] = useState<SortKey>('department')
   const [sortAsc, setSortAsc] = useState(true)
 
-  const departments = useMemo(() => ['All Departments', ...Array.from(new Set(employees.map((employee) => employee.department))).sort()], [employees])
+  const departments = useMemo(() => ['All Sections', ...Array.from(new Set(employees.map((employee) => employee.department))).sort()], [employees])
   const nationalityList = useMemo(() => ['All Nationalities', ...Array.from(new Set(employees.map((employee) => employee.nationality))).sort()], [employees])
 
   const handleSort = (key: SortKey) => {
@@ -647,7 +647,7 @@ function EmployeesPage({ employees, onAdd, onEdit, onExport, onImport, onTemplat
     return [...employees].filter((employee) => {
       const haystack = [employee.employeeId, employee.fullName, employee.department, employee.designation, employee.nationality, employee.nicPassportNo, employee.workPermitNo, employee.mobileNo].join(' ').toLowerCase()
       return haystack.includes(normalized)
-        && (department === 'All Departments' || employee.department === department)
+        && (department === 'All Sections' || employee.department === department)
         && (status === 'All Statuses' || employee.siteStatus === status)
         && (nationality === 'All Nationalities' || employee.nationality === nationality)
     }).sort((a, b) => {
@@ -712,7 +712,7 @@ function EmployeesPage({ employees, onAdd, onEdit, onExport, onImport, onTemplat
               {visibleRows.map((employee, index) => (
                 <tr className={`${recordStatus(employee) === 'Pending' ? 'pending-row' : ''} status-row-${employee.siteStatus.toLowerCase().replaceAll(' ', '-')}`} key={`${employee.employeeId}-${employee.fullName}`}>
                   <td>{pageSize === 'All' ? index + 1 : (safePage - 1) * pageSize + index + 1}</td>
-                  <td>{employee.employeeId || 'Pending'}</td>
+                  <td className="col-empid">{employee.employeeId || 'Pending'}</td>
                   <td className="col-name">{employee.fullName}</td>
                   <td>{employee.department}</td>
                   <td className="col-desig">{employee.designation}</td>
@@ -3299,32 +3299,53 @@ function App() {
       if (!file) return
       const reader = new FileReader()
       reader.onload = () => {
-        const allRows = parseCsv(String(reader.result ?? '')).slice(1)
+        const allRows = parseCsv(String(reader.result ?? ''))
+        if (allRows.length < 2) return
+        // Build column index map from the header row (case-insensitive)
+        const hdr = allRows[0].map((h) => h.toLowerCase().replace(/[^a-z0-9]/g, ''))
+        const col = (terms: string[]) => terms.map((t) => hdr.indexOf(t)).find((i) => i >= 0) ?? -1
+        const CI = {
+          id:     col(['empid','employeeid']),
+          name:   col(['fullname','name']),
+          dept:   col(['section','department']),
+          desig:  col(['designation']),
+          nat:    col(['nationality']),
+          nic:    col(['nicppno','nicpassportno','nic','passport']),
+          wp:     col(['wpno','workpermitno','wp']),
+          doj:    col(['dateofjoin','joiningdate','dateofjoining','join']),
+          mobile: col(['mobileno','mobile','contact','phone']),
+          dob:    col(['dateofbirth','dob','birth']),
+          status: col(['sitestatus','status']),
+        }
+        const g = (row: string[], key: keyof typeof CI) => { const i = CI[key]; return i >= 0 ? (row[i] ?? '').trim() : '' }
+
+        const dataRows = allRows.slice(1)
         let added = 0; let updated = 0; let skipped = 0
         setEmployees((current) => {
           const byId = new Map(current.map((e) => [e.employeeId, e]))
           const result = [...current]
-          allRows.forEach((row, index) => {
-            if (!row[0] && !row[1]) { skipped++; return } // blank row
-            const eid = row[0] || `PENDING-${String(current.length + index + 1).padStart(4, '0')}`
-            const nat = (row[4] || 'MALDIVES').toUpperCase()
+          dataRows.forEach((row, index) => {
+            if (row.every((c) => !c.trim())) { skipped++; return } // blank row
+            const eid = g(row, 'id') || `PENDING-${String(current.length + index + 1).padStart(4, '0')}`
+            const nat = (g(row, 'nat') || 'MALDIVES').toUpperCase()
+            const siteRaw = g(row, 'status')
             const parsed: Employee = {
               employeeId: eid,
-              fullName: row[1] || 'Imported Employee',
-              department: row[2] || departmentsList[0],
-              designation: row[3] || '',
+              fullName: g(row, 'name') || 'Imported Employee',
+              department: g(row, 'dept') || departmentsList[0],
+              designation: g(row, 'desig') || '',
               nationality: nat,
-              nicPassportNo: row[5] || '',
-              workPermitNo: nat === 'MALDIVES' ? '' : (row[6] || ''),
-              dateOfJoin: parseImportDate(row[7]) || new Date().toISOString().slice(0, 10),
-              mobileNo: row[8] || '',
-              dateOfBirth: parseImportDate(row[9]) || '',
+              nicPassportNo: g(row, 'nic'),
+              workPermitNo: nat === 'MALDIVES' ? '' : g(row, 'wp'),
+              dateOfJoin: parseImportDate(g(row, 'doj')) || new Date().toISOString().slice(0, 10),
+              mobileNo: g(row, 'mobile'),
+              dateOfBirth: parseImportDate(g(row, 'dob')),
               passportStatus: 'With Employee',
-              siteStatus: row[10] === 'On Leave' || row[10] === 'Off Site' ? row[10] as SiteStatus : 'On Site',
+              siteStatus: siteRaw === 'On Leave' || siteRaw === 'Off Site' ? siteRaw as SiteStatus : 'On Site',
             }
-            if (row[0] && byId.has(row[0])) {
-              // update existing record — merge, preserve fields not in CSV
-              const idx = result.findIndex((e) => e.employeeId === row[0])
+            const existId = g(row, 'id')
+            if (existId && byId.has(existId)) {
+              const idx = result.findIndex((e) => e.employeeId === existId)
               if (idx >= 0) { result[idx] = { ...result[idx], ...parsed }; updated++ }
             } else {
               result.unshift(parsed); byId.set(eid, parsed); added++

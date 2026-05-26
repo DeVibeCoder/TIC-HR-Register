@@ -3770,7 +3770,7 @@ button.step-pill:hover { filter: brightness(0.98); }
 }
 
 /* ── Employee table: fixed-width wrapping columns ─────────── */
-.employee-table .col-name { min-width: 140px; max-width: 170px; white-space: normal; word-break: break-word; line-height: 1.3; }
+/* Note: col-name and col-empid widths overridden below in the latest rules block */
 .employee-table .col-desig { min-width: 140px; max-width: 170px; white-space: normal; word-break: break-word; line-height: 1.3; }
 .employee-table .col-dept { min-width: 100px; max-width: 130px; white-space: normal; }
 
@@ -4420,7 +4420,8 @@ button.step-pill:hover { filter: brightness(0.98); }
 .employee-table { font-size: 0.75rem; min-width: 1700px; }
 .employee-table th { font-size: 0.68rem; }
 .employee-table td { padding: 6px 10px; }
-.employee-table .col-name { min-width: 150px; max-width: 200px; white-space: normal; line-height: 1.35; word-break: break-word; }
+.employee-table .col-empid { width: 78px; min-width: 70px; max-width: 90px; }
+.employee-table .col-name { min-width: 220px; max-width: 280px; white-space: normal; line-height: 1.35; word-break: break-word; }
 .employee-table .col-desig { min-width: 130px; max-width: 180px; white-space: normal; line-height: 1.35; }
 
 /* ── Employee search wider ───────────────────────────────── */
