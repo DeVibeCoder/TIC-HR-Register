@@ -3005,9 +3005,20 @@ const pageIcons: Record<Page, string> = {
 }
 
 function App() {
-  const [activePage, setActivePage] = useState<Page>('overview')
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [activePage, setActivePageState] = useState<Page>(() => (localStorage.getItem('tic_page') as Page) ?? 'overview')
+  const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem('tic_auth') === '1')
+  const [sidebarCollapsed, setSidebarCollapsedState] = useState(() => localStorage.getItem('tic_sidebar') === '1')
+
+  const setActivePage = (page: Page) => { setActivePageState(page); localStorage.setItem('tic_page', page) }
+  const setSidebarCollapsed = (val: boolean | ((prev: boolean) => boolean)) => {
+    setSidebarCollapsedState((prev) => {
+      const next = typeof val === 'function' ? val(prev) : val
+      localStorage.setItem('tic_sidebar', next ? '1' : '0')
+      return next
+    })
+  }
+  const login = () => { localStorage.setItem('tic_auth', '1'); setIsLoggedIn(true) }
+  const logout = () => { localStorage.removeItem('tic_auth'); setIsLoggedIn(false) }
   const [importResult, setImportResult] = useState<{ added: number; skipped: number } | null>(null)
   const [employees, setEmployees] = useState<Employee[]>(initialEmployees)
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequestRecord[]>(initialLeaveRequests)
@@ -3277,7 +3288,7 @@ function App() {
 
   const downloadTemplate = () => downloadCsv('tic-employee-template.csv', [['Employee ID', 'Full Name', 'Section (Department)', 'Designation', 'Nationality', 'NIC/PP No', 'WP No (blank for Maldives)', 'Date of Join (YYYY-MM-DD)', 'Mobile No', 'Date of Birth (YYYY-MM-DD)', 'Site Status (On Site/Off Site/On Leave)']])
 
-  if (!isLoggedIn) return <LoginPage onLogin={() => setIsLoggedIn(true)} />
+  if (!isLoggedIn) return <LoginPage onLogin={login} />
 
   const openEditEmployee = (employee: Employee) => {
     setEmployeeMode('edit')
@@ -3316,7 +3327,7 @@ function App() {
             <div className="sidebar-user-avatar">A</div>
             {!sidebarCollapsed && <span className="sidebar-user-name">admin</span>}
           </div>
-          <button className="sidebar-logout" onClick={() => setIsLoggedIn(false)} type="button" title={sidebarCollapsed ? 'Logout' : undefined}>
+          <button className="sidebar-logout" onClick={logout} type="button" title={sidebarCollapsed ? 'Logout' : undefined}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
             {!sidebarCollapsed && <span>Logout</span>}
           </button>
