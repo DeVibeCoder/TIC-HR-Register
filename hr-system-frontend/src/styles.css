@@ -174,46 +174,57 @@ button:disabled { cursor: not-allowed; opacity: 0.5; }
 .workspace-topbar {
   display: flex;
   align-items: center;
-  gap: 10px;
-  height: 44px;
-  padding: 0 14px;
-  border-bottom: 1px solid rgba(148,163,184,0.18);
-  background: rgba(255,255,255,0.72);
-  backdrop-filter: blur(8px);
+  gap: 8px;
+  height: 42px;
+  padding: 0 16px;
+  border-bottom: 1px solid rgba(148,163,184,0.15);
+  background: #fff;
   flex-shrink: 0;
 }
 
 .topbar-toggle-btn {
   display: grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   flex-shrink: 0;
-  border-radius: 8px;
-  border: 1px solid rgba(148,163,184,0.3);
-  background: transparent;
-  color: #94a3b8;
+  border-radius: 7px;
+  border: none;
+  background: rgba(124,58,237,0.07);
+  color: #7c3aed;
   cursor: pointer;
   padding: 0;
-  transition: background 140ms, color 140ms, border-color 140ms;
+  transition: background 140ms, color 140ms, transform 100ms;
 }
 
 .topbar-toggle-btn:hover {
-  background: #7c3aed;
-  color: #fff;
-  border-color: #7c3aed;
+  background: rgba(124,58,237,0.14);
+  color: #6d28d9;
+}
+
+.topbar-toggle-btn:active {
+  transform: scale(0.92);
 }
 
 .topbar-toggle-btn svg {
-  width: 16px;
+  width: 15px;
+  height: 15px;
+  display: block;
+}
+
+.topbar-divider {
+  width: 1px;
   height: 16px;
+  background: rgba(148,163,184,0.3);
+  flex-shrink: 0;
 }
 
 .topbar-page-title {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 700;
-  color: #64748b;
-  letter-spacing: 0.02em;
+  color: #94a3b8;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 
 .sidebar-nav {

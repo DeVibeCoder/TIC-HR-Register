@@ -3343,15 +3343,19 @@ function App() {
             aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
-            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
-              <rect x="1.5" y="1.5" width="15" height="15" rx="2.5"/>
-              <line x1="6" y1="1.5" x2="6" y2="16.5"/>
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              {/* outer panel rect */}
+              <rect x="2" y="2" width="16" height="16" rx="3"/>
+              {/* sidebar divider */}
+              <line x1="7" y1="2" x2="7" y2="18"/>
+              {/* arrow pointing toward divider (collapse) or away (expand) */}
               {sidebarCollapsed
-                ? <polyline points="10,6.5 13.5,9 10,11.5"/>
-                : <polyline points="10,6.5 7,9 10,11.5"/>
+                ? <polyline points="11,7.5 14.5,10 11,12.5"/>
+                : <polyline points="13,7.5 9.5,10 13,12.5"/>
               }
             </svg>
           </button>
+          <div className="topbar-divider" aria-hidden="true" />
           <span className="topbar-page-title">{pages.find((p) => p.id === activePage)?.label}</span>
         </div>
         <main className="workspace-inner" id="top">
