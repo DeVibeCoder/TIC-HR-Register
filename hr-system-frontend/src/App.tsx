@@ -25,8 +25,6 @@ type Employee = {
   passportStatus: string
   siteStatus: SiteStatus
   gender?: string
-  permanentAddress?: string
-  presentAddress?: string
 }
 
 type EmployeeForm = Employee
@@ -263,8 +261,6 @@ const emptyEmployee: EmployeeForm = {
   passportStatus: 'With Employee',
   siteStatus: 'On Site',
   gender: '',
-  permanentAddress: '',
-  presentAddress: '',
 }
 
 function calculateAge(dateOfBirth: string) {
@@ -569,8 +565,6 @@ function EmployeeFormModal({ form, mode, onClose, onSave, setForm }: {
             <label><span>Nationality</span><select value={form.nationality} onChange={(e) => update('nationality', e.target.value)}>{nationalities.map((n) => <option key={n}>{n}</option>)}</select></label>
             <label className="ef-span2"><span>NIC / Passport No</span><input value={form.nicPassportNo} onChange={(e) => update('nicPassportNo', e.target.value)} placeholder="NIC or passport number" /></label>
             <label><span>Mobile No</span><input value={form.mobileNo} onChange={(e) => update('mobileNo', e.target.value)} placeholder="+960 xxx xxxx" /></label>
-            <label className="ef-span2"><span>Permanent Address</span><input value={form.permanentAddress ?? ''} onChange={(e) => update('permanentAddress', e.target.value)} placeholder="Home island / city" /></label>
-            <label><span>Present / Site Address</span><input value={form.presentAddress ?? ''} onChange={(e) => update('presentAddress', e.target.value)} placeholder="Current residence" /></label>
           </div>
         </div>
 
