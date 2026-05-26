@@ -4417,11 +4417,12 @@ button.step-pill:hover { filter: brightness(0.98); }
 .sort-indicator { font-size: 0.65rem; opacity: 0.7; margin-left: 2px; }
 
 /* ── Employee table font + column widths ─────────────────── */
-.employee-table { font-size: 0.75rem; min-width: 1700px; }
+.employee-table { font-size: 0.75rem; min-width: 1800px; }
 .employee-table th { font-size: 0.68rem; }
 .employee-table td { padding: 6px 10px; }
-.employee-table .col-empid { width: 78px; min-width: 70px; max-width: 90px; }
-.employee-table .col-name { min-width: 220px; max-width: 280px; white-space: normal; line-height: 1.35; word-break: break-word; }
+.employee-table .col-empid { width: 78px; min-width: 78px; max-width: 78px; }
+/* col-name: sized so "ARUNODA KAVINDU NANAYAKKARA NANAYAKKARA KEPPETI DUWAGE" fits in 2 lines */
+.employee-table .col-name { width: 320px; min-width: 320px; max-width: 320px; white-space: normal; line-height: 1.4; word-break: break-word; }
 .employee-table .col-desig { min-width: 130px; max-width: 180px; white-space: normal; line-height: 1.35; }
 
 /* ── Employee search wider ───────────────────────────────── */
