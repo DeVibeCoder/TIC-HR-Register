@@ -3294,9 +3294,6 @@ function App() {
             <span className="sidebar-logo">TIC</span>
             {!sidebarCollapsed && <span className="sidebar-brand-text"><strong>HR Register</strong><small>Thilafushi Industrial Complex</small></span>}
           </div>
-          <button className="sidebar-toggle" onClick={() => setSidebarCollapsed((c) => !c)} type="button" aria-label="Toggle sidebar">
-            {sidebarCollapsed ? '›' : '‹'}
-          </button>
         </div>
 
         <nav className="sidebar-nav">
@@ -3325,6 +3322,16 @@ function App() {
           </button>
         </div>
       </aside>
+
+      <button
+        className="sidebar-edge-toggle"
+        onClick={() => setSidebarCollapsed((c) => !c)}
+        type="button"
+        aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+      >
+        {sidebarCollapsed ? '›' : '‹'}
+      </button>
 
       <div className="workspace">
         <main className="workspace-inner" id="top">
