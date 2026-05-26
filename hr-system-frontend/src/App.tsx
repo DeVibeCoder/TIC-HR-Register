@@ -690,6 +690,22 @@ function EmployeesPage({ employees, onAdd, onEdit, onExport, onImport, onTemplat
         </div>
         <div className="employee-table-shell">
           <table className="data-table employee-table">
+            <colgroup>
+              <col style={{ width: '38px' }} />
+              <col style={{ width: '82px' }} />
+              <col style={{ width: '480px' }} />
+              <col style={{ width: '155px' }} />
+              <col style={{ width: '155px' }} />
+              <col style={{ width: '110px' }} />
+              <col style={{ width: '108px' }} />
+              <col style={{ width: '100px' }} />
+              <col style={{ width: '108px' }} />
+              <col style={{ width: '98px' }} />
+              <col style={{ width: '108px' }} />
+              <col style={{ width: '46px' }} />
+              <col style={{ width: '96px' }} />
+              <col style={{ width: '56px' }} />
+            </colgroup>
             <thead>
               <tr>
                 <th>#</th>
