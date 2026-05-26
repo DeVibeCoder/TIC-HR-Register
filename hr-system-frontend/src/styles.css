@@ -167,50 +167,54 @@ button:disabled { cursor: not-allowed; opacity: 0.5; }
 
 /* hide old inline toggle */
 .sidebar-toggle { display: none; }
+.sidebar-edge-toggle { display: none; }
+.sidebar-edge-pip { display: none; }
 
-/* ── Sidebar collapse button – floats on the page, tracks sidebar edge ─ */
-.sidebar-edge-toggle {
-  position: fixed;
-  top: 12px;
-  left: calc(var(--sidebar-w) + 10px);
-  z-index: 25;
+/* ── Workspace topbar ────────────────────────────────────── */
+.workspace-topbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  padding: 0 14px;
+  border-bottom: 1px solid rgba(148,163,184,0.18);
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: blur(8px);
+  flex-shrink: 0;
+}
+
+.topbar-toggle-btn {
   display: grid;
   place-items: center;
   width: 30px;
   height: 30px;
+  flex-shrink: 0;
   border-radius: 8px;
-  border: 1px solid rgba(148,163,184,0.28);
-  background: #fff;
+  border: 1px solid rgba(148,163,184,0.3);
+  background: transparent;
   color: #94a3b8;
   cursor: pointer;
-  box-shadow: 0 1px 4px rgba(15,23,42,0.07);
-  transition: left var(--sidebar-anim),
-              background 140ms,
-              color 140ms,
-              border-color 140ms,
-              box-shadow 140ms;
   padding: 0;
+  transition: background 140ms, color 140ms, border-color 140ms;
 }
 
-.sidebar-edge-toggle:hover {
+.topbar-toggle-btn:hover {
   background: #7c3aed;
   color: #fff;
   border-color: #7c3aed;
-  box-shadow: 0 3px 10px rgba(124,58,237,0.28);
 }
 
-.sidebar-edge-toggle svg {
-  width: 15px;
-  height: 15px;
-  flex-shrink: 0;
+.topbar-toggle-btn svg {
+  width: 16px;
+  height: 16px;
 }
 
-.sidebar-is-collapsed .sidebar-edge-toggle {
-  left: calc(var(--sidebar-w-sm) + 10px);
+.topbar-page-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.02em;
 }
-
-/* no pip needed any more */
-.sidebar-edge-pip { display: none; }
 
 .sidebar-nav {
   flex: 1;
@@ -4421,26 +4425,7 @@ button.step-pill:hover { filter: brightness(0.98); }
 }
 
 /* ── Sidebar toggle text ─────────────────────────────────── */
-.sidebar-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border: none;
-  border-radius: 6px;
-  background: rgba(255,255,255,0.08);
-  color: rgba(255,255,255,0.55);
-  font-size: 1rem;
-  line-height: 1;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: background 140ms, color 140ms;
-}
-.sidebar-toggle:hover {
-  background: rgba(255,255,255,0.14);
-  color: #fff;
-}
+/* sidebar-toggle removed – replaced by topbar-toggle-btn */
 
 
 

@@ -3334,23 +3334,26 @@ function App() {
         </div>
       </aside>
 
-      <button
-        className="sidebar-edge-toggle"
-        onClick={() => setSidebarCollapsed((c) => !c)}
-        type="button"
-        aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-      >
-        {/* panel-left / panel-right icon */}
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          {sidebarCollapsed
-            ? <><rect x="1" y="1" width="14" height="14" rx="2"/><line x1="5" y1="1" x2="5" y2="15"/><line x1="8" y1="5" x2="11" y2="8"/><line x1="8" y1="11" x2="11" y2="8"/></>
-            : <><rect x="1" y="1" width="14" height="14" rx="2"/><line x1="5" y1="1" x2="5" y2="15"/><line x1="8" y1="5" x2="5.5" y2="8"/><line x1="8" y1="11" x2="5.5" y2="8"/></>
-          }
-        </svg>
-      </button>
-
       <div className="workspace">
+        <div className="workspace-topbar">
+          <button
+            className="topbar-toggle-btn"
+            onClick={() => setSidebarCollapsed((c) => !c)}
+            type="button"
+            aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
+              <rect x="1.5" y="1.5" width="15" height="15" rx="2.5"/>
+              <line x1="6" y1="1.5" x2="6" y2="16.5"/>
+              {sidebarCollapsed
+                ? <polyline points="10,6.5 13.5,9 10,11.5"/>
+                : <polyline points="10,6.5 7,9 10,11.5"/>
+              }
+            </svg>
+          </button>
+          <span className="topbar-page-title">{pages.find((p) => p.id === activePage)?.label}</span>
+        </div>
         <main className="workspace-inner" id="top">
           {activePage === 'overview' && <OverviewPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} />}
           {activePage === 'employees' && <EmployeesPage employees={employees} onAdd={() => { setEmployeeMode('add'); setEmployeeForm(emptyEmployee); setShowEmployeeForm(true) }} onEdit={openEditEmployee} onExport={exportCsv} onImport={importCsv} onTemplate={downloadTemplate} onShowTasks={() => setShowPendingTasks(true)} />}
@@ -3360,7 +3363,7 @@ function App() {
           {activePage === 'termination' && <TerminationPage noticeTerminations={noticeTerminations} completedTerminations={completedTerminations} onAdd={openAddTermination} onEdit={openEditTermination} onAdvanceStatus={advanceTerminationStatus} onDelete={deleteTermination} onViewDetails={(record) => setTerminationDetails(record)} />}
           {activePage === 'settings' && <SettingsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} />}
         </main>
-      </div>
+      </div> {/* .workspace */}
 
       {showEmployeeForm && <EmployeeFormModal form={employeeForm} mode={employeeMode} onClose={() => setShowEmployeeForm(false)} onSave={saveEmployee} setForm={setEmployeeForm} />}
       {showPendingTasks && <PendingTasksModal employees={employees} onEdit={openEditEmployee} onClose={() => setShowPendingTasks(false)} />}
