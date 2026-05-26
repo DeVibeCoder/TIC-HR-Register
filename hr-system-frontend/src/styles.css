@@ -4507,6 +4507,82 @@ button.step-pill:hover { filter: brightness(0.98); }
   color: #fff;
 }
 
+/* ── Employee Add/Edit form modal ────────────────────────── */
+.emp-form-modal {
+  max-width: 780px;
+  width: min(780px, calc(100vw - 40px));
+}
+
+.emp-form-section {
+  margin-bottom: 22px;
+}
+
+.emp-form-section-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: #7c3aed;
+  padding: 0 0 10px;
+  margin-bottom: 12px;
+  border-bottom: 1.5px solid rgba(124,58,237,0.12);
+}
+
+.emp-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px 14px;
+}
+
+.emp-form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.emp-form-grid .ef-span2 { grid-column: span 2; }
+.emp-form-grid .ef-span3 { grid-column: 1 / -1; }
+
+.emp-form-grid span {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.emp-form-grid input,
+.emp-form-grid select {
+  padding: 9px 11px;
+  border: 1.5px solid rgba(139,92,246,0.18);
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-family: inherit;
+  background: var(--surface-strong);
+  color: var(--ink);
+  transition: border-color 0.18s, box-shadow 0.18s;
+  width: 100%;
+}
+
+.emp-form-grid input:focus,
+.emp-form-grid select:focus {
+  outline: none;
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
+}
+
+.emp-form-grid input:disabled {
+  background: rgba(0,0,0,0.04);
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .emp-form-grid { grid-template-columns: 1fr 1fr; }
+  .emp-form-grid .ef-span3 { grid-column: 1 / -1; }
+  .emp-form-grid .ef-span2 { grid-column: 1 / -1; }
+}
+
 
 
 

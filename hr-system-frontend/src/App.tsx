@@ -27,10 +27,6 @@ type Employee = {
   gender?: string
   permanentAddress?: string
   presentAddress?: string
-  qualification?: string
-  experience?: string
-  emergencyContact?: string
-  bankDetails?: string
 }
 
 type EmployeeForm = Employee
@@ -269,10 +265,6 @@ const emptyEmployee: EmployeeForm = {
   gender: '',
   permanentAddress: '',
   presentAddress: '',
-  qualification: '',
-  experience: '',
-  emergencyContact: '',
-  bankDetails: '',
 }
 
 function calculateAge(dateOfBirth: string) {
@@ -559,49 +551,44 @@ function EmployeeFormModal({ form, mode, onClose, onSave, setForm }: {
 
   return (
     <div className="modal-backdrop" role="presentation">
-      <section className="registration-modal extra-wide" role="dialog" aria-modal="true" aria-labelledby="registration-title">
+      <section className="registration-modal emp-form-modal" role="dialog" aria-modal="true" aria-labelledby="registration-title">
         <div className="modal-header">
           <div>
-            <p className="eyebrow">{mode === 'add' ? 'Initial registration' : 'Update employee'}</p>
-            <h2 id="registration-title">Employee Registration Form</h2>
-            <p>Save incomplete data now and complete the record later.</p>
+            <p className="eyebrow">{mode === 'add' ? 'New employee' : 'Edit employee'}</p>
+            <h2 id="registration-title">{mode === 'add' ? 'Add Employee' : 'Update Employee'}</h2>
           </div>
           <button className="icon-button" onClick={onClose} type="button">✕</button>
         </div>
 
-        <div className="form-section">
-          <h3>Personal Details</h3>
-          <div className="form-grid">
-            <label className="full-field"><span>Full Name</span><input disabled={mode === 'edit'} value={form.fullName} onChange={(event) => update('fullName', event.target.value)} placeholder="Enter full name as per passport/NIC" /></label>
-            <label><span>Date of Birth</span><input type="date" value={form.dateOfBirth} onChange={(event) => update('dateOfBirth', event.target.value)} /></label>
-            <label><span>Gender</span><select value={form.gender ?? ''} onChange={(event) => update('gender', event.target.value)}><option value="">Select gender</option><option>Male</option><option>Female</option></select></label>
-            <label><span>Nationality</span><select value={form.nationality} onChange={(event) => update('nationality', event.target.value)}>{nationalities.map((item) => <option key={item}>{item}</option>)}</select></label>
-            <label><span>NIC / Passport No</span><input value={form.nicPassportNo} onChange={(event) => update('nicPassportNo', event.target.value)} placeholder="NIC or passport number" /></label>
-            <label><span>Mobile No</span><input value={form.mobileNo} onChange={(event) => update('mobileNo', event.target.value)} placeholder="+960 xxx xxxx" /></label>
-            <label className="full-field"><span>Permanent Address</span><input value={form.permanentAddress ?? ''} onChange={(event) => update('permanentAddress', event.target.value)} placeholder="Home island / city" /></label>
-            <label className="full-field"><span>Present Address</span><input value={form.presentAddress ?? ''} onChange={(event) => update('presentAddress', event.target.value)} placeholder="Current residence on site or nearby" /></label>
+        <div className="emp-form-section">
+          <div className="emp-form-section-label">Personal Details</div>
+          <div className="emp-form-grid">
+            <label className="ef-span3"><span>Full Name</span><input disabled={mode === 'edit'} value={form.fullName} onChange={(e) => update('fullName', e.target.value)} placeholder="Full name as per passport / NIC" /></label>
+            <label><span>Date of Birth</span><input type="date" value={form.dateOfBirth} onChange={(e) => update('dateOfBirth', e.target.value)} /></label>
+            <label><span>Gender</span><select value={form.gender ?? ''} onChange={(e) => update('gender', e.target.value)}><option value="">— Select —</option><option>Male</option><option>Female</option></select></label>
+            <label><span>Nationality</span><select value={form.nationality} onChange={(e) => update('nationality', e.target.value)}>{nationalities.map((n) => <option key={n}>{n}</option>)}</select></label>
+            <label className="ef-span2"><span>NIC / Passport No</span><input value={form.nicPassportNo} onChange={(e) => update('nicPassportNo', e.target.value)} placeholder="NIC or passport number" /></label>
+            <label><span>Mobile No</span><input value={form.mobileNo} onChange={(e) => update('mobileNo', e.target.value)} placeholder="+960 xxx xxxx" /></label>
+            <label className="ef-span2"><span>Permanent Address</span><input value={form.permanentAddress ?? ''} onChange={(e) => update('permanentAddress', e.target.value)} placeholder="Home island / city" /></label>
+            <label><span>Present / Site Address</span><input value={form.presentAddress ?? ''} onChange={(e) => update('presentAddress', e.target.value)} placeholder="Current residence" /></label>
           </div>
         </div>
 
-        <div className="form-section">
-          <h3>Employment Details</h3>
-          <div className="form-grid">
-            <label><span>Employee ID</span><input value={form.employeeId} onChange={(event) => update('employeeId', event.target.value)} placeholder="e.g. TIC-0001" /></label>
-            <label><span>Section / Department</span><select value={form.department} onChange={(event) => update('department', event.target.value)}>{departmentsList.map((item) => <option key={item}>{item}</option>)}</select></label>
-            <label><span>Designation</span><input value={form.designation} onChange={(event) => update('designation', event.target.value)} placeholder="Job title" /></label>
-            <label><span>Date of Join</span><input type="date" value={form.dateOfJoin} onChange={(event) => update('dateOfJoin', event.target.value)} /></label>
-            <label><span>WP No</span><input disabled={wpDisabled} placeholder={wpDisabled ? 'N/A — Maldives national' : 'Work permit number'} value={wpDisabled ? '' : form.workPermitNo} onChange={(event) => update('workPermitNo', event.target.value)} /></label>
-            <label><span>Site Status</span><select value={form.siteStatus} onChange={(event) => update('siteStatus', event.target.value as SiteStatus)}><option>On Site</option><option>Off Site</option><option>On Leave</option></select></label>
-            <label><span>Qualification</span><input value={form.qualification ?? ''} onChange={(event) => update('qualification', event.target.value)} placeholder="Highest education level" /></label>
-            <label><span>Experience</span><input value={form.experience ?? ''} onChange={(event) => update('experience', event.target.value)} placeholder="Years of experience" /></label>
-            <label className="full-field"><span>Emergency Contact</span><input value={form.emergencyContact ?? ''} onChange={(event) => update('emergencyContact', event.target.value)} placeholder="Name and phone number" /></label>
-            <label className="full-field"><span>Bank Details</span><input value={form.bankDetails ?? ''} onChange={(event) => update('bankDetails', event.target.value)} placeholder="Bank name, account number" /></label>
+        <div className="emp-form-section">
+          <div className="emp-form-section-label">Employment Details</div>
+          <div className="emp-form-grid">
+            <label><span>Emp ID</span><input value={form.employeeId} onChange={(e) => update('employeeId', e.target.value)} placeholder="e.g. TIC-0001" /></label>
+            <label><span>Section</span><select value={form.department} onChange={(e) => update('department', e.target.value)}>{departmentsList.map((d) => <option key={d}>{d}</option>)}</select></label>
+            <label><span>Designation</span><input value={form.designation} onChange={(e) => update('designation', e.target.value)} placeholder="Job title" /></label>
+            <label><span>Date of Join</span><input type="date" value={form.dateOfJoin} onChange={(e) => update('dateOfJoin', e.target.value)} /></label>
+            <label><span>Work Permit No</span><input disabled={wpDisabled} placeholder={wpDisabled ? 'N/A — Maldivian' : 'Work permit number'} value={wpDisabled ? '' : form.workPermitNo} onChange={(e) => update('workPermitNo', e.target.value)} /></label>
+            <label><span>Site Status</span><select value={form.siteStatus} onChange={(e) => update('siteStatus', e.target.value as SiteStatus)}><option>On Site</option><option>Off Site</option><option>On Leave</option></select></label>
           </div>
         </div>
 
         <div className="modal-actions">
           <button className="quiet-button light" onClick={onClose} type="button">Cancel</button>
-          <button className="primary-button" onClick={onSave} type="button">{mode === 'add' ? 'Save Registration' : 'Update Record'}</button>
+          <button className="primary-button" onClick={onSave} type="button">{mode === 'add' ? 'Add Employee' : 'Save Changes'}</button>
         </div>
       </section>
     </div>
