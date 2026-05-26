@@ -168,74 +168,49 @@ button:disabled { cursor: not-allowed; opacity: 0.5; }
 /* hide old inline toggle */
 .sidebar-toggle { display: none; }
 
-/* ── Edge toggle – full-height invisible strip on sidebar border ─ */
+/* ── Sidebar collapse button – floats on the page, tracks sidebar edge ─ */
 .sidebar-edge-toggle {
   position: fixed;
-  top: 0;
-  bottom: 0;
-  left: var(--sidebar-w);
-  z-index: 30;
-  width: 14px;
-  transform: translateX(-50%);
-  background: transparent;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: left var(--sidebar-anim);
-}
-
-/* thin line – barely visible at rest, glows on hover */
-.sidebar-edge-toggle::before {
-  content: '';
-  position: absolute;
-  inset: 0 auto;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 1px;
-  background: rgba(124,58,237,0.12);
-  transition: width 180ms ease, background 180ms ease;
-}
-.sidebar-edge-toggle:hover::before {
-  width: 2px;
-  background: rgba(124,58,237,0.45);
-}
-
-/* pip – hidden at rest, fades in on hover */
-.sidebar-edge-pip {
-  position: relative;
-  z-index: 1;
+  top: 12px;
+  left: calc(var(--sidebar-w) + 10px);
+  z-index: 25;
   display: grid;
   place-items: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid rgba(148,163,184,0.28);
   background: #fff;
-  border: 1px solid rgba(124,58,237,0.2);
-  color: #7c3aed;
-  font-size: 0.65rem;
-  box-shadow: 0 1px 5px rgba(15,23,42,0.12);
-  opacity: 0;
-  transform: scale(0.7);
-  transition: opacity 180ms ease, transform 180ms ease, background 140ms, color 140ms;
-  pointer-events: none;
+  color: #94a3b8;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(15,23,42,0.07);
+  transition: left var(--sidebar-anim),
+              background 140ms,
+              color 140ms,
+              border-color 140ms,
+              box-shadow 140ms;
+  padding: 0;
 }
-.sidebar-edge-toggle:hover .sidebar-edge-pip {
-  opacity: 1;
-  transform: scale(1);
-  pointer-events: auto;
-}
-.sidebar-edge-toggle:hover .sidebar-edge-pip:hover,
-.sidebar-edge-toggle:active .sidebar-edge-pip {
+
+.sidebar-edge-toggle:hover {
   background: #7c3aed;
   color: #fff;
+  border-color: #7c3aed;
+  box-shadow: 0 3px 10px rgba(124,58,237,0.28);
+}
+
+.sidebar-edge-toggle svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
 }
 
 .sidebar-is-collapsed .sidebar-edge-toggle {
-  left: var(--sidebar-w-sm);
+  left: calc(var(--sidebar-w-sm) + 10px);
 }
+
+/* no pip needed any more */
+.sidebar-edge-pip { display: none; }
 
 .sidebar-nav {
   flex: 1;

@@ -3341,7 +3341,13 @@ function App() {
         aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
       >
-        <span className="sidebar-edge-pip" aria-hidden="true">{sidebarCollapsed ? '›' : '‹'}</span>
+        {/* panel-left / panel-right icon */}
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          {sidebarCollapsed
+            ? <><rect x="1" y="1" width="14" height="14" rx="2"/><line x1="5" y1="1" x2="5" y2="15"/><line x1="8" y1="5" x2="11" y2="8"/><line x1="8" y1="11" x2="11" y2="8"/></>
+            : <><rect x="1" y="1" width="14" height="14" rx="2"/><line x1="5" y1="1" x2="5" y2="15"/><line x1="8" y1="5" x2="5.5" y2="8"/><line x1="8" y1="11" x2="5.5" y2="8"/></>
+          }
+        </svg>
       </button>
 
       <div className="workspace">
