@@ -215,7 +215,7 @@ const pages: Array<{ id: Page; label: string }> = [
 ]
 
 const departmentsList = ['ADMINISTRATION', 'HUMAN RESOURCES', 'ACCOUNTS AND FINANCE', 'CAFE', 'STORES', 'HOUSEKEEPING', 'LPG PLANT', 'OXYGEN PLANT', 'CEMENT PLANT', 'FUEL FARM', 'ENGINEERING ADMINISTRATION', 'MECHANICAL', 'ELECTRICAL', 'MAINTENANCE', 'POWER HOUSE', 'PAINTING PROJECT', 'KITCHEN', 'STAFF MESS', 'LOSS PREVENTION', 'ROOFING FACTORY', 'BATCHING PLANT']
-const nationalities = ['MALDIVIAN', 'INDIAN', 'BANGLADESHI', 'SRI LANKAN', 'NEPALESE', 'FINNISH', 'MALAYSIAN']
+const nationalities = ['MALDIVES', 'INDIA', 'BANGLADESH', 'SRI LANKA', 'NEPAL', 'FINLAND', 'MALAYSIA', 'PHILIPPINES', 'MYANMAR', 'PAKISTAN']
 
 const leaveTypeOptions: Array<{ code: LeaveTypeCode; label: string }> = [
   { code: 'AL', label: 'Annual Leave' },
@@ -229,161 +229,43 @@ const requestSteps: LeaveRequestStep[] = ['Letter Submitted', 'Approved', 'Dates
 const passportSteps: PassportStep[] = ['Issued', 'Collected', 'Sent to HO']
 
 const baseEmployees: Employee[] = [
-  { employeeId: '36693', fullName: 'ALI DIDI', department: 'ADMINISTRATION', designation: 'GENERAL MANAGER', nationality: 'MALDIVIAN', nicPassportNo: 'A026683', workPermitNo: '', dateOfJoin: '2007-12-01', mobileNo: '7786691', dateOfBirth: '1960-03-03', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-  { employeeId: '47149', fullName: 'HUSSAIN SHAHID', department: 'ADMINISTRATION', designation: 'DEPUTY GENERAL MANAGER', nationality: 'MALDIVIAN', nicPassportNo: 'A059738', workPermitNo: '', dateOfJoin: '2021-09-13', mobileNo: '7989870', dateOfBirth: '1966-10-13', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-  { employeeId: '41966', fullName: 'AHMED ALI', department: 'ADMINISTRATION', designation: 'OPERATIONS MANAGER', nationality: 'MALDIVIAN', nicPassportNo: 'A240435', workPermitNo: '', dateOfJoin: '2012-01-13', mobileNo: '9980110', dateOfBirth: '1993-03-07', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-  { employeeId: '56530', fullName: 'PUBUDU MADURANGA ALAWATHTHA KANKANAMGE', department: 'ADMINISTRATION', designation: 'PACKING & BAGGING CREW', nationality: 'SRI LANKAN', nicPassportNo: 'N9702660', workPermitNo: 'WP00601866', dateOfJoin: '2024-06-15', mobileNo: '7225658', dateOfBirth: '1998-12-17', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-  { employeeId: '50814', fullName: 'ARUSHULLA RASHID', department: 'HUMAN RESOURCES', designation: 'ADMINISTRATOR', nationality: 'MALDIVIAN', nicPassportNo: 'A254362', workPermitNo: '', dateOfJoin: '2019-07-22', mobileNo: '7654009', dateOfBirth: '2001-03-21', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Female' },
-  { employeeId: '58692', fullName: 'SHANTUMON PATHIYIL CHACKO', department: 'HUMAN RESOURCES', designation: 'HR ADMINISTRATION SPECIALIST', nationality: 'INDIAN', nicPassportNo: 'C4846043', workPermitNo: 'WP00725382', dateOfJoin: '2025-10-10', mobileNo: '7260520', dateOfBirth: '1998-02-10', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-  { employeeId: '35494', fullName: 'GAMARALALAGE AJITH WIJESIRI', department: 'ACCOUNTS AND FINANCE', designation: 'SENIOR ACCOUNTANT', nationality: 'SRI LANKAN', nicPassportNo: 'N6296286', workPermitNo: 'WP00202472', dateOfJoin: '2007-05-01', mobileNo: '7665760', dateOfBirth: '1969-11-28', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-  { employeeId: '52804', fullName: 'AHMED IMRAN', department: 'ACCOUNTS AND FINANCE', designation: 'ACCOUNTS ASSISTANT', nationality: 'BANGLADESHI', nicPassportNo: 'A05854471', workPermitNo: 'WP00394323', dateOfJoin: '2020-11-16', mobileNo: '9422460', dateOfBirth: '1991-02-02', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-  { employeeId: '56646', fullName: 'CHANDRASHEKHER PURELLA', department: 'ACCOUNTS AND FINANCE', designation: 'ACCOUNTS ASSISTANT', nationality: 'INDIAN', nicPassportNo: 'P7063576', workPermitNo: 'WP00606434', dateOfJoin: '2024-07-16', mobileNo: '9157925', dateOfBirth: '1999-07-03', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-  { employeeId: '57935', fullName: 'ARUNODA KAVINDU NANAYAKKARA', department: 'ACCOUNTS AND FINANCE', designation: 'ACCOUNTS ASSISTANT', nationality: 'SRI LANKAN', nicPassportNo: 'P0284056', workPermitNo: 'WP00661094', dateOfJoin: '2025-04-10', mobileNo: '7986407', dateOfBirth: '1988-11-16', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-  { employeeId: '57637', fullName: 'MUNI ACHARI GUNTI KOVALA', department: 'CAFE', designation: 'TRANSACTION SPECIALIST', nationality: 'INDIAN', nicPassportNo: 'T1139224', workPermitNo: 'WP00647914', dateOfJoin: '2025-02-01', mobileNo: '', dateOfBirth: '1994-05-10', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-  { employeeId: '56141', fullName: 'RAJU PERKA', department: 'CAFE', designation: 'TRANSACTION SPECIALIST', nationality: 'INDIAN', nicPassportNo: 'S3358854', workPermitNo: 'WP00585966', dateOfJoin: '2024-03-20', mobileNo: '9398452', dateOfBirth: '1999-05-24', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-  { employeeId: '50223', fullName: 'AYESHAN KUMARA WIJEYATHUNGA MUDALIGE', department: 'STORES', designation: 'STOREKEEPER', nationality: 'SRI LANKAN', nicPassportNo: 'N5366962', workPermitNo: 'WP00310428', dateOfJoin: '2019-03-21', mobileNo: '9837704', dateOfBirth: '1996-03-13', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-  { employeeId: '37916', fullName: 'JAGO', department: 'STORES', designation: 'STORE OPERATIONS SUPERVISOR', nationality: 'BANGLADESHI', nicPassportNo: 'R2320412', workPermitNo: 'WP00428783', dateOfJoin: '2008-08-21', mobileNo: '7727368', dateOfBirth: '1979-03-01', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-  { employeeId: '43407', fullName: 'MOHAMMAD DELOWAR HOSSAIN', department: 'STORES', designation: 'SENIOR ASSISTANT', nationality: 'BANGLADESHI', nicPassportNo: 'A03797309', workPermitNo: 'WP00031976', dateOfJoin: '2013-07-25', mobileNo: '9494380', dateOfBirth: '1986-02-04', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-  { employeeId: '44386', fullName: 'MAJIB', department: 'STORES', designation: 'SENIOR ASSISTANT', nationality: 'BANGLADESHI', nicPassportNo: 'EL0754008', workPermitNo: 'WP00079203', dateOfJoin: '2014-05-21', mobileNo: '7677578', dateOfBirth: '1972-01-01', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-  { employeeId: '53029', fullName: 'KUMARAN VAITHILINGAM', department: 'STORES', designation: 'ASSISTANT STOREKEEPER', nationality: 'INDIAN', nicPassportNo: 'N9611274', workPermitNo: 'WP00403148', dateOfJoin: '2022-01-05', mobileNo: '7514147', dateOfBirth: '1974-05-20', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-  { employeeId: '50427', fullName: 'MD SAIFUR RAHMAN', department: 'STORES', designation: 'SENIOR ASSISTANT', nationality: 'BANGLADESHI', nicPassportNo: 'A06214870', workPermitNo: 'WP00515811', dateOfJoin: '2019-05-06', mobileNo: '7742400', dateOfBirth: '1999-06-11', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-  { employeeId: '53979', fullName: 'NAVEEN SEKAR', department: 'STORES', designation: 'MATERIAL HANDLING OPERATOR', nationality: 'INDIAN', nicPassportNo: 'R3499139', workPermitNo: 'WP00441782', dateOfJoin: '2022-07-25', mobileNo: '7476327', dateOfBirth: '2001-05-04', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-  { employeeId: '55427', fullName: 'SARAVANAN RAJENDRAN', department: 'STORES', designation: 'STORE OPERATIONS CREW', nationality: 'INDIAN', nicPassportNo: 'R4247453', workPermitNo: 'WP00524039', dateOfJoin: '2023-08-08', mobileNo: '9978551', dateOfBirth: '2000-06-04', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
 ]
 
 function createEmployees(): Employee[] {
-  // All remaining employees from VHPL real dataset
-  const allEmployees: Employee[] = [
-    ...baseEmployees,
-    { employeeId: '55692', fullName: 'MOHAMMAD NISAR', department: 'STORES', designation: 'STORE OPERATIONS CREW', nationality: 'INDIAN', nicPassportNo: 'V4828255', workPermitNo: 'WP00545111', dateOfJoin: '2023-11-06', mobileNo: '9728054', dateOfBirth: '2001-06-05', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-    { employeeId: '55866', fullName: 'MD SALEH AHMED', department: 'STORES', designation: 'STORE OPERATIONS CREW', nationality: 'BANGLADESHI', nicPassportNo: 'EH0537122', workPermitNo: 'WP00558905', dateOfJoin: '2023-12-31', mobileNo: '9938927', dateOfBirth: '2002-06-02', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-    { employeeId: '55864', fullName: 'RAKIB HUSEN', department: 'STORES', designation: 'STORE OPERATIONS CREW', nationality: 'BANGLADESHI', nicPassportNo: 'B00381623', workPermitNo: 'WP00558906', dateOfJoin: '2023-12-31', mobileNo: '9499458', dateOfBirth: '1998-03-12', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-    { employeeId: '56542', fullName: 'MOHAMMAD FOYSAL MASSTHAN', department: 'STORES', designation: 'STORE OPERATIONS CREW', nationality: 'BANGLADESHI', nicPassportNo: 'A03159939', workPermitNo: 'WP00602130', dateOfJoin: '2024-06-02', mobileNo: '9566780', dateOfBirth: '1992-02-02', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-    { employeeId: '56872', fullName: 'MOHAN MOHAN RAJ', department: 'STORES', designation: 'DISPATCH ASSISTANT', nationality: 'INDIAN', nicPassportNo: 'Y2147348', workPermitNo: 'WP00616219', dateOfJoin: '2024-09-03', mobileNo: '7987825', dateOfBirth: '2005-08-18', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-    { employeeId: '57015', fullName: 'AJITHKUMAR VELMURUGAN', department: 'STORES', designation: 'STORE OPERATIONS CREW', nationality: 'INDIAN', nicPassportNo: 'S6583653', workPermitNo: 'WP00620439', dateOfJoin: '2024-09-25', mobileNo: '7397460', dateOfBirth: '1997-06-01', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-    { employeeId: '57803', fullName: 'INDIKA SAMPATH SAMARASINGHEGE', department: 'STORES', designation: 'CRANE OPERATOR', nationality: 'SRI LANKAN', nicPassportNo: 'N10416975', workPermitNo: 'WP00654248', dateOfJoin: '2025-03-12', mobileNo: '', dateOfBirth: '1989-03-11', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-    { employeeId: '58034', fullName: 'SAMEERA MADUSANKA GUNARATHNA', department: 'STORES', designation: 'CRANE OPERATOR', nationality: 'SRI LANKAN', nicPassportNo: 'P0202237', workPermitNo: 'WP00668084', dateOfJoin: '2025-05-01', mobileNo: '', dateOfBirth: '2000-05-10', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-    { employeeId: '26486', fullName: 'MOHAMED SAMEER', department: 'STORES', designation: 'SENIOR DRIVER', nationality: 'MALDIVIAN', nicPassportNo: 'A101223', workPermitNo: '', dateOfJoin: '2001-02-05', mobileNo: '7991616', dateOfBirth: '1981-09-28', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-    { employeeId: '32545', fullName: 'AHMED RAUF', department: 'STORES', designation: 'HEAVY VEHICLE DRIVER', nationality: 'MALDIVIAN', nicPassportNo: 'A088013', workPermitNo: '', dateOfJoin: '2005-02-24', mobileNo: '7812131', dateOfBirth: '1985-04-14', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-    { employeeId: '57557', fullName: 'MOHAMED ASLAM UNISKHAN', department: 'STORES', designation: 'STORE OPERATIONS CREW', nationality: 'INDIAN', nicPassportNo: 'P0615141', workPermitNo: 'WP00643964', dateOfJoin: '2025-01-14', mobileNo: '', dateOfBirth: '1997-04-11', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-    { employeeId: '58686', fullName: 'YASAR ARAFATH BASHEER AHAMED', department: 'STORES', designation: 'DISPATCH SUPERVISOR', nationality: 'INDIAN', nicPassportNo: 'B7214529', workPermitNo: 'WP00722732', dateOfJoin: '2025-10-09', mobileNo: '', dateOfBirth: '1992-07-20', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-    { employeeId: '56863', fullName: 'MD HARUN MIAH', department: 'STORES', designation: 'STORE OPERATIONS CREW', nationality: 'BANGLADESHI', nicPassportNo: 'A06663404', workPermitNo: 'WP00616222', dateOfJoin: '2024-08-26', mobileNo: '', dateOfBirth: '1995-03-09', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-    { employeeId: '40780', fullName: 'MOHSIN MIAZI', department: 'HOUSEKEEPING', designation: 'HOUSEKEEPING OPERATIONS SUPERVISOR', nationality: 'BANGLADESHI', nicPassportNo: 'A11123060', workPermitNo: 'WP00202473', dateOfJoin: '2011-02-10', mobileNo: '7598249', dateOfBirth: '1984-08-13', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-    { employeeId: '37026', fullName: 'MD RIAZ UDDIN', department: 'HOUSEKEEPING', designation: 'ASSISTANT SUPERVISOR', nationality: 'BANGLADESHI', nicPassportNo: 'A07264062', workPermitNo: 'WP00024929', dateOfJoin: '2008-02-03', mobileNo: '9821456', dateOfBirth: '1983-12-22', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-    { employeeId: '44451', fullName: 'HOSSAIN ALAMIN', department: 'HOUSEKEEPING', designation: 'FACILITIES MAINTENANCE CREW', nationality: 'BANGLADESHI', nicPassportNo: 'EF0998050', workPermitNo: 'WP00078005', dateOfJoin: '2014-06-03', mobileNo: '7226814', dateOfBirth: '1988-06-20', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-    { employeeId: '49561', fullName: 'MD JOYNAL ABEDIN', department: 'HOUSEKEEPING', designation: 'FACILITIES MAINTENANCE CREW', nationality: 'BANGLADESHI', nicPassportNo: 'EJ0985210', workPermitNo: 'WP00299427', dateOfJoin: '2018-10-27', mobileNo: '9579237', dateOfBirth: '1981-08-03', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-    { employeeId: '49134', fullName: 'FARUK MIAH', department: 'HOUSEKEEPING', designation: 'FACILITIES MAINTENANCE CREW', nationality: 'BANGLADESHI', nicPassportNo: 'EJ0285596', workPermitNo: 'WP00282580', dateOfJoin: '2018-08-11', mobileNo: '9154977', dateOfBirth: '1984-05-01', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-    { employeeId: '56544', fullName: 'MOHAMMAD SOBIR AHAMMAD', department: 'HOUSEKEEPING', designation: 'FACILITIES MAINTENANCE CREW', nationality: 'BANGLADESHI', nicPassportNo: 'A08339817', workPermitNo: 'WP00603036', dateOfJoin: '2024-06-02', mobileNo: '', dateOfBirth: '1994-01-01', passportStatus: 'With Employee', siteStatus: 'On Site', gender: 'Male' },
-  ]
-  
-  return allEmployees.sort((a, b) => a.department.localeCompare(b.department) || a.fullName.localeCompare(b.fullName))
+  return baseEmployees.sort((a, b) => a.department.localeCompare(b.department) || a.fullName.localeCompare(b.fullName))
 }
 
 const initialEmployees = createEmployees()
 
 const initialLeaveRequests: LeaveRequestRecord[] = [
-  { id: 'LVR-001', employeeId: 'VHPL-0031', name: 'Shiyam Ismail', department: 'Coordination', nationality: 'Maldivian', leaveTypeCode: 'FRL', departureDate: '2026-05-08', returnDate: '2026-05-12', days: 5, step: 'Approved' },
-  { id: 'LVR-002', employeeId: 'VHPL-0063', name: 'Mohamed Zahir', department: 'Operations', nationality: 'Bangladeshi', leaveTypeCode: 'AL', departureDate: '2026-05-18', returnDate: '2026-06-02', days: 16, step: 'Dates Shared' },
-  { id: 'LVR-003', employeeId: 'VHPL-0023', name: 'Mufeedh Ali', department: 'Safety', nationality: 'Maldivian', leaveTypeCode: 'PT', departureDate: '2026-05-21', returnDate: '2026-05-27', days: 7, step: 'Letter Submitted' },
 ]
 
-const initialActiveLeaves: ActiveLeaveRecord[] = [
-  { id: 'LVA-001', employeeId: 'VHPL-0014', name: 'Aishath Naza', department: 'Administration', nationality: 'Maldivian', leaveTypeCode: 'AL', departureDate: '2026-04-29', returnDate: '2026-05-06', days: 8, status: 'Departed' },
-  { id: 'LVA-002', employeeId: 'VHPL-0108', name: 'Nimal Perera', department: 'Warehouse', nationality: 'Sri Lankan', leaveTypeCode: 'AL', departureDate: '2026-04-24', returnDate: '2026-05-12', days: 19, status: 'Departed' },
-]
-
-const initialLeaveHistory: LeaveHistoryRecord[] = [
-  { id: 'LVH-001', employeeId: 'VHPL-0052', name: 'Hassan Latheef', department: 'Maintenance', nationality: 'Maldivian', leaveTypeCode: 'NP', departureDate: '2026-03-10', returnDate: '2026-03-20', days: 11 },
-]
-
-const initialPassportHandovers: PassportHandoverRecord[] = [
-  { id: 'PP-001', employeeId: 'VHPL-0014', name: 'Aishath Naza', department: 'Administration', nationality: 'Maldivian', leaveTypeCode: 'AL', departureDate: '2026-04-29', returnDate: '2026-05-06', days: 8, passportStep: 'Collected', givenDate: '2026-04-28', remarks: 'Collected from HR desk' },
-]
-
-const initialNoticeTerminations: EnhancedTerminationRecord[] = [
-  { id: 'TERM-001', employeeId: '37916', name: 'JAGO', department: 'STORES', designation: 'STORE OPERATIONS SUPERVISOR', nationality: 'BANGLADESHI', passportNo: 'R2320412', wpNo: 'WP00428783', dateOfJoin: '2008-08-21', dateSubmitted: '2026-04-10', lastWorkingDate: '2026-06-30', departureDate: '2026-07-15', currentStage: 'Letter Submitted', reasonForLeaving: 'Family reasons', satisfactionRating: 3, rehireEligible: true, exitInterviewCompleted: false, comments: '', terminationType: 'Resignation' },
-  { id: 'TERM-002', employeeId: '44451', name: 'HOSSAIN ALAMIN', department: 'HOUSEKEEPING', designation: 'FACILITIES MAINTENANCE CREW', nationality: 'BANGLADESHI', passportNo: 'EF0998050', wpNo: 'WP00078005', dateOfJoin: '2014-06-03', dateSubmitted: '2026-04-20', lastWorkingDate: '2026-06-15', departureDate: '2026-07-30', currentStage: 'Exit Interview', reasonForLeaving: 'Better opportunity', satisfactionRating: 4, rehireEligible: true, exitInterviewCompleted: true, comments: 'Employee satisfied with work environment', terminationType: 'Resignation' },
-  { id: 'TERM-003', employeeId: '53029', name: 'KUMARAN VAITHILINGAM', department: 'STORES', designation: 'ASSISTANT STOREKEEPER', nationality: 'INDIAN', passportNo: 'N9611274', wpNo: 'WP00403148', dateOfJoin: '2022-01-05', dateSubmitted: '2026-03-15', lastWorkingDate: '2026-05-31', departureDate: '2026-06-15', currentStage: 'Ticket', reasonForLeaving: 'Return to home country', satisfactionRating: 3, rehireEligible: true, exitInterviewCompleted: true, comments: 'Arranged return flight', terminationType: 'Resignation' },
-  { id: 'TERM-004', employeeId: '50427', name: 'MD SAIFUR RAHMAN', department: 'STORES', designation: 'SENIOR ASSISTANT', nationality: 'BANGLADESHI', passportNo: 'A06214870', wpNo: 'WP00515811', dateOfJoin: '2019-05-06', dateSubmitted: '2026-02-01', lastWorkingDate: '2026-05-10', departureDate: '2026-05-20', currentStage: 'Pending Departure', reasonForLeaving: 'Contract not renewed', satisfactionRating: 2, rehireEligible: false, exitInterviewCompleted: true, comments: 'Final dues being processed', terminationType: 'Contract Expiry' },
-]
-
-const initialCompletedTerminations: CompletedTerminationRecord[] = [
-  { id: 'TERM-C001', employeeId: 'VHPL-0044', name: 'Hussain Amir', department: 'Operations', designation: 'Plant Operator', nationality: 'Bangladeshi', passportNo: 'A01458962', wpNo: '', dateOfJoin: '2016-01-08', lastWorkingDate: '2026-03-18', departureDate: '2026-04-01', currentStage: 'Pending Departure', rehireEligible: true, exitInterviewCompleted: true, reasonForLeaving: 'Personal decision', comments: '', terminationType: 'Resignation' },
-  { id: 'TERM-C002', employeeId: 'VHPL-0099', name: 'Ravi Menon', department: 'Maintenance', designation: 'Technician', nationality: 'Indian', passportNo: 'P1045682', wpNo: '', dateOfJoin: '2019-05-20', lastWorkingDate: '2026-02-02', departureDate: '2026-02-15', currentStage: 'Pending Departure', rehireEligible: false, exitInterviewCompleted: false, reasonForLeaving: 'Policy violation', comments: '', terminationType: 'Dismissal' },
-]
-
+const initialActiveLeaves: ActiveLeaveRecord[] = []
+const initialLeaveHistory: LeaveHistoryRecord[] = []
+const initialPassportHandovers: PassportHandoverRecord[] = []
+const initialNoticeTerminations: EnhancedTerminationRecord[] = []
+const initialCompletedTerminations: CompletedTerminationRecord[] = []
 const allTerminationStages: TerminationStage[] = ['Letter Submitted', 'Exit Interview', 'Ticket', 'Pending Departure']
-
-const initialPersonalFiles: PersonalFileRecord[] = [
-  { fileNo: '0001', employeeId: '36693', fullName: 'ALI DIDI', department: 'ADMINISTRATION', isFormerStaff: false, coc: true, jd: true, cont: true, contractExpiryDate: '', remarks: '' },
-  { fileNo: '0002', employeeId: '47149', fullName: 'HUSSAIN SHAHID', department: 'ADMINISTRATION', isFormerStaff: false, coc: true, jd: false, cont: true, contractExpiryDate: '', remarks: 'JD pending' },
-  { fileNo: '0003', employeeId: '50814', fullName: 'ARUSHULLA RASHID', department: 'HUMAN RESOURCES', isFormerStaff: false, coc: true, jd: true, cont: true, contractExpiryDate: '2027-07-22', remarks: '' },
-  { fileNo: '0004', employeeId: '58692', fullName: 'SHANTUMON PATHIYIL CHACKO', department: 'HUMAN RESOURCES', isFormerStaff: false, coc: false, jd: false, cont: false, contractExpiryDate: '2027-10-10', remarks: 'Documents pending collection' },
-  { fileNo: '0005', employeeId: '35494', fullName: 'GAMARALALAGE AJITH WIJESIRI', department: 'ACCOUNTS AND FINANCE', isFormerStaff: false, coc: true, jd: true, cont: true, contractExpiryDate: '2026-12-31', remarks: '' },
-  { fileNo: '0006', employeeId: '50223', fullName: 'AYESHAN KUMARA WIJEYATHUNGA MUDALIGE', department: 'STORES', isFormerStaff: false, coc: true, jd: true, cont: false, contractExpiryDate: '2026-09-30', remarks: 'Contract renewal pending' },
-  { fileNo: '0007', employeeId: 'EX-001', fullName: 'HUSSAIN AMIR', department: 'OPERATIONS', isFormerStaff: true, coc: true, jd: true, cont: true, contractExpiryDate: '2026-03-31', remarks: 'Left March 2026 – Resignation' },
-]
-
-const initialInductionRecords: InductionRecord[] = [
-  { id: 'IND-001', refNo: 'IND-REF-001', employeeId: '36693', name: 'ALI DIDI', department: 'ADMINISTRATION', inductionDate: '2021-03-15', conductedBy: 'Arushulla Rashid', inductionContent: 'General site orientation covering workplace safety rules, emergency procedures, site layout, HR policies, code of conduct, and employee responsibilities. Staff was briefed on accommodation rules, mess timings, and reporting procedures.', status: 'Completed', remarks: '' },
-  { id: 'IND-002', refNo: 'IND-REF-002', employeeId: '50814', name: 'ARUSHULLA RASHID', department: 'HUMAN RESOURCES', inductionDate: '2020-08-10', conductedBy: 'Arushulla Rashid', inductionContent: 'HR department induction: introduction to HR processes, leave management system, payroll procedures, employee record keeping, confidentiality policy, and access to HR systems.', status: 'Completed', remarks: '' },
-  { id: 'IND-003', refNo: 'IND-REF-003', employeeId: '50223', name: 'AYESHAN KUMARA WIJEYATHUNGA MUDALIGE', department: 'STORES', inductionDate: '2022-03-21', conductedBy: 'Shantumon Pathiyil Chacko', inductionContent: 'Stores department induction: material handling procedures, inventory management, store safety, PPE requirements, forklift zone awareness, and emergency evacuation route for the stores building.', status: 'Completed', remarks: '' },
-  { id: 'IND-004', refNo: 'IND-REF-004', employeeId: '58692', name: 'SHANTUMON PATHIYIL CHACKO', department: 'HUMAN RESOURCES', inductionDate: '', conductedBy: '', inductionContent: '', status: 'Pending', remarks: 'Schedule with HR team' },
-]
-
-const initialTrainingRecords: TrainingRecord[] = [
-  { id: 'TRN-001', trainingTitle: 'Fire Safety & Emergency Response', date: '2024-01-15', conductedBy: 'Ahmed Ali', trainingType: 'Internal', participants: ['ALI DIDI', 'HUSSAIN SHAHID', 'ARUSHULLA RASHID', 'AHMED ALI', 'SHANTUMON PATHIYIL CHACKO'], status: 'Completed', remarks: 'Annual refresher – renewal due Jan 2026' },
-  { id: 'TRN-002', trainingTitle: 'First Aid & CPR', date: '2025-03-10', conductedBy: 'External Trainer – Maldives Red Crescent', trainingType: 'External', participants: ['ARUSHULLA RASHID', 'SHANTUMON PATHIYIL CHACKO', 'GAMARALALAGE AJITH WIJESIRI'], status: 'Completed', remarks: '' },
-  { id: 'TRN-003', trainingTitle: 'Forklift & Crane Operation Safety', date: '2022-06-01', conductedBy: 'Mohamed Sameer', trainingType: 'Internal', participants: ['AYESHAN KUMARA WIJEYATHUNGA MUDALIGE', 'JAGO', 'NAVEEN SEKAR', 'SARAVANAN RAJENDRAN', 'MOHAN MOHAN RAJ'], status: 'Pending', remarks: 'Renewal overdue – retrain required' },
-  { id: 'TRN-004', trainingTitle: 'Hazardous Materials Handling', date: '2025-07-20', conductedBy: 'Ahmed Ali', trainingType: 'Internal', participants: ['JAGO', 'MOHAMMAD DELOWAR HOSSAIN', 'KUMARAN VAITHILINGAM', 'MD SAIFUR RAHMAN'], status: 'Completed', remarks: '' },
-  { id: 'TRN-005', trainingTitle: 'Supervisory & Leadership Skills', date: '2023-11-15', conductedBy: 'External Trainer – MNU', trainingType: 'External', participants: ['HUSSAIN SHAHID', 'AHMED ALI', 'MOHSIN MIAZI'], status: 'Pending', remarks: 'Renewal needed' },
-]
-
-const initialStaffRequests: StaffRequestRecord[] = [
-  { id: 'REQ-001', employeeName: 'Adam Rasheed', department: 'Operations', requestType: 'Accommodation', description: 'Requesting accommodation change to Block B', submittedDate: '2026-05-02', completedDate: '', status: 'Open', remarks: '' },
-  { id: 'REQ-002', employeeName: 'Nimal Perera', department: 'Warehouse', requestType: 'Documents', description: 'Employment confirmation letter required for visa', submittedDate: '2026-04-28', completedDate: '', status: 'In Progress', remarks: 'Letter being prepared' },
-  { id: 'REQ-003', employeeName: 'Shiyam Ismail', department: 'Coordination', requestType: 'Equipment', description: 'New PPE set requested — boots and gloves', submittedDate: '2026-04-25', completedDate: '2026-04-27', status: 'Resolved', remarks: 'Issued on 27 Apr' },
-]
-
-const initialVisitRecords: VisitRecord[] = [
-  { id: 'VIS-001', employeeId: '56543', employeeName: 'MD MASUD ALOM', department: 'STAFF MESS', nationality: 'BANGLADESHI', visitType: 'Visa Medical', visitDate: '2026-03-02', status: 'Completed', remarks: '' },
-  { id: 'VIS-002', employeeId: '55428', employeeName: 'ARNEL SARABIA CARAMPATAN', department: 'MECHANICAL', nationality: 'FILIPINO', visitType: 'Visa Medical', visitDate: '2026-03-02', status: 'Completed', remarks: '' },
-  { id: 'VIS-003', employeeId: '56678', employeeName: 'AJITH ARUL SELVASAMY PUSHPPANATHAN', department: 'FUEL FARM', nationality: 'INDIAN', visitType: 'Visa Medical', visitDate: '2026-03-03', status: 'Completed', remarks: '' },
-  { id: 'VIS-004', employeeId: '57967', employeeName: 'NALLATHAMBI DURAISAMY', department: 'BATCHING PLANT', nationality: 'INDIAN', visitType: 'Visa Medical', visitDate: '2026-03-03', status: 'Completed', remarks: '' },
-  { id: 'VIS-005', employeeId: '53979', employeeName: 'NAVEEN SEKAR', department: 'STORES', nationality: 'INDIAN', visitType: 'Visa Medical', visitDate: '2026-03-03', status: 'Completed', remarks: '' },
-  { id: 'VIS-006', employeeId: '56544', employeeName: 'MOHAMMAD SOBIR AHAMMAD', department: 'HOUSEKEEPING', nationality: 'BANGLADESHI', visitType: 'Visa Medical', visitDate: '2026-03-04', status: 'Completed', remarks: '' },
-  { id: 'VIS-007', employeeId: '55427', employeeName: 'SARAVANAN RAJENDRAN', department: 'STORES', nationality: 'INDIAN', visitType: 'Embassy Letter Collection', visitDate: '2026-04-09', status: 'Completed', remarks: '' },
-  { id: 'VIS-008', employeeId: '57557', employeeName: 'MOHAMED ASLAM UNISKHAN', department: 'STORES', nationality: 'INDIAN', visitType: 'Passport Renewal', visitDate: '2026-04-12', status: 'Completed', remarks: '' },
-  { id: 'VIS-009', employeeId: '59584', employeeName: 'MARUTHUPANDIYAN DURAIRAJ', department: 'LOSS PREVENTION', nationality: 'INDIAN', visitType: 'Photo', visitDate: '2026-04-16', status: 'Completed', remarks: '' },
-  { id: 'VIS-010', employeeId: '56863', employeeName: 'MD HARUN MIAH', department: 'STORES', nationality: 'BANGLADESHI', visitType: 'Visa Medical', visitDate: '2026-04-23', status: 'Completed', remarks: '' },
-  { id: 'VIS-011', employeeId: '52806', employeeName: 'MOHAMMED ABDUS SALAM', department: 'FUEL FARM', nationality: 'BANGLADESHI', visitType: 'Visa Medical', visitDate: '2026-04-26', status: 'Completed', remarks: '' },
-  { id: 'VIS-012', employeeId: '58121', employeeName: 'DANASIRI SILVA KALUPERUMA', department: 'KITCHEN', nationality: 'SRI LANKAN', visitType: 'Visa Medical', visitDate: '2026-04-29', status: 'Completed', remarks: '' },
-]
-
-const initialIncidentRecords: IncidentRecord[] = [
-  { id: 'INC-001', incidentDate: '2026-01-26', timeOfIncident: 'Evening', employeeId: '57360', employeeName: 'ZAHIR', reportedById: '57978', reportedByName: 'MD NOOR ALAM MIA', department: 'QMARINE', siteLocation: 'QMARINE WELDING WORKSHOP', incidentType: 'Work Injury', description: 'After undocking Villa Roalhi 33 and during keeping the spreader on top of welding workshop, he was required to remove the cables. While removing the cables he lost focus and the cable hit him which made him lose balance and fell inside the workshop and sustained an injury on left shin.', injuryInvolved: true, actionTaken: 'Staff was immediately sent to Male\' IGMH for medical by a speedboat. Necessary actions were taken however LP was not informed on the incident.', statementTaken: false, disciplinaryAction: true, status: 'Closed' },
-  { id: 'INC-002', incidentDate: '2026-01-29', timeOfIncident: 'Evening', employeeId: '51558', employeeName: 'VINAYAGAM', reportedById: '58416', reportedByName: 'MD RIPON HOSSAIN', department: 'CEMENT PLANT', siteLocation: 'CEMENT PLANT', incidentType: 'Work Injury', description: 'During evening duty at the cement plant, the worker fainted while loading activities were ongoing. At that time, he complained of chest pain.', injuryInvolved: true, actionTaken: 'Sent to Male\' IGMH for medical by speedboat.', statementTaken: false, disciplinaryAction: true, status: 'Closed' },
-  { id: 'INC-003', incidentDate: '2026-02-06', timeOfIncident: 'Morning', employeeId: '58692', employeeName: 'SHANTUMON', reportedById: '57622', reportedByName: 'SACHIDA NAND SINGH', department: 'MECHANICAL', siteLocation: 'MESS HALL', incidentType: 'Misconduct', description: 'During morning breakfast time, he attended a phone call in the mess hall and was speaking loudly. The mess staff informed him loud noise not allowed inside the mess hall and asked him to step outside. At that time, he argued with the staff and raised his voice.', injuryInvolved: false, actionTaken: 'Staff was brought to HR and briefed on maintaining discipline at places and respect all staff at all times.', statementTaken: false, disciplinaryAction: false, status: 'Closed' },
-  { id: 'INC-004', incidentDate: '2026-02-06', timeOfIncident: 'Morning', employeeId: '31606', employeeName: 'AHMED', reportedById: '52684', reportedByName: 'KARANRAJ GANESAN', department: 'POWER HOUSE', siteLocation: 'POWER HOUSE', incidentType: 'Sleeping on Duty', description: 'He was found sleeping during assigned duty hours.', injuryInvolved: false, actionTaken: '', statementTaken: false, disciplinaryAction: true, status: 'Closed' },
-  { id: 'INC-005', incidentDate: '2026-02-25', timeOfIncident: 'Afternoon', employeeId: '52808', employeeName: 'HOSSAIN EMRAN', reportedById: '58509', reportedByName: 'MD KAWSER ALI', department: 'ROOFING FACTORY', siteLocation: 'ROOFING FACTORY', incidentType: 'Work Injury', description: 'During machine cleaning operations, the worker\'s finger became caught in the roller mechanism, resulting in an injury.', injuryInvolved: true, actionTaken: 'The staff member was brought to the HR office, a statement was taken.', statementTaken: true, disciplinaryAction: false, status: 'Closed' },
-  { id: 'INC-006', incidentDate: '2026-03-10', timeOfIncident: 'Morning', employeeId: '58121', employeeName: 'SILVA', reportedById: '44960', reportedByName: 'NIZAM UDDIN', department: 'KITCHEN', siteLocation: 'KITCHEN', incidentType: 'Work Injury', description: 'During duty hours, while performing his assigned tasks, the staff member accidentally got his finger stuck in the wall gap between the chillers.', injuryInvolved: true, actionTaken: 'Male\' IGMH for medical treatment by speedboat. Afterward, the staff member was brought to the HR office, where a statement was taken.', statementTaken: true, disciplinaryAction: false, status: 'Closed' },
-  { id: 'INC-007', incidentDate: '2026-04-04', timeOfIncident: 'Morning', employeeId: '52558', employeeName: 'ALAVUDEEN', reportedById: '56985', reportedByName: 'MATHEWS THOMAS', department: 'LOSS PREVENTION', siteLocation: 'MAIN GATE', incidentType: 'Misconduct', description: 'LP officer argued with executive for duty assigned location.', injuryInvolved: false, actionTaken: 'He is advised not to repeat the same again and if repeated in future further action will be taken. Issued verbal warning.', statementTaken: false, disciplinaryAction: false, status: 'Closed' },
-  { id: 'INC-008', incidentDate: '2026-04-13', timeOfIncident: 'Morning', employeeId: '', employeeName: '', reportedById: '55996', reportedByName: 'SAIM MIA', department: 'FUEL FARM', siteLocation: 'FUEL FARM', incidentType: 'Work Injury', description: 'During work time try to cut one pipe with cutter and slip the cutter and finger injured.', injuryInvolved: true, actionTaken: 'Provided first AID', statementTaken: false, disciplinaryAction: false, status: 'Open' },
-]
+const initialPersonalFiles: PersonalFileRecord[] = []
+const initialInductionRecords: InductionRecord[] = []
+const initialTrainingRecords: TrainingRecord[] = []
+const initialStaffRequests: StaffRequestRecord[] = []
+const initialVisitRecords: VisitRecord[] = []
+const initialIncidentRecords: IncidentRecord[] = []
 
 const emptyEmployee: EmployeeForm = {
   employeeId: '',
   fullName: '',
   department: 'Operations',
   designation: '',
-  nationality: 'Maldivian',
+  nationality: 'MALDIVES',
   nicPassportNo: '',
   workPermitNo: '',
   dateOfJoin: new Date().toISOString().slice(0, 10),
   mobileNo: '',
   dateOfBirth: '',
   passportStatus: 'With Employee',
-  siteStatus: 'Off Site',
+  siteStatus: 'On Site',
   gender: '',
   permanentAddress: '',
   presentAddress: '',
@@ -412,7 +294,7 @@ function formatDateDisplay(isoDate: string) {
   if (!isoDate) return '-'
   const [year, month, day] = isoDate.split('-')
   if (!year || !month || !day) return isoDate
-  return `${day}-${month}-${year}`
+  return `${day}/${month}/${year}`
 }
 
 function nextIncidentRef(records: IncidentRecord[]) {
@@ -488,8 +370,7 @@ function getPendingTasks(employee: Employee) {
     ['Date of Join', employee.dateOfJoin],
     ['Mobile No', employee.mobileNo],
     ['Date of Birth', employee.dateOfBirth],
-    ['Passport Status', employee.passportStatus],
-    ...(employee.nationality === 'Maldivian' ? [] : [['WP No', employee.workPermitNo]]),
+    ...(employee.nationality === 'MALDIVES' ? [] : [['WP No', employee.workPermitNo]]),
   ].filter(([, value]) => !value || String(value).startsWith('PENDING-')).map(([label]) => label)
 }
 
@@ -520,83 +401,142 @@ function parseCsv(text: string) {
 }
 
 function OverviewPage({ employees, leaveRequests, activeLeaves, leaveHistory }: { employees: Employee[]; leaveRequests: LeaveRequestRecord[]; activeLeaves: ActiveLeaveRecord[]; leaveHistory: LeaveHistoryRecord[] }) {
-  const pendingTasks = employees.filter((employee) => recordStatus(employee) === 'Pending')
+  const pendingEmployees = employees.filter((employee) => recordStatus(employee) === 'Pending')
   const onSite = employees.filter((employee) => employee.siteStatus === 'On Site').length
-  const onLeave = activeLeaves.length
-  const pendingLeave = leaveRequests.length
-  const completedLeave = leaveHistory.length
-  const projectTime = Math.round((onSite / Math.max(1, employees.length)) * 100)
-  const output = Math.round((completedLeave / Math.max(1, pendingLeave + completedLeave)) * 100)
-  const weeklyHours = 6.1
+  const offSite = employees.filter((employee) => employee.siteStatus === 'Off Site').length
+  const onLeave = employees.filter((employee) => employee.siteStatus === 'On Leave').length
+  const onSitePct = employees.length ? Math.round((onSite / employees.length) * 100) : 0
+
+  const deptCounts = useMemo(() => {
+    const counts: Record<string, number> = {}
+    employees.forEach((e) => { counts[e.department] = (counts[e.department] ?? 0) + 1 })
+    return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8)
+  }, [employees])
+
+  const maxDeptCount = deptCounts[0]?.[1] ?? 1
+
+  const recentLeave = [...leaveRequests].sort((a, b) => b.departureDate.localeCompare(a.departureDate)).slice(0, 5)
 
   return (
     <section className="nx-overview">
-      <div className="nx-hero">
+      <div className="overview-header-band">
         <div>
-          <h1>Welcome in, TIC HR</h1>
-          <div className="nx-track-row">
-            <div className="nx-track-item"><span>Interviews</span><strong>{pendingLeave}</strong></div>
-            <div className="nx-track-item"><span>Hired</span><strong>{onSite}</strong></div>
-            <div className="nx-track-item wide"><span>Project time</span><strong>{projectTime}%</strong><div className="nx-track-bar"><i style={{ width: `${projectTime}%` }} /></div></div>
-            <div className="nx-track-item"><span>Output</span><strong>{output}%</strong></div>
-          </div>
-        </div>
-        <div className="nx-kpis">
-          <article><strong>{employees.length}</strong><span>Employee</span></article>
-          <article><strong>{onSite}</strong><span>Hirings</span></article>
-          <article><strong>{pendingTasks.length + completedLeave + onLeave}</strong><span>Projects</span></article>
+          <p className="eyebrow">Thilafushi Industrial Complex</p>
+          <h1>HR Overview</h1>
+          <p className="overview-sub">Live summary of workforce status, leave activity, and record completeness.</p>
         </div>
       </div>
 
-      <div className="nx-grid">
-        <article className="nx-profile-card">
-          <div className="nx-profile-photo"><span>{employees[0]?.fullName?.[0] ?? 'E'}</span></div>
-          <div className="nx-profile-meta">
-            <strong>{employees[0]?.fullName ?? 'Employee'}</strong>
-            <p>{employees[0]?.designation ?? 'Team Member'}</p>
-            <button type="button">$1,200</button>
+      <div className="overview-stats-row">
+        <div className="ov-stat ov-stat--purple">
+          <strong>{employees.length}</strong>
+          <span>Total Employees</span>
+        </div>
+        <div className="ov-stat ov-stat--green">
+          <strong>{onSite}</strong>
+          <span>On Site</span>
+        </div>
+        <div className="ov-stat ov-stat--blue">
+          <strong>{onLeave}</strong>
+          <span>On Leave</span>
+        </div>
+        <div className="ov-stat ov-stat--orange">
+          <strong>{offSite}</strong>
+          <span>Off Site</span>
+        </div>
+        <div className="ov-stat ov-stat--red">
+          <strong>{pendingEmployees.length}</strong>
+          <span>Pending Records</span>
+        </div>
+        <div className="ov-stat ov-stat--teal">
+          <strong>{leaveRequests.length}</strong>
+          <span>Leave Requests</span>
+        </div>
+        <div className="ov-stat ov-stat--indigo">
+          <strong>{activeLeaves.length}</strong>
+          <span>Active Leaves</span>
+        </div>
+        <div className="ov-stat ov-stat--slate">
+          <strong>{leaveHistory.length}</strong>
+          <span>Leave History</span>
+        </div>
+      </div>
+
+      <div className="overview-grid-2">
+        <article className="overview-panel">
+          <h3>Site Presence</h3>
+          <div className="ov-presence-bar">
+            <div className="ov-bar-segment ov-bar-green" style={{ width: `${onSitePct}%` }} title={`On Site: ${onSite}`} />
+            <div className="ov-bar-segment ov-bar-blue" style={{ width: `${employees.length ? Math.round((onLeave / employees.length) * 100) : 0}%` }} title={`On Leave: ${onLeave}`} />
+            <div className="ov-bar-segment ov-bar-orange" style={{ width: `${employees.length ? Math.round((offSite / employees.length) * 100) : 0}%` }} title={`Off Site: ${offSite}`} />
           </div>
-          <div className="nx-profile-list">
-            <div><span>Pension contributions</span><em>{onSite}</em></div>
-            <div><span>Devices</span><em>{employees.length > 0 ? '1' : '0'}</em></div>
-            <div><span>Compensation Summary</span><em>View</em></div>
-            <div><span>Employee Benefits</span><em>View</em></div>
+          <div className="ov-legend">
+            <span className="ov-dot green" />On Site ({onSite})
+            <span className="ov-dot blue" />On Leave ({onLeave})
+            <span className="ov-dot orange" />Off Site ({offSite})
           </div>
+          <div className="ov-site-pct">{onSitePct}% workforce on site</div>
         </article>
 
-        <div className="nx-center-stack">
-          <div className="nx-cards-row">
-            <article className="nx-widget">
-              <header><h3>Progress</h3><span>↗</span></header>
-              <div className="nx-progress-head"><strong>{weeklyHours}h</strong><small>Work Time This week</small></div>
-              <div className="nx-week-bars">
-                {[32, 46, 38, 58, 44, 66, 50].map((height, index) => <i key={index} style={{ height: `${height}%` }} />)}
+        <article className="overview-panel">
+          <h3>Record Completion</h3>
+          {employees.length === 0
+            ? <p className="ov-empty">No employees added yet.</p>
+            : <>
+                <div className="ov-completion-bar">
+                  <div style={{ width: `${Math.round(((employees.length - pendingEmployees.length) / employees.length) * 100)}%` }} />
+                </div>
+                <div className="ov-completion-label">
+                  <span>{employees.length - pendingEmployees.length} complete</span>
+                  <span>{pendingEmployees.length} pending</span>
+                </div>
+                {pendingEmployees.length > 0 && (
+                  <ul className="ov-list">
+                    {pendingEmployees.slice(0, 5).map((employee) => (
+                      <li key={employee.employeeId}>
+                        <span>{employee.fullName || 'Unnamed'}</span>
+                        <small>{getPendingTasks(employee).join(', ')}</small>
+                      </li>
+                    ))}
+                    {pendingEmployees.length > 5 && <li className="ov-more">+ {pendingEmployees.length - 5} more pending</li>}
+                  </ul>
+                )}
+              </>
+          }
+        </article>
+
+        <article className="overview-panel">
+          <h3>Employees by Section</h3>
+          {deptCounts.length === 0
+            ? <p className="ov-empty">No department data yet.</p>
+            : <div className="ov-dept-bars">
+                {deptCounts.map(([dept, count]) => (
+                  <div className="dept-bar-item" key={dept}>
+                    <span className="dept-bar-label">{dept}</span>
+                    <div className="dept-bar-track">
+                      <div className="dept-bar-fill" style={{ width: `${Math.round((count / maxDeptCount) * 100)}%` }} />
+                    </div>
+                    <span className="dept-bar-count">{count}</span>
+                  </div>
+                ))}
               </div>
-            </article>
+          }
+        </article>
 
-            <article className="nx-widget">
-              <header><h3>Time tracker</h3><span>↗</span></header>
-              <div className="nx-time-ring"><div><strong>02:35</strong><small>Work Time</small></div></div>
-              <div className="nx-player"><button type="button">▶</button><button type="button">⏸</button><button type="button">◼</button></div>
-            </article>
-          </div>
-
-          <article className="nx-schedule">
-            <div className="nx-month-strip"><span>August</span><span>September 2024</span><span>October</span></div>
-            <div className="nx-event-row"><strong>Weekly Team Sync</strong><small>Discuss progress and priorities</small></div>
-            <div className="nx-event-row light"><strong>Onboarding Session</strong><small>Introduction for new staff</small></div>
-          </article>
-        </div>
-
-        <article className="nx-onboarding">
-          <div className="nx-onboard-head"><h3>Onboarding</h3><strong>18%</strong></div>
-          <div className="nx-onboard-gauge"><span style={{ width: '30%' }} /><span style={{ width: '25%' }} /><span style={{ width: '45%' }} /></div>
-          <div className="nx-onboard-panel">
-            <header><strong>Onboarding Task</strong><span>2/8</span></header>
-            <ul>
-              {[...leaveRequests, ...activeLeaves].slice(0, 4).map((record) => <li key={record.id}><span>{record.name}</span><small>{record.department}</small></li>)}
-            </ul>
-          </div>
+        <article className="overview-panel">
+          <h3>Recent Leave Requests</h3>
+          {recentLeave.length === 0
+            ? <p className="ov-empty">No leave requests yet.</p>
+            : <ul className="ov-list">
+                {recentLeave.map((record) => (
+                  <li key={record.id}>
+                    <span>{record.name}</span>
+                    <small>{record.department} · {leaveTypeLabel(record.leaveTypeCode)} · {formatDateDisplay(record.departureDate)}</small>
+                    <StatusBadge status={record.step} />
+                  </li>
+                ))}
+              </ul>
+          }
         </article>
       </div>
     </section>
@@ -612,40 +552,52 @@ function EmployeeFormModal({ form, mode, onClose, onSave, setForm }: {
 }) {
   const update = (key: keyof EmployeeForm, value: string) => {
     const next = { ...form, [key]: value }
-    if (key === 'nationality' && value === 'Maldivian') next.workPermitNo = ''
+    if (key === 'nationality' && value === 'MALDIVES') next.workPermitNo = ''
     setForm(next)
   }
-  const wpDisabled = form.nationality === 'Maldivian'
+  const wpDisabled = form.nationality === 'MALDIVES'
 
   return (
     <div className="modal-backdrop" role="presentation">
-      <section className="registration-modal wide-modal" role="dialog" aria-modal="true" aria-labelledby="registration-title">
+      <section className="registration-modal extra-wide" role="dialog" aria-modal="true" aria-labelledby="registration-title">
         <div className="modal-header">
           <div>
             <p className="eyebrow">{mode === 'add' ? 'Initial registration' : 'Update employee'}</p>
             <h2 id="registration-title">Employee Registration Form</h2>
-            <p>Structured like the registration PDF: save incomplete data now and complete the record later.</p>
+            <p>Save incomplete data now and complete the record later.</p>
           </div>
-          <button className="icon-button" onClick={onClose} type="button">x</button>
+          <button className="icon-button" onClick={onClose} type="button">✕</button>
         </div>
 
-        <div className="form-section"><h3>Personal Details</h3><div className="form-grid">
-          <label><span>Full Name</span><input disabled={mode === 'edit'} value={form.fullName} onChange={(event) => update('fullName', event.target.value)} /></label>
-          <label><span>Date of Birth</span><input type="date" value={form.dateOfBirth} onChange={(event) => update('dateOfBirth', event.target.value)} /></label>
-          <label><span>Contact Details</span><input value={form.mobileNo} onChange={(event) => update('mobileNo', event.target.value)} /></label>
-          <label><span>Nationality</span><select value={form.nationality} onChange={(event) => update('nationality', event.target.value)}>{nationalities.map((item) => <option key={item}>{item}</option>)}</select></label>
-          <label><span>Gender</span><select value={form.gender ?? ''} onChange={(event) => update('gender', event.target.value)}><option></option><option>Male</option><option>Female</option></select></label>
-          <label><span>NIC/PP No</span><input value={form.nicPassportNo} onChange={(event) => update('nicPassportNo', event.target.value)} /></label>
-        </div></div>
+        <div className="form-section">
+          <h3>Personal Details</h3>
+          <div className="form-grid">
+            <label className="full-field"><span>Full Name</span><input disabled={mode === 'edit'} value={form.fullName} onChange={(event) => update('fullName', event.target.value)} placeholder="Enter full name as per passport/NIC" /></label>
+            <label><span>Date of Birth</span><input type="date" value={form.dateOfBirth} onChange={(event) => update('dateOfBirth', event.target.value)} /></label>
+            <label><span>Gender</span><select value={form.gender ?? ''} onChange={(event) => update('gender', event.target.value)}><option value="">Select gender</option><option>Male</option><option>Female</option></select></label>
+            <label><span>Nationality</span><select value={form.nationality} onChange={(event) => update('nationality', event.target.value)}>{nationalities.map((item) => <option key={item}>{item}</option>)}</select></label>
+            <label><span>NIC / Passport No</span><input value={form.nicPassportNo} onChange={(event) => update('nicPassportNo', event.target.value)} placeholder="NIC or passport number" /></label>
+            <label><span>Mobile No</span><input value={form.mobileNo} onChange={(event) => update('mobileNo', event.target.value)} placeholder="+960 xxx xxxx" /></label>
+            <label className="full-field"><span>Permanent Address</span><input value={form.permanentAddress ?? ''} onChange={(event) => update('permanentAddress', event.target.value)} placeholder="Home island / city" /></label>
+            <label className="full-field"><span>Present Address</span><input value={form.presentAddress ?? ''} onChange={(event) => update('presentAddress', event.target.value)} placeholder="Current residence on site or nearby" /></label>
+          </div>
+        </div>
 
-        <div className="form-section"><h3>Employment Details</h3><div className="form-grid">
-          <label><span>Employee ID</span><input value={form.employeeId} onChange={(event) => update('employeeId', event.target.value)} /></label>
-          <label><span>Department</span><select value={form.department} onChange={(event) => update('department', event.target.value)}>{departmentsList.map((item) => <option key={item}>{item}</option>)}</select></label>
-          <label><span>Designation</span><input value={form.designation} onChange={(event) => update('designation', event.target.value)} /></label>
-          <label><span>Date of Join</span><input type="date" value={form.dateOfJoin} onChange={(event) => update('dateOfJoin', event.target.value)} /></label>
-          <label><span>WP No</span><input disabled={wpDisabled} value={wpDisabled ? '' : form.workPermitNo} onChange={(event) => update('workPermitNo', event.target.value)} /></label>
-          <label><span>Site Status</span><select value={form.siteStatus} onChange={(event) => update('siteStatus', event.target.value as SiteStatus)}><option>On Site</option><option>Off Site</option><option>On Leave</option></select></label>
-        </div></div>
+        <div className="form-section">
+          <h3>Employment Details</h3>
+          <div className="form-grid">
+            <label><span>Employee ID</span><input value={form.employeeId} onChange={(event) => update('employeeId', event.target.value)} placeholder="e.g. TIC-0001" /></label>
+            <label><span>Section / Department</span><select value={form.department} onChange={(event) => update('department', event.target.value)}>{departmentsList.map((item) => <option key={item}>{item}</option>)}</select></label>
+            <label><span>Designation</span><input value={form.designation} onChange={(event) => update('designation', event.target.value)} placeholder="Job title" /></label>
+            <label><span>Date of Join</span><input type="date" value={form.dateOfJoin} onChange={(event) => update('dateOfJoin', event.target.value)} /></label>
+            <label><span>WP No</span><input disabled={wpDisabled} placeholder={wpDisabled ? 'N/A — Maldives national' : 'Work permit number'} value={wpDisabled ? '' : form.workPermitNo} onChange={(event) => update('workPermitNo', event.target.value)} /></label>
+            <label><span>Site Status</span><select value={form.siteStatus} onChange={(event) => update('siteStatus', event.target.value as SiteStatus)}><option>On Site</option><option>Off Site</option><option>On Leave</option></select></label>
+            <label><span>Qualification</span><input value={form.qualification ?? ''} onChange={(event) => update('qualification', event.target.value)} placeholder="Highest education level" /></label>
+            <label><span>Experience</span><input value={form.experience ?? ''} onChange={(event) => update('experience', event.target.value)} placeholder="Years of experience" /></label>
+            <label className="full-field"><span>Emergency Contact</span><input value={form.emergencyContact ?? ''} onChange={(event) => update('emergencyContact', event.target.value)} placeholder="Name and phone number" /></label>
+            <label className="full-field"><span>Bank Details</span><input value={form.bankDetails ?? ''} onChange={(event) => update('bankDetails', event.target.value)} placeholder="Bank name, account number" /></label>
+          </div>
+        </div>
 
         <div className="modal-actions">
           <button className="quiet-button light" onClick={onClose} type="button">Cancel</button>
@@ -655,6 +607,8 @@ function EmployeeFormModal({ form, mode, onClose, onSave, setForm }: {
     </div>
   )
 }
+
+type SortKey = 'employeeId' | 'fullName' | 'department' | 'designation' | 'nationality' | 'dateOfJoin' | 'siteStatus'
 
 function EmployeesPage({ employees, onAdd, onEdit, onExport, onImport, onTemplate, onShowTasks }: {
   employees: Employee[]
@@ -668,50 +622,129 @@ function EmployeesPage({ employees, onAdd, onEdit, onExport, onImport, onTemplat
   const [query, setQuery] = useState('')
   const [department, setDepartment] = useState('All Departments')
   const [status, setStatus] = useState('All Statuses')
+  const [nationality, setNationality] = useState('All Nationalities')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState<PageSize>(50)
+  const [sortKey, setSortKey] = useState<SortKey>('department')
+  const [sortAsc, setSortAsc] = useState(true)
+
   const departments = useMemo(() => ['All Departments', ...Array.from(new Set(employees.map((employee) => employee.department))).sort()], [employees])
+  const nationalityList = useMemo(() => ['All Nationalities', ...Array.from(new Set(employees.map((employee) => employee.nationality))).sort()], [employees])
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) { setSortAsc((prev) => !prev) } else { setSortKey(key); setSortAsc(true) }
+    setPage(1)
+  }
+
+  const SortTh = ({ col, label }: { col: SortKey; label: string }) => (
+    <th className={`sortable-th${sortKey === col ? ' sort-active' : ''}`} onClick={() => handleSort(col)}>
+      {label}<span className="sort-indicator">{sortKey === col ? (sortAsc ? ' ↑' : ' ↓') : ' ⇅'}</span>
+    </th>
+  )
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase()
     return [...employees].filter((employee) => {
       const haystack = [employee.employeeId, employee.fullName, employee.department, employee.designation, employee.nationality, employee.nicPassportNo, employee.workPermitNo, employee.mobileNo].join(' ').toLowerCase()
-      return haystack.includes(normalized) && (department === 'All Departments' || employee.department === department) && (status === 'All Statuses' || employee.siteStatus === status)
-    }).sort((a, b) => a.department.localeCompare(b.department) || a.fullName.localeCompare(b.fullName))
-  }, [department, employees, query, status])
+      return haystack.includes(normalized)
+        && (department === 'All Departments' || employee.department === department)
+        && (status === 'All Statuses' || employee.siteStatus === status)
+        && (nationality === 'All Nationalities' || employee.nationality === nationality)
+    }).sort((a, b) => {
+      const va = String(a[sortKey] ?? '').toLowerCase()
+      const vb = String(b[sortKey] ?? '').toLowerCase()
+      return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va)
+    })
+  }, [department, employees, nationality, query, sortAsc, sortKey, status])
 
   const totalPages = pageSize === 'All' ? 1 : Math.max(1, Math.ceil(filtered.length / pageSize))
   const safePage = Math.min(page, totalPages)
   const visibleRows = pageSize === 'All' ? filtered : filtered.slice((safePage - 1) * pageSize, safePage * pageSize)
   const setFilter = (setter: (value: string) => void, value: string) => { setter(value); setPage(1) }
 
+  const pendingCount = employees.filter((employee) => recordStatus(employee) === 'Pending').length
+
   return (
     <>
       <PageHeader eyebrow="Employee register" title="Employees" subtitle="TIC Employee Details in one place with site status" />
       <section className="employee-workspace">
         <div className="table-actions">
-          <div className="table-actions-left"><button className="primary-button" onClick={onTemplate} type="button">Template</button><button className="primary-button" onClick={onImport} type="button">Import</button></div>
-          <div className="table-actions-right"><button className="primary-button" onClick={onShowTasks} type="button">Pending Tasks</button><button className="primary-button" onClick={onExport} type="button">Export</button><button className="primary-button" onClick={onAdd} type="button">Add Employee</button></div>
+          <div className="table-actions-left">
+            <button className="primary-button" onClick={onTemplate} type="button">Template</button>
+            <button className="primary-button" onClick={onImport} type="button">Import</button>
+          </div>
+          <div className="table-actions-right">
+            <button className="primary-button" onClick={onShowTasks} type="button">
+              Pending Tasks{pendingCount > 0 && <span className="pending-count-badge" style={{ marginLeft: '6px' }}>{pendingCount}</span>}
+            </button>
+            <button className="primary-button" onClick={onExport} type="button">Export</button>
+            <button className="primary-button" onClick={onAdd} type="button">Add Employee</button>
+          </div>
         </div>
         <div className="table-toolbar employee-toolbar">
-          <label className="search-field"><span>Search</span><input onChange={(event) => setFilter(setQuery, event.target.value)} placeholder="Name, ID, department, designation, passport, permit..." type="search" value={query} /></label>
-          <label><span>Department</span><select onChange={(event) => setFilter(setDepartment, event.target.value)} value={department}>{departments.map((item) => <option key={item}>{item}</option>)}</select></label>
+          <label className="search-field"><span>Search</span><input onChange={(event) => setFilter(setQuery, event.target.value)} placeholder="Name, ID, section, designation, passport, permit..." type="search" value={query} /></label>
+          <label><span>Section</span><select onChange={(event) => setFilter(setDepartment, event.target.value)} value={department}>{departments.map((item) => <option key={item}>{item}</option>)}</select></label>
+          <label><span>Nationality</span><select onChange={(event) => setFilter(setNationality, event.target.value)} value={nationality}>{nationalityList.map((item) => <option key={item}>{item}</option>)}</select></label>
           <label><span>Status</span><select onChange={(event) => setFilter(setStatus, event.target.value)} value={status}>{['All Statuses', 'On Site', 'Off Site', 'On Leave'].map((item) => <option key={item}>{item}</option>)}</select></label>
           <label><span>Rows</span><select onChange={(event) => { setPageSize(event.target.value === 'All' ? 'All' : Number(event.target.value) as 50 | 100); setPage(1) }} value={pageSize}><option>50</option><option>100</option><option>All</option></select></label>
         </div>
         <div className="employee-table-shell">
           <table className="data-table employee-table">
-            <thead><tr><th>#</th><th>Employee ID</th><th>Full Name</th><th>Department</th><th>Designation</th><th>Nationality</th><th>NIC/PP No</th><th>WP No</th><th>Date of Join</th><th>Mobile No</th><th>Date of Birth</th><th>Age</th><th>Site Status</th><th>Action</th></tr></thead>
+            <thead>
+              <tr>
+                <th>#</th>
+                <SortTh col="employeeId" label="Employee ID" />
+                <SortTh col="fullName" label="Full Name" />
+                <SortTh col="department" label="Section" />
+                <th>Department</th>
+                <SortTh col="designation" label="Designation" />
+                <SortTh col="nationality" label="Nationality" />
+                <th>NIC/PP No</th>
+                <th>WP No</th>
+                <SortTh col="dateOfJoin" label="Date of Join" />
+                <th>Mobile No</th>
+                <th>Date of Birth</th>
+                <th>Age</th>
+                <SortTh col="siteStatus" label="Site Status" />
+                <th>Action</th>
+              </tr>
+            </thead>
             <tbody>
               {visibleRows.map((employee, index) => (
                 <tr className={`${recordStatus(employee) === 'Pending' ? 'pending-row' : ''} status-row-${employee.siteStatus.toLowerCase().replaceAll(' ', '-')}`} key={`${employee.employeeId}-${employee.fullName}`}>
-                  <td>{pageSize === 'All' ? index + 1 : (safePage - 1) * pageSize + index + 1}</td><td>{employee.employeeId || 'Pending'}</td><td>{employee.fullName}</td><td>{employee.department}</td><td>{employee.designation}</td><td>{employee.nationality}</td><td>{employee.nicPassportNo}</td><td>{employee.nationality === 'Maldivian' ? '' : employee.workPermitNo || 'Pending'}</td><td>{formatDateDisplay(employee.dateOfJoin)}</td><td>{employee.mobileNo}</td><td>{employee.dateOfBirth ? formatDateDisplay(employee.dateOfBirth) : '-'}</td><td>{calculateAge(employee.dateOfBirth)}</td><td><StatusBadge status={employee.siteStatus} /></td><td><button className="action-glyph edit" onClick={() => onEdit(employee)} type="button" title="Edit" aria-label="Edit employee">✎</button></td>
+                  <td>{pageSize === 'All' ? index + 1 : (safePage - 1) * pageSize + index + 1}</td>
+                  <td>{employee.employeeId || 'Pending'}</td>
+                  <td className="col-name">{employee.fullName}</td>
+                  <td>{employee.department}</td>
+                  <td className="col-dept">THILAFUSHI INDUSTRIAL COMPLEX</td>
+                  <td className="col-desig">{employee.designation}</td>
+                  <td>{employee.nationality}</td>
+                  <td>{employee.nicPassportNo}</td>
+                  <td>{employee.nationality === 'MALDIVES' ? '—' : employee.workPermitNo || 'Pending'}</td>
+                  <td>{formatDateDisplay(employee.dateOfJoin)}</td>
+                  <td>{employee.mobileNo}</td>
+                  <td>{employee.dateOfBirth ? formatDateDisplay(employee.dateOfBirth) : '—'}</td>
+                  <td>{calculateAge(employee.dateOfBirth)}</td>
+                  <td><StatusBadge status={employee.siteStatus} /></td>
+                  <td><button className="action-glyph edit" onClick={() => onEdit(employee)} type="button" title="Edit" aria-label="Edit employee">✎</button></td>
                 </tr>
               ))}
+              {visibleRows.length === 0 && (
+                <tr><td colSpan={15} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-3)' }}>No employees match the current filters.</td></tr>
+              )}
             </tbody>
           </table>
         </div>
-        {filtered.length > 0 && <div className="table-footer"><span>Showing {visibleRows.length ? (pageSize === 'All' ? 1 : (safePage - 1) * pageSize + 1) : 0}-{pageSize === 'All' ? filtered.length : Math.min(safePage * pageSize, filtered.length)} of {filtered.length}</span><div><button className="quiet-button light" disabled={safePage === 1 || pageSize === 'All'} onClick={() => setPage((current) => Math.max(1, current - 1))} type="button">Previous</button><strong>{safePage} / {totalPages}</strong><button className="quiet-button light" disabled={safePage === totalPages || pageSize === 'All'} onClick={() => setPage((current) => Math.min(totalPages, current + 1))} type="button">Next</button></div></div>}
+        {filtered.length > 0 && (
+          <div className="table-footer">
+            <span>Showing {visibleRows.length ? (pageSize === 'All' ? 1 : (safePage - 1) * pageSize + 1) : 0}–{pageSize === 'All' ? filtered.length : Math.min(safePage * pageSize, filtered.length)} of {filtered.length}</span>
+            <div>
+              <button className="quiet-button light" disabled={safePage === 1 || pageSize === 'All'} onClick={() => setPage((current) => Math.max(1, current - 1))} type="button">Previous</button>
+              <strong>{safePage} / {totalPages}</strong>
+              <button className="quiet-button light" disabled={safePage === totalPages || pageSize === 'All'} onClick={() => setPage((current) => Math.min(totalPages, current + 1))} type="button">Next</button>
+            </div>
+          </div>
+        )}
       </section>
     </>
   )
@@ -806,7 +839,7 @@ function PassportHandoverModal({
           employeeId: employee?.employeeId ?? '',
           name: employee?.fullName ?? '',
           department: employee?.department ?? departmentsList[0],
-          nationality: employee?.nationality ?? 'Maldivian',
+          nationality: employee?.nationality ?? 'MALDIVES',
           leaveTypeCode,
           departureDate,
           returnDate,
@@ -2839,9 +2872,40 @@ function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves:
   )
 }
 
-function PendingTasksModal({ employees, onClose }: { employees: Employee[]; onClose: () => void }) {
+function PendingTasksModal({ employees, onEdit, onClose }: { employees: Employee[]; onEdit: (employee: Employee) => void; onClose: () => void }) {
   const taskRows = employees.map((employee) => ({ employee, tasks: getPendingTasks(employee) })).filter((row) => row.tasks.length > 0)
-  return <div className="modal-backdrop" role="presentation"><section className="registration-modal pending-modal" role="dialog" aria-modal="true"><div className="modal-header"><div><p className="eyebrow">Record completion</p><h2>Pending Tasks</h2><p>Employees with missing registration details that need HR/admin follow-up.</p></div><button className="icon-button" onClick={onClose} type="button">x</button></div><div className="structured-list pending-task-list">{taskRows.map(({ employee, tasks }) => <article className="structured-row" key={`${employee.employeeId}-${employee.fullName}`}><div><strong>{employee.fullName}</strong><span>{employee.employeeId}</span></div><div><strong>{employee.department}</strong><span>{tasks.join(', ')}</span></div><StatusBadge status={recordStatus(employee)} /></article>)}</div></section></div>
+  return (
+    <div className="modal-backdrop" role="presentation">
+      <section className="registration-modal pending-modal" role="dialog" aria-modal="true">
+        <div className="modal-header">
+          <div>
+            <p className="eyebrow">Record completion</p>
+            <h2>Pending Tasks <span className="pending-count-badge">{taskRows.length}</span></h2>
+            <p>Employees with incomplete registration details. Click a name to open the edit form.</p>
+          </div>
+          <button className="icon-button" onClick={onClose} type="button">✕</button>
+        </div>
+        <div className="pending-task-list">
+          {taskRows.length === 0
+            ? <p style={{ textAlign: 'center', color: 'var(--text-3)', padding: '2rem 1rem' }}>✓ All employee records are complete</p>
+            : taskRows.map(({ employee, tasks }) => (
+              <div className="pending-task-row" key={`${employee.employeeId}-${employee.fullName}`}>
+                <div className="pending-task-info">
+                  <button className="pending-name-btn" type="button" onClick={() => { onEdit(employee); onClose() }}>
+                    {employee.fullName || 'Unnamed Employee'}
+                  </button>
+                  <span className="pending-task-id">{employee.employeeId || 'No ID'} · {employee.department}</span>
+                </div>
+                <div className="pending-task-fields">
+                  {tasks.map((task) => <span className="pending-field-chip" key={task}>{task}</span>)}
+                </div>
+              </div>
+            ))
+          }
+        </div>
+      </section>
+    </div>
+  )
 }
 
 function LoginPage({ onLogin }: { onLogin: () => void }) {
@@ -2928,9 +2992,21 @@ function LoginPage({ onLogin }: { onLogin: () => void }) {
   )
 }
 
+const pageIcons: Record<Page, string> = {
+  overview: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>`,
+  employees: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+  leave: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
+  operations: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>`,
+  activities: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>`,
+  termination: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`,
+  settings: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2"/></svg>`,
+}
+
 function App() {
   const [activePage, setActivePage] = useState<Page>('overview')
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [importResult, setImportResult] = useState<{ added: number; skipped: number } | null>(null)
   const [employees, setEmployees] = useState<Employee[]>(initialEmployees)
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequestRecord[]>(initialLeaveRequests)
   const [activeLeaves, setActiveLeaves] = useState<ActiveLeaveRecord[]>(initialActiveLeaves)
@@ -2951,7 +3027,7 @@ function App() {
   const [terminationDetails, setTerminationDetails] = useState<EnhancedTerminationRecord | CompletedTerminationRecord | null>(null)
 
   const saveEmployee = () => {
-    const employee = { ...employeeForm, employeeId: employeeForm.employeeId || `PENDING-${String(employees.length + 1).padStart(4, '0')}`, fullName: employeeForm.fullName || 'Pending Employee', designation: employeeForm.designation || 'Pending Designation', workPermitNo: employeeForm.nationality === 'Maldivian' ? '' : employeeForm.workPermitNo }
+    const employee = { ...employeeForm, employeeId: employeeForm.employeeId || `PENDING-${String(employees.length + 1).padStart(4, '0')}`, fullName: employeeForm.fullName || 'Pending Employee', designation: employeeForm.designation || 'Pending Designation', workPermitNo: employeeForm.nationality === 'MALDIVES' ? '' : employeeForm.workPermitNo }
     setEmployees((current) => employeeMode === 'edit' ? current.map((item) => item.employeeId === employee.employeeId ? employee : item) : [employee, ...current])
     setEmployeeForm(emptyEmployee)
     setShowEmployeeForm(false)
@@ -3148,9 +3224,9 @@ function App() {
   }
 
   const exportCsv = () => {
-    const headers = ['Employee ID', 'Full Name', 'Department', 'Designation', 'Nationality', 'NIC/PP No', 'WP No', 'Date of Join', 'Mobile No', 'Date of Birth', 'Age', 'Passport Status', 'Site Status', 'Record Status']
-    const rows = employees.map((employee) => [employee.employeeId, employee.fullName, employee.department, employee.designation, employee.nationality, employee.nicPassportNo, employee.nationality === 'Maldivian' ? '' : employee.workPermitNo, employee.dateOfJoin, employee.mobileNo, employee.dateOfBirth, calculateAge(employee.dateOfBirth), employee.passportStatus, employee.siteStatus, recordStatus(employee)])
-    downloadCsv('vhpl-tic-employees.csv', [headers, ...rows])
+    const headers = ['Employee ID', 'Full Name', 'Section', 'Department', 'Designation', 'Nationality', 'NIC/PP No', 'WP No', 'Date of Join', 'Mobile No', 'Date of Birth', 'Age', 'Site Status', 'Record Status']
+    const rows = employees.map((employee) => [employee.employeeId, employee.fullName, employee.department, 'THILAFUSHI INDUSTRIAL COMPLEX', employee.designation, employee.nationality, employee.nicPassportNo, employee.nationality === 'MALDIVES' ? '' : employee.workPermitNo, employee.dateOfJoin, employee.mobileNo, employee.dateOfBirth, calculateAge(employee.dateOfBirth), employee.siteStatus, recordStatus(employee)])
+    downloadCsv('tic-employees.csv', [headers, ...rows])
   }
 
   const importCsv = () => {
@@ -3162,55 +3238,122 @@ function App() {
       if (!file) return
       const reader = new FileReader()
       reader.onload = () => {
-        const imported = parseCsv(String(reader.result ?? '')).slice(1).map((row, index): Employee => ({
-          employeeId: row[0] || `PENDING-${String(employees.length + index + 1).padStart(4, '0')}`,
-          fullName: row[1] || 'Imported Employee',
-          department: row[2] || 'Operations',
-          designation: row[3] || 'Pending Assignment',
-          nationality: row[4] || 'Maldivian',
-          nicPassportNo: row[5] || '',
-          workPermitNo: row[4] === 'Maldivian' ? '' : row[6] || '',
-          dateOfJoin: row[7] || new Date().toISOString().slice(0, 10),
-          mobileNo: row[8] || '',
-          dateOfBirth: row[9] || '',
-          passportStatus: row[10] || 'With Employee',
-          siteStatus: row[11] === 'On Leave' || row[11] === 'Off Site' ? row[11] : 'On Site',
-        }))
-        setEmployees((current) => [...imported, ...current])
+        const allRows = parseCsv(String(reader.result ?? '')).slice(1)
+        setEmployees((current) => {
+          const existingIds = new Set(current.map((e) => e.employeeId).filter(Boolean))
+          let added = 0
+          let skipped = 0
+          const newOnes: Employee[] = []
+          allRows.forEach((row, index) => {
+            const eid = row[0] || `PENDING-${String(current.length + index + 1).padStart(4, '0')}`
+            if (row[0] && existingIds.has(row[0])) { skipped++; return }
+            existingIds.add(eid)
+            added++
+            newOnes.push({
+              employeeId: eid,
+              fullName: row[1] || 'Imported Employee',
+              department: row[2] || departmentsList[0],
+              designation: row[3] || 'Pending Assignment',
+              nationality: row[4] || 'MALDIVES',
+              nicPassportNo: row[5] || '',
+              workPermitNo: row[4] === 'MALDIVES' ? '' : row[6] || '',
+              dateOfJoin: row[7] || new Date().toISOString().slice(0, 10),
+              mobileNo: row[8] || '',
+              dateOfBirth: row[9] || '',
+              passportStatus: 'With Employee',
+              siteStatus: row[10] === 'On Leave' || row[10] === 'Off Site' ? row[10] : 'On Site',
+            })
+          })
+          setImportResult({ added, skipped })
+          return [...newOnes, ...current]
+        })
       }
       reader.readAsText(file)
     }
     input.click()
   }
 
-  const downloadTemplate = () => downloadCsv('vhpl-tic-employee-template.csv', [['Employee ID', 'Full Name', 'Department', 'Designation', 'Nationality', 'NIC/PP No', 'WP No', 'Date of Join', 'Mobile No', 'Date of Birth', 'Passport Status', 'Site Status']])
+  const downloadTemplate = () => downloadCsv('tic-employee-template.csv', [['Employee ID', 'Full Name', 'Section (Department)', 'Designation', 'Nationality', 'NIC/PP No', 'WP No (blank for Maldives)', 'Date of Join (YYYY-MM-DD)', 'Mobile No', 'Date of Birth (YYYY-MM-DD)', 'Site Status (On Site/Off Site/On Leave)']])
 
   if (!isLoggedIn) return <LoginPage onLogin={() => setIsLoggedIn(true)} />
 
-  return (
-    <div className="app-shell">
-      <header className="topbar">
-        <a className="brand" href="#top" aria-label="VHPL Thilafushi Industrial Complex home"><span className="brand-mark">VH</span><span><strong>HR REGISTER</strong><small>VHPL | Thilafushi Industrial Complex</small></span></a>
-        <nav className="page-tabs" aria-label="Primary sections">{pages.map((page) => <button className={activePage === page.id ? 'active' : ''} key={page.id} onClick={() => setActivePage(page.id)} type="button">{page.label}</button>)}</nav>
-        <div className="top-actions"><button className="quiet-button" onClick={() => setIsLoggedIn(false)} type="button">Logout</button></div>
-      </header>
+  const openEditEmployee = (employee: Employee) => {
+    setEmployeeMode('edit')
+    setEmployeeForm(employee)
+    setShowEmployeeForm(true)
+    setActivePage('employees')
+  }
 
-      <main className="workspace" id="top">
-        {activePage === 'overview' && <OverviewPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} />}
-        {activePage === 'employees' && <EmployeesPage employees={employees} onAdd={() => { setEmployeeMode('add'); setEmployeeForm(emptyEmployee); setShowEmployeeForm(true) }} onEdit={(employee) => { setEmployeeMode('edit'); setEmployeeForm(employee); setShowEmployeeForm(true) }} onExport={exportCsv} onImport={importCsv} onTemplate={downloadTemplate} onShowTasks={() => setShowPendingTasks(true)} />}
-        {activePage === 'leave' && <LeavePage leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} passportHandovers={passportHandovers} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onAddPassport={() => setEditingPassportRecord({ id: `PP-${Date.now()}`, employeeId: employees[0]?.employeeId ?? '', name: employees[0]?.fullName ?? '', department: employees[0]?.department ?? departmentsList[0], nationality: employees[0]?.nationality ?? 'Maldivian', leaveTypeCode: 'AL', departureDate: new Date().toISOString().slice(0, 10), returnDate: new Date().toISOString().slice(0, 10), days: 1, passportStep: 'Issued', givenDate: '', returnedDate: '', sentToHoDate: '', remarks: '' })} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onAdvanceRequestStep={advanceLeaveRequestStep} onHistoryConfirm={updateHistoryConfirmation} onEditPassport={(record) => setEditingPassportRecord(record)} onDeletePassport={deletePassportRecord} />}
-        {activePage === 'operations' && <OperationsPage employees={employees} />}
-        {activePage === 'activities' && <ActivitiesPage employees={employees} />}
-        {activePage === 'termination' && <TerminationPage noticeTerminations={noticeTerminations} completedTerminations={completedTerminations} onAdd={openAddTermination} onEdit={openEditTermination} onAdvanceStatus={advanceTerminationStatus} onDelete={deleteTermination} onViewDetails={(record) => setTerminationDetails(record)} />}
-        {activePage === 'settings' && <SettingsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} />}
-      </main>
+  return (
+    <div className={`app-shell${sidebarCollapsed ? ' sidebar-is-collapsed' : ''}`}>
+      <aside className={`sidebar${sidebarCollapsed ? ' sidebar--collapsed' : ''}`}>
+        <div className="sidebar-header">
+          <div className="sidebar-brand">
+            <span className="sidebar-logo">TIC</span>
+            {!sidebarCollapsed && <span className="sidebar-brand-text"><strong>HR Register</strong><small>Thilafushi Industrial Complex</small></span>}
+          </div>
+          <button className="sidebar-toggle" onClick={() => setSidebarCollapsed((c) => !c)} type="button" aria-label="Toggle sidebar">
+            {sidebarCollapsed ? '›' : '‹'}
+          </button>
+        </div>
+
+        <nav className="sidebar-nav">
+          {pages.map((page) => (
+            <button
+              className={`sidebar-item${activePage === page.id ? ' active' : ''}`}
+              key={page.id}
+              onClick={() => setActivePage(page.id)}
+              type="button"
+              title={sidebarCollapsed ? page.label : undefined}
+            >
+              <span className="sidebar-icon" dangerouslySetInnerHTML={{ __html: pageIcons[page.id] }} />
+              {!sidebarCollapsed && <span className="sidebar-label">{page.label}</span>}
+            </button>
+          ))}
+        </nav>
+
+        <div className="sidebar-bottom">
+          <div className="sidebar-user" title={sidebarCollapsed ? 'admin' : undefined}>
+            <div className="sidebar-user-avatar">A</div>
+            {!sidebarCollapsed && <span className="sidebar-user-name">admin</span>}
+          </div>
+          <button className="sidebar-logout" onClick={() => setIsLoggedIn(false)} type="button" title={sidebarCollapsed ? 'Logout' : undefined}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            {!sidebarCollapsed && <span>Logout</span>}
+          </button>
+        </div>
+      </aside>
+
+      <div className="workspace">
+        <main className="workspace-inner" id="top">
+          {activePage === 'overview' && <OverviewPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} />}
+          {activePage === 'employees' && <EmployeesPage employees={employees} onAdd={() => { setEmployeeMode('add'); setEmployeeForm(emptyEmployee); setShowEmployeeForm(true) }} onEdit={openEditEmployee} onExport={exportCsv} onImport={importCsv} onTemplate={downloadTemplate} onShowTasks={() => setShowPendingTasks(true)} />}
+          {activePage === 'leave' && <LeavePage leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} passportHandovers={passportHandovers} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onAddPassport={() => setEditingPassportRecord({ id: `PP-${Date.now()}`, employeeId: employees[0]?.employeeId ?? '', name: employees[0]?.fullName ?? '', department: employees[0]?.department ?? departmentsList[0], nationality: employees[0]?.nationality ?? 'MALDIVES', leaveTypeCode: 'AL', departureDate: new Date().toISOString().slice(0, 10), returnDate: new Date().toISOString().slice(0, 10), days: 1, passportStep: 'Issued', givenDate: '', returnedDate: '', sentToHoDate: '', remarks: '' })} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onAdvanceRequestStep={advanceLeaveRequestStep} onHistoryConfirm={updateHistoryConfirmation} onEditPassport={(record) => setEditingPassportRecord(record)} onDeletePassport={deletePassportRecord} />}
+          {activePage === 'operations' && <OperationsPage employees={employees} />}
+          {activePage === 'activities' && <ActivitiesPage employees={employees} />}
+          {activePage === 'termination' && <TerminationPage noticeTerminations={noticeTerminations} completedTerminations={completedTerminations} onAdd={openAddTermination} onEdit={openEditTermination} onAdvanceStatus={advanceTerminationStatus} onDelete={deleteTermination} onViewDetails={(record) => setTerminationDetails(record)} />}
+          {activePage === 'settings' && <SettingsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} />}
+        </main>
+      </div>
 
       {showEmployeeForm && <EmployeeFormModal form={employeeForm} mode={employeeMode} onClose={() => setShowEmployeeForm(false)} onSave={saveEmployee} setForm={setEmployeeForm} />}
-      {showPendingTasks && <PendingTasksModal employees={employees} onClose={() => setShowPendingTasks(false)} />}
+      {showPendingTasks && <PendingTasksModal employees={employees} onEdit={openEditEmployee} onClose={() => setShowPendingTasks(false)} />}
       {showLeaveForm && <LeaveFormModal employees={employees} initialRecord={editingLeaveRequest} onClose={() => { setShowLeaveForm(false); setEditingLeaveRequest(null) }} onSave={saveLeaveRequest} />}
       {editingPassportRecord && <PassportHandoverModal record={editingPassportRecord} employees={employees} onClose={() => setEditingPassportRecord(null)} onSave={savePassportRecord} />}
       {showTerminationForm && editingTermination && <TerminationFormModal mode={terminationFormMode} record={editingTermination} employees={employees} onClose={() => { setShowTerminationForm(false); setEditingTermination(null) }} onSave={saveTerminationRecord} />}
       {terminationDetails && <TerminationDetailsModal record={terminationDetails} onClose={() => setTerminationDetails(null)} />}
+
+      {importResult && (
+        <div className="import-toast-backdrop" role="presentation" onClick={() => setImportResult(null)}>
+          <div className="import-toast" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+            <div className="import-toast-icon">✓</div>
+            <h3>Import Complete</h3>
+            <p><strong>{importResult.added}</strong> employee{importResult.added !== 1 ? 's' : ''} added</p>
+            {importResult.skipped > 0 && <p><strong>{importResult.skipped}</strong> duplicate{importResult.skipped !== 1 ? 's' : ''} skipped</p>}
+            <button className="primary-button" onClick={() => setImportResult(null)} type="button">Done</button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
