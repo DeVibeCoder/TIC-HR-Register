@@ -2968,16 +2968,7 @@ button.step-pill:hover { filter: brightness(0.98); }
   overflow: hidden;
 }
 
-.sidebar {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow-y: auto;
-  border-right: 1px solid var(--line);
-  background: linear-gradient(180deg, #ede9fe 0%, #99f6e4 100%);
-  padding: 10px 8px 12px;
-  gap: 2px;
-}
+/* old sidebar block – properties handled by the top-of-file rule */
 
 .brand-box {
   display: flex;
@@ -3024,14 +3015,7 @@ button.step-pill:hover { filter: brightness(0.98); }
   flex: 1;
 }
 
-.sidebar-bottom {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  padding-top: 8px;
-  border-top: 1px solid rgba(148, 163, 184, 0.5);
-  margin-top: 8px;
-}
+/* old sidebar-bottom – handled by top-of-file rule */
 
 .nav-item {
   display: block;

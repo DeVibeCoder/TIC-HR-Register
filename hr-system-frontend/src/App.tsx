@@ -729,12 +729,14 @@ function EmployeesPage({ employees, onAdd, onEdit, onExport, onImport, onTemplat
                   <td><button className="action-glyph edit" onClick={() => onEdit(employee)} type="button" title="Edit" aria-label="Edit employee">✎</button></td>
                 </tr>
               ))}
-              {visibleRows.length === 0 && (
-                <tr><td colSpan={15} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-3)' }}>No employees match the current filters.</td></tr>
-              )}
             </tbody>
           </table>
         </div>
+        {visibleRows.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '2.5rem 1rem', color: '#94a3b8', fontSize: '0.85rem' }}>
+            {employees.length === 0 ? '📋 No employees added yet. Use Add Employee or Import to get started.' : '🔍 No employees match the current filters.'}
+          </div>
+        )}
         {filtered.length > 0 && (
           <div className="table-footer">
             <span>Showing {visibleRows.length ? (pageSize === 'All' ? 1 : (safePage - 1) * pageSize + 1) : 0}–{pageSize === 'All' ? filtered.length : Math.min(safePage * pageSize, filtered.length)} of {filtered.length}</span>
