@@ -693,10 +693,9 @@ function EmployeesPage({ employees, onAdd, onEdit, onExport, onImport, onTemplat
             <thead>
               <tr>
                 <th>#</th>
-                <SortTh col="employeeId" label="Employee ID" />
+                <SortTh col="employeeId" label="Emp ID" />
                 <SortTh col="fullName" label="Full Name" />
                 <SortTh col="department" label="Section" />
-                <th>Department</th>
                 <SortTh col="designation" label="Designation" />
                 <SortTh col="nationality" label="Nationality" />
                 <th>NIC/PP No</th>
@@ -716,7 +715,6 @@ function EmployeesPage({ employees, onAdd, onEdit, onExport, onImport, onTemplat
                   <td>{employee.employeeId || 'Pending'}</td>
                   <td className="col-name">{employee.fullName}</td>
                   <td>{employee.department}</td>
-                  <td className="col-dept">THILAFUSHI INDUSTRIAL COMPLEX</td>
                   <td className="col-desig">{employee.designation}</td>
                   <td>{employee.nationality}</td>
                   <td>{employee.nicPassportNo}</td>
@@ -734,7 +732,7 @@ function EmployeesPage({ employees, onAdd, onEdit, onExport, onImport, onTemplat
         </div>
         {visibleRows.length === 0 && (
           <div style={{ textAlign: 'center', padding: '2.5rem 1rem', color: '#94a3b8', fontSize: '0.85rem' }}>
-            {employees.length === 0 ? '📋 No employees added yet. Use Add Employee or Import to get started.' : '🔍 No employees match the current filters.'}
+            {employees.length === 0 ? 'No employees added yet — use Add Employee or Import to get started.' : 'No employees match the current filters.'}
           </div>
         )}
         {filtered.length > 0 && (
@@ -2742,10 +2740,11 @@ function UserFormModal({ user, onClose, onSave }: {
   )
 }
 
-function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves: _al }: {
+function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves: _al, onReset }: {
   employees: Employee[]
   leaveRequests: LeaveRequestRecord[]
   activeLeaves: ActiveLeaveRecord[]
+  onReset: () => void
 }) {
   const [users, setUsers] = useState<AppUser[]>(initialAppUsers)
   const [editing, setEditing] = useState<AppUser | null>(null)
@@ -2870,6 +2869,20 @@ function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves:
           onSave={saveUser}
         />
       )}
+
+      <div className="settings-danger-zone">
+        <div className="danger-zone-header">
+          <h2>Danger Zone</h2>
+          <p>Irreversible actions. Proceed with caution.</p>
+        </div>
+        <div className="danger-zone-row">
+          <div>
+            <strong>Reset All Data</strong>
+            <p>Permanently delete all employees, leave records, terminations, and operations data. This cannot be undone.</p>
+          </div>
+          <button className="danger-button" type="button" onClick={onReset}>Reset All Data</button>
+        </div>
+      </div>
     </div>
   )
 }
@@ -3019,14 +3032,19 @@ function App() {
   }
   const login = () => { localStorage.setItem('tic_auth', '1'); setIsLoggedIn(true) }
   const logout = () => { localStorage.removeItem('tic_auth'); setIsLoggedIn(false) }
-  const [importResult, setImportResult] = useState<{ added: number; skipped: number } | null>(null)
-  const [employees, setEmployees] = useState<Employee[]>(initialEmployees)
-  const [leaveRequests, setLeaveRequests] = useState<LeaveRequestRecord[]>(initialLeaveRequests)
-  const [activeLeaves, setActiveLeaves] = useState<ActiveLeaveRecord[]>(initialActiveLeaves)
-  const [leaveHistory, setLeaveHistory] = useState<LeaveHistoryRecord[]>(initialLeaveHistory)
-  const [passportHandovers, setPassportHandovers] = useState<PassportHandoverRecord[]>(initialPassportHandovers)
-  const [noticeTerminations, setNoticeTerminations] = useState<EnhancedTerminationRecord[]>(initialNoticeTerminations)
-  const [completedTerminations, setCompletedTerminations] = useState<CompletedTerminationRecord[]>(initialCompletedTerminations)
+  const [importResult, setImportResult] = useState<{ added: number; updated: number; skipped: number } | null>(null)
+
+  function loadStore<T>(key: string, fallback: T[]): T[] {
+    try { const s = localStorage.getItem(key); return s ? (JSON.parse(s) as T[]) : fallback } catch { return fallback }
+  }
+
+  const [employees, setEmployees] = useState<Employee[]>(() => loadStore('tic_employees', initialEmployees))
+  const [leaveRequests, setLeaveRequests] = useState<LeaveRequestRecord[]>(() => loadStore('tic_leave_req', initialLeaveRequests))
+  const [activeLeaves, setActiveLeaves] = useState<ActiveLeaveRecord[]>(() => loadStore('tic_leave_active', initialActiveLeaves))
+  const [leaveHistory, setLeaveHistory] = useState<LeaveHistoryRecord[]>(() => loadStore('tic_leave_history', initialLeaveHistory))
+  const [passportHandovers, setPassportHandovers] = useState<PassportHandoverRecord[]>(() => loadStore('tic_passport', initialPassportHandovers))
+  const [noticeTerminations, setNoticeTerminations] = useState<EnhancedTerminationRecord[]>(() => loadStore('tic_term_notice', initialNoticeTerminations))
+  const [completedTerminations, setCompletedTerminations] = useState<CompletedTerminationRecord[]>(() => loadStore('tic_term_done', initialCompletedTerminations))
   const [showEmployeeForm, setShowEmployeeForm] = useState(false)
   const [employeeMode, setEmployeeMode] = useState<'add' | 'edit'>('add')
   const [employeeForm, setEmployeeForm] = useState<EmployeeForm>(emptyEmployee)
@@ -3038,6 +3056,28 @@ function App() {
   const [showTerminationForm, setShowTerminationForm] = useState(false)
   const [terminationFormMode, setTerminationFormMode] = useState<'add' | 'edit'>('add')
   const [terminationDetails, setTerminationDetails] = useState<EnhancedTerminationRecord | CompletedTerminationRecord | null>(null)
+
+  // Persist all data to localStorage on every change
+  useEffect(() => { localStorage.setItem('tic_employees', JSON.stringify(employees)) }, [employees])
+  useEffect(() => { localStorage.setItem('tic_leave_req', JSON.stringify(leaveRequests)) }, [leaveRequests])
+  useEffect(() => { localStorage.setItem('tic_leave_active', JSON.stringify(activeLeaves)) }, [activeLeaves])
+  useEffect(() => { localStorage.setItem('tic_leave_history', JSON.stringify(leaveHistory)) }, [leaveHistory])
+  useEffect(() => { localStorage.setItem('tic_passport', JSON.stringify(passportHandovers)) }, [passportHandovers])
+  useEffect(() => { localStorage.setItem('tic_term_notice', JSON.stringify(noticeTerminations)) }, [noticeTerminations])
+  useEffect(() => { localStorage.setItem('tic_term_done', JSON.stringify(completedTerminations)) }, [completedTerminations])
+
+  const resetAllData = () => {
+    if (!window.confirm('This will permanently delete ALL data (employees, leave records, etc.). Are you sure?')) return
+    const keys = ['tic_employees','tic_leave_req','tic_leave_active','tic_leave_history','tic_passport','tic_term_notice','tic_term_done']
+    keys.forEach((k) => localStorage.removeItem(k))
+    setEmployees([])
+    setLeaveRequests([])
+    setActiveLeaves([])
+    setLeaveHistory([])
+    setPassportHandovers([])
+    setNoticeTerminations([])
+    setCompletedTerminations([])
+  }
 
   const saveEmployee = () => {
     const employee = { ...employeeForm, employeeId: employeeForm.employeeId || `PENDING-${String(employees.length + 1).padStart(4, '0')}`, fullName: employeeForm.fullName || 'Pending Employee', designation: employeeForm.designation || 'Pending Designation', workPermitNo: employeeForm.nationality === 'MALDIVES' ? '' : employeeForm.workPermitNo }
@@ -3236,9 +3276,17 @@ function App() {
     setNoticeTerminations((current) => current.filter((record) => record.id !== id))
   }
 
+  // Convert DD-MM-YYYY or DD/MM/YYYY → YYYY-MM-DD for storage; pass through if already ISO
+  const parseImportDate = (raw: string) => {
+    if (!raw) return ''
+    const dmY = /^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/.exec(raw.trim())
+    if (dmY) return `${dmY[3]}-${dmY[2].padStart(2,'0')}-${dmY[1].padStart(2,'0')}`
+    return raw.trim() // already YYYY-MM-DD or blank
+  }
+
   const exportCsv = () => {
-    const headers = ['Employee ID', 'Full Name', 'Section', 'Department', 'Designation', 'Nationality', 'NIC/PP No', 'WP No', 'Date of Join', 'Mobile No', 'Date of Birth', 'Age', 'Site Status', 'Record Status']
-    const rows = employees.map((employee) => [employee.employeeId, employee.fullName, employee.department, 'THILAFUSHI INDUSTRIAL COMPLEX', employee.designation, employee.nationality, employee.nicPassportNo, employee.nationality === 'MALDIVES' ? '' : employee.workPermitNo, employee.dateOfJoin, employee.mobileNo, employee.dateOfBirth, calculateAge(employee.dateOfBirth), employee.siteStatus, recordStatus(employee)])
+    const headers = ['Emp ID', 'Full Name', 'Section', 'Department', 'Designation', 'Nationality', 'NIC/PP No', 'WP No', 'Date of Join', 'Mobile No', 'Date of Birth', 'Age', 'Site Status', 'Record Status']
+    const rows = employees.map((e) => [e.employeeId, e.fullName, e.department, 'THILAFUSHI INDUSTRIAL COMPLEX', e.designation, e.nationality, e.nicPassportNo, e.nationality === 'MALDIVES' ? '' : e.workPermitNo, formatDateDisplay(e.dateOfJoin), e.mobileNo, e.dateOfBirth ? formatDateDisplay(e.dateOfBirth) : '', calculateAge(e.dateOfBirth), e.siteStatus, recordStatus(e)])
     downloadCsv('tic-employees.csv', [headers, ...rows])
   }
 
@@ -3252,33 +3300,38 @@ function App() {
       const reader = new FileReader()
       reader.onload = () => {
         const allRows = parseCsv(String(reader.result ?? '')).slice(1)
+        let added = 0; let updated = 0; let skipped = 0
         setEmployees((current) => {
-          const existingIds = new Set(current.map((e) => e.employeeId).filter(Boolean))
-          let added = 0
-          let skipped = 0
-          const newOnes: Employee[] = []
+          const byId = new Map(current.map((e) => [e.employeeId, e]))
+          const result = [...current]
           allRows.forEach((row, index) => {
+            if (!row[0] && !row[1]) { skipped++; return } // blank row
             const eid = row[0] || `PENDING-${String(current.length + index + 1).padStart(4, '0')}`
-            if (row[0] && existingIds.has(row[0])) { skipped++; return }
-            existingIds.add(eid)
-            added++
-            newOnes.push({
+            const nat = (row[4] || 'MALDIVES').toUpperCase()
+            const parsed: Employee = {
               employeeId: eid,
               fullName: row[1] || 'Imported Employee',
               department: row[2] || departmentsList[0],
-              designation: row[3] || 'Pending Assignment',
-              nationality: row[4] || 'MALDIVES',
+              designation: row[3] || '',
+              nationality: nat,
               nicPassportNo: row[5] || '',
-              workPermitNo: row[4] === 'MALDIVES' ? '' : row[6] || '',
-              dateOfJoin: row[7] || new Date().toISOString().slice(0, 10),
+              workPermitNo: nat === 'MALDIVES' ? '' : (row[6] || ''),
+              dateOfJoin: parseImportDate(row[7]) || new Date().toISOString().slice(0, 10),
               mobileNo: row[8] || '',
-              dateOfBirth: row[9] || '',
+              dateOfBirth: parseImportDate(row[9]) || '',
               passportStatus: 'With Employee',
-              siteStatus: row[10] === 'On Leave' || row[10] === 'Off Site' ? row[10] : 'On Site',
-            })
+              siteStatus: row[10] === 'On Leave' || row[10] === 'Off Site' ? row[10] as SiteStatus : 'On Site',
+            }
+            if (row[0] && byId.has(row[0])) {
+              // update existing record — merge, preserve fields not in CSV
+              const idx = result.findIndex((e) => e.employeeId === row[0])
+              if (idx >= 0) { result[idx] = { ...result[idx], ...parsed }; updated++ }
+            } else {
+              result.unshift(parsed); byId.set(eid, parsed); added++
+            }
           })
-          setImportResult({ added, skipped })
-          return [...newOnes, ...current]
+          setImportResult({ added, updated, skipped })
+          return result
         })
       }
       reader.readAsText(file)
@@ -3286,7 +3339,10 @@ function App() {
     input.click()
   }
 
-  const downloadTemplate = () => downloadCsv('tic-employee-template.csv', [['Employee ID', 'Full Name', 'Section (Department)', 'Designation', 'Nationality', 'NIC/PP No', 'WP No (blank for Maldives)', 'Date of Join (YYYY-MM-DD)', 'Mobile No', 'Date of Birth (YYYY-MM-DD)', 'Site Status (On Site/Off Site/On Leave)']])
+  const downloadTemplate = () => downloadCsv('tic-employee-template.csv', [
+    ['Emp ID', 'Full Name', 'Section', 'Designation', 'Nationality', 'NIC/PP No', 'WP No', 'Date of Join', 'Mobile No', 'Date of Birth', 'Site Status'],
+    ['TIC-0001', 'Example Name', 'ADMINISTRATION', 'Manager', 'MALDIVES', 'A123456', '', '01-01-2024', '+960 777 0000', '15-06-1990', 'On Site'],
+  ])
 
   if (!isLoggedIn) return <LoginPage onLogin={login} />
 
@@ -3365,7 +3421,7 @@ function App() {
           {activePage === 'operations' && <OperationsPage employees={employees} />}
           {activePage === 'activities' && <ActivitiesPage employees={employees} />}
           {activePage === 'termination' && <TerminationPage noticeTerminations={noticeTerminations} completedTerminations={completedTerminations} onAdd={openAddTermination} onEdit={openEditTermination} onAdvanceStatus={advanceTerminationStatus} onDelete={deleteTermination} onViewDetails={(record) => setTerminationDetails(record)} />}
-          {activePage === 'settings' && <SettingsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} />}
+          {activePage === 'settings' && <SettingsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} onReset={resetAllData} />}
         </main>
       </div> {/* .workspace */}
 
@@ -3381,8 +3437,9 @@ function App() {
           <div className="import-toast" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
             <div className="import-toast-icon">✓</div>
             <h3>Import Complete</h3>
-            <p><strong>{importResult.added}</strong> employee{importResult.added !== 1 ? 's' : ''} added</p>
-            {importResult.skipped > 0 && <p><strong>{importResult.skipped}</strong> duplicate{importResult.skipped !== 1 ? 's' : ''} skipped</p>}
+            {importResult.added > 0 && <p><strong>{importResult.added}</strong> new employee{importResult.added !== 1 ? 's' : ''} added</p>}
+            {importResult.updated > 0 && <p><strong>{importResult.updated}</strong> existing record{importResult.updated !== 1 ? 's' : ''} updated</p>}
+            {importResult.skipped > 0 && <p><strong>{importResult.skipped}</strong> blank row{importResult.skipped !== 1 ? 's' : ''} skipped</p>}
             <button className="primary-button" onClick={() => setImportResult(null)} type="button">Done</button>
           </div>
         </div>
