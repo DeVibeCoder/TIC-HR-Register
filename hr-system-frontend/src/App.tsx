@@ -732,7 +732,7 @@ function EmployeesPage({ employees, onAdd, onEdit, onExport, onImport, onTemplat
                   <td className="col-empid">{employee.employeeId || 'Pending'}</td>
                   <td><div className="col-name">{employee.fullName}</div></td>
                   <td>{employee.department}</td>
-                  <td className="col-desig">{employee.designation}</td>
+                  <td><div className="col-desig">{employee.designation}</div></td>
                   <td>{employee.nationality === employee.department ? <span style={{ color: '#ef4444', fontSize: '0.72rem', fontWeight: 700 }}>⚠ Fix needed</span> : employee.nationality}</td>
                   <td>{employee.nicPassportNo}</td>
                   <td>{employee.nationality === 'MALDIVES' ? '—' : employee.workPermitNo || 'Pending'}</td>

@@ -3771,7 +3771,7 @@ button.step-pill:hover { filter: brightness(0.98); }
 
 /* ── Employee table: fixed-width wrapping columns ─────────── */
 /* Note: col-name and col-empid widths overridden below in the latest rules block */
-.employee-table .col-desig { min-width: 140px; max-width: 170px; white-space: normal; word-break: break-word; line-height: 1.3; }
+/* col-desig is a <div> inside <td> — see latest rules block below */
 .employee-table .col-dept { min-width: 100px; max-width: 130px; white-space: normal; }
 
 /* ── Wider search bar in employees ────────────────────────── */
@@ -4423,7 +4423,8 @@ button.step-pill:hover { filter: brightness(0.98); }
 .employee-table .col-empid { width: 78px; min-width: 78px; max-width: 82px; }
 /* col-name is a <div> inside <td>: forces the cell to this exact width */
 .col-name { width: 280px; white-space: normal; line-height: 1.4; word-break: break-word; }
-.employee-table .col-desig { min-width: 130px; max-width: 180px; white-space: normal; line-height: 1.35; }
+/* col-desig: <div> inside <td>, forces cell width, wraps long designations to 2 lines */
+.col-desig { width: 240px; white-space: normal; line-height: 1.4; word-break: break-word; }
 
 /* ── Employee search wider ───────────────────────────────── */
 .employee-toolbar { grid-template-columns: 2fr 1fr 1fr 1fr 0.5fr !important; }
