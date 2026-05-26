@@ -693,7 +693,7 @@ function EmployeesPage({ employees, onAdd, onEdit, onExport, onImport, onTemplat
             <colgroup>
               <col style={{ width: '38px' }} />
               <col style={{ width: '82px' }} />
-              <col style={{ width: '480px' }} />
+              <col style={{ width: '320px' }} />
               <col style={{ width: '155px' }} />
               <col style={{ width: '155px' }} />
               <col style={{ width: '110px' }} />

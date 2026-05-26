@@ -4418,7 +4418,7 @@ button.step-pill:hover { filter: brightness(0.98); }
 
 /* ── Employee table font + column widths ─────────────────── */
 /* table-layout:fixed + colgroup widths = guaranteed pixel-exact columns */
-.employee-table { font-size: 0.75rem; table-layout: fixed; width: 1740px; }
+.employee-table { font-size: 0.75rem; table-layout: fixed; width: 1580px; }
 .employee-table th { font-size: 0.68rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .employee-table td { padding: 6px 10px; overflow: hidden; }
 /* Full name cell: allow wrapping so long names break over 2 lines */
