@@ -611,8 +611,15 @@ function EmployeesPage({ employees, onAdd, onEdit, onExport, onImport, onTemplat
 
   const departments = useMemo(() => ['All Sections', ...Array.from(new Set(employees.map((employee) => employee.department))).sort()], [employees])
   const nationalityList = useMemo(() => {
-    const deptSet = new Set(departmentsList)
-    const validNats = Array.from(new Set(employees.map((e) => e.nationality).filter((n) => n && !deptSet.has(n)))).sort()
+    // Build a set of ALL section names from both the predefined list and actual employee data
+    // so imported sections that differ from the predefined list are also excluded
+    const deptSet = new Set([
+      ...departmentsList,
+      ...employees.map((e) => e.department).filter(Boolean),
+    ])
+    const validNats = Array.from(new Set(
+      employees.map((e) => e.nationality).filter((n) => n && !deptSet.has(n))
+    )).sort()
     return ['All Nationalities', ...validNats]
   }, [employees])
 
@@ -701,7 +708,7 @@ function EmployeesPage({ employees, onAdd, onEdit, onExport, onImport, onTemplat
                   <td><div className="col-name">{employee.fullName}</div></td>
                   <td>{employee.department}</td>
                   <td className="col-desig">{employee.designation}</td>
-                  <td>{employee.nationality}</td>
+                  <td>{employee.nationality === employee.department ? <span style={{ color: '#ef4444', fontSize: '0.72rem', fontWeight: 700 }}>⚠ Fix needed</span> : employee.nationality}</td>
                   <td>{employee.nicPassportNo}</td>
                   <td>{employee.nationality === 'MALDIVES' ? '—' : employee.workPermitNo || 'Pending'}</td>
                   <td>{formatDateDisplay(employee.dateOfJoin)}</td>
