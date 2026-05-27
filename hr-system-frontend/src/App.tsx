@@ -1797,47 +1797,41 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
   <style>
     @page { size: A4 portrait; margin: 0; }
     *, *::before, *::after { box-sizing: border-box; }
-    body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #1a1a2e; background: #ddd6fe; margin: 0; padding: 0; }
+    body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #1a1a2e; background: #e8e4f3; margin: 0; padding: 0; }
 
     /* ── Screen toolbar ── */
     .screen-bar {
       display: flex; align-items: center; gap: 14px;
-      padding: 10px 20px; background: #0f0730; position: sticky; top: 0; z-index: 10;
+      padding: 10px 20px; background: #1e1b4b; position: sticky; top: 0; z-index: 10;
       font-family: system-ui, -apple-system, sans-serif; font-size: 13px;
     }
     .screen-bar button {
-      padding: 7px 20px; background: #7c3aed; color: #fff; border: none;
+      padding: 7px 20px; background: #6d28d9; color: #fff; border: none;
       border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; letter-spacing: 0.03em;
     }
-    .screen-bar button:hover { background: #6d28d9; }
+    .screen-bar button:hover { background: #5b21b6; }
     .screen-bar .ref-label { font-weight: 700; color: #ddd6fe; font-size: 13px; }
     .screen-bar .meta-label { color: rgba(221,214,254,0.7); font-size: 12px; }
 
     /* ── A4 page shells ── */
     .a4-wrap { max-width: 210mm; margin: 24px auto; display: flex; flex-direction: column; gap: 20px; padding-bottom: 40px; }
-    .a4-page { background: #fff; box-shadow: 0 6px 32px rgba(26,13,82,0.22); min-height: 297mm; overflow: hidden; display: flex; flex-direction: column; }
+    .a4-page { background: #fff; box-shadow: 0 4px 20px rgba(30,27,75,0.16); min-height: 297mm; overflow: hidden; display: flex; flex-direction: column; }
 
     /* ══ HEADER BANNER ══ */
     .doc-hdr {
-      background: linear-gradient(120deg, #0f0730 0%, #1a0d52 55%, #2e1472 100%);
-      padding: 15pt 20pt 13pt;
+      background: linear-gradient(135deg, #1e1b4b 0%, #3730a3 100%);
+      padding: 14pt 20pt 12pt;
       display: flex; justify-content: space-between; align-items: center;
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
-    .hdr-brand { font-size: 28pt; font-weight: 900; color: #fff; letter-spacing: 5px; line-height: 1; font-family: Arial, sans-serif; }
+    .hdr-brand { font-size: 26pt; font-weight: 900; color: #fff; letter-spacing: 5px; line-height: 1; font-family: Arial, sans-serif; }
     .hdr-co { font-size: 7.5pt; color: #c4b5fd; letter-spacing: 0.4px; margin-top: 3pt; }
     .hdr-right { text-align: right; }
-    .hdr-dept-lbl { font-size: 7pt; color: #a78bfa; letter-spacing: 2.5px; text-transform: uppercase; }
-    .hdr-doc-title { font-size: 16pt; font-weight: 900; color: #fff; letter-spacing: 2px; margin-top: 2pt; font-family: Arial, sans-serif; }
-    .hdr-ref-pill {
-      display: inline-block; margin-top: 5pt;
-      background: rgba(124,58,237,0.4); border: 0.75pt solid rgba(196,181,253,0.5);
-      color: #ddd6fe; padding: 2pt 10pt; border-radius: 20pt;
-      font-size: 8pt; font-family: 'Courier New', monospace; letter-spacing: 0.5px;
-    }
+    .hdr-dept-lbl { font-size: 7pt; color: #a5b4fc; letter-spacing: 2px; text-transform: uppercase; }
+    .hdr-doc-title { font-size: 15pt; font-weight: 900; color: #fff; letter-spacing: 1.5px; margin-top: 2pt; font-family: Arial, sans-serif; }
     .hdr-accent {
-      height: 4pt;
-      background: linear-gradient(90deg, #7c3aed 0%, #a78bfa 45%, #6366f1 100%);
+      height: 3pt;
+      background: linear-gradient(90deg, #818cf8, #a78bfa, #818cf8);
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
 
@@ -1848,7 +1842,7 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
     .info-tbl { width: 100%; border-collapse: collapse; margin-bottom: 14pt; }
     .info-tbl td { padding: 5.5pt 9pt; font-size: 9.5pt; border: 0.75pt solid #c4b5fd; vertical-align: middle; }
     .info-tbl .lbl {
-      font-weight: 700; background: #1a0d52; color: #fff;
+      font-weight: 700; background: #ede9fe; color: #3730a3;
       width: 110pt; white-space: nowrap;
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
@@ -1860,7 +1854,7 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
 
     /* ── Section heading bar ── */
     .sec-hdr {
-      background: #7c3aed; color: #fff;
+      background: #5b21b6; color: #fff;
       padding: 5pt 10pt; font-size: 8.5pt; font-weight: 700;
       text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0;
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
@@ -1869,48 +1863,43 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
     /* ── Participants table ── */
     table.p-tbl { width: 100%; border-collapse: collapse; margin-bottom: 14pt; font-size: 9pt; table-layout: fixed; }
     .p-tbl thead th {
-      background: #1a0d52; color: #fff;
+      background: #4338ca; color: #fff;
       padding: 5pt 5pt; text-align: left; font-weight: 700;
-      border: 0.75pt solid #4c1d95;
+      border: 0.75pt solid #4338ca;
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
     .p-tbl thead th.tc { text-align: center; }
     .p-tbl tbody td { border: 0.75pt solid #e2d9f3; padding: 4pt 5pt; vertical-align: middle; }
-    .p-tbl tbody tr:nth-child(even) td { background: #f5f3ff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .p-tbl tbody tr:nth-child(even) td { background: #f8f6ff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .p-tbl .tc { text-align: center; }
     .p-tbl .sig-cell { height: 20pt; }
 
     /* ── Signature blocks ── */
     .sig-row { display: flex; gap: 14pt; margin-top: 16pt; }
-    .sig-block { flex: 1; border: 0.75pt solid #c4b5fd; border-radius: 4pt; overflow: hidden; }
-    .sig-blk-hdr {
-      background: #7c3aed; color: #fff;
-      padding: 4pt 9pt; font-size: 7.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;
-      -webkit-print-color-adjust: exact; print-color-adjust: exact;
-    }
-    .sig-space { height: 52pt; background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .sig-info { padding: 5pt 9pt; border-top: 0.75pt solid #c4b5fd; background: #f5f3ff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .sig-person { font-weight: 700; font-size: 9.5pt; color: #1a0d52; }
-    .sig-desig { font-size: 8.5pt; color: #7c3aed; margin-top: 1pt; }
+    .sig-block { flex: 1; border: 0.75pt solid #c4b5fd; border-top: 2.5pt solid #5b21b6; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .sig-space { height: 52pt; }
+    .sig-info { padding: 5pt 9pt; border-top: 0.75pt solid #c4b5fd; background: #f8f6ff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .sig-role { font-size: 7.5pt; color: #5b21b6; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2pt; }
+    .sig-person { font-weight: 700; font-size: 9.5pt; color: #1e1b4b; }
+    .sig-desig { font-size: 8.5pt; color: #5b21b6; margin-top: 1pt; }
 
     /* ══ PAGE 2 ══ */
     .p2-meta-bar {
       display: flex; gap: 24pt;
-      background: #f5f3ff; border-left: 3.5pt solid #7c3aed;
+      background: #f5f3ff; border-left: 3pt solid #6d28d9;
       padding: 6pt 10pt; margin-bottom: 13pt; font-size: 9.5pt;
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
     .summary-hdg {
-      font-size: 10pt; font-weight: 700; color: #fff;
-      background: #1a0d52; padding: 5pt 10pt;
-      margin-bottom: 11pt; letter-spacing: 0.5px;
+      font-size: 10.5pt; font-weight: 700; color: #3730a3;
+      border-bottom: 2pt solid #6d28d9; padding-bottom: 5pt; margin-bottom: 11pt;
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
     .content-text { font-size: 10pt; line-height: 1.75; color: #1a1a2e; }
     .content-text p { margin: 0 0 8pt; }
     .remarks-box {
       margin-top: 14pt; padding: 7pt 11pt;
-      border-left: 3.5pt solid #7c3aed; background: #faf5ff; font-size: 9.5pt;
+      border-left: 3pt solid #6d28d9; background: #faf5ff; font-size: 9.5pt;
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
 
@@ -1944,7 +1933,6 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
       <div class="hdr-right">
         <div class="hdr-dept-lbl">Human Resources</div>
         <div class="hdr-doc-title">STAFF INDUCTION</div>
-        <div class="hdr-ref-pill">${esc(fullRef)}</div>
       </div>
     </div>
     <div class="hdr-accent"></div>
@@ -1996,17 +1984,17 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
 
       <div class="sig-row">
         <div class="sig-block">
-          <div class="sig-blk-hdr">Conducted By</div>
           <div class="sig-space"></div>
           <div class="sig-info">
+            <div class="sig-role">Conducted By</div>
             <div class="sig-person">${esc(conductedByDisplay)}</div>
             ${conductedByDesig ? `<div class="sig-desig">${esc(conductedByDesig)}</div>` : ''}
           </div>
         </div>
         <div class="sig-block">
-          <div class="sig-blk-hdr">Approved By</div>
           <div class="sig-space"></div>
           <div class="sig-info">
+            <div class="sig-role">Approved By</div>
             <div class="sig-person">Arushulla Rashid (50814)</div>
             <div class="sig-desig">Administrator</div>
           </div>
@@ -2026,7 +2014,6 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
       <div class="hdr-right">
         <div class="hdr-dept-lbl">Human Resources</div>
         <div class="hdr-doc-title">STAFF INDUCTION</div>
-        <div class="hdr-ref-pill">${esc(fullRef)}</div>
       </div>
     </div>
     <div class="hdr-accent"></div>
@@ -2345,44 +2332,38 @@ function printTrainingRecord(record: TrainingRecord) {
   <style>
     @page { size: A4 portrait; margin: 0; }
     *, *::before, *::after { box-sizing: border-box; }
-    body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #1a1a2e; background: #ddd6fe; margin: 0; padding: 0; }
+    body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #1a1a2e; background: #e8e4f3; margin: 0; padding: 0; }
 
     /* ── Screen toolbar ── */
     .screen-bar {
       display: flex; align-items: center; gap: 14px;
-      padding: 10px 20px; background: #0f0730; position: sticky; top: 0; z-index: 10;
+      padding: 10px 20px; background: #1e1b4b; position: sticky; top: 0; z-index: 10;
       font-family: system-ui, sans-serif; font-size: 13px;
     }
-    .screen-bar button { padding: 7px 20px; background: #7c3aed; color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; }
-    .screen-bar button:hover { background: #6d28d9; }
+    .screen-bar button { padding: 7px 20px; background: #6d28d9; color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .screen-bar button:hover { background: #5b21b6; }
     .screen-bar .ref-label { font-weight: 700; color: #ddd6fe; }
     .screen-bar .meta-label { color: rgba(221,214,254,0.7); font-size: 12px; }
 
     /* ── A4 shell ── */
     .a4-wrap { max-width: 210mm; margin: 24px auto; padding-bottom: 40px; }
-    .a4-page { background: #fff; box-shadow: 0 6px 32px rgba(26,13,82,0.22); min-height: 297mm; overflow: hidden; display: flex; flex-direction: column; }
+    .a4-page { background: #fff; box-shadow: 0 4px 20px rgba(30,27,75,0.16); min-height: 297mm; overflow: hidden; display: flex; flex-direction: column; }
 
     /* ══ HEADER BANNER ══ */
     .doc-hdr {
-      background: linear-gradient(120deg, #0f0730 0%, #1a0d52 55%, #2e1472 100%);
-      padding: 15pt 20pt 13pt;
+      background: linear-gradient(135deg, #1e1b4b 0%, #3730a3 100%);
+      padding: 14pt 20pt 12pt;
       display: flex; justify-content: space-between; align-items: center;
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
-    .hdr-brand { font-size: 28pt; font-weight: 900; color: #fff; letter-spacing: 5px; line-height: 1; }
+    .hdr-brand { font-size: 26pt; font-weight: 900; color: #fff; letter-spacing: 5px; line-height: 1; }
     .hdr-co { font-size: 7.5pt; color: #c4b5fd; letter-spacing: 0.4px; margin-top: 3pt; }
     .hdr-right { text-align: right; max-width: 58%; }
-    .hdr-dept-lbl { font-size: 7pt; color: #a78bfa; letter-spacing: 2.5px; text-transform: uppercase; }
+    .hdr-dept-lbl { font-size: 7pt; color: #a5b4fc; letter-spacing: 2px; text-transform: uppercase; }
     .hdr-doc-title { font-size: 14pt; font-weight: 900; color: #fff; letter-spacing: 0.5px; margin-top: 2pt; word-break: break-word; line-height: 1.25; }
-    .hdr-ref-pill {
-      display: inline-block; margin-top: 5pt;
-      background: rgba(124,58,237,0.4); border: 0.75pt solid rgba(196,181,253,0.5);
-      color: #ddd6fe; padding: 2pt 10pt; border-radius: 20pt;
-      font-size: 8pt; letter-spacing: 0.5px;
-    }
     .hdr-accent {
-      height: 4pt;
-      background: linear-gradient(90deg, #7c3aed 0%, #a78bfa 45%, #6366f1 100%);
+      height: 3pt;
+      background: linear-gradient(90deg, #818cf8, #a78bfa, #818cf8);
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
 
@@ -2393,7 +2374,7 @@ function printTrainingRecord(record: TrainingRecord) {
     .info-tbl { width: 100%; border-collapse: collapse; margin-bottom: 14pt; }
     .info-tbl td { padding: 5.5pt 9pt; font-size: 9.5pt; border: 0.75pt solid #c4b5fd; vertical-align: middle; }
     .info-tbl .lbl {
-      font-weight: 700; background: #1a0d52; color: #fff;
+      font-weight: 700; background: #ede9fe; color: #3730a3;
       width: 110pt; white-space: nowrap;
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
@@ -2410,7 +2391,7 @@ function printTrainingRecord(record: TrainingRecord) {
 
     /* ── Section heading bar ── */
     .sec-hdr {
-      background: #7c3aed; color: #fff;
+      background: #5b21b6; color: #fff;
       padding: 5pt 10pt; font-size: 8.5pt; font-weight: 700;
       text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0;
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
@@ -2419,14 +2400,14 @@ function printTrainingRecord(record: TrainingRecord) {
     /* ── Participants table ── */
     table.p-tbl { width: 100%; border-collapse: collapse; font-size: 9pt; table-layout: fixed; }
     .p-tbl thead th {
-      background: #1a0d52; color: #fff;
+      background: #4338ca; color: #fff;
       padding: 5pt 5pt; text-align: left; font-weight: 700;
-      border: 0.75pt solid #4c1d95;
+      border: 0.75pt solid #4338ca;
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
     .p-tbl thead th.tc { text-align: center; }
     .p-tbl tbody td { border: 0.75pt solid #e2d9f3; padding: 4pt 5pt; vertical-align: middle; }
-    .p-tbl tbody tr:nth-child(even) td { background: #f5f3ff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .p-tbl tbody tr:nth-child(even) td { background: #f8f6ff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .p-tbl .tc { text-align: center; }
     .p-tbl .sig-cell { height: 20pt; }
 
@@ -2457,7 +2438,6 @@ function printTrainingRecord(record: TrainingRecord) {
       <div class="hdr-right">
         <div class="hdr-dept-lbl">Training Record</div>
         <div class="hdr-doc-title">${esc(record.trainingTitle)}</div>
-        <div class="hdr-ref-pill">${dateStr}</div>
       </div>
     </div>
     <div class="hdr-accent"></div>
