@@ -4849,13 +4849,13 @@ button.step-pill:hover { filter: brightness(0.98); }
 
 /* ── Induction table — column alignment overrides ───────────
    Layout: 1:Ref No  2:Date  3:Conducted By  4:Participants
-           5:Status  6:Remarks  7:Actions                     */
+           5:Remarks  6:Actions                              */
 .induction-table {
   table-layout: fixed;
 }
 .induction-table th:nth-child(1),
 .induction-table td:nth-child(1) {
-  width: 76px !important;
+  width: 84px !important;
   text-align: center !important;
   vertical-align: middle !important;
 }
@@ -4875,26 +4875,36 @@ button.step-pill:hover { filter: brightness(0.98); }
 }
 .induction-table th:nth-child(4),
 .induction-table td:nth-child(4) {
-  width: 130px !important;
+  width: 132px !important;
   text-align: center !important;
   vertical-align: middle !important;
 }
 .induction-table th:nth-child(5),
 .induction-table td:nth-child(5) {
-  width: 110px !important;
-  text-align: center !important;
-  vertical-align: middle !important;
-}
-.induction-table th:nth-child(6),
-.induction-table td:nth-child(6) {
   text-align: left !important;
   color: #475569;
   font-size: 0.78rem;
 }
 .induction-table th:last-child,
 .induction-table td:last-child {
-  width: 118px !important;
+  width: 130px !important;
   text-align: center !important;
+}
+/* Actions stay on one line */
+.ind-actions {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  gap: 2px !important;
+  justify-content: center;
+  align-items: center;
+}
+.ind-remarks-cell {
+  color: #475569;
+  font-size: 0.78rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
 }
 
 /* ── Induction ref chip ──────────────────────────────────── */
@@ -5297,3 +5307,179 @@ button.step-pill:hover { filter: brightness(0.98); }
 
 
 
+
+/* ── Induction modal shell ───────────────────────────────── */
+.induction-modal-shell {
+  max-width: 820px !important;
+}
+.ind-modal-ref {
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: #2e1065;
+  letter-spacing: 0.04em;
+  margin: 0;
+  line-height: 1.2;
+}
+.ind-modal-sub {
+  font-size: 0.77rem;
+  color: #64748b;
+  margin-top: 3px;
+}
+.ind-modal-sub strong { color: #0f5f52; }
+
+/* ── 2-column induction form grid ───────────────────────── */
+.ind-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 16px;
+  margin-bottom: 14px;
+}
+.ind-form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ind-form-grid label span {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #4a2996;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.ind-form-grid label input,
+.ind-form-grid label select,
+.ind-form-grid label textarea {
+  padding: 7px 10px;
+  border: 1.5px solid rgba(148, 163, 184, 0.52);
+  border-radius: 8px;
+  font-size: 0.82rem;
+  background: #fff;
+  color: #1e293b;
+  outline: none;
+  transition: border-color 120ms;
+}
+.ind-form-grid label input:focus,
+.ind-form-grid label select:focus,
+.ind-form-grid label textarea:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+.ind-span-2 {
+  grid-column: 1 / -1 !important;
+}
+.ind-ref-readonly {
+  background: rgba(245, 243, 255, 0.85) !important;
+  color: #4c1d95 !important;
+  font-weight: 700 !important;
+  font-size: 0.82rem !important;
+  border-color: rgba(124, 58, 237, 0.28) !important;
+  cursor: default;
+}
+
+/* ── Manual participant table ────────────────────────────── */
+.ind-participants-section {
+  border: 1.5px solid rgba(124, 58, 237, 0.18);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  background: rgba(248, 250, 252, 0.65);
+}
+.ind-participants-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.ind-participants-title {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #1e1060;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.ind-participants-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 20px;
+  background: rgba(124, 58, 237, 0.14);
+  color: #4c1d95;
+  border-radius: 10px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0 6px;
+}
+.ind-participants-hint {
+  font-size: 0.74rem;
+  color: #94a3b8;
+  margin: 0;
+  font-style: italic;
+  flex: 1;
+}
+.ind-add-row-btn {
+  padding: 4px 13px;
+  background: rgba(124, 58, 237, 0.08);
+  border: 1.5px solid rgba(124, 58, 237, 0.28);
+  border-radius: 8px;
+  color: #4c1d95;
+  font-size: 0.76rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 120ms;
+}
+.ind-add-row-btn:hover {
+  background: rgba(124, 58, 237, 0.16);
+}
+.ind-table-scroll {
+  overflow-x: auto;
+  border-radius: 7px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+.ind-edit-table {
+  table-layout: fixed;
+  min-width: 600px;
+}
+.ind-edit-table td {
+  padding: 4px 5px !important;
+  vertical-align: middle;
+}
+.ind-edit-table th {
+  padding: 5px 7px !important;
+  font-size: 0.71rem !important;
+}
+.ind-row-num {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.cell-input {
+  width: 100%;
+  padding: 5px 7px;
+  border: 1.5px solid rgba(148, 163, 184, 0.4);
+  border-radius: 6px;
+  font-size: 0.79rem;
+  background: #fff;
+  color: #1e293b;
+  outline: none;
+  transition: border-color 100ms;
+  min-width: 0;
+}
+.cell-input:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1);
+}
+.cell-input-name { font-weight: 600; }
+.ind-remove-row {
+  font-size: 1rem !important;
+  line-height: 1;
+  padding: 2px 6px !important;
+  color: #dc2626 !important;
+  opacity: 0.7;
+}
+.ind-remove-row:hover { opacity: 1 !important; }

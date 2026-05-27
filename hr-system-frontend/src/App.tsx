@@ -447,8 +447,20 @@ function leaveTypeLabel(code: LeaveTypeCode) {
   return leaveTypeOptions.find((item) => item.code === code)?.label ?? code
 }
 
-function fullInductionRef(refNo: string): string {
-  return `VHPL/TIC/HR/IND/26/${refNo.padStart(3, '0')}`
+function inductionYear(inductionDate?: string): string {
+  if (inductionDate) {
+    const y = inductionDate.split('-')[0]
+    if (y && y.length >= 4) return y.slice(2)
+  }
+  return String(new Date().getFullYear()).slice(2)
+}
+
+function fullInductionRef(refNo: string, inductionDate?: string): string {
+  return `VHPL/TIC/HR/IND/${inductionYear(inductionDate)}/${refNo.padStart(3, '0')}`
+}
+
+function shortInductionRef(refNo: string, inductionDate?: string): string {
+  return `${inductionYear(inductionDate)}/${refNo.padStart(3, '0')}`
 }
 
 function leaveSearchText(record: LeaveBase) {
@@ -1348,73 +1360,76 @@ function InductionModal({ employees, record, onClose, onSave }: {
   onSave: (record: InductionRecord) => void
 }) {
   const isNew = record.id.startsWith('IND-new')
+
   const [refNo, setRefNo] = useState(record.refNo)
-  const [inductionDate, setInductionDate] = useState(record.inductionDate)
-  const [conductedBy, setConductedBy] = useState(record.conductedBy)
+  const [inductionDate, setInductionDate] = useState(
+    record.inductionDate || new Date().toISOString().slice(0, 10)
+  )
   const [conductedByEmpId, setConductedByEmpId] = useState(record.conductedByEmpId ?? '')
+  const [conductedBy, setConductedBy] = useState(record.conductedBy)
   const [inductionContent, setInductionContent] = useState(record.inductionContent)
-  const [status, setStatus] = useState<InductionRecord['status']>(record.status)
   const [remarks, setRemarks] = useState(record.remarks)
-  const [participants, setParticipants] = useState<InductionParticipant[]>(record.participants)
-  const [participantSearch, setParticipantSearch] = useState('')
 
-  const searchResults = useMemo(() => {
-    const q = participantSearch.trim().toLowerCase()
-    if (!q) return []
-    return employees
-      .filter((e) => !participants.some((p) => p.employeeId === e.employeeId))
-      .filter((e) => `${e.employeeId} ${e.fullName} ${e.department}`.toLowerCase().includes(q))
-      .slice(0, 8)
-  }, [employees, participants, participantSearch])
+  // Start with at least one blank row when creating new, else existing participants
+  const blankRow = (): InductionParticipant => ({ employeeId: '', name: '', nicPassportNo: '', department: '' })
+  const [participants, setParticipants] = useState<InductionParticipant[]>(
+    record.participants.length > 0 ? record.participants : [blankRow()]
+  )
 
-  const addParticipant = (emp: Employee) => {
-    setParticipants((prev) => [...prev, {
-      employeeId: emp.employeeId,
-      name: emp.fullName,
-      nicPassportNo: emp.nicPassportNo,
-      department: emp.department,
-    }])
-    setParticipantSearch('')
+  const hrEmployees = employees.filter((e) => e.department === 'HUMAN RESOURCES')
+
+  const derivedFullRef = fullInductionRef(refNo, inductionDate)
+
+  const handleConductedBySelect = (empId: string) => {
+    setConductedByEmpId(empId)
+    const emp = employees.find((e) => e.employeeId === empId)
+    setConductedBy(emp ? emp.fullName : '')
   }
 
-  const removeParticipant = (empId: string) => {
-    setParticipants((prev) => prev.filter((p) => p.employeeId !== empId))
+  const updateRow = (index: number, field: keyof InductionParticipant, value: string) => {
+    setParticipants((prev) => prev.map((p, i) => i === index ? { ...p, [field]: value } : p))
   }
 
-  const handleConductedByEmpId = (id: string) => {
-    setConductedByEmpId(id)
-    const emp = employees.find((e) => e.employeeId === id)
-    if (emp) setConductedBy(emp.fullName)
+  const addRow = () => setParticipants((prev) => [...prev, blankRow()])
+
+  const removeRow = (index: number) => {
+    setParticipants((prev) => {
+      const next = prev.filter((_, i) => i !== index)
+      return next.length > 0 ? next : [blankRow()]
+    })
   }
 
   const save = () => {
+    const cleanParticipants = participants.filter((p) => p.name.trim() || p.employeeId.trim())
     onSave({
       ...record,
       refNo,
       inductionDate,
       conductedBy,
       conductedByEmpId: conductedByEmpId || undefined,
-      participants,
+      participants: cleanParticipants,
       inductionContent,
-      status,
+      status: 'Completed',
       remarks,
     })
   }
 
   return (
     <div className="modal-backdrop" role="presentation">
-      <section className="registration-modal wide-modal" role="dialog" aria-modal="true">
+      <section className="registration-modal wide-modal induction-modal-shell" role="dialog" aria-modal="true">
         <div className="modal-header">
           <div>
-            <p className="eyebrow">Induction</p>
-            <h2>{isNew ? 'Add Induction Session' : `Edit — ${fullInductionRef(record.refNo)}`}</h2>
+            <p className="eyebrow">Induction Session</p>
+            <h2 className="ind-modal-ref">{derivedFullRef}</h2>
+            <p className="ind-modal-sub">Saved as <strong>Completed</strong> — update after the session is conducted</p>
           </div>
           <button className="icon-button" onClick={onClose} type="button">×</button>
         </div>
 
-        <div className="form-grid" style={{ marginBottom: 12 }}>
+        {/* ── 2-column form ── */}
+        <div className="ind-form-grid">
           <label>
-            <span>Reference No (Short)</span>
+            <span>Sequence No</span>
             <input value={refNo} onChange={(e) => setRefNo(e.target.value)} placeholder="e.g. 004" />
           </label>
           <label>
@@ -1422,83 +1437,95 @@ function InductionModal({ employees, record, onClose, onSave }: {
             <input type="date" value={inductionDate} onChange={(e) => setInductionDate(e.target.value)} />
           </label>
           <label>
-            <span>Status</span>
-            <select value={status} onChange={(e) => setStatus(e.target.value as InductionRecord['status'])}>
-              <option>Scheduled</option><option>Pending</option><option>Completed</option>
-            </select>
+            <span>Full Reference</span>
+            <input className="ind-ref-readonly" disabled value={derivedFullRef} />
           </label>
           <label>
-            <span>Conducted By — Emp ID</span>
-            <input value={conductedByEmpId} onChange={(e) => handleConductedByEmpId(e.target.value)} placeholder="Employee ID of HR person" />
+            <span>Conducted By (HR Staff)</span>
+            <select
+              value={conductedByEmpId}
+              onChange={(e) => handleConductedBySelect(e.target.value)}
+            >
+              <option value="">— Select HR person —</option>
+              {hrEmployees.map((emp) => (
+                <option key={emp.employeeId} value={emp.employeeId}>
+                  {emp.fullName}{emp.designation ? ` — ${emp.designation}` : ''}
+                </option>
+              ))}
+              {/* fallback: allow typing name if no HR staff in system */}
+              {hrEmployees.length === 0 && conductedBy && (
+                <option value="">{conductedBy}</option>
+              )}
+            </select>
           </label>
-          <label className="full-field">
-            <span>Conducted By — Name</span>
-            <input value={conductedBy} onChange={(e) => setConductedBy(e.target.value)} placeholder="Name of HR person conducting induction" />
+          {/* if no HR employees in system, show text input fallback */}
+          {hrEmployees.length === 0 && (
+            <label className="ind-span-2">
+              <span>Conducted By (Name)</span>
+              <input value={conductedBy} onChange={(e) => setConductedBy(e.target.value)} placeholder="HR person name" />
+            </label>
+          )}
+          <label className="ind-span-2">
+            <span>Topics Covered / Induction Content</span>
+            <textarea
+              className="induction-textarea"
+              rows={3}
+              value={inductionContent}
+              onChange={(e) => setInductionContent(e.target.value)}
+              placeholder="Topics covered — company intro, safety rules, HR policies, bank account setup, accommodation…"
+            />
           </label>
-          <label className="full-field">
+          <label className="ind-span-2">
             <span>Remarks</span>
-            <input value={remarks} onChange={(e) => setRemarks(e.target.value)} />
+            <input value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="Any notes about this session" />
           </label>
         </div>
 
-        <div className="induction-participants-editor">
-          <div className="participants-editor-header">
-            <h3>Participants <span className="participants-count-label-inline">({participants.length})</span></h3>
-            <div className="participant-search-wrap">
-              <input
-                className="participant-search-input"
-                type="search"
-                value={participantSearch}
-                onChange={(e) => setParticipantSearch(e.target.value)}
-                placeholder="Search employee by ID or name to add…"
-              />
-              {searchResults.length > 0 && (
-                <div className="participant-search-results">
-                  {searchResults.map((emp) => (
-                    <button
-                      key={emp.employeeId}
-                      className="participant-search-result-item"
-                      type="button"
-                      onClick={() => addParticipant(emp)}
-                    >
-                      <strong>{emp.employeeId}</strong> {emp.fullName} <span>{emp.department}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+        {/* ── Manual participant table ── */}
+        <div className="ind-participants-section">
+          <div className="ind-participants-header">
+            <h3 className="ind-participants-title">
+              Participants
+              <span className="ind-participants-count">{participants.filter(p => p.name.trim()).length}</span>
+            </h3>
+            <p className="ind-participants-hint">Enter details manually — staff may not yet be in the system</p>
+            <button className="ind-add-row-btn" onClick={addRow} type="button">+ Add Row</button>
           </div>
-          {participants.length > 0 ? (
-            <table className="data-table participants-editor-table">
-              <thead><tr><th>#</th><th>Emp ID</th><th>Name</th><th>NIC / PP No</th><th>Section</th><th></th></tr></thead>
+          <div className="ind-table-scroll">
+            <table className="data-table ind-edit-table">
+              <thead>
+                <tr>
+                  <th style={{ width: 34 }}>#</th>
+                  <th style={{ width: 82 }}>Emp ID</th>
+                  <th>Full Name</th>
+                  <th style={{ width: 120 }}>NIC / PP No</th>
+                  <th style={{ width: 170 }}>Section / Department</th>
+                  <th style={{ width: 34 }}></th>
+                </tr>
+              </thead>
               <tbody>
                 {participants.map((p, i) => (
-                  <tr key={p.employeeId}>
-                    <td>{i + 1}</td>
-                    <td>{p.employeeId}</td>
-                    <td>{p.name}</td>
-                    <td>{p.nicPassportNo || '—'}</td>
-                    <td>{p.department}</td>
-                    <td><button className="action-glyph delete" onClick={() => removeParticipant(p.employeeId)} type="button" title="Remove" aria-label="Remove participant">×</button></td>
+                  <tr key={i}>
+                    <td className="ind-row-num">{i + 1}</td>
+                    <td><input className="cell-input" value={p.employeeId} onChange={(e) => updateRow(i, 'employeeId', e.target.value)} placeholder="ID" /></td>
+                    <td><input className="cell-input cell-input-name" value={p.name} onChange={(e) => updateRow(i, 'name', e.target.value)} placeholder="Full name" /></td>
+                    <td><input className="cell-input" value={p.nicPassportNo} onChange={(e) => updateRow(i, 'nicPassportNo', e.target.value)} placeholder="NIC or PP" /></td>
+                    <td><input className="cell-input" value={p.department} onChange={(e) => updateRow(i, 'department', e.target.value)} placeholder="Section / dept" /></td>
+                    <td>
+                      <button className="action-glyph delete ind-remove-row" onClick={() => removeRow(i)} type="button" title="Remove row">×</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          ) : (
-            <p className="participants-empty">No participants added yet. Search above to add employees.</p>
-          )}
-        </div>
-
-        <div className="form-grid" style={{ marginTop: 12 }}>
-          <label className="full-field">
-            <span>Induction Content / Topics Covered</span>
-            <textarea className="induction-textarea" rows={5} value={inductionContent} onChange={(e) => setInductionContent(e.target.value)} placeholder="Describe topics covered — company intro, safety rules, HR policies, accommodation rules, bank account setup…" />
-          </label>
+          </div>
         </div>
 
         <div className="modal-actions">
           <button className="quiet-button light" onClick={onClose} type="button">Cancel</button>
-          <button className="primary-button" onClick={save} type="button">Save Session</button>
+          <button className="primary-button" onClick={save} type="button">
+            {isNew ? 'Save as Completed' : 'Save Changes'}
+          </button>
         </div>
       </section>
     </div>
@@ -1512,7 +1539,7 @@ function InductionViewModal({ record, onClose }: { record: InductionRecord; onCl
         <div className="modal-header">
           <div>
             <p className="eyebrow">Induction Session</p>
-            <h2>{fullInductionRef(record.refNo)}</h2>
+            <h2>{fullInductionRef(record.refNo, record.inductionDate)}</h2>
             <p>{record.inductionDate ? formatDateDisplay(record.inductionDate) : '—'} · Conducted by {record.conductedBy || '—'}</p>
           </div>
           <button className="icon-button" onClick={onClose} type="button">×</button>
@@ -1571,7 +1598,7 @@ function InductionViewModal({ record, onClose }: { record: InductionRecord; onCl
 }
 
 function printInductionRecord(record: InductionRecord) {
-  const fullRef = fullInductionRef(record.refNo)
+  const fullRef = fullInductionRef(record.refNo, record.inductionDate)
   const dateStr = record.inductionDate ? formatDateDisplay(record.inductionDate) : '—'
   const conductedByStr = (record.conductedBy || 'HR Officer') +
     (record.conductedByEmpId ? ` (ID: ${record.conductedByEmpId})` : '')
@@ -2108,16 +2135,13 @@ function InductionSection({ employees, records, onUpdate }: {
   onBack?: () => void
 }) {
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState<'All' | InductionRecord['status']>('All')
   const [editing, setEditing] = useState<InductionRecord | null>(null)
   const [viewing, setViewing] = useState<InductionRecord | null>(null)
 
   const rows = useMemo(() => records.filter((r) => {
     const participantText = r.participants.map((p) => `${p.employeeId} ${p.name}`).join(' ')
-    const matchSearch = !search.trim() || [r.refNo, r.conductedBy, participantText].join(' ').toLowerCase().includes(search.trim().toLowerCase())
-    const matchStatus = statusFilter === 'All' || r.status === statusFilter
-    return matchSearch && matchStatus
-  }).sort((a, b) => b.inductionDate.localeCompare(a.inductionDate)), [records, search, statusFilter])
+    return !search.trim() || [r.refNo, r.conductedBy, participantText].join(' ').toLowerCase().includes(search.trim().toLowerCase())
+  }).sort((a, b) => b.inductionDate.localeCompare(a.inductionDate)), [records, search])
 
   const saveRecord = (record: InductionRecord) => {
     onUpdate((prev) => {
@@ -2129,15 +2153,25 @@ function InductionSection({ employees, records, onUpdate }: {
 
   const deleteRecord = (id: string) => onUpdate((prev) => prev.filter((r) => r.id !== id))
 
+  const nextRefNo = (): string => {
+    const currentYear = new Date().getFullYear().toString()
+    const thisYearRecords = records.filter((r) => r.inductionDate.startsWith(currentYear))
+    const maxSeq = thisYearRecords.reduce((max, r) => {
+      const n = parseInt(r.refNo, 10)
+      return isNaN(n) ? max : Math.max(max, n)
+    }, 0)
+    return String(maxSeq + 1).padStart(3, '0')
+  }
+
   const newRecord = (): InductionRecord => ({
     id: `IND-new-${Date.now()}`,
-    refNo: String(records.length + 1).padStart(3, '0'),
+    refNo: nextRefNo(),
     inductionDate: new Date().toISOString().slice(0, 10),
     conductedBy: '',
     conductedByEmpId: undefined,
     participants: [],
     inductionContent: '',
-    status: 'Scheduled',
+    status: 'Completed',
     remarks: '',
   })
 
@@ -2145,8 +2179,10 @@ function InductionSection({ employees, records, onUpdate }: {
     <>
       <section className="employee-workspace">
         <div className="table-toolbar ops-section-toolbar">
-          <label className="search-field"><span>Search</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Ref no, conducted by, participant name/ID" /></label>
-          <label><span>Status</span><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}><option value="All">All Status</option><option>Scheduled</option><option>Pending</option><option>Completed</option></select></label>
+          <label className="search-field">
+            <span>Search</span>
+            <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Ref no, conducted by, participant name" />
+          </label>
           <button className="primary-button" onClick={() => setEditing(newRecord())} type="button">Add Session</button>
         </div>
         <div className="employee-table-shell compact-scroll">
@@ -2157,19 +2193,18 @@ function InductionSection({ employees, records, onUpdate }: {
                 <th>Date</th>
                 <th>Conducted By</th>
                 <th>Participants</th>
-                <th>Status</th>
                 <th>Remarks</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {rows.length === 0 ? (
-                <tr><td colSpan={7} className="empty-row">No induction sessions found.</td></tr>
+                <tr><td colSpan={6} className="empty-row">No induction sessions found.</td></tr>
               ) : rows.map((record) => (
                 <tr key={record.id}>
                   <td>
-                    <span className="induction-ref-chip" title={fullInductionRef(record.refNo)}>
-                      {record.refNo || '—'}
+                    <span className="induction-ref-chip" title={fullInductionRef(record.refNo, record.inductionDate)}>
+                      {shortInductionRef(record.refNo, record.inductionDate)}
                     </span>
                   </td>
                   <td>{record.inductionDate ? formatDateDisplay(record.inductionDate) : '—'}</td>
@@ -2183,12 +2218,11 @@ function InductionSection({ employees, records, onUpdate }: {
                       <span className="no-participants-text">—</span>
                     )}
                   </td>
-                  <td><StatusBadge status={record.status} /></td>
-                  <td>{record.remarks || '—'}</td>
+                  <td className="ind-remarks-cell">{record.remarks || '—'}</td>
                   <td>
-                    <div className="row-actions request-inline-actions">
+                    <div className="row-actions ind-actions">
                       <button className="action-glyph" onClick={() => setViewing(record)} type="button" title="View participants" aria-label="View participants">👁</button>
-                      <button className="action-glyph print-glyph" onClick={() => printInductionRecord(record)} type="button" title="Print" aria-label="Print induction">🖨</button>
+                      <button className="action-glyph" onClick={() => printInductionRecord(record)} type="button" title="Print" aria-label="Print induction">🖨</button>
                       <button className="action-glyph edit" onClick={() => setEditing(record)} type="button" title="Edit" aria-label="Edit">✎</button>
                       <button className="action-glyph delete" onClick={() => deleteRecord(record.id)} type="button" title="Delete" aria-label="Delete">🗑</button>
                     </div>
