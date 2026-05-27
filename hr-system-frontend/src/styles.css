@@ -4848,6 +4848,35 @@ button.step-pill:hover { filter: brightness(0.98); }
   font-size: 0.69rem;
 }
 
+/* ════════════════════════════════════════════════════════════
+   HR OPERATIONS — shared table header override
+   All four tabs get the same lighter indigo header instead of
+   the global near-black gradient.
+   ════════════════════════════════════════════════════════════ */
+.personal-files-table thead th,
+.induction-table thead th,
+.training-table thead th,
+.bank-table thead th {
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important;
+  color: #fff !important;
+  border-bottom: 2px solid rgba(99, 102, 241, 0.35) !important;
+  padding: 9px 12px !important;
+  font-size: 0.71rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.06em !important;
+  vertical-align: middle !important;
+  white-space: nowrap !important;
+  line-height: 1.2 !important;
+}
+
+/* All ops-table body cells: consistent vertical alignment */
+.personal-files-table td,
+.induction-table td,
+.training-table td,
+.bank-table td {
+  vertical-align: middle !important;
+}
+
 /* ── Induction table — column alignment overrides ───────────
    Layout: 1:Ref No  2:Date  3:Conducted By  4:Participants
            5:Remarks  6:Actions                              */
