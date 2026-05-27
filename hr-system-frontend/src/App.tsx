@@ -1815,7 +1815,7 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
 
     /* ── A4 page shells ── */
     .a4-wrap { max-width: 210mm; margin: 24px auto; display: flex; flex-direction: column; gap: 20px; padding-bottom: 40px; }
-    .a4-page { background: #fff; padding: 18mm 16mm; box-shadow: 0 3px 16px rgba(0,0,0,0.13); }
+    .a4-page { background: #fff; padding: 18mm 16mm; box-shadow: 0 3px 16px rgba(0,0,0,0.13); min-height: 257mm; }
 
     /* ══ PAGE 1 ══ */
     .p1-hdr { text-align: center; padding-bottom: 10pt; border-bottom: 2.5pt solid #000; margin-bottom: 13pt; }
@@ -1856,7 +1856,7 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
       body { background: white; }
       .screen-bar { display: none !important; }
       .a4-wrap { max-width: none; margin: 0; padding: 0; gap: 0; }
-      .a4-page { padding: 0; box-shadow: none; }
+      .a4-page { padding: 0; box-shadow: none; min-height: 261mm; }
       .page-break { page-break-before: always; }
     }
   </style>
@@ -1988,8 +1988,6 @@ function TrainingModal({ record, employees, onClose, onSave }: {
   const [trainingType, setTrainingType] = useState<TrainingRecord['trainingType']>(record.trainingType)
   const [participants, setParticipants] = useState<TrainingParticipant[]>(record.participants)
   const [participantSearch, setParticipantSearch] = useState('')
-  const [status, setStatus] = useState<TrainingRecord['status']>(record.status)
-  const [remarks, setRemarks] = useState(record.remarks)
 
   const searchResults = useMemo(() => {
     const q = participantSearch.trim().toLowerCase()
@@ -2009,14 +2007,8 @@ function TrainingModal({ record, employees, onClose, onSave }: {
     setParticipants((prev) => prev.filter((p) => p.employeeId !== empId))
   }
 
-  const toggleAttended = (empId: string) => {
-    setParticipants((prev) => prev.map((p) => p.employeeId === empId ? { ...p, attended: !p.attended } : p))
-  }
-
-  const attendedCount = participants.filter((p) => p.attended).length
-
   const save = () => {
-    onSave({ ...record, trainingTitle, date, conductedBy, trainingType, participants, status, remarks })
+    onSave({ ...record, trainingTitle, date, conductedBy, trainingType, participants, status: 'Completed', remarks: '' })
   }
 
   return (
@@ -2026,22 +2018,36 @@ function TrainingModal({ record, employees, onClose, onSave }: {
           <div>
             <p className="eyebrow">Training</p>
             <h2>{isNew ? 'Add Training Record' : 'Edit Training Record'}</h2>
+            <p className="ind-modal-sub">Saved as <strong>Completed</strong> — update after the training is conducted</p>
           </div>
           <button className="icon-button" onClick={onClose} type="button">×</button>
         </div>
 
-        <div className="form-grid" style={{ marginBottom: 12 }}>
-          <label className="full-field"><span>Training Title</span><input value={trainingTitle} onChange={(e) => setTrainingTitle(e.target.value)} placeholder="e.g. Fire Safety Training" /></label>
-          <label><span>Training Date</span><input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></label>
-          <label><span>Type</span><select value={trainingType} onChange={(e) => setTrainingType(e.target.value as TrainingRecord['trainingType'])}><option value="Internal">Internal</option><option value="External">External</option></select></label>
-          <label><span>Status</span><select value={status} onChange={(e) => setStatus(e.target.value as TrainingRecord['status'])}><option value="Pending">Pending</option><option value="Completed">Completed</option></select></label>
-          <label className="full-field"><span>Conducted By / Trainer</span><input value={conductedBy} onChange={(e) => setConductedBy(e.target.value)} placeholder="Name of trainer or organisation" /></label>
-          <label className="full-field"><span>Remarks</span><input value={remarks} onChange={(e) => setRemarks(e.target.value)} /></label>
+        <div className="trn-form-grid">
+          <label className="trn-span-3">
+            <span>Training Title</span>
+            <input value={trainingTitle} onChange={(e) => setTrainingTitle(e.target.value)} placeholder="e.g. Fire Safety Training" />
+          </label>
+          <label>
+            <span>Training Date</span>
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          </label>
+          <label>
+            <span>Type</span>
+            <select value={trainingType} onChange={(e) => setTrainingType(e.target.value as TrainingRecord['trainingType'])}>
+              <option value="Internal">Internal</option>
+              <option value="External">External</option>
+            </select>
+          </label>
+          <label>
+            <span>Conducted By / Trainer</span>
+            <input value={conductedBy} onChange={(e) => setConductedBy(e.target.value)} placeholder="Trainer name or organisation" />
+          </label>
         </div>
 
         <div className="induction-participants-editor">
           <div className="participants-editor-header">
-            <h3>Participants <span className="participants-count-label-inline">({participants.length} invited{attendedCount > 0 ? `, ${attendedCount} attended` : ''})</span></h3>
+            <h3>Participants <span className="participants-count-label-inline">({participants.length} attended)</span></h3>
             <div className="participant-search-wrap">
               <input
                 className="participant-search-input"
@@ -2068,20 +2074,14 @@ function TrainingModal({ record, employees, onClose, onSave }: {
           </div>
           {participants.length > 0 ? (
             <table className="data-table participants-editor-table">
-              <thead><tr><th>#</th><th>Emp ID</th><th>Name</th><th>Section</th><th>Attended</th><th></th></tr></thead>
+              <thead><tr><th style={{ width: 32 }}>#</th><th style={{ width: 80 }}>Emp ID</th><th>Name</th><th style={{ width: 160 }}>Section</th><th style={{ width: 36 }}></th></tr></thead>
               <tbody>
                 {participants.map((p, i) => (
                   <tr key={p.employeeId}>
-                    <td>{i + 1}</td>
+                    <td style={{ textAlign: 'center' }}>{i + 1}</td>
                     <td>{p.employeeId}</td>
                     <td>{p.name}</td>
                     <td>{p.department}</td>
-                    <td>
-                      <label className="attended-toggle">
-                        <input type="checkbox" checked={p.attended} onChange={() => toggleAttended(p.employeeId)} />
-                        <span className={p.attended ? 'attended-yes' : 'attended-no'}>{p.attended ? 'Yes' : 'No'}</span>
-                      </label>
-                    </td>
                     <td><button className="action-glyph delete" onClick={() => removeParticipant(p.employeeId)} type="button" title="Remove" aria-label="Remove participant">×</button></td>
                   </tr>
                 ))}
@@ -2094,7 +2094,7 @@ function TrainingModal({ record, employees, onClose, onSave }: {
 
         <div className="modal-actions">
           <button className="quiet-button light" onClick={onClose} type="button">Cancel</button>
-          <button className="primary-button" onClick={save} type="button">Save Record</button>
+          <button className="primary-button" onClick={save} type="button">{isNew ? 'Save as Completed' : 'Save Changes'}</button>
         </div>
       </section>
     </div>
@@ -2102,14 +2102,12 @@ function TrainingModal({ record, employees, onClose, onSave }: {
 }
 
 function TrainingParticipantsModal({ record, onClose }: { record: TrainingRecord; onClose: () => void }) {
-  const attendedCount = record.participants.filter((p) => p.attended).length
-
   return (
     <div className="modal-backdrop" role="presentation">
-      <section className="registration-modal wide-modal" role="dialog" aria-modal="true">
+      <section className="registration-modal ind-participants-view-modal" role="dialog" aria-modal="true">
         <div className="modal-header">
           <div>
-            <p className="eyebrow">Training Participants</p>
+            <p className="eyebrow">Participants · {record.participants.length} attended</p>
             <h2>{record.trainingTitle}</h2>
             <p>
               {record.date ? formatDateDisplay(record.date) : '—'} ·{' '}
@@ -2119,45 +2117,248 @@ function TrainingParticipantsModal({ record, onClose }: { record: TrainingRecord
           </div>
           <button className="icon-button" onClick={onClose} type="button">×</button>
         </div>
-        <p className="participants-count-label">
-          {record.participants.length} invited · <strong>{attendedCount} attended</strong>
-        </p>
-        {record.participants.length > 0 ? (
-          <table className="data-table participants-view-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Emp ID</th>
-                <th>Name</th>
-                <th>Section</th>
-                <th>Attended</th>
+        <table className="data-table ind-pv-table">
+          <colgroup>
+            <col style={{ width: '5%' }} />
+            <col style={{ width: '12%' }} />
+            <col style={{ width: '40%' }} />
+            <col style={{ width: '43%' }} />
+          </colgroup>
+          <thead>
+            <tr><th>#</th><th>Emp ID</th><th>Name</th><th>Section</th></tr>
+          </thead>
+          <tbody>
+            {record.participants.length === 0 ? (
+              <tr><td colSpan={4} className="empty-row">No participants recorded for this training.</td></tr>
+            ) : record.participants.map((p, i) => (
+              <tr key={p.employeeId}>
+                <td style={{ textAlign: 'center' }}>{i + 1}</td>
+                <td>{p.employeeId}</td>
+                <td>{p.name}</td>
+                <td>{p.department}</td>
               </tr>
-            </thead>
-            <tbody>
-              {record.participants.map((p, i) => (
-                <tr key={p.employeeId}>
-                  <td>{i + 1}</td>
-                  <td>{p.employeeId}</td>
-                  <td>{p.name}</td>
-                  <td>{p.department}</td>
-                  <td>
-                    <span className={p.attended ? 'attended-badge-yes' : 'attended-badge-no'}>
-                      {p.attended ? '✓ Yes' : '— No'}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p className="participants-empty">No participants recorded for this training.</p>
-        )}
+            ))}
+          </tbody>
+        </table>
         <div className="modal-actions">
           <button className="primary-button" onClick={onClose} type="button">Close</button>
         </div>
       </section>
     </div>
   )
+}
+
+function TrainingViewModal({ record, onClose, onPrint }: {
+  record: TrainingRecord
+  onClose: () => void
+  onPrint?: () => void
+}) {
+  return (
+    <div className="modal-backdrop" role="presentation">
+      <section className="registration-modal ind-preview-modal" role="dialog" aria-modal="true">
+        <div className="modal-header">
+          <div>
+            <p className="eyebrow">Training Record</p>
+            <h2>{record.trainingTitle}</h2>
+            <p>
+              {record.date ? formatDateDisplay(record.date) : '—'} ·{' '}
+              <span className={`training-type-badge ${record.trainingType.toLowerCase()}`}>{record.trainingType}</span>
+            </p>
+          </div>
+          <button className="icon-button" onClick={onClose} type="button">×</button>
+        </div>
+
+        <div className="ind-preview-scroll">
+          <div className="ind-preview-doc">
+            <div className="ind-prev-hdr">
+              <div className="ind-prev-title" style={{ fontSize: '1.05rem', letterSpacing: '1.5px' }}>{record.trainingTitle.toUpperCase()}</div>
+              <div className="ind-prev-sub">VHPL | Thilafushi Industrial Complex</div>
+            </div>
+
+            <table className="ind-prev-info">
+              <tbody>
+                <tr>
+                  <td className="ind-pi-lbl">Date:</td>
+                  <td className="ind-pi-val">{record.date ? formatDateDisplay(record.date) : '—'}</td>
+                  <td className="ind-pi-lbl">Training Type:</td>
+                  <td className="ind-pi-val">{record.trainingType}</td>
+                </tr>
+                <tr>
+                  <td className="ind-pi-lbl">Conducted By:</td>
+                  <td className="ind-pi-val" colSpan={3}>{record.conductedBy || '—'}</td>
+                </tr>
+                <tr>
+                  <td className="ind-pi-lbl">No. of Participants:</td>
+                  <td className="ind-pi-val" colSpan={3}>{record.participants.length} attended</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <p className="ind-prev-tbl-label">Participants</p>
+            <table className="data-table ind-prev-ptbl">
+              <colgroup>
+                <col style={{ width: '5%' }} />
+                <col style={{ width: '11%' }} />
+                <col style={{ width: '42%' }} />
+                <col style={{ width: '42%' }} />
+              </colgroup>
+              <thead>
+                <tr><th>#</th><th>Emp ID</th><th>Name</th><th>Section</th></tr>
+              </thead>
+              <tbody>
+                {record.participants.length === 0 ? (
+                  <tr><td colSpan={4} className="empty-row">No participants recorded.</td></tr>
+                ) : record.participants.map((p, i) => (
+                  <tr key={p.employeeId}>
+                    <td style={{ textAlign: 'center' }}>{i + 1}</td>
+                    <td>{p.employeeId}</td>
+                    <td>{p.name}</td>
+                    <td>{p.department}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="modal-actions">
+          {onPrint && <button className="primary-button" onClick={onPrint} type="button">🖨 Print</button>}
+          <button className="back-btn-sm" onClick={onClose} type="button">Close</button>
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function printTrainingRecord(record: TrainingRecord) {
+  const dateStr = record.date ? formatDateDisplay(record.date) : '—'
+  const esc = (s: string) =>
+    s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+  const participantRows = record.participants.map((p, i) => `
+    <tr>
+      <td class="tc">${i + 1}</td>
+      <td>${esc(p.employeeId)}</td>
+      <td>${esc(p.name)}</td>
+      <td>${esc(p.department)}</td>
+      <td class="sig-cell"></td>
+    </tr>`).join('')
+
+  const emptyCount = Math.max(0, 8 - record.participants.length)
+  const emptyRows = Array.from({ length: emptyCount }, (_, i) => `
+    <tr>
+      <td class="tc">${record.participants.length + i + 1}</td>
+      <td></td><td></td><td></td>
+      <td class="sig-cell"></td>
+    </tr>`).join('')
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Training — ${esc(record.trainingTitle)}</title>
+  <style>
+    @page { size: A4 portrait; margin: 18mm 16mm; }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Times New Roman', Times, serif; font-size: 10.5pt; color: #000; background: #f1f5f9; margin: 0; padding: 0; }
+
+    .screen-bar {
+      display: flex; align-items: center; gap: 14px;
+      padding: 10px 20px; background: #1a0d52; position: sticky; top: 0; z-index: 10;
+      font-family: system-ui, sans-serif; font-size: 13px;
+    }
+    .screen-bar button { padding: 7px 20px; background: #7c3aed; color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .screen-bar button:hover { background: #6d28d9; }
+    .screen-bar .ref-label { font-weight: 700; color: #ddd6fe; }
+    .screen-bar .meta-label { color: rgba(221,214,254,0.7); font-size: 12px; }
+
+    .a4-wrap { max-width: 210mm; margin: 24px auto; padding-bottom: 40px; }
+    .a4-page { background: #fff; padding: 18mm 16mm; box-shadow: 0 3px 16px rgba(0,0,0,0.13); min-height: 257mm; }
+
+    .p1-hdr { text-align: center; padding-bottom: 10pt; border-bottom: 2.5pt solid #000; margin-bottom: 13pt; }
+    .p1-title { font-size: 18pt; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; font-family: Arial, Helvetica, sans-serif; }
+    .p1-sub { font-size: 11pt; margin-top: 4pt; letter-spacing: 0.4px; }
+
+    .info-tbl { width: 100%; border-collapse: collapse; margin-bottom: 13pt; }
+    .info-tbl td { border: 0.75pt solid #000; padding: 4.5pt 8pt; font-size: 10pt; }
+    .info-tbl .lbl { font-weight: bold; background: #f0f0f0; width: 115pt; white-space: nowrap; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+    table.p-tbl { width: 100%; border-collapse: collapse; font-size: 9.5pt; table-layout: fixed; }
+    .p-tbl th, .p-tbl td { border: 0.75pt solid #444; padding: 4pt 5pt; vertical-align: middle; }
+    .p-tbl thead th { background: #ede9fe; font-weight: bold; text-align: left; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .p-tbl .tc { text-align: center; }
+    .p-tbl .sig-cell { height: 22pt; }
+
+    @media print {
+      body { background: white; }
+      .screen-bar { display: none !important; }
+      .a4-wrap { max-width: none; margin: 0; padding: 0; }
+      .a4-page { padding: 0; box-shadow: none; min-height: 261mm; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="screen-bar">
+  <button onclick="window.print()">🖨&nbsp; Print / Save as PDF</button>
+  <span class="ref-label">${esc(record.trainingTitle)}</span>
+  <span class="meta-label">${dateStr} &nbsp;·&nbsp; ${esc(record.trainingType)} &nbsp;·&nbsp; ${record.participants.length} attended</span>
+</div>
+
+<div class="a4-wrap">
+  <div class="a4-page">
+
+    <div class="p1-hdr">
+      <div class="p1-title">${esc(record.trainingTitle)}</div>
+      <div class="p1-sub">VHPL | Thilafushi Industrial Complex</div>
+    </div>
+
+    <table class="info-tbl">
+      <tbody>
+        <tr>
+          <td class="lbl">Date:</td>
+          <td>${dateStr}</td>
+          <td class="lbl">Training Type:</td>
+          <td>${esc(record.trainingType)}</td>
+        </tr>
+        <tr>
+          <td class="lbl">Conducted By:</td>
+          <td colspan="3">${esc(record.conductedBy || '—')}</td>
+        </tr>
+        <tr>
+          <td class="lbl">No. of Participants:</td>
+          <td colspan="3">${record.participants.length} attended</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table class="p-tbl">
+      <thead>
+        <tr>
+          <th style="width:20pt" class="tc">#</th>
+          <th style="width:54pt">Emp ID</th>
+          <th>Name</th>
+          <th style="width:130pt">Section</th>
+          <th style="width:66pt">Signature</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${participantRows}
+        ${emptyRows}
+      </tbody>
+    </table>
+
+  </div>
+</div>
+</body>
+</html>`
+
+  const win = window.open('', '_blank')
+  if (win) {
+    win.document.write(html)
+    win.document.close()
+    win.focus()
+  }
 }
 
 function PersonalFileModal({ file, employees, isNew, onClose, onSave }: {
@@ -2425,16 +2626,15 @@ function TrainingSection({ records, onUpdate, employees }: {
 }) {
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState<'All' | 'Internal' | 'External'>('All')
-  const [statusFilter, setStatusFilter] = useState<'All' | TrainingRecord['status']>('All')
   const [editing, setEditing] = useState<TrainingRecord | null>(null)
+  const [viewing, setViewing] = useState<TrainingRecord | null>(null)
   const [viewingParticipants, setViewingParticipants] = useState<TrainingRecord | null>(null)
 
   const rows = useMemo(() => records.filter((r) => {
     const matchSearch = [r.trainingTitle, r.conductedBy].join(' ').toLowerCase().includes(search.trim().toLowerCase())
     const matchType = typeFilter === 'All' || r.trainingType === typeFilter
-    const matchStatus = statusFilter === 'All' || r.status === statusFilter
-    return matchSearch && matchType && matchStatus
-  }).sort((a, b) => b.date.localeCompare(a.date)), [records, search, typeFilter, statusFilter])
+    return matchSearch && matchType
+  }).sort((a, b) => b.date.localeCompare(a.date)), [records, search, typeFilter])
 
   const saveRecord = (record: TrainingRecord) => {
     onUpdate((prev) => {
@@ -2446,7 +2646,7 @@ function TrainingSection({ records, onUpdate, employees }: {
 
   const deleteRecord = (id: string) => onUpdate((prev) => prev.filter((r) => r.id !== id))
 
-  const newRecord = (): TrainingRecord => ({ id: `TRN-new-${Date.now()}`, trainingTitle: '', date: new Date().toISOString().slice(0, 10), conductedBy: '', trainingType: 'Internal', participants: [], status: 'Pending', remarks: '' })
+  const newRecord = (): TrainingRecord => ({ id: `TRN-new-${Date.now()}`, trainingTitle: '', date: new Date().toISOString().slice(0, 10), conductedBy: '', trainingType: 'Internal', participants: [], status: 'Completed', remarks: '' })
 
   return (
     <>
@@ -2454,26 +2654,35 @@ function TrainingSection({ records, onUpdate, employees }: {
         <div className="table-toolbar ops-section-toolbar">
           <label className="search-field"><span>Search</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Training title, trainer" /></label>
           <label><span>Type</span><select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as typeof typeFilter)}><option value="All">All Types</option><option value="Internal">Internal</option><option value="External">External</option></select></label>
-          <label><span>Status</span><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}><option value="All">All Status</option><option value="Completed">Completed</option><option value="Pending">Pending</option></select></label>
           <button className="primary-button" onClick={() => setEditing(newRecord())} type="button">Add</button>
         </div>
         <div className="employee-table-shell compact-scroll">
           <table className="data-table training-table">
-            <thead><tr><th>Training Title</th><th>Date</th><th>Conducted By</th><th>Type</th><th>Participants</th><th>Status</th><th>Remarks</th><th>Action</th></tr></thead>
+            <thead><tr><th className="trn-title-th">Training Title</th><th>Date</th><th>Conducted By</th><th>Type</th><th>Participants</th><th>Action</th></tr></thead>
             <tbody>
-              {rows.map((record) => (
+              {rows.length === 0 ? (
+                <tr><td colSpan={6} className="empty-row">No training records found.</td></tr>
+              ) : rows.map((record) => (
                 <tr key={record.id}>
-                  <td>{record.trainingTitle}</td>
+                  <td className="trn-title-cell">{record.trainingTitle}</td>
                   <td>{record.date ? formatDateDisplay(record.date) : '—'}</td>
                   <td>{record.conductedBy || '—'}</td>
                   <td><span className={`training-type-badge ${record.trainingType.toLowerCase()}`}>{record.trainingType}</span></td>
-                  <td><button className="participants-count-btn" onClick={() => setViewingParticipants(record)} type="button">{record.participants.length} participant{record.participants.length !== 1 ? 's' : ''}</button></td>
-                  <td><StatusBadge status={record.status} /></td>
-                  <td>{record.remarks || '—'}</td>
-                  <td><div className="row-actions request-inline-actions">
-                    <button className="action-glyph edit" onClick={() => setEditing(record)} type="button" title="Edit" aria-label="Edit">✎</button>
-                    <button className="action-glyph delete" onClick={() => deleteRecord(record.id)} type="button" title="Delete" aria-label="Delete">🗑</button>
-                  </div></td>
+                  <td>
+                    {record.participants.length > 0 ? (
+                      <button className="participants-count-btn" onClick={() => setViewingParticipants(record)} type="button">
+                        {record.participants.length} attended
+                      </button>
+                    ) : <span className="no-participants-text">—</span>}
+                  </td>
+                  <td>
+                    <div className="row-actions ind-actions">
+                      <button className="action-glyph" onClick={() => setViewing(record)} type="button" title="View" aria-label="View">👁</button>
+                      <button className="action-glyph" onClick={() => printTrainingRecord(record)} type="button" title="Print" aria-label="Print">🖨</button>
+                      <button className="action-glyph edit" onClick={() => setEditing(record)} type="button" title="Edit" aria-label="Edit">✎</button>
+                      <button className="action-glyph delete" onClick={() => deleteRecord(record.id)} type="button" title="Delete" aria-label="Delete">🗑</button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -2481,6 +2690,7 @@ function TrainingSection({ records, onUpdate, employees }: {
         </div>
       </section>
       {editing && <TrainingModal record={editing} employees={employees} onClose={() => setEditing(null)} onSave={saveRecord} />}
+      {viewing && <TrainingViewModal record={viewing} onClose={() => setViewing(null)} onPrint={() => printTrainingRecord(viewing)} />}
       {viewingParticipants && <TrainingParticipantsModal record={viewingParticipants} onClose={() => setViewingParticipants(null)} />}
     </>
   )

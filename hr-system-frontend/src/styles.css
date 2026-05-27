@@ -5484,6 +5484,22 @@ button.step-pill:hover { filter: brightness(0.98); }
 }
 .ind-remove-row:hover { opacity: 1 !important; }
 
+/* ── Training form grid (3 columns) ── */
+.trn-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px 16px;
+  margin-bottom: 14px;
+}
+.trn-span-3 { grid-column: 1 / -1; }
+
+/* ── Training table title alignment ── */
+.trn-title-th { text-align: left !important; }
+.trn-title-cell {
+  text-align: left !important;
+  font-weight: 600;
+}
+
 /* ── Induction print-preview modal ── */
 .ind-preview-modal {
   max-width: 980px !important;
