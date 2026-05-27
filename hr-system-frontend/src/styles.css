@@ -4630,6 +4630,38 @@ button.step-pill:hover { filter: brightness(0.98); }
   color: #475569 !important; cursor: default;
 }
 
+/* ── Leave table: status step colour badges ──────────────── */
+.status-advance-btn {
+  padding: 3px 9px; border-radius: 20px; font-size: 0.68rem;
+  font-weight: 700; border: 1.5px solid; cursor: pointer;
+  white-space: nowrap; transition: filter 120ms;
+  width: auto; min-height: unset;
+}
+.status-advance-btn:hover:not(:disabled) { filter: brightness(0.92); }
+.status-advance-btn:disabled { cursor: default; opacity: 0.8; }
+/* step-0: Letter Submitted — slate */
+.status-advance-btn.step-0 { color: #334155; background: #f1f5f9; border-color: #94a3b8; }
+/* step-1: Approved — green */
+.status-advance-btn.step-1 { color: #14532d; background: #dcfce7; border-color: #86efac; }
+/* step-2: Dates Shared — blue */
+.status-advance-btn.step-2 { color: #1e3a5f; background: #dbeafe; border-color: #93c5fd; }
+/* step-3: Ticket Booked — amber */
+.status-advance-btn.step-3 { color: #713f12; background: #fef9c3; border-color: #fcd34d; }
+/* step-4: Pending Departure — purple */
+.status-advance-btn.step-4 { color: #4c1d95; background: #ede9fe; border-color: #a78bfa; }
+
+/* ── Leave request remarks cell ──────────────────────────── */
+.leave-remarks-cell { max-width: 160px; white-space: normal; font-size: 0.75rem; color: #475569; line-height: 1.35; }
+.muted-dash { color: #cbd5e1; }
+
+/* ── Leave history: not-returned row red highlight ───────── */
+.not-returned-row td {
+  background: #fff1f2 !important;
+  color: #7f1d1d;
+}
+.not-returned-row:hover td { background: #ffe4e6 !important; }
+.not-returned-row td:first-child { border-left: 3px solid #ef4444; }
+
 .emp-form-grid input:focus,
 .emp-form-grid select:focus {
   outline: none;
