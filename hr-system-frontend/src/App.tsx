@@ -43,6 +43,7 @@ type LeaveBase = {
 
 type LeaveRequestRecord = LeaveBase & {
   step: LeaveRequestStep
+  remarks?: string
 }
 
 type ActiveLeaveRecord = LeaveBase & {
@@ -778,36 +779,148 @@ function LeaveFormModal({
   onClose: () => void
   onSave: (record: LeaveRequestRecord) => void
 }) {
-  const [employeeId, setEmployeeId] = useState(initialRecord?.employeeId ?? employees[0]?.employeeId ?? '')
+  const initEmp = initialRecord ? employees.find((e) => e.employeeId === initialRecord.employeeId) ?? null : null
+  const [selectedEmp, setSelectedEmp] = useState<Employee | null>(initEmp)
+  const [searchQuery, setSearchQuery] = useState(initEmp ? `${initEmp.employeeId} – ${initEmp.fullName}` : '')
+  const [showResults, setShowResults] = useState(false)
   const [leaveTypeCode, setLeaveTypeCode] = useState<LeaveTypeCode>(initialRecord?.leaveTypeCode ?? 'AL')
   const [departureDate, setDepartureDate] = useState(initialRecord?.departureDate ?? new Date().toISOString().slice(0, 10))
   const [returnDate, setReturnDate] = useState(initialRecord?.returnDate ?? new Date().toISOString().slice(0, 10))
   const [step, setStep] = useState<LeaveRequestStep>(initialRecord?.step ?? 'Letter Submitted')
-  const employee = employees.find((item) => item.employeeId === employeeId) ?? employees[0]
+  const [remarks, setRemarks] = useState(initialRecord?.remarks ?? '')
+
+  const searchResults = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase()
+    if (!q || selectedEmp) return []
+    return employees.filter((e) =>
+      e.employeeId.toLowerCase().includes(q) || e.fullName.toLowerCase().includes(q)
+    ).slice(0, 8)
+  }, [searchQuery, selectedEmp, employees])
+
+  const totalDays = dayCount(departureDate, returnDate)
+
+  const selectEmployee = (emp: Employee) => {
+    setSelectedEmp(emp)
+    setSearchQuery(`${emp.employeeId} – ${emp.fullName}`)
+    setShowResults(false)
+  }
+
+  const handleSearchChange = (val: string) => {
+    setSearchQuery(val)
+    setSelectedEmp(null)
+    setShowResults(true)
+  }
+
+  const canSave = !!selectedEmp && !!departureDate && !!returnDate
 
   return (
     <div className="modal-backdrop" role="presentation">
-      <section className="registration-modal" role="dialog" aria-modal="true">
-        <div className="modal-header"><div><p className="eyebrow">Leave request</p><h2>{initialRecord ? 'Edit Leave Request' : 'Add Leave Request'}</h2><p>Operational request workflow with automatic movement to active leaves.</p></div><button className="icon-button" onClick={onClose} type="button">x</button></div>
-        <div className="form-grid">
-          <label><span>Employee</span><select value={employeeId} onChange={(event) => setEmployeeId(event.target.value)}>{employees.slice(0, 120).map((item) => <option key={item.employeeId} value={item.employeeId}>{item.employeeId} - {item.fullName}</option>)}</select></label>
-          <label><span>Purpose</span><select value={leaveTypeCode} onChange={(event) => setLeaveTypeCode(event.target.value as LeaveTypeCode)}>{leaveTypeOptions.map((item) => <option key={item.code} value={item.code}>{item.label} ({item.code})</option>)}</select></label>
-          <label><span>Departure Date</span><input type="date" value={departureDate} onChange={(event) => setDepartureDate(event.target.value)} /></label>
-          <label><span>Return Date</span><input type="date" value={returnDate} onChange={(event) => setReturnDate(event.target.value)} /></label>
-          {initialRecord && <label><span>Status</span><select value={step} onChange={(event) => setStep(event.target.value as LeaveRequestStep)}>{requestSteps.map((item) => <option key={item}>{item}</option>)}</select></label>}
+      <section className="registration-modal lf-modal" role="dialog" aria-modal="true">
+        <div className="modal-header">
+          <div>
+            <p className="eyebrow">Leave request</p>
+            <h2>{initialRecord ? 'Edit Leave Request' : 'Add Leave Request'}</h2>
+          </div>
+          <button className="icon-button" onClick={onClose} type="button">✕</button>
         </div>
-        <div className="modal-actions"><button className="quiet-button light" onClick={onClose} type="button">Cancel</button><button className="primary-button" onClick={() => onSave({
-          id: initialRecord?.id ?? `LVR-${Date.now()}`,
-          employeeId,
-          name: employee.fullName,
-          department: employee.department,
-          nationality: employee.nationality,
-          leaveTypeCode,
-          departureDate,
-          returnDate,
-          days: dayCount(departureDate, returnDate),
-          step,
-        })} type="button">{initialRecord ? 'Update Request' : 'Save Request'}</button></div>
+
+        {/* Employee search */}
+        <div className="lf-section-label">Employee</div>
+        <div className="lf-search-wrap">
+          <input
+            className="lf-search-input"
+            placeholder="Search by Emp ID or name…"
+            value={searchQuery}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            onFocus={() => !selectedEmp && setShowResults(true)}
+            autoComplete="off"
+          />
+          {showResults && searchResults.length > 0 && (
+            <ul className="lf-search-results">
+              {searchResults.map((emp) => (
+                <li key={emp.employeeId} onMouseDown={() => selectEmployee(emp)}>
+                  <span className="lf-res-id">{emp.employeeId}</span>
+                  <span className="lf-res-name">{emp.fullName}</span>
+                  <span className="lf-res-dept">{emp.department}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {/* Auto-filled employee info */}
+        <div className="lf-grid lf-grid-2" style={{ marginTop: '12px' }}>
+          <label>
+            <span>NIC / PP No</span>
+            <input readOnly value={selectedEmp?.nicPassportNo ?? ''} placeholder="—" className="lf-readonly" />
+          </label>
+          <label>
+            <span>Section</span>
+            <input readOnly value={selectedEmp?.department ?? ''} placeholder="—" className="lf-readonly" />
+          </label>
+        </div>
+
+        {/* Leave type + remarks */}
+        <div className="lf-grid lf-grid-2" style={{ marginTop: '10px' }}>
+          <label>
+            <span>Leave Type</span>
+            <select value={leaveTypeCode} onChange={(e) => setLeaveTypeCode(e.target.value as LeaveTypeCode)}>
+              {leaveTypeOptions.map((item) => <option key={item.code} value={item.code}>{item.label} ({item.code})</option>)}
+            </select>
+          </label>
+          <label>
+            <span>Remarks</span>
+            <input value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="Optional notes" />
+          </label>
+        </div>
+
+        {/* Dates + days */}
+        <div className="lf-grid lf-grid-3" style={{ marginTop: '10px' }}>
+          <label>
+            <span>Departure Date</span>
+            <input type="date" value={departureDate} onChange={(e) => setDepartureDate(e.target.value)} />
+          </label>
+          <label>
+            <span>Return Date</span>
+            <input type="date" value={returnDate} onChange={(e) => setReturnDate(e.target.value)} />
+          </label>
+          <label>
+            <span>Total Days</span>
+            <input readOnly value={totalDays > 0 ? `${totalDays} day${totalDays !== 1 ? 's' : ''}` : '—'} className="lf-readonly" />
+          </label>
+        </div>
+
+        {/* Status (edit only) */}
+        {initialRecord && (
+          <div className="lf-grid lf-grid-2" style={{ marginTop: '10px' }}>
+            <label>
+              <span>Status</span>
+              <select value={step} onChange={(e) => setStep(e.target.value as LeaveRequestStep)}>
+                {requestSteps.map((item) => <option key={item}>{item}</option>)}
+              </select>
+            </label>
+          </div>
+        )}
+
+        <div className="modal-actions">
+          <button className="quiet-button light" onClick={onClose} type="button">Cancel</button>
+          <button className="primary-button" disabled={!canSave} onClick={() => {
+            if (!selectedEmp) return
+            onSave({
+              id: initialRecord?.id ?? `LVR-${Date.now()}`,
+              employeeId: selectedEmp.employeeId,
+              name: selectedEmp.fullName,
+              department: selectedEmp.department,
+              nationality: selectedEmp.nationality,
+              leaveTypeCode,
+              departureDate,
+              returnDate,
+              days: totalDays,
+              step,
+              remarks,
+            })
+          }} type="button">{initialRecord ? 'Update Request' : 'Save Request'}</button>
+        </div>
       </section>
     </div>
   )
