@@ -4790,6 +4790,7 @@ button.step-pill:hover { filter: brightness(0.98); }
   border-radius: 10px;
   padding: 4px;
   margin-bottom: 18px;
+  margin-left: 14px;
   box-shadow: 0 4px 14px rgba(30, 10, 80, 0.28);
 }
 .section-inline-tabs button {
