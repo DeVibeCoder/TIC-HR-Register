@@ -373,7 +373,7 @@ function StatusBadge({ status }: { status: string }) {
   return <span className={`status-badge ${status.toLowerCase().replaceAll(' ', '-')}`}>{status}</span>
 }
 
-function PageHeader(_props: { eyebrow: string; title: string; subtitle: string }) {
+function PageHeader(_props: { eyebrow: string; title: string; subtitle?: string }) {
   return null
 }
 
@@ -1396,11 +1396,11 @@ function PersonalFileModal({ file, employees, isNew, onClose, onSave }: {
   )
 }
 
-function PersonalFilesSection({ employees, records, onUpdate, onBack }: {
+function PersonalFilesSection({ employees, records, onUpdate }: {
   employees: Employee[]
   records: PersonalFileRecord[]
   onUpdate: (fn: (prev: PersonalFileRecord[]) => PersonalFileRecord[]) => void
-  onBack: () => void
+  onBack?: () => void
 }) {
   const [search, setSearch] = useState('')
   const [deptFilter, setDeptFilter] = useState('All Departments')
@@ -1441,7 +1441,6 @@ function PersonalFilesSection({ employees, records, onUpdate, onBack }: {
     <>
       <section className="employee-workspace">
         <div className="table-toolbar pf-toolbar">
-          <button className="back-btn-sm" onClick={onBack} type="button">← Back</button>
           <label className="search-field"><span>Search</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="File no, employee, department" /></label>
           <label><span>Department</span><select value={deptFilter} onChange={(e) => setDeptFilter(e.target.value)}><option>All Departments</option>{departmentsList.map((d) => <option key={d}>{d}</option>)}</select></label>
           <label><span>Staff</span><select value={staffFilter} onChange={(e) => setStaffFilter(e.target.value as typeof staffFilter)}><option value="Active">Active</option><option value="Inactive">Inactive</option><option value="All">All</option></select></label>
@@ -1475,11 +1474,11 @@ function PersonalFilesSection({ employees, records, onUpdate, onBack }: {
   )
 }
 
-function InductionSection({ employees, records, onUpdate, onBack }: {
+function InductionSection({ employees, records, onUpdate }: {
   employees: Employee[]
   records: InductionRecord[]
   onUpdate: (fn: (prev: InductionRecord[]) => InductionRecord[]) => void
-  onBack: () => void
+  onBack?: () => void
 }) {
   const [search, setSearch] = useState('')
   const [deptFilter, setDeptFilter] = useState('All Departments')
@@ -1510,7 +1509,6 @@ function InductionSection({ employees, records, onUpdate, onBack }: {
     <>
       <section className="employee-workspace">
         <div className="table-toolbar ops-section-toolbar">
-          <button className="back-btn-sm" onClick={onBack} type="button">← Back</button>
           <label className="search-field"><span>Search</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Ref, employee, ID, department" /></label>
           <label><span>Status</span><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}><option value="All">All Status</option><option>Completed</option><option>Pending</option><option>Scheduled</option></select></label>
           <label><span>Department</span><select value={deptFilter} onChange={(e) => setDeptFilter(e.target.value)}><option>All Departments</option>{departmentsList.map((d) => <option key={d}>{d}</option>)}</select></label>
@@ -1544,10 +1542,10 @@ function InductionSection({ employees, records, onUpdate, onBack }: {
   )
 }
 
-function TrainingSection({ records, onUpdate, onBack, employees }: {
+function TrainingSection({ records, onUpdate, employees }: {
   records: TrainingRecord[]
   onUpdate: (fn: (prev: TrainingRecord[]) => TrainingRecord[]) => void
-  onBack: () => void
+  onBack?: () => void
   employees: Employee[]
 }) {
   const [search, setSearch] = useState('')
@@ -1579,7 +1577,6 @@ function TrainingSection({ records, onUpdate, onBack, employees }: {
     <>
       <section className="employee-workspace">
         <div className="table-toolbar ops-section-toolbar">
-          <button className="back-btn-sm" onClick={onBack} type="button">← Back</button>
           <label className="search-field"><span>Search</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Training title, trainer" /></label>
           <label><span>Type</span><select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as typeof typeFilter)}><option value="All">All Types</option><option value="Internal">Internal</option><option value="External">External</option></select></label>
           <label><span>Status</span><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}><option value="All">All Status</option><option value="Completed">Completed</option><option value="Pending">Pending</option></select></label>
@@ -1760,11 +1757,11 @@ function BankAccountModal({ record, employees, onClose, onSave }: {
   )
 }
 
-function BankAccountSection({ employees, records, onUpdate, onBack }: {
+function BankAccountSection({ employees, records, onUpdate }: {
   employees: Employee[]
   records: BankAccountRecord[]
   onUpdate: (fn: (prev: BankAccountRecord[]) => BankAccountRecord[]) => void
-  onBack: () => void
+  onBack?: () => void
 }) {
   const [activeTab, setActiveTab] = useState<'pending' | 'completed'>('pending')
   const [search, setSearch] = useState('')
@@ -1884,7 +1881,6 @@ function BankAccountSection({ employees, records, onUpdate, onBack }: {
 
         {/* Toolbar */}
         <div className="table-toolbar bank-toolbar">
-          <button className="back-btn-sm" onClick={onBack} type="button">← Back</button>
           <label className="search-field">
             <span>Search</span>
             <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Name, ID, department, nationality" />
@@ -2313,7 +2309,7 @@ function TerminationPage({
 }
 
 function OperationsPage({ employees }: { employees: Employee[] }) {
-  const [activeSection, setActiveSection] = useState<OpsSection | null>(null)
+  const [activeSection, setActiveSection] = useState<OpsSection>('files')
   const [personalFiles, setPersonalFiles] = useState<PersonalFileRecord[]>(initialPersonalFiles)
   const [inductionRecords, setInductionRecords] = useState<InductionRecord[]>(initialInductionRecords)
   const [trainingRecords, setTrainingRecords] = useState<TrainingRecord[]>(initialTrainingRecords)
@@ -2347,89 +2343,19 @@ function OperationsPage({ employees }: { employees: Employee[] }) {
     })
   }, [employees])
 
-  const fileStats = useMemo(() => {
-    const activeFiles = personalFiles.filter((r) => !r.isFormerStaff)
-    const incomplete = activeFiles.filter((r) => !(r.coc && r.jd && r.cont)).length
-    return { total: activeFiles.length, incomplete }
-  }, [personalFiles])
-
-  const inductionStats = useMemo(() => ({
-    completed: inductionRecords.filter((r) => r.status === 'Completed').length,
-    pending: inductionRecords.filter((r) => r.status !== 'Completed').length,
-  }), [inductionRecords])
-
-  const trainingStats = useMemo(() => ({
-    active: trainingRecords.filter((r) => r.status === 'Completed').length,
-    attention: trainingRecords.filter((r) => r.status === 'Pending').length,
-  }), [trainingRecords])
-
-  const bankStats = useMemo(() => ({
-    total: bankAccountRecords.length,
-    completed: bankAccountRecords.filter((r) => r.usdStatus === 'Completed' && r.mvrStatus === 'Completed').length,
-    pending: bankAccountRecords.filter((r) => r.usdStatus === 'Pending' || r.mvrStatus === 'Pending').length,
-    incomplete: bankAccountRecords.filter((r) => r.usdStatus === 'Incomplete' || r.mvrStatus === 'Incomplete').length,
-  }), [bankAccountRecords])
-
-  if (activeSection === 'files') return <PersonalFilesSection employees={employees} records={personalFiles} onUpdate={setPersonalFiles} onBack={() => setActiveSection(null)} />
-  if (activeSection === 'induction') return <InductionSection employees={employees} records={inductionRecords} onUpdate={setInductionRecords} onBack={() => setActiveSection(null)} />
-  if (activeSection === 'training') return <TrainingSection records={trainingRecords} employees={employees} onUpdate={setTrainingRecords} onBack={() => setActiveSection(null)} />
-  if (activeSection === 'bank') return <BankAccountSection employees={employees} records={bankAccountRecords} onUpdate={setBankAccountRecords} onBack={() => setActiveSection(null)} />
-
   return (
     <>
-      <PageHeader eyebrow="HR operations" title="HR Operations" subtitle="Manage employee personal files, site inductions, training records and bank account tracking." />
-      <div className="ops-cards-grid">
-        <button className="ops-card" onClick={() => setActiveSection('files')} type="button">
-          <span className="ops-card-icon">PF</span>
-          <div className="ops-card-body">
-            <h3>Personal Files</h3>
-            <p>Track document collection status for all employees — IDs, passports, photos and signed contracts.</p>
-            <div className="ops-card-stats">
-              <span>{fileStats.total} employees</span>
-              {fileStats.incomplete > 0 ? <span className="stat-warn">{fileStats.incomplete} incomplete</span> : <span className="stat-ok">All complete</span>}
-            </div>
-          </div>
-          <span className="ops-card-arrow">→</span>
-        </button>
-        <button className="ops-card" onClick={() => setActiveSection('induction')} type="button">
-          <span className="ops-card-icon">IN</span>
-          <div className="ops-card-body">
-            <h3>Induction</h3>
-            <p>Track site induction completions and schedules for new and existing staff members.</p>
-            <div className="ops-card-stats">
-              <span>{inductionStats.completed} completed</span>
-              {inductionStats.pending > 0 ? <span className="stat-warn">{inductionStats.pending} pending</span> : <span className="stat-ok">All inducted</span>}
-            </div>
-          </div>
-          <span className="ops-card-arrow">→</span>
-        </button>
-        <button className="ops-card" onClick={() => setActiveSection('training')} type="button">
-          <span className="ops-card-icon">TR</span>
-          <div className="ops-card-body">
-            <h3>Training</h3>
-            <p>Manage training certifications, renewal dates and compliance status for all employees.</p>
-            <div className="ops-card-stats">
-              <span>{trainingStats.active} active</span>
-              {trainingStats.attention > 0 ? <span className="stat-warn">{trainingStats.attention} due / expired</span> : <span className="stat-ok">All up to date</span>}
-            </div>
-          </div>
-          <span className="ops-card-arrow">→</span>
-        </button>
-        <button className="ops-card" onClick={() => setActiveSection('bank')} type="button">
-          <span className="ops-card-icon">BK</span>
-          <div className="ops-card-body">
-            <h3>Bank Account Opening</h3>
-            <p>Track USD and MVR bank account opening for new expatriate staff across SBI, BOC and CBM.</p>
-            <div className="ops-card-stats">
-              <span>{bankStats.total} staff</span>
-              {bankStats.pending > 0 ? <span className="stat-warn">{bankStats.pending} pending</span> : <span className="stat-ok">None pending</span>}
-              {bankStats.incomplete > 0 && <span className="stat-warn">{bankStats.incomplete} incomplete</span>}
-              {bankStats.completed > 0 && <span className="stat-ok">{bankStats.completed} completed</span>}
-            </div>
-          </div>
-          <span className="ops-card-arrow">→</span>
-        </button>
+      <PageHeader eyebrow="HR operations" title="HR Operations" />
+      <div className="section-inline-tabs">
+        <button className={activeSection === 'files' ? 'active' : ''} onClick={() => setActiveSection('files')} type="button">Personal Files</button>
+        <button className={activeSection === 'induction' ? 'active' : ''} onClick={() => setActiveSection('induction')} type="button">Induction</button>
+        <button className={activeSection === 'training' ? 'active' : ''} onClick={() => setActiveSection('training')} type="button">Training</button>
+        <button className={activeSection === 'bank' ? 'active' : ''} onClick={() => setActiveSection('bank')} type="button">Bank Account</button>
       </div>
+      {activeSection === 'files' && <PersonalFilesSection employees={employees} records={personalFiles} onUpdate={setPersonalFiles} onBack={() => {}} />}
+      {activeSection === 'induction' && <InductionSection employees={employees} records={inductionRecords} onUpdate={setInductionRecords} onBack={() => {}} />}
+      {activeSection === 'training' && <TrainingSection records={trainingRecords} employees={employees} onUpdate={setTrainingRecords} onBack={() => {}} />}
+      {activeSection === 'bank' && <BankAccountSection employees={employees} records={bankAccountRecords} onUpdate={setBankAccountRecords} onBack={() => {}} />}
     </>
   )
 }
@@ -2617,7 +2543,7 @@ function IncidentModal({ record, employees, onClose, onSave }: { record: Inciden
   )
 }
 
-function RequestsSection({ records, onUpdate, onBack }: { records: StaffRequestRecord[]; onUpdate: (fn: (prev: StaffRequestRecord[]) => StaffRequestRecord[]) => void; onBack: () => void }) {
+function RequestsSection({ records, onUpdate }: { records: StaffRequestRecord[]; onUpdate: (fn: (prev: StaffRequestRecord[]) => StaffRequestRecord[]) => void; onBack?: () => void }) {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
   const [editing, setEditing] = useState<StaffRequestRecord | null>(null)
@@ -2626,10 +2552,8 @@ function RequestsSection({ records, onUpdate, onBack }: { records: StaffRequestR
   const del = (id: string) => onUpdate((prev) => prev.filter((x) => x.id !== id))
   return (
     <>
-      <PageHeader eyebrow="Activities" title="Staff Requests" subtitle="Track and manage staff requests from submission to resolution." />
       <section className="employee-workspace">
         <div className="table-toolbar activities-toolbar">
-          <button className="back-btn-sm" onClick={onBack} type="button">← Back</button>
           <label className="search-field"><span>Search</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Employee, type, description" /></label>
           <label><span>Status</span><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="All">All Statuses</option><option>Open</option><option>In Progress</option><option>Resolved</option><option>Rejected</option></select></label>
           <button className="primary-button" type="button" onClick={() => setEditing({ id: 'REQ-new', employeeName: '', department: departmentsList[0], requestType: 'Accommodation', description: '', submittedDate: new Date().toISOString().slice(0, 10), completedDate: '', status: 'Open', remarks: '' })}>+ Add Request</button>
@@ -2646,7 +2570,7 @@ function RequestsSection({ records, onUpdate, onBack }: { records: StaffRequestR
   )
 }
 
-function VisitsSection({ records, onUpdate, onBack }: { records: VisitRecord[]; onUpdate: (fn: (prev: VisitRecord[]) => VisitRecord[]) => void; onBack: () => void }) {
+function VisitsSection({ records, onUpdate }: { records: VisitRecord[]; onUpdate: (fn: (prev: VisitRecord[]) => VisitRecord[]) => void; onBack?: () => void }) {
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('All')
   const [statusFilter, setStatusFilter] = useState('All')
@@ -2656,10 +2580,8 @@ function VisitsSection({ records, onUpdate, onBack }: { records: VisitRecord[]; 
   const del = (id: string) => onUpdate((prev) => prev.filter((x) => x.id !== id))
   return (
     <>
-      <PageHeader eyebrow="Activities" title="HR Visits" subtitle="Track HR-arranged visits for employees — visa medical, photo, passport renewal and embassy letter collection." />
       <section className="employee-workspace">
         <div className="table-toolbar activities-toolbar">
-          <button className="back-btn-sm" onClick={onBack} type="button">← Back</button>
           <label className="search-field"><span>Search</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="ID, name, department" /></label>
           <label><span>Type</span><select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}><option value="All">All Types</option><option>Visa Medical</option><option>Photo</option><option>Passport Renewal</option><option>Embassy Letter Collection</option></select></label>
           <label><span>Status</span><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="All">All Statuses</option><option>Scheduled</option><option>Completed</option><option>Cancelled</option></select></label>
@@ -2677,7 +2599,7 @@ function VisitsSection({ records, onUpdate, onBack }: { records: VisitRecord[]; 
   )
 }
 
-function IncidentsSection({ records, employees, onUpdate, onBack }: { records: IncidentRecord[]; employees: Employee[]; onUpdate: (fn: (prev: IncidentRecord[]) => IncidentRecord[]) => void; onBack: () => void }) {
+function IncidentsSection({ records, employees, onUpdate }: { records: IncidentRecord[]; employees: Employee[]; onUpdate: (fn: (prev: IncidentRecord[]) => IncidentRecord[]) => void; onBack?: () => void }) {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
   const [editing, setEditing] = useState<IncidentRecord | null>(null)
@@ -2695,10 +2617,8 @@ function IncidentsSection({ records, employees, onUpdate, onBack }: { records: I
   const newIncident = (): IncidentRecord => ({ id: 'INC-new', incidentDate: new Date().toISOString().slice(0, 10), timeOfIncident: 'Morning', employeeId: '', employeeName: '', reportedById: '', reportedByName: '', department: departmentsList[0], siteLocation: '', incidentType: 'Work Injury', incidentSummary: '', exactLocation: '', immediateCause: '', witnessName: '', witnessId: '', correctiveOwner: '', followUpDate: '', description: '', injuryInvolved: false, actionTaken: '', statementTaken: false, disciplinaryAction: false, status: 'Open' })
   return (
     <>
-      <PageHeader eyebrow="Activities" title="Incidents" subtitle="Record and follow up on site incidents and near misses." />
       <section className="employee-workspace">
         <div className="table-toolbar activities-toolbar">
-          <button className="back-btn-sm" onClick={onBack} type="button">← Back</button>
           <label className="search-field"><span>Search</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Employee, type, location" /></label>
           <label><span>Status</span><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="All">All Statuses</option><option>Open</option><option>Under Review</option><option>Closed</option></select></label>
           <button className="primary-button" type="button" onClick={() => setEditing(newIncident())}>+ Log Incident</button>
@@ -2756,59 +2676,21 @@ function IncidentsSection({ records, employees, onUpdate, onBack }: { records: I
 }
 
 function ActivitiesPage({ employees }: { employees: Employee[] }) {
-  const [activeSection, setActiveSection] = useState<ActivitiesSection | null>(null)
+  const [activeSection, setActiveSection] = useState<ActivitiesSection>('requests')
   const [staffRequests, setStaffRequests] = useState<StaffRequestRecord[]>(initialStaffRequests)
   const [visitRecords, setVisitRecords] = useState<VisitRecord[]>(initialVisitRecords)
   const [incidentRecords, setIncidentRecords] = useState<IncidentRecord[]>(initialIncidentRecords)
-  const reqStats = { open: staffRequests.filter((r) => r.status === 'Open').length, inProgress: staffRequests.filter((r) => r.status === 'In Progress').length }
-  const visStats = { scheduled: visitRecords.filter((r) => r.status === 'Scheduled').length, total: visitRecords.length }
-  const incStats = { open: incidentRecords.filter((r) => r.status === 'Open' || r.status === 'Under Review').length, closed: incidentRecords.filter((r) => r.status === 'Closed').length }
-  if (activeSection === 'requests') return <RequestsSection records={staffRequests} onUpdate={setStaffRequests} onBack={() => setActiveSection(null)} />
-  if (activeSection === 'visits') return <VisitsSection records={visitRecords} onUpdate={setVisitRecords} onBack={() => setActiveSection(null)} />
-  if (activeSection === 'incidents') return <IncidentsSection records={incidentRecords} employees={employees} onUpdate={setIncidentRecords} onBack={() => setActiveSection(null)} />
   return (
     <>
-      <PageHeader eyebrow="Activities" title="Requests, visits and incidents" subtitle="A daily operating queue for staff requests, scheduled visits and incident follow-up." />
-      <div className="ops-cards-grid">
-        <button className="ops-card" onClick={() => setActiveSection('requests')} type="button">
-          <span className="ops-card-icon">RE</span>
-          <div className="ops-card-body">
-            <h3>Requests</h3>
-            <p>Manage staff requests for accommodation, equipment, documents, transfers and more.</p>
-            <div className="ops-card-stats">
-              {reqStats.open > 0 ? <span className="stat-warn">{reqStats.open} open</span> : <span className="stat-ok">No open items</span>}
-              {reqStats.inProgress > 0 && <span>{reqStats.inProgress} in progress</span>}
-              <span>{staffRequests.length} total</span>
-            </div>
-          </div>
-          <span className="ops-card-arrow">→</span>
-        </button>
-        <button className="ops-card" onClick={() => setActiveSection('visits')} type="button">
-          <span className="ops-card-icon">VI</span>
-          <div className="ops-card-body">
-            <h3>Visits</h3>
-            <p>Schedule and track contractor, supplier, government and client site visits.</p>
-            <div className="ops-card-stats">
-              {visStats.scheduled > 0 ? <span>{visStats.scheduled} scheduled</span> : <span className="stat-ok">None scheduled</span>}
-              <span>{visStats.total} total</span>
-            </div>
-          </div>
-          <span className="ops-card-arrow">→</span>
-        </button>
-        <button className="ops-card" onClick={() => setActiveSection('incidents')} type="button">
-          <span className="ops-card-icon">IN</span>
-          <div className="ops-card-body">
-            <h3>Incidents</h3>
-            <p>Log and follow up on site incidents, near misses and safety-related observations.</p>
-            <div className="ops-card-stats">
-              {incStats.open > 0 ? <span className="stat-warn">{incStats.open} open / under review</span> : <span className="stat-ok">All closed</span>}
-              {incStats.closed > 0 && <span>{incStats.closed} closed</span>}
-              <span>{incidentRecords.length} total</span>
-            </div>
-          </div>
-          <span className="ops-card-arrow">→</span>
-        </button>
+      <PageHeader eyebrow="Activities" title="Activities" />
+      <div className="section-inline-tabs">
+        <button className={activeSection === 'requests' ? 'active' : ''} onClick={() => setActiveSection('requests')} type="button">Requests</button>
+        <button className={activeSection === 'visits' ? 'active' : ''} onClick={() => setActiveSection('visits')} type="button">Visits</button>
+        <button className={activeSection === 'incidents' ? 'active' : ''} onClick={() => setActiveSection('incidents')} type="button">Incidents</button>
       </div>
+      {activeSection === 'requests' && <RequestsSection records={staffRequests} onUpdate={setStaffRequests} onBack={() => {}} />}
+      {activeSection === 'visits' && <VisitsSection records={visitRecords} onUpdate={setVisitRecords} onBack={() => {}} />}
+      {activeSection === 'incidents' && <IncidentsSection records={incidentRecords} employees={employees} onUpdate={setIncidentRecords} onBack={() => {}} />}
     </>
   )
 }

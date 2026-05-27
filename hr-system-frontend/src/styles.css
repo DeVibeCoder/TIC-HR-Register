@@ -4779,6 +4779,49 @@ button.step-pill:hover { filter: brightness(0.98); }
 .leave-table .leave-date-th   { text-align: center !important; }
 .leave-table .leave-days-th   { text-align: center !important; }
 
+/* ── Section inline tab bar (Ops & Activities) ───────────── */
+.section-inline-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 16px;
+  border-bottom: 2px solid rgba(148, 163, 184, 0.2);
+  padding-bottom: 0;
+}
+.section-inline-tabs button {
+  position: relative;
+  padding: 7px 18px;
+  background: transparent;
+  border: none;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #94a3b8;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 140ms, border-color 140ms;
+  white-space: nowrap;
+}
+.section-inline-tabs button:hover {
+  color: #7c3aed;
+}
+.section-inline-tabs button.active {
+  color: #7c3aed;
+  border-bottom-color: #7c3aed;
+}
+/* pipe separator between tabs */
+.section-inline-tabs button + button::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 25%;
+  height: 50%;
+  width: 1px;
+  background: rgba(148, 163, 184, 0.4);
+}
+
 
 
 
