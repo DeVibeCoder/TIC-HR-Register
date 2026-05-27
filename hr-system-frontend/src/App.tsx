@@ -2064,140 +2064,136 @@ function TrainingModal({ record, employees, onClose, onSave }: {
   const [date, setDate] = useState(record.date)
   const [conductedBy, setConductedBy] = useState(record.conductedBy)
   const [trainingType, setTrainingType] = useState<TrainingRecord['trainingType']>(record.trainingType)
-  const [participants, setParticipants] = useState<TrainingParticipant[]>(record.participants)
-  const [participantSearch, setParticipantSearch] = useState('')
 
-  const searchResults = useMemo(() => {
-    const q = participantSearch.trim().toLowerCase()
-    if (!q) return []
-    return employees
-      .filter((e) => !participants.some((p) => p.employeeId === e.employeeId))
-      .filter((e) => `${e.employeeId} ${e.fullName} ${e.department}`.toLowerCase().includes(q))
-      .slice(0, 8)
-  }, [employees, participants, participantSearch])
+  const blankRow = (): TrainingParticipant => ({ employeeId: '', name: '', department: '', attended: true })
+  const [participants, setParticipants] = useState<TrainingParticipant[]>(
+    record.participants.length > 0 ? record.participants : [blankRow()]
+  )
 
-  const addParticipant = (emp: Employee) => {
-    setParticipants((prev) => [...prev, { employeeId: emp.employeeId, name: emp.fullName, department: emp.department, attended: true }])
-    setParticipantSearch('')
+  const updateRow = (index: number, field: keyof TrainingParticipant, value: string) => {
+    setParticipants((prev) => prev.map((p, i) => i === index ? { ...p, [field]: value } : p))
   }
 
-  const removeParticipant = (empId: string) => {
-    setParticipants((prev) => prev.filter((p) => p.employeeId !== empId))
+  const handleEmpIdBlur = (index: number, value: string) => {
+    const emp = employees.find((e) => e.employeeId === value.trim())
+    if (emp) {
+      setParticipants((prev) => prev.map((p, i) =>
+        i === index ? { ...p, employeeId: emp.employeeId, name: emp.fullName, department: emp.department } : p
+      ))
+    }
+  }
+
+  const addRow = () => setParticipants((prev) => [...prev, blankRow()])
+
+  const removeRow = (index: number) => {
+    setParticipants((prev) => {
+      const next = prev.filter((_, i) => i !== index)
+      return next.length > 0 ? next : [blankRow()]
+    })
   }
 
   const save = () => {
-    onSave({ ...record, trainingTitle, date, conductedBy, trainingType, participants, status: 'Completed', remarks: '' })
+    const clean = participants.filter((p) => p.name.trim() || p.employeeId.trim())
+    onSave({ ...record, trainingTitle, date, conductedBy, trainingType, participants: clean, status: 'Completed', remarks: '' })
   }
 
   return (
     <div className="modal-backdrop" role="presentation">
-      <section className="registration-modal wide-modal" role="dialog" aria-modal="true">
+      <section className="registration-modal wide-modal induction-modal-shell" role="dialog" aria-modal="true">
         <div className="modal-header">
           <div>
             <p className="eyebrow">Training Record</p>
             <h2>{isNew ? 'Add Training Record' : 'Edit Training Record'}</h2>
+            <p className="ind-modal-sub">Saved as <strong>Completed</strong></p>
           </div>
           <button className="icon-button" onClick={onClose} type="button">×</button>
         </div>
 
-        {/* ── Form card ── */}
-        <div className="trn-modal-card">
-          {/* Training title – full width */}
-          <div className="trn-modal-field-block">
-            <span className="trn-modal-field-lbl">Training Title</span>
+        {/* ── Session details — reuse induction form grid style ── */}
+        <div className="ind-form-grid">
+          <label className="ind-span-2">
+            <span>Training Title</span>
             <input
-              className="trn-modal-title-input"
               value={trainingTitle}
               onChange={(e) => setTrainingTitle(e.target.value)}
               placeholder="e.g. Fire Safety & Emergency Procedures"
             />
-          </div>
-          {/* Detail row: Date / Type / Conducted By */}
-          <div className="trn-modal-detail-row">
-            <label>
-              <span className="trn-modal-field-lbl">Training Date</span>
-              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-            </label>
-            <label>
-              <span className="trn-modal-field-lbl">Type</span>
-              <select value={trainingType} onChange={(e) => setTrainingType(e.target.value as TrainingRecord['trainingType'])}>
-                <option value="Internal">Internal</option>
-                <option value="External">External</option>
-              </select>
-            </label>
-            <label>
-              <span className="trn-modal-field-lbl">Conducted By / Trainer</span>
-              <input value={conductedBy} onChange={(e) => setConductedBy(e.target.value)} placeholder="Trainer name or organisation" />
-            </label>
-          </div>
+          </label>
+          <label>
+            <span>Training Date</span>
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          </label>
+          <label>
+            <span>Type</span>
+            <select value={trainingType} onChange={(e) => setTrainingType(e.target.value as TrainingRecord['trainingType'])}>
+              <option value="Internal">Internal</option>
+              <option value="External">External</option>
+            </select>
+          </label>
+          <label className="ind-span-2">
+            <span>Conducted By / Trainer</span>
+            <input value={conductedBy} onChange={(e) => setConductedBy(e.target.value)} placeholder="Trainer name or organisation" />
+          </label>
         </div>
 
-        {/* ── Participants ── */}
-        <div className="trn-participants-card">
-          <div className="trn-participants-hdr">
-            <div className="trn-participants-hdr-left">
-              <span className="trn-participants-title">Participants</span>
-              <span className="trn-participants-count">{participants.length} added</span>
-            </div>
-            <div className="participant-search-wrap">
-              <input
-                className="participant-search-input"
-                type="search"
-                value={participantSearch}
-                onChange={(e) => setParticipantSearch(e.target.value)}
-                placeholder="Search employee by ID or name to add…"
-              />
-              {searchResults.length > 0 && (
-                <div className="participant-search-results">
-                  {searchResults.map((emp) => (
-                    <button
-                      key={emp.employeeId}
-                      className="participant-search-result-item"
-                      type="button"
-                      onClick={() => addParticipant(emp)}
-                    >
-                      <strong>{emp.employeeId}</strong> {emp.fullName} <span>{emp.department}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+        {/* ── Participants — row-based like induction ── */}
+        <div className="ind-participants-section">
+          <div className="ind-participants-header">
+            <h3 className="ind-participants-title">
+              Participants
+              <span className="ind-participants-count">{participants.filter((p) => p.name.trim() || p.employeeId.trim()).length}</span>
+            </h3>
+            <p className="ind-participants-hint">Enter Emp ID and press Tab — name &amp; section auto-fill if found in records</p>
+            <button className="ind-add-row-btn" onClick={addRow} type="button">+ Add Row</button>
           </div>
-          {participants.length > 0 ? (
-            <table className="data-table trn-participants-tbl">
-              <colgroup>
-                <col style={{ width: '36px' }} />
-                <col style={{ width: '90px' }} />
-                <col />
-                <col style={{ width: '170px' }} />
-                <col style={{ width: '36px' }} />
-              </colgroup>
+          <div className="ind-table-scroll">
+            <table className="data-table ind-edit-table">
               <thead>
                 <tr>
-                  <th style={{ textAlign: 'center' }}>#</th>
-                  <th>Emp ID</th>
-                  <th>Name</th>
-                  <th>Section</th>
-                  <th></th>
+                  <th style={{ width: 30 }}>#</th>
+                  <th style={{ width: 80 }}>Emp ID</th>
+                  <th>Full Name</th>
+                  <th style={{ width: 180 }}>Section / Department</th>
+                  <th style={{ width: 30 }}></th>
                 </tr>
               </thead>
               <tbody>
                 {participants.map((p, i) => (
-                  <tr key={p.employeeId}>
-                    <td style={{ textAlign: 'center' }}>{i + 1}</td>
-                    <td>{p.employeeId}</td>
-                    <td>{p.name}</td>
-                    <td>{p.department}</td>
-                    <td style={{ textAlign: 'center' }}>
-                      <button className="action-glyph delete" onClick={() => removeParticipant(p.employeeId)} type="button" title="Remove" aria-label="Remove participant">×</button>
+                  <tr key={i}>
+                    <td className="ind-row-num">{i + 1}</td>
+                    <td>
+                      <input
+                        className="cell-input"
+                        value={p.employeeId}
+                        onChange={(e) => updateRow(i, 'employeeId', e.target.value)}
+                        onBlur={(e) => handleEmpIdBlur(i, e.target.value)}
+                        placeholder="ID"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        className="cell-input cell-input-name"
+                        value={p.name}
+                        onChange={(e) => updateRow(i, 'name', e.target.value)}
+                        placeholder="Full name"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        className="cell-input"
+                        value={p.department}
+                        onChange={(e) => updateRow(i, 'department', e.target.value)}
+                        placeholder="Section"
+                      />
+                    </td>
+                    <td>
+                      <button className="ind-remove-row-btn" onClick={() => removeRow(i)} type="button" title="Remove row" aria-label="Remove row">×</button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          ) : (
-            <p className="trn-participants-empty">No participants added yet — search above to add employees.</p>
-          )}
+          </div>
         </div>
 
         <div className="modal-actions">
@@ -2532,31 +2528,22 @@ function printTrainingRecord(record: TrainingRecord) {
   }
 }
 
-function PersonalFileModal({ file, employees, isNew, onClose, onSave }: {
+function PersonalFileModal({ file, onClose, onSave }: {
   file: PersonalFileRecord
-  employees: Employee[]
-  isNew: boolean
   onClose: () => void
   onSave: (file: PersonalFileRecord) => void
 }) {
-  const [employeeId, setEmployeeId] = useState(file.employeeId)
-  const [fullName, setFullName] = useState(file.fullName)
-  const [department, setDepartment] = useState(file.department)
-  const [staffStatus, setStaffStatus] = useState<StaffStatus>(file.staffStatus)
   const [coc, setCoc] = useState(file.coc)
   const [jd, setJd] = useState(file.jd)
   const [ea, setEa] = useState(file.ea)
   const [eaExpiryDate, setEaExpiryDate] = useState(file.eaExpiryDate)
   const [remarks, setRemarks] = useState(file.remarks)
-  const [manualEntry, setManualEntry] = useState(!isNew)
+  const [markInactive, setMarkInactive] = useState(file.staffStatus !== 'Active')
+  const [inactiveReason, setInactiveReason] = useState<'Terminated' | 'Retired' | 'Transferred'>(
+    file.staffStatus !== 'Active' ? (file.staffStatus as 'Terminated' | 'Retired' | 'Transferred') : 'Terminated'
+  )
 
-  const isInactive = staffStatus !== 'Active'
-
-  const handleEmployeeSelect = (id: string) => {
-    setEmployeeId(id)
-    const emp = employees.find((e) => e.employeeId === id)
-    if (emp) { setFullName(emp.fullName); setDepartment(emp.department) }
-  }
+  const effectiveStatus: StaffStatus = markInactive ? inactiveReason : 'Active'
 
   return (
     <div className="modal-backdrop" role="presentation">
@@ -2564,75 +2551,10 @@ function PersonalFileModal({ file, employees, isNew, onClose, onSave }: {
         <div className="modal-header">
           <div>
             <p className="eyebrow">Personal Files</p>
-            <h2>{isNew ? 'Add Personal File' : file.fullName}</h2>
-            {!isNew && <p className="pf-modal-meta">{file.fileNo} &nbsp;·&nbsp; {file.employeeId} &nbsp;·&nbsp; {file.department}</p>}
+            <h2>{file.fullName}</h2>
+            <p className="pf-modal-meta">{file.fileNo} &nbsp;·&nbsp; {file.employeeId} &nbsp;·&nbsp; {file.department}</p>
           </div>
           <button className="icon-button" onClick={onClose} type="button">×</button>
-        </div>
-
-        {/* Employee selection / identity */}
-        {isNew && (
-          <div className="pf-modal-identity">
-            <div className="pf-modal-identity-toggle">
-              <button
-                type="button"
-                className={`pf-toggle-btn ${!manualEntry ? 'active' : ''}`}
-                onClick={() => setManualEntry(false)}
-              >From Employee List</button>
-              <button
-                type="button"
-                className={`pf-toggle-btn ${manualEntry ? 'active' : ''}`}
-                onClick={() => setManualEntry(true)}
-              >Manual Entry</button>
-            </div>
-            {!manualEntry ? (
-              <label className="pf-modal-label">
-                <span>Select Employee</span>
-                <select value={employeeId} onChange={(e) => handleEmployeeSelect(e.target.value)}>
-                  <option value="">— choose employee —</option>
-                  {employees.map((emp) => (
-                    <option key={emp.employeeId} value={emp.employeeId}>{emp.employeeId} – {emp.fullName} ({emp.department})</option>
-                  ))}
-                </select>
-              </label>
-            ) : (
-              <div className="pf-modal-manual-row">
-                <label className="pf-modal-label">
-                  <span>Employee ID</span>
-                  <input value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} placeholder="e.g. 58700" />
-                </label>
-                <label className="pf-modal-label">
-                  <span>Full Name</span>
-                  <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Full name in uppercase" />
-                </label>
-                <label className="pf-modal-label">
-                  <span>Department</span>
-                  <select value={department} onChange={(e) => setDepartment(e.target.value)}>
-                    {departmentsList.map((d) => <option key={d}>{d}</option>)}
-                  </select>
-                </label>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Status */}
-        <div className="pf-modal-status-row">
-          <label className="pf-modal-label">
-            <span>Staff Status</span>
-            <select value={staffStatus} onChange={(e) => setStaffStatus(e.target.value as StaffStatus)}>
-              <option value="Active">Active</option>
-              <option value="Terminated">Terminated</option>
-              <option value="Retired">Retired</option>
-              <option value="Transferred">Transferred</option>
-            </select>
-          </label>
-          {isInactive && (
-            <label className="pf-modal-label pf-modal-reason">
-              <span>Reason / Notes</span>
-              <input value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="e.g. Resigned, EA expiry, transferred to HO…" />
-            </label>
-          )}
         </div>
 
         {/* Document checklist */}
@@ -2649,17 +2571,37 @@ function PersonalFileModal({ file, employees, isNew, onClose, onSave }: {
             <span>EA Expiry Date</span>
             <input type="date" value={eaExpiryDate} onChange={(e) => setEaExpiryDate(e.target.value)} />
           </label>
-          {!isInactive && (
-            <label className="full-field">
-              <span>Remarks</span>
-              <input value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="Any notes about this file" />
+          <label className="full-field">
+            <span>Remarks</span>
+            <input value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="Any notes about this file" />
+          </label>
+        </div>
+
+        {/* Mark as Inactive toggle */}
+        <div className="pf-inactive-toggle-row">
+          <label className="pf-inactive-toggle-label">
+            <input
+              type="checkbox"
+              checked={markInactive}
+              onChange={(e) => setMarkInactive(e.target.checked)}
+            />
+            <span className="pf-inactive-toggle-text">Mark as Inactive</span>
+          </label>
+          {markInactive && (
+            <label className="pf-inactive-reason-label">
+              <span>Reason</span>
+              <select value={inactiveReason} onChange={(e) => setInactiveReason(e.target.value as typeof inactiveReason)}>
+                <option value="Terminated">Terminated</option>
+                <option value="Retired">Retired</option>
+                <option value="Transferred">Transferred</option>
+              </select>
             </label>
           )}
         </div>
 
         <div className="modal-actions">
           <button className="quiet-button light" onClick={onClose} type="button">Cancel</button>
-          <button className="primary-button" onClick={() => onSave({ ...file, employeeId, fullName, department, staffStatus, coc, jd, ea, eaExpiryDate, remarks })} type="button">Save</button>
+          <button className="primary-button" onClick={() => onSave({ ...file, staffStatus: effectiveStatus, coc, jd, ea, eaExpiryDate, remarks })} type="button">Save</button>
         </div>
       </section>
     </div>
@@ -2670,8 +2612,7 @@ function StaffStatusBadge({ status }: { status: StaffStatus }) {
   return <span className={`pf-status-badge pf-status-${status.toLowerCase()}`}>{status}</span>
 }
 
-function PersonalFilesSection({ employees, records, onUpdate }: {
-  employees: Employee[]
+function PersonalFilesSection({ records, onUpdate }: {
   records: PersonalFileRecord[]
   onUpdate: (fn: (prev: PersonalFileRecord[]) => PersonalFileRecord[]) => void
   onBack?: () => void
@@ -2680,7 +2621,6 @@ function PersonalFilesSection({ employees, records, onUpdate }: {
   const [deptFilter, setDeptFilter] = useState('All Sections')
   const [staffFilter, setStaffFilter] = useState<'Active' | 'Inactive' | 'All'>('Active')
   const [editingFileNo, setEditingFileNo] = useState<string | null>(null)
-  const [showAddModal, setShowAddModal] = useState(false)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState<50 | 100 | 'All'>(50)
 
@@ -2699,25 +2639,13 @@ function PersonalFilesSection({ employees, records, onUpdate }: {
 
   const editingFile = editingFileNo ? (records.find((r) => r.fileNo === editingFileNo) ?? null) : null
 
-  const nextFileNo = () => {
-    const nums = records.map((r) => parseInt(r.fileNo, 10)).filter((n) => !isNaN(n))
-    const max = nums.length ? Math.max(...nums) : 0
-    return String(max + 1).padStart(4, '0')
-  }
-
   const saveFile = (file: PersonalFileRecord) => {
     onUpdate((prev) => {
       const exists = prev.some((r) => r.fileNo === file.fileNo)
       return exists ? prev.map((r) => r.fileNo === file.fileNo ? file : r) : [file, ...prev]
     })
     setEditingFileNo(null)
-    setShowAddModal(false)
   }
-
-  const newFile = (): PersonalFileRecord => ({
-    fileNo: nextFileNo(), employeeId: '', fullName: '', department: departmentsList[0],
-    staffStatus: 'Active', coc: false, jd: false, ea: false, eaExpiryDate: '', remarks: '',
-  })
 
   const rowClass = (s: StaffStatus) => {
     if (s === 'Terminated') return 'pf-row-terminated'
@@ -2757,7 +2685,6 @@ function PersonalFilesSection({ employees, records, onUpdate }: {
               <option value="All">All</option>
             </select>
           </label>
-          <button className="primary-button" onClick={() => setShowAddModal(true)} type="button">Add</button>
         </div>
 
         <div className="employee-table-shell compact-scroll">
@@ -2813,8 +2740,7 @@ function PersonalFilesSection({ employees, records, onUpdate }: {
           <div className="pagination-bar"><span className="page-info">{filtered.length} records total</span></div>
         )}
       </section>
-      {editingFile && <PersonalFileModal file={editingFile} employees={employees} isNew={false} onClose={() => setEditingFileNo(null)} onSave={saveFile} />}
-      {showAddModal && <PersonalFileModal file={newFile()} employees={employees} isNew={true} onClose={() => setShowAddModal(false)} onSave={saveFile} />}
+      {editingFile && <PersonalFileModal file={editingFile} onClose={() => setEditingFileNo(null)} onSave={saveFile} />}
     </>
   )
 }
@@ -3087,6 +3013,8 @@ function BankAccountModal({ record, employees, onClose, onSave }: {
     })
   }
 
+  const displayEmp = isNew ? selected : employees.find((e) => e.employeeId === record.employeeId)
+
   return (
     <div className="modal-backdrop" role="presentation">
       <section className="registration-modal" role="dialog" aria-modal="true">
@@ -3098,51 +3026,83 @@ function BankAccountModal({ record, employees, onClose, onSave }: {
           <button className="icon-button" onClick={onClose} type="button">×</button>
         </div>
         <form onSubmit={save}>
-          <div className="trn-form-grid">
-            {isNew ? (
-              <label className="trn-span-3">
-                <span>Employee (Expatriate Staff)</span>
-                <select value={employeeId} onChange={(e) => setEmployeeId(e.target.value)}>
+          {/* Employee card */}
+          <div className="trn-modal-card" style={{ marginBottom: '16px' }}>
+            <div className="trn-modal-field-block">
+              <span className="trn-modal-field-lbl">Employee</span>
+              {isNew ? (
+                <select
+                  value={employeeId}
+                  onChange={(e) => setEmployeeId(e.target.value)}
+                  style={{ width: '100%', padding: '7px 10px', borderRadius: '7px', border: '1.5px solid rgba(124,58,237,0.2)', fontSize: '0.85rem', background: '#fff' }}
+                >
                   {nonLocals.map((emp) => (
-                    <option key={emp.employeeId} value={emp.employeeId}>{emp.employeeId} – {emp.fullName}</option>
+                    <option key={emp.employeeId} value={emp.employeeId}>{emp.employeeId} – {emp.fullName} ({emp.department})</option>
                   ))}
                 </select>
-              </label>
-            ) : (
-              <label className="trn-span-3">
-                <span>Employee</span>
-                <input disabled value={`${record.employeeId} – ${record.fullName}`} />
-              </label>
+              ) : (
+                <p style={{ margin: 0, fontWeight: 700, fontSize: '0.92rem', color: '#1e1b4b' }}>{record.fullName}</p>
+              )}
+            </div>
+            {displayEmp && (
+              <div className="trn-modal-detail-row" style={{ gridTemplateColumns: '1fr 1fr 1fr', marginTop: '8px' }}>
+                <div>
+                  <span className="trn-modal-field-lbl">Emp ID</span>
+                  <p style={{ margin: 0, fontSize: '0.85rem', color: '#374151' }}>{displayEmp.employeeId}</p>
+                </div>
+                <div>
+                  <span className="trn-modal-field-lbl">Section</span>
+                  <p style={{ margin: 0, fontSize: '0.85rem', color: '#374151' }}>{displayEmp.department}</p>
+                </div>
+                <div>
+                  <span className="trn-modal-field-lbl">Nationality</span>
+                  <p style={{ margin: 0, fontSize: '0.85rem', color: '#374151' }}>{displayEmp.nationality}</p>
+                </div>
+              </div>
             )}
-            <label>
-              <span>Bank</span>
-              <select value={bank} onChange={(e) => setBank(e.target.value as BankName)}>
-                <option>SBI</option><option>BOC</option><option>CBM</option>
-              </select>
-            </label>
-            <label>
-              <span>Account Type</span>
-              <select value={accountType} onChange={(e) => setAccountType(e.target.value as AccountType)}>
-                <option value="USD">USD</option>
-                <option value="MVR">MVR</option>
-                <option value="USD & MVR">USD &amp; MVR</option>
-              </select>
-            </label>
-            <label>
-              <span>Scheduled Date</span>
-              <input type="date" value={scheduledDate} onChange={(e) => setScheduledDate(e.target.value)} />
-            </label>
-            <label>
-              <span>Status</span>
-              <select value={status} onChange={(e) => setStatus(e.target.value as AccountStatus)}>
-                <option>Pending</option><option>Applied</option><option>Completed</option>
-              </select>
-            </label>
-            <label className="trn-span-2">
-              <span>Remarks</span>
-              <input value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="Optional notes" />
-            </label>
           </div>
+
+          {/* Account details card */}
+          <div className="trn-modal-card" style={{ marginBottom: '16px' }}>
+            <div className="trn-modal-detail-row">
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span className="trn-modal-field-lbl">Bank</span>
+                <select value={bank} onChange={(e) => setBank(e.target.value as BankName)}
+                  style={{ padding: '7px 10px', borderRadius: '7px', border: '1.5px solid rgba(124,58,237,0.2)', fontSize: '0.85rem', background: '#fff' }}>
+                  <option>SBI</option><option>BOC</option><option>CBM</option>
+                </select>
+              </label>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span className="trn-modal-field-lbl">Account Type</span>
+                <select value={accountType} onChange={(e) => setAccountType(e.target.value as AccountType)}
+                  style={{ padding: '7px 10px', borderRadius: '7px', border: '1.5px solid rgba(124,58,237,0.2)', fontSize: '0.85rem', background: '#fff' }}>
+                  <option value="USD">USD</option>
+                  <option value="MVR">MVR</option>
+                  <option value="USD & MVR">USD &amp; MVR</option>
+                </select>
+              </label>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span className="trn-modal-field-lbl">Scheduled Date</span>
+                <input type="date" value={scheduledDate} onChange={(e) => setScheduledDate(e.target.value)}
+                  style={{ padding: '7px 10px', borderRadius: '7px', border: '1.5px solid rgba(124,58,237,0.2)', fontSize: '0.85rem', background: '#fff' }} />
+              </label>
+            </div>
+            <div className="trn-modal-detail-row" style={{ gridTemplateColumns: '1fr 2fr', marginTop: '10px' }}>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span className="trn-modal-field-lbl">Status</span>
+                <select value={status} onChange={(e) => setStatus(e.target.value as AccountStatus)}
+                  style={{ padding: '7px 10px', borderRadius: '7px', border: '1.5px solid rgba(124,58,237,0.2)', fontSize: '0.85rem', background: '#fff' }}>
+                  <option>Pending</option><option>Applied</option><option>Completed</option>
+                </select>
+              </label>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span className="trn-modal-field-lbl">Remarks</span>
+                <input value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="Optional notes"
+                  style={{ padding: '7px 10px', borderRadius: '7px', border: '1.5px solid rgba(124,58,237,0.2)', fontSize: '0.85rem', background: '#fff' }} />
+              </label>
+            </div>
+          </div>
+
           <div className="modal-actions">
             <button className="quiet-button light" onClick={onClose} type="button">Cancel</button>
             <button className="primary-button" type="submit">Save Record</button>
@@ -3838,7 +3798,7 @@ function OperationsPage({ employees, completedTerminations }: {
         <button className={activeSection === 'training' ? 'active' : ''} onClick={() => setActiveSection('training')} type="button">Training</button>
         <button className={activeSection === 'bank' ? 'active' : ''} onClick={() => setActiveSection('bank')} type="button">Bank Account</button>
       </div>
-      {activeSection === 'files' && <PersonalFilesSection employees={employees} records={personalFiles} onUpdate={setPersonalFiles} onBack={() => {}} />}
+      {activeSection === 'files' && <PersonalFilesSection records={personalFiles} onUpdate={setPersonalFiles} onBack={() => {}} />}
       {activeSection === 'induction' && <InductionSection employees={employees} records={inductionRecords} onUpdate={setInductionRecords} onBack={() => {}} />}
       {activeSection === 'training' && <TrainingSection records={trainingRecords} employees={employees} onUpdate={setTrainingRecords} onBack={() => {}} />}
       {activeSection === 'bank' && <BankAccountSection employees={employees} records={bankAccountRecords} onUpdate={setBankAccountRecords} onBack={() => {}} />}
