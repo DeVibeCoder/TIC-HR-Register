@@ -4849,32 +4849,68 @@ button.step-pill:hover { filter: brightness(0.98); }
 }
 
 /* ════════════════════════════════════════════════════════════
-   HR OPERATIONS — shared table header override
-   All four tabs get the same lighter indigo header instead of
-   the global near-black gradient.
+   HR OPERATIONS — header & cell alignment (no color change)
    ════════════════════════════════════════════════════════════ */
+
+/* All ops-table headers: vertically centered */
 .personal-files-table thead th,
 .induction-table thead th,
 .training-table thead th,
 .bank-table thead th {
-  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important;
-  color: #fff !important;
-  border-bottom: 2px solid rgba(99, 102, 241, 0.35) !important;
-  padding: 9px 12px !important;
-  font-size: 0.71rem !important;
-  font-weight: 800 !important;
-  letter-spacing: 0.06em !important;
   vertical-align: middle !important;
-  white-space: nowrap !important;
-  line-height: 1.2 !important;
+  text-align: left !important;
 }
 
-/* All ops-table body cells: consistent vertical alignment */
+/* All ops-table body cells: vertically centered */
 .personal-files-table td,
 .induction-table td,
 .training-table td,
 .bank-table td {
   vertical-align: middle !important;
+}
+
+/* Personal Files: center these columns (header + cell) */
+.personal-files-table th:nth-child(1),  /* File No */
+.personal-files-table td:nth-child(1),
+.personal-files-table th:nth-child(2),  /* Emp ID */
+.personal-files-table td:nth-child(2),
+.personal-files-table th:nth-child(5),  /* COC */
+.personal-files-table td:nth-child(5),
+.personal-files-table th:nth-child(6),  /* JD */
+.personal-files-table td:nth-child(6),
+.personal-files-table th:nth-child(7),  /* EA */
+.personal-files-table td:nth-child(7),
+.personal-files-table th:nth-child(8),  /* EA Expiry */
+.personal-files-table td:nth-child(8),
+.personal-files-table th:nth-child(9),  /* Status */
+.personal-files-table td:nth-child(9),
+.personal-files-table th:last-child,    /* Action */
+.personal-files-table td:last-child {
+  text-align: center !important;
+}
+
+/* Training: center Date header to match content */
+.training-table th:nth-child(2),
+.training-table td:nth-child(2) {
+  text-align: center !important;
+}
+
+/* Bank: center Emp ID, Account Type header + cell */
+.bank-table th:nth-child(1),
+.bank-table td:nth-child(1),
+.bank-table th:nth-child(2),
+.bank-table td:nth-child(2),
+.bank-table th:nth-child(6),
+.bank-table td:nth-child(6),
+.bank-table th:nth-child(7),
+.bank-table td:nth-child(7),
+.bank-table th:nth-child(8),
+.bank-table td:nth-child(8),
+.bank-table th:nth-child(9),
+.bank-table td:nth-child(9),
+.bank-table th:last-child,
+.bank-table td:last-child {
+  text-align: center !important;
 }
 
 /* ── Induction table — column alignment overrides ───────────
