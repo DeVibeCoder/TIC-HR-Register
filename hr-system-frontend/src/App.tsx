@@ -64,16 +64,18 @@ type PassportHandoverRecord = LeaveBase & {
 
 type OpsSection = 'files' | 'induction' | 'training' | 'bank'
 
+type StaffStatus = 'Active' | 'Terminated' | 'Retired' | 'Transferred'
+
 type PersonalFileRecord = {
   fileNo: string
   employeeId: string
   fullName: string
   department: string
-  isFormerStaff: boolean
+  staffStatus: StaffStatus
   coc: boolean
   jd: boolean
-  cont: boolean
-  contractExpiryDate: string
+  ea: boolean
+  eaExpiryDate: string
   remarks: string
 }
 
@@ -256,28 +258,28 @@ const initialNoticeTerminations: EnhancedTerminationRecord[] = []
 const initialCompletedTerminations: CompletedTerminationRecord[] = []
 const allTerminationStages: TerminationStage[] = ['Letter Submitted', 'Exit Interview', 'Ticket', 'Pending Departure']
 const initialPersonalFiles: PersonalFileRecord[] = [
-  { fileNo: '0001', employeeId: '25431', fullName: 'THILINA LAKSHAN PERERA', department: 'STORES', isFormerStaff: true, coc: true, jd: true, cont: true, contractExpiryDate: '2022-12-31', remarks: 'Left company Dec 2022' },
-  { fileNo: '0002', employeeId: '31672', fullName: 'MD RAFIQUL ISLAM', department: 'ADMINISTRATION', isFormerStaff: true, coc: true, jd: true, cont: true, contractExpiryDate: '2023-06-30', remarks: 'Contract not renewed' },
-  { fileNo: '0003', employeeId: '33856', fullName: 'KRISHNA PRASAD RIMAL', department: 'MECHANICAL', isFormerStaff: true, coc: true, jd: false, cont: true, contractExpiryDate: '2024-01-15', remarks: 'Resigned' },
-  { fileNo: '0004', employeeId: '35494', fullName: 'GAMARALALAGE AJITH WIJESIRI', department: 'ACCOUNTS AND FINANCE', isFormerStaff: false, coc: true, jd: true, cont: true, contractExpiryDate: '2027-05-31', remarks: '' },
-  { fileNo: '0005', employeeId: '37916', fullName: 'JAGO', department: 'STORES', isFormerStaff: false, coc: true, jd: true, cont: true, contractExpiryDate: '2026-09-01', remarks: '' },
-  { fileNo: '0006', employeeId: '43407', fullName: 'MOHAMMAD DELOWAR HOSSAIN', department: 'STORES', isFormerStaff: false, coc: true, jd: true, cont: true, contractExpiryDate: '2026-08-01', remarks: '' },
-  { fileNo: '0007', employeeId: '44386', fullName: 'MAJIB', department: 'STORES', isFormerStaff: false, coc: true, jd: true, cont: true, contractExpiryDate: '2026-06-01', remarks: '' },
-  { fileNo: '0008', employeeId: '50223', fullName: 'AYESHAN KUMARA WIJEYATHUNGA MUDALIGE', department: 'STORES', isFormerStaff: false, coc: true, jd: true, cont: true, contractExpiryDate: '2027-04-10', remarks: '' },
-  { fileNo: '0009', employeeId: '50427', fullName: 'MD SAIFUR RAHMAN', department: 'STORES', isFormerStaff: false, coc: true, jd: true, cont: false, contractExpiryDate: '2027-06-01', remarks: 'Contract renewal pending' },
-  { fileNo: '0010', employeeId: '52804', fullName: 'AHMED IMRAN', department: 'ACCOUNTS AND FINANCE', isFormerStaff: false, coc: true, jd: true, cont: true, contractExpiryDate: '2027-12-01', remarks: '' },
-  { fileNo: '0011', employeeId: '53029', fullName: 'KUMARAN VAITHILINGAM', department: 'STORES', isFormerStaff: false, coc: true, jd: true, cont: true, contractExpiryDate: '2026-01-20', remarks: '' },
-  { fileNo: '0012', employeeId: '53979', fullName: 'NAVEEN SEKAR', department: 'STORES', isFormerStaff: false, coc: true, jd: false, cont: true, contractExpiryDate: '2026-08-10', remarks: 'JD pending signature' },
-  { fileNo: '0013', employeeId: '55427', fullName: 'SARAVANAN RAJENDRAN', department: 'STORES', isFormerStaff: false, coc: true, jd: true, cont: true, contractExpiryDate: '2025-09-01', remarks: '' },
-  { fileNo: '0014', employeeId: '56141', fullName: 'RAJU PERKA', department: 'CAFE', isFormerStaff: false, coc: true, jd: true, cont: true, contractExpiryDate: '2026-04-01', remarks: '' },
-  { fileNo: '0015', employeeId: '56530', fullName: 'PUBUDU MADURANGA ALAWATHTHA KANKANAMGE', department: 'ADMINISTRATION', isFormerStaff: false, coc: true, jd: true, cont: true, contractExpiryDate: '2026-07-01', remarks: '' },
-  { fileNo: '0016', employeeId: '56646', fullName: 'CHANDRASHEKHER PURELLA', department: 'ACCOUNTS AND FINANCE', isFormerStaff: false, coc: true, jd: true, cont: true, contractExpiryDate: '2026-08-01', remarks: '' },
-  { fileNo: '0017', employeeId: '57637', fullName: 'MUNI ACHARI GUNTI KOVALA', department: 'CAFE', isFormerStaff: false, coc: true, jd: true, cont: true, contractExpiryDate: '2027-02-10', remarks: '' },
-  { fileNo: '0018', employeeId: '57803', fullName: 'INDIKA SAMPATH SAMARASINGHEGE', department: 'STORES', isFormerStaff: false, coc: true, jd: false, cont: false, contractExpiryDate: '2027-05-20', remarks: 'JD and contract pending' },
-  { fileNo: '0019', employeeId: '57935', fullName: 'ARUNODA KAVINDU NANAYAKKARA', department: 'ACCOUNTS AND FINANCE', isFormerStaff: false, coc: true, jd: true, cont: false, contractExpiryDate: '2027-04-20', remarks: 'Contract pending' },
-  { fileNo: '0020', employeeId: '58034', fullName: 'SAMEERA MADUSANKA GUNARATHNA', department: 'STORES', isFormerStaff: false, coc: true, jd: false, cont: false, contractExpiryDate: '2027-05-22', remarks: 'JD and contract pending' },
-  { fileNo: '0021', employeeId: '58686', fullName: 'YASAR ARAFATH BASHEER AHAMED', department: 'STORES', isFormerStaff: false, coc: false, jd: false, cont: false, contractExpiryDate: '2027-05-18', remarks: 'All documents pending' },
-  { fileNo: '0022', employeeId: '58692', fullName: 'SHANTUMON PATHIYIL CHACKO', department: 'HUMAN RESOURCES', isFormerStaff: false, coc: true, jd: true, cont: true, contractExpiryDate: '2027-10-15', remarks: '' },
+  { fileNo: '0001', employeeId: '25431', fullName: 'THILINA LAKSHAN PERERA', department: 'STORES', staffStatus: 'Terminated', coc: true, jd: true, ea: true, eaExpiryDate: '2022-12-31', remarks: 'Left company Dec 2022' },
+  { fileNo: '0002', employeeId: '31672', fullName: 'MD RAFIQUL ISLAM', department: 'ADMINISTRATION', staffStatus: 'Terminated', coc: true, jd: true, ea: true, eaExpiryDate: '2023-06-30', remarks: 'Contract not renewed' },
+  { fileNo: '0003', employeeId: '33856', fullName: 'KRISHNA PRASAD RIMAL', department: 'MECHANICAL', staffStatus: 'Terminated', coc: true, jd: false, ea: true, eaExpiryDate: '2024-01-15', remarks: 'Resigned' },
+  { fileNo: '0004', employeeId: '35494', fullName: 'GAMARALALAGE AJITH WIJESIRI', department: 'ACCOUNTS AND FINANCE', staffStatus: 'Active', coc: true, jd: true, ea: true, eaExpiryDate: '2027-05-31', remarks: '' },
+  { fileNo: '0005', employeeId: '37916', fullName: 'JAGO', department: 'STORES', staffStatus: 'Active', coc: true, jd: true, ea: true, eaExpiryDate: '2026-09-01', remarks: '' },
+  { fileNo: '0006', employeeId: '43407', fullName: 'MOHAMMAD DELOWAR HOSSAIN', department: 'STORES', staffStatus: 'Active', coc: true, jd: true, ea: true, eaExpiryDate: '2026-08-01', remarks: '' },
+  { fileNo: '0007', employeeId: '44386', fullName: 'MAJIB', department: 'STORES', staffStatus: 'Active', coc: true, jd: true, ea: true, eaExpiryDate: '2026-06-01', remarks: '' },
+  { fileNo: '0008', employeeId: '50223', fullName: 'AYESHAN KUMARA WIJEYATHUNGA MUDALIGE', department: 'STORES', staffStatus: 'Active', coc: true, jd: true, ea: true, eaExpiryDate: '2027-04-10', remarks: '' },
+  { fileNo: '0009', employeeId: '50427', fullName: 'MD SAIFUR RAHMAN', department: 'STORES', staffStatus: 'Active', coc: true, jd: true, ea: false, eaExpiryDate: '2027-06-01', remarks: 'EA renewal pending' },
+  { fileNo: '0010', employeeId: '52804', fullName: 'AHMED IMRAN', department: 'ACCOUNTS AND FINANCE', staffStatus: 'Active', coc: true, jd: true, ea: true, eaExpiryDate: '2027-12-01', remarks: '' },
+  { fileNo: '0011', employeeId: '53029', fullName: 'KUMARAN VAITHILINGAM', department: 'STORES', staffStatus: 'Active', coc: true, jd: true, ea: true, eaExpiryDate: '2026-01-20', remarks: '' },
+  { fileNo: '0012', employeeId: '53979', fullName: 'NAVEEN SEKAR', department: 'STORES', staffStatus: 'Active', coc: true, jd: false, ea: true, eaExpiryDate: '2026-08-10', remarks: 'JD pending signature' },
+  { fileNo: '0013', employeeId: '55427', fullName: 'SARAVANAN RAJENDRAN', department: 'STORES', staffStatus: 'Active', coc: true, jd: true, ea: true, eaExpiryDate: '2025-09-01', remarks: '' },
+  { fileNo: '0014', employeeId: '56141', fullName: 'RAJU PERKA', department: 'CAFE', staffStatus: 'Active', coc: true, jd: true, ea: true, eaExpiryDate: '2026-04-01', remarks: '' },
+  { fileNo: '0015', employeeId: '56530', fullName: 'PUBUDU MADURANGA ALAWATHTHA KANKANAMGE', department: 'ADMINISTRATION', staffStatus: 'Active', coc: true, jd: true, ea: true, eaExpiryDate: '2026-07-01', remarks: '' },
+  { fileNo: '0016', employeeId: '56646', fullName: 'CHANDRASHEKHER PURELLA', department: 'ACCOUNTS AND FINANCE', staffStatus: 'Active', coc: true, jd: true, ea: true, eaExpiryDate: '2026-08-01', remarks: '' },
+  { fileNo: '0017', employeeId: '57637', fullName: 'MUNI ACHARI GUNTI KOVALA', department: 'CAFE', staffStatus: 'Active', coc: true, jd: true, ea: true, eaExpiryDate: '2027-02-10', remarks: '' },
+  { fileNo: '0018', employeeId: '57803', fullName: 'INDIKA SAMPATH SAMARASINGHEGE', department: 'STORES', staffStatus: 'Active', coc: true, jd: false, ea: false, eaExpiryDate: '2027-05-20', remarks: 'JD and EA pending' },
+  { fileNo: '0019', employeeId: '57935', fullName: 'ARUNODA KAVINDU NANAYAKKARA', department: 'ACCOUNTS AND FINANCE', staffStatus: 'Active', coc: true, jd: true, ea: false, eaExpiryDate: '2027-04-20', remarks: 'EA pending' },
+  { fileNo: '0020', employeeId: '58034', fullName: 'SAMEERA MADUSANKA GUNARATHNA', department: 'STORES', staffStatus: 'Active', coc: true, jd: false, ea: false, eaExpiryDate: '2027-05-22', remarks: 'JD and EA pending' },
+  { fileNo: '0021', employeeId: '58686', fullName: 'YASAR ARAFATH BASHEER AHAMED', department: 'STORES', staffStatus: 'Active', coc: false, jd: false, ea: false, eaExpiryDate: '2027-05-18', remarks: 'All documents pending' },
+  { fileNo: '0022', employeeId: '58692', fullName: 'SHANTUMON PATHIYIL CHACKO', department: 'HUMAN RESOURCES', staffStatus: 'Active', coc: true, jd: true, ea: true, eaExpiryDate: '2027-10-15', remarks: '' },
 ]
 
 const initialInductionRecords: InductionRecord[] = [
@@ -2092,38 +2094,51 @@ function TrainingModal({ record, employees, onClose, onSave }: {
       <section className="registration-modal wide-modal" role="dialog" aria-modal="true">
         <div className="modal-header">
           <div>
-            <p className="eyebrow">Training</p>
+            <p className="eyebrow">Training Record</p>
             <h2>{isNew ? 'Add Training Record' : 'Edit Training Record'}</h2>
-            <p className="ind-modal-sub">Saved as <strong>Completed</strong> — update after the training is conducted</p>
           </div>
           <button className="icon-button" onClick={onClose} type="button">×</button>
         </div>
 
-        <div className="trn-form-grid">
-          <label className="trn-span-3">
-            <span>Training Title</span>
-            <input value={trainingTitle} onChange={(e) => setTrainingTitle(e.target.value)} placeholder="e.g. Fire Safety Training" />
-          </label>
-          <label>
-            <span>Training Date</span>
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-          </label>
-          <label>
-            <span>Type</span>
-            <select value={trainingType} onChange={(e) => setTrainingType(e.target.value as TrainingRecord['trainingType'])}>
-              <option value="Internal">Internal</option>
-              <option value="External">External</option>
-            </select>
-          </label>
-          <label>
-            <span>Conducted By / Trainer</span>
-            <input value={conductedBy} onChange={(e) => setConductedBy(e.target.value)} placeholder="Trainer name or organisation" />
-          </label>
+        {/* ── Form card ── */}
+        <div className="trn-modal-card">
+          {/* Training title – full width */}
+          <div className="trn-modal-field-block">
+            <span className="trn-modal-field-lbl">Training Title</span>
+            <input
+              className="trn-modal-title-input"
+              value={trainingTitle}
+              onChange={(e) => setTrainingTitle(e.target.value)}
+              placeholder="e.g. Fire Safety & Emergency Procedures"
+            />
+          </div>
+          {/* Detail row: Date / Type / Conducted By */}
+          <div className="trn-modal-detail-row">
+            <label>
+              <span className="trn-modal-field-lbl">Training Date</span>
+              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            </label>
+            <label>
+              <span className="trn-modal-field-lbl">Type</span>
+              <select value={trainingType} onChange={(e) => setTrainingType(e.target.value as TrainingRecord['trainingType'])}>
+                <option value="Internal">Internal</option>
+                <option value="External">External</option>
+              </select>
+            </label>
+            <label>
+              <span className="trn-modal-field-lbl">Conducted By / Trainer</span>
+              <input value={conductedBy} onChange={(e) => setConductedBy(e.target.value)} placeholder="Trainer name or organisation" />
+            </label>
+          </div>
         </div>
 
-        <div className="induction-participants-editor">
-          <div className="participants-editor-header">
-            <h3>Participants <span className="participants-count-label-inline">({participants.length} attended)</span></h3>
+        {/* ── Participants ── */}
+        <div className="trn-participants-card">
+          <div className="trn-participants-hdr">
+            <div className="trn-participants-hdr-left">
+              <span className="trn-participants-title">Participants</span>
+              <span className="trn-participants-count">{participants.length} added</span>
+            </div>
             <div className="participant-search-wrap">
               <input
                 className="participant-search-input"
@@ -2149,8 +2164,23 @@ function TrainingModal({ record, employees, onClose, onSave }: {
             </div>
           </div>
           {participants.length > 0 ? (
-            <table className="data-table participants-editor-table">
-              <thead><tr><th style={{ width: 32 }}>#</th><th style={{ width: 80 }}>Emp ID</th><th>Name</th><th style={{ width: 160 }}>Section</th><th style={{ width: 36 }}></th></tr></thead>
+            <table className="data-table trn-participants-tbl">
+              <colgroup>
+                <col style={{ width: '36px' }} />
+                <col style={{ width: '90px' }} />
+                <col />
+                <col style={{ width: '170px' }} />
+                <col style={{ width: '36px' }} />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: 'center' }}>#</th>
+                  <th>Emp ID</th>
+                  <th>Name</th>
+                  <th>Section</th>
+                  <th></th>
+                </tr>
+              </thead>
               <tbody>
                 {participants.map((p, i) => (
                   <tr key={p.employeeId}>
@@ -2158,19 +2188,21 @@ function TrainingModal({ record, employees, onClose, onSave }: {
                     <td>{p.employeeId}</td>
                     <td>{p.name}</td>
                     <td>{p.department}</td>
-                    <td><button className="action-glyph delete" onClick={() => removeParticipant(p.employeeId)} type="button" title="Remove" aria-label="Remove participant">×</button></td>
+                    <td style={{ textAlign: 'center' }}>
+                      <button className="action-glyph delete" onClick={() => removeParticipant(p.employeeId)} type="button" title="Remove" aria-label="Remove participant">×</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           ) : (
-            <p className="participants-empty">No participants added. Search above to add employees.</p>
+            <p className="trn-participants-empty">No participants added yet — search above to add employees.</p>
           )}
         </div>
 
         <div className="modal-actions">
           <button className="quiet-button light" onClick={onClose} type="button">Cancel</button>
-          <button className="primary-button" onClick={save} type="button">{isNew ? 'Save as Completed' : 'Save Changes'}</button>
+          <button className="primary-button" onClick={save} type="button">{isNew ? 'Save Record' : 'Save Changes'}</button>
         </div>
       </section>
     </div>
@@ -2510,12 +2542,15 @@ function PersonalFileModal({ file, employees, isNew, onClose, onSave }: {
   const [employeeId, setEmployeeId] = useState(file.employeeId)
   const [fullName, setFullName] = useState(file.fullName)
   const [department, setDepartment] = useState(file.department)
-  const [isFormerStaff, setIsFormerStaff] = useState(file.isFormerStaff)
+  const [staffStatus, setStaffStatus] = useState<StaffStatus>(file.staffStatus)
   const [coc, setCoc] = useState(file.coc)
   const [jd, setJd] = useState(file.jd)
-  const [cont, setCont] = useState(file.cont)
-  const [contractExpiryDate, setContractExpiryDate] = useState(file.contractExpiryDate)
+  const [ea, setEa] = useState(file.ea)
+  const [eaExpiryDate, setEaExpiryDate] = useState(file.eaExpiryDate)
   const [remarks, setRemarks] = useState(file.remarks)
+  const [manualEntry, setManualEntry] = useState(!isNew)
+
+  const isInactive = staffStatus !== 'Active'
 
   const handleEmployeeSelect = (id: string) => {
     setEmployeeId(id)
@@ -2528,42 +2563,111 @@ function PersonalFileModal({ file, employees, isNew, onClose, onSave }: {
       <section className="registration-modal" role="dialog" aria-modal="true">
         <div className="modal-header">
           <div>
-            <p className="eyebrow">Personal files</p>
+            <p className="eyebrow">Personal Files</p>
             <h2>{isNew ? 'Add Personal File' : file.fullName}</h2>
-            {!isNew && <p>{file.fileNo} · {file.employeeId} – {file.department}</p>}
+            {!isNew && <p className="pf-modal-meta">{file.fileNo} &nbsp;·&nbsp; {file.employeeId} &nbsp;·&nbsp; {file.department}</p>}
           </div>
-          <button className="icon-button" onClick={onClose} type="button">x</button>
+          <button className="icon-button" onClick={onClose} type="button">×</button>
         </div>
+
+        {/* Employee selection / identity */}
         {isNew && (
-          <div className="form-grid" style={{ marginBottom: '12px' }}>
-            <label><span>Staff Type</span><select value={isFormerStaff ? 'former' : 'active'} onChange={(e) => setIsFormerStaff(e.target.value === 'former')}><option value="active">Active Staff</option><option value="former">Former Staff</option></select></label>
-            {!isFormerStaff ? (
-              <label><span>Employee</span><select value={employeeId} onChange={(e) => handleEmployeeSelect(e.target.value)}><option value="">Select employee</option>{employees.map((emp) => <option key={emp.employeeId} value={emp.employeeId}>{emp.employeeId} – {emp.fullName}</option>)}</select></label>
+          <div className="pf-modal-identity">
+            <div className="pf-modal-identity-toggle">
+              <button
+                type="button"
+                className={`pf-toggle-btn ${!manualEntry ? 'active' : ''}`}
+                onClick={() => setManualEntry(false)}
+              >From Employee List</button>
+              <button
+                type="button"
+                className={`pf-toggle-btn ${manualEntry ? 'active' : ''}`}
+                onClick={() => setManualEntry(true)}
+              >Manual Entry</button>
+            </div>
+            {!manualEntry ? (
+              <label className="pf-modal-label">
+                <span>Select Employee</span>
+                <select value={employeeId} onChange={(e) => handleEmployeeSelect(e.target.value)}>
+                  <option value="">— choose employee —</option>
+                  {employees.map((emp) => (
+                    <option key={emp.employeeId} value={emp.employeeId}>{emp.employeeId} – {emp.fullName} ({emp.department})</option>
+                  ))}
+                </select>
+              </label>
             ) : (
-              <>
-                <label><span>Employee ID</span><input value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} placeholder="Former employee ID" /></label>
-                <label><span>Full Name</span><input value={fullName} onChange={(e) => setFullName(e.target.value)} /></label>
-                <label><span>Department</span><select value={department} onChange={(e) => setDepartment(e.target.value)}>{departmentsList.map((d) => <option key={d}>{d}</option>)}</select></label>
-              </>
+              <div className="pf-modal-manual-row">
+                <label className="pf-modal-label">
+                  <span>Employee ID</span>
+                  <input value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} placeholder="e.g. 58700" />
+                </label>
+                <label className="pf-modal-label">
+                  <span>Full Name</span>
+                  <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Full name in uppercase" />
+                </label>
+                <label className="pf-modal-label">
+                  <span>Department</span>
+                  <select value={department} onChange={(e) => setDepartment(e.target.value)}>
+                    {departmentsList.map((d) => <option key={d}>{d}</option>)}
+                  </select>
+                </label>
+              </div>
             )}
           </div>
         )}
+
+        {/* Status */}
+        <div className="pf-modal-status-row">
+          <label className="pf-modal-label">
+            <span>Staff Status</span>
+            <select value={staffStatus} onChange={(e) => setStaffStatus(e.target.value as StaffStatus)}>
+              <option value="Active">Active</option>
+              <option value="Terminated">Terminated</option>
+              <option value="Retired">Retired</option>
+              <option value="Transferred">Transferred</option>
+            </select>
+          </label>
+          {isInactive && (
+            <label className="pf-modal-label pf-modal-reason">
+              <span>Reason / Notes</span>
+              <input value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="e.g. Resigned, EA expiry, transferred to HO…" />
+            </label>
+          )}
+        </div>
+
+        {/* Document checklist */}
+        <div className="pf-modal-section-hdr">Documents on File</div>
         <div className="file-check-grid">
           <label className="check-field"><input type="checkbox" checked={coc} onChange={(e) => setCoc(e.target.checked)} /><span>COC – Code of Conduct</span></label>
           <label className="check-field"><input type="checkbox" checked={jd} onChange={(e) => setJd(e.target.checked)} /><span>JD – Job Description</span></label>
-          <label className="check-field"><input type="checkbox" checked={cont} onChange={(e) => setCont(e.target.checked)} /><span>CONT – Contract</span></label>
+          <label className="check-field"><input type="checkbox" checked={ea} onChange={(e) => setEa(e.target.checked)} /><span>EA – Employment Agreement</span></label>
         </div>
-        <div className="form-grid" style={{ marginTop: '12px' }}>
-          <label><span>Contract Expiry Date</span><input type="date" value={contractExpiryDate} onChange={(e) => setContractExpiryDate(e.target.value)} /></label>
-          <label className="full-field"><span>Remarks</span><input value={remarks} onChange={(e) => setRemarks(e.target.value)} /></label>
+
+        {/* EA Expiry + Remarks */}
+        <div className="form-grid pf-modal-bottom-row">
+          <label>
+            <span>EA Expiry Date</span>
+            <input type="date" value={eaExpiryDate} onChange={(e) => setEaExpiryDate(e.target.value)} />
+          </label>
+          {!isInactive && (
+            <label className="full-field">
+              <span>Remarks</span>
+              <input value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="Any notes about this file" />
+            </label>
+          )}
         </div>
+
         <div className="modal-actions">
           <button className="quiet-button light" onClick={onClose} type="button">Cancel</button>
-          <button className="primary-button" onClick={() => onSave({ ...file, employeeId, fullName, department, isFormerStaff, coc, jd, cont, contractExpiryDate, remarks })} type="button">Save</button>
+          <button className="primary-button" onClick={() => onSave({ ...file, employeeId, fullName, department, staffStatus, coc, jd, ea, eaExpiryDate, remarks })} type="button">Save</button>
         </div>
       </section>
     </div>
   )
+}
+
+function StaffStatusBadge({ status }: { status: StaffStatus }) {
+  return <span className={`pf-status-badge pf-status-${status.toLowerCase()}`}>{status}</span>
 }
 
 function PersonalFilesSection({ employees, records, onUpdate }: {
@@ -2577,13 +2681,21 @@ function PersonalFilesSection({ employees, records, onUpdate }: {
   const [staffFilter, setStaffFilter] = useState<'Active' | 'Inactive' | 'All'>('Active')
   const [editingFileNo, setEditingFileNo] = useState<string | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState<50 | 100 | 'All'>(50)
 
-  const rows = useMemo(() => records.filter((r) => {
+  const filtered = useMemo(() => records.filter((r) => {
     const matchSearch = [r.fileNo, r.employeeId, r.fullName, r.department].join(' ').toLowerCase().includes(search.trim().toLowerCase())
     const matchDept = deptFilter === 'All Sections' || r.department === deptFilter
-    const matchStaff = staffFilter === 'All' || (staffFilter === 'Active' && !r.isFormerStaff) || (staffFilter === 'Inactive' && r.isFormerStaff)
+    const matchStaff = staffFilter === 'All'
+      || (staffFilter === 'Active' && r.staffStatus === 'Active')
+      || (staffFilter === 'Inactive' && r.staffStatus !== 'Active')
     return matchSearch && matchDept && matchStaff
   }), [records, search, deptFilter, staffFilter])
+
+  const totalPages = pageSize === 'All' ? 1 : Math.max(1, Math.ceil(filtered.length / pageSize))
+  const safePage = Math.min(page, totalPages)
+  const rows = pageSize === 'All' ? filtered : filtered.slice((safePage - 1) * pageSize, safePage * pageSize)
 
   const editingFile = editingFileNo ? (records.find((r) => r.fileNo === editingFileNo) ?? null) : null
 
@@ -2603,40 +2715,103 @@ function PersonalFilesSection({ employees, records, onUpdate }: {
   }
 
   const newFile = (): PersonalFileRecord => ({
-    fileNo: nextFileNo(), employeeId: '', fullName: '', department: departmentsList[0], isFormerStaff: false,
-    coc: false, jd: false, cont: false, contractExpiryDate: '', remarks: '',
+    fileNo: nextFileNo(), employeeId: '', fullName: '', department: departmentsList[0],
+    staffStatus: 'Active', coc: false, jd: false, ea: false, eaExpiryDate: '', remarks: '',
   })
+
+  const rowClass = (s: StaffStatus) => {
+    if (s === 'Terminated') return 'pf-row-terminated'
+    if (s === 'Retired') return 'pf-row-retired'
+    if (s === 'Transferred') return 'pf-row-transferred'
+    return ''
+  }
 
   return (
     <>
       <section className="employee-workspace">
         <div className="table-toolbar pf-toolbar">
-          <label className="search-field"><span>Search</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="File no, employee, department" /></label>
-          <label><span>Section</span><select value={deptFilter} onChange={(e) => setDeptFilter(e.target.value)}><option>All Sections</option>{departmentsList.map((d) => <option key={d}>{d}</option>)}</select></label>
-          <label><span>Staff</span><select value={staffFilter} onChange={(e) => setStaffFilter(e.target.value as typeof staffFilter)}><option value="Active">Active</option><option value="Inactive">Inactive</option><option value="All">All</option></select></label>
+          <label className="search-field">
+            <span>Search</span>
+            <input type="search" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1) }} placeholder="File no, employee, department" />
+          </label>
+          <label>
+            <span>Section</span>
+            <select value={deptFilter} onChange={(e) => { setDeptFilter(e.target.value); setPage(1) }}>
+              <option>All Sections</option>
+              {departmentsList.map((d) => <option key={d}>{d}</option>)}
+            </select>
+          </label>
+          <label>
+            <span>Status</span>
+            <select value={staffFilter} onChange={(e) => { setStaffFilter(e.target.value as typeof staffFilter); setPage(1) }}>
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+              <option value="All">All</option>
+            </select>
+          </label>
+          <label>
+            <span>Rows</span>
+            <select value={pageSize} onChange={(e) => { setPageSize(e.target.value === 'All' ? 'All' : Number(e.target.value) as 50 | 100); setPage(1) }}>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+              <option value="All">All</option>
+            </select>
+          </label>
           <button className="primary-button" onClick={() => setShowAddModal(true)} type="button">Add</button>
         </div>
+
         <div className="employee-table-shell compact-scroll">
           <table className="data-table personal-files-table">
-            <thead><tr><th>File No</th><th>Employee ID</th><th>Full Name</th><th>Section</th><th>COC</th><th>JD</th><th>CONT</th><th>Contract Expiry</th><th>Status</th><th>Action</th></tr></thead>
+            <thead>
+              <tr>
+                <th>File No</th>
+                <th>Emp ID</th>
+                <th>Full Name</th>
+                <th>Section</th>
+                <th style={{ textAlign: 'center' }}>COC</th>
+                <th style={{ textAlign: 'center' }}>JD</th>
+                <th style={{ textAlign: 'center' }}>EA</th>
+                <th style={{ textAlign: 'center' }}>EA Expiry</th>
+                <th style={{ textAlign: 'center' }}>Status</th>
+                <th style={{ textAlign: 'center' }}>Action</th>
+              </tr>
+            </thead>
             <tbody>
-              {rows.map((file) => (
-                <tr key={file.fileNo} className={file.isFormerStaff ? 'former-staff-row' : ''}>
+              {rows.length === 0 ? (
+                <tr><td colSpan={10} className="empty-row">No personal file records match the current filters.</td></tr>
+              ) : rows.map((file) => (
+                <tr key={file.fileNo} className={rowClass(file.staffStatus)}>
                   <td>{file.fileNo}</td>
                   <td>{file.employeeId}</td>
-                  <td>{file.fullName}{file.isFormerStaff && <span className="former-badge"> (Former)</span>}</td>
+                  <td>{file.fullName}</td>
                   <td>{file.department}</td>
                   <td className="doc-check-cell">{file.coc ? <span className="doc-yes">✓</span> : <span className="doc-no">—</span>}</td>
                   <td className="doc-check-cell">{file.jd ? <span className="doc-yes">✓</span> : <span className="doc-no">—</span>}</td>
-                  <td className="doc-check-cell">{file.cont ? <span className="doc-yes">✓</span> : <span className="doc-no">—</span>}</td>
-                  <td>{file.contractExpiryDate ? formatDateDisplay(file.contractExpiryDate) : '—'}</td>
-                  <td><StatusBadge status={file.coc && file.jd && file.cont ? 'Completed' : 'Incomplete'} /></td>
-                  <td><button className="action-glyph edit" onClick={() => setEditingFileNo(file.fileNo)} type="button" title="Edit" aria-label="Edit file">✎</button></td>
+                  <td className="doc-check-cell">{file.ea ? <span className="doc-yes">✓</span> : <span className="doc-no">—</span>}</td>
+                  <td style={{ textAlign: 'center' }}>{file.eaExpiryDate ? formatDateDisplay(file.eaExpiryDate) : '—'}</td>
+                  <td style={{ textAlign: 'center' }}><StaffStatusBadge status={file.staffStatus} /></td>
+                  <td style={{ textAlign: 'center' }}>
+                    <button className="action-glyph edit" onClick={() => setEditingFileNo(file.fileNo)} type="button" title="Edit" aria-label="Edit file">✎</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {pageSize !== 'All' && totalPages > 1 && (
+          <div className="pagination-bar">
+            <button className="page-btn" onClick={() => setPage(1)} disabled={safePage === 1} type="button">«</button>
+            <button className="page-btn" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={safePage === 1} type="button">‹</button>
+            <span className="page-info">Page {safePage} of {totalPages} &nbsp;·&nbsp; {filtered.length} records</span>
+            <button className="page-btn" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={safePage === totalPages} type="button">›</button>
+            <button className="page-btn" onClick={() => setPage(totalPages)} disabled={safePage === totalPages} type="button">»</button>
+          </div>
+        )}
+        {pageSize === 'All' && (
+          <div className="pagination-bar"><span className="page-info">{filtered.length} records total</span></div>
+        )}
       </section>
       {editingFile && <PersonalFileModal file={editingFile} employees={employees} isNew={false} onClose={() => setEditingFileNo(null)} onSave={saveFile} />}
       {showAddModal && <PersonalFileModal file={newFile()} employees={employees} isNew={true} onClose={() => setShowAddModal(false)} onSave={saveFile} />}
@@ -3202,14 +3377,14 @@ function BankAccountSection({ employees, records, onUpdate }: {
                 {appliedConfirm.bank} &nbsp;·&nbsp; {appliedConfirm.accountType}
               </p>
               <p style={{ fontSize: '0.9rem', color: '#1e293b', lineHeight: 1.55 }}>
-                Has the bank account application been <strong>completed</strong> and details <strong>shared to head office</strong>?
+                Has the bank account application been <strong>completed</strong> and details <strong>shared</strong>?
               </p>
             </div>
             <div className="modal-actions">
               <button className="quiet-button light" onClick={() => setAppliedConfirm(null)} type="button">Cancel</button>
               <button className="primary-button" onClick={() => {
                 onUpdate((prev) => prev.map((x) => x.id === appliedConfirm!.id
-                  ? { ...x, status: 'Completed' as AccountStatus, remarks: 'Details shared to head office' }
+                  ? { ...x, status: 'Completed' as AccountStatus, remarks: 'Details shared' }
                   : x))
                 setAppliedConfirm(null)
               }} type="button">Yes, Mark as Completed</button>
@@ -3583,39 +3758,76 @@ function TerminationPage({
   )
 }
 
-function OperationsPage({ employees }: { employees: Employee[] }) {
+function OperationsPage({ employees, completedTerminations }: {
+  employees: Employee[]
+  completedTerminations: CompletedTerminationRecord[]
+}) {
   const [activeSection, setActiveSection] = useState<OpsSection>('files')
   const [personalFiles, setPersonalFiles] = useState<PersonalFileRecord[]>(initialPersonalFiles)
   const [inductionRecords, setInductionRecords] = useState<InductionRecord[]>(initialInductionRecords)
   const [trainingRecords, setTrainingRecords] = useState<TrainingRecord[]>(initialTrainingRecords)
   const [bankAccountRecords, setBankAccountRecords] = useState<BankAccountRecord[]>(initialBankAccountRecords)
 
-  // Auto-add newly registered non-Maldivian employees
+  // Auto-add newly registered employees → personal files + bank accounts
   const prevEmployeeIdsRef = useRef<Set<string>>(new Set(employees.map((e) => e.employeeId)))
   useEffect(() => {
     const currentIds = new Set(employees.map((e) => e.employeeId))
-    const addedEmployees = employees.filter(
-      (e) => e.nationality !== 'MALDIVIAN' && !prevEmployeeIdsRef.current.has(e.employeeId)
-    )
+    const addedEmployees = employees.filter((e) => !prevEmployeeIdsRef.current.has(e.employeeId))
     prevEmployeeIdsRef.current = currentIds
     if (addedEmployees.length === 0) return
-    setBankAccountRecords((prev) => {
+
+    // Auto-add to personal files
+    setPersonalFiles((prev) => {
       const existingIds = new Set(prev.map((r) => r.employeeId))
       const toAdd = addedEmployees.filter((e) => !existingIds.has(e.employeeId))
       if (toAdd.length === 0) return prev
-      return [...prev, ...toAdd.map((e): BankAccountRecord => ({
-        id: `BNK-auto-${e.employeeId}`,
+      const maxNum = Math.max(0, ...prev.map((r) => parseInt(r.fileNo, 10)).filter((n) => !isNaN(n)))
+      return [...prev, ...toAdd.map((e, idx): PersonalFileRecord => ({
+        fileNo: String(maxNum + 1 + idx).padStart(4, '0'),
         employeeId: e.employeeId,
         fullName: e.fullName,
         department: e.department,
-        nationality: e.nationality,
-        bank: 'SBI',
-        accountType: 'USD & MVR',
-        scheduledDate: '',
-        status: 'Pending',
+        staffStatus: 'Active',
+        coc: false,
+        jd: false,
+        ea: false,
+        eaExpiryDate: '',
+        remarks: '',
       }))]
     })
+
+    // Auto-add non-Maldivians to bank accounts
+    const nonMaldivian = addedEmployees.filter((e) => e.nationality !== 'MALDIVIAN')
+    if (nonMaldivian.length > 0) {
+      setBankAccountRecords((prev) => {
+        const existingIds = new Set(prev.map((r) => r.employeeId))
+        const toAdd = nonMaldivian.filter((e) => !existingIds.has(e.employeeId))
+        if (toAdd.length === 0) return prev
+        return [...prev, ...toAdd.map((e): BankAccountRecord => ({
+          id: `BNK-auto-${e.employeeId}`,
+          employeeId: e.employeeId,
+          fullName: e.fullName,
+          department: e.department,
+          nationality: e.nationality,
+          bank: 'SBI',
+          accountType: 'USD & MVR',
+          scheduledDate: '',
+          status: 'Pending',
+        }))]
+      })
+    }
   }, [employees])
+
+  // Auto-terminate personal files when termination is completed
+  useEffect(() => {
+    if (completedTerminations.length === 0) return
+    const terminatedIds = new Set(completedTerminations.map((t) => t.employeeId))
+    setPersonalFiles((prev) => prev.map((pf) =>
+      terminatedIds.has(pf.employeeId) && pf.staffStatus === 'Active'
+        ? { ...pf, staffStatus: 'Terminated' as StaffStatus, remarks: pf.remarks || 'Terminated via HR process' }
+        : pf
+    ))
+  }, [completedTerminations])
 
   return (
     <>
@@ -4774,7 +4986,7 @@ function App() {
           {activePage === 'overview' && <OverviewPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} />}
           {activePage === 'employees' && <EmployeesPage employees={employees} onAdd={() => { setEmployeeMode('add'); setEmployeeForm(emptyEmployee); setShowEmployeeForm(true) }} onEdit={openEditEmployee} onExport={exportCsv} onImport={importCsv} onTemplate={downloadTemplate} onShowTasks={() => setShowPendingTasks(true)} />}
           {activePage === 'leave' && <LeavePage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} passportHandovers={passportHandovers} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onAddPassport={() => setEditingPassportRecord({ id: `PP-${Date.now()}`, employeeId: employees[0]?.employeeId ?? '', name: employees[0]?.fullName ?? '', department: employees[0]?.department ?? departmentsList[0], nationality: employees[0]?.nationality ?? 'MALDIVES', leaveTypeCode: 'AL', departureDate: new Date().toISOString().slice(0, 10), returnDate: new Date().toISOString().slice(0, 10), days: 1, passportStep: 'Issued', givenDate: '', returnedDate: '', sentToHoDate: '', remarks: '' })} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onAdvanceRequestStep={advanceLeaveRequestStep} onHistoryConfirm={updateHistoryConfirmation} onEditPassport={(record) => setEditingPassportRecord(record)} onDeletePassport={deletePassportRecord} />}
-          {activePage === 'operations' && <OperationsPage employees={employees} />}
+          {activePage === 'operations' && <OperationsPage employees={employees} completedTerminations={completedTerminations} />}
           {activePage === 'activities' && <ActivitiesPage employees={employees} />}
           {activePage === 'termination' && <TerminationPage noticeTerminations={noticeTerminations} completedTerminations={completedTerminations} onAdd={openAddTermination} onEdit={openEditTermination} onAdvanceStatus={advanceTerminationStatus} onDelete={deleteTermination} onViewDetails={(record) => setTerminationDetails(record)} />}
           {activePage === 'settings' && <SettingsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} onReset={resetAllData} />}
