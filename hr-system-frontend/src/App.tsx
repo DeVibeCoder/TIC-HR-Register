@@ -1125,8 +1125,8 @@ function LeavePage({
                     <tr key={record.id}>
                       <td>{record.employeeId}</td>
                       <td>{record.name}</td>
-                      <td>{getNic(record.employeeId)}</td>
                       <td>{record.department}</td>
+                      <td>{getNic(record.employeeId)}</td>
                       <td className="leave-type-cell"><LeaveTypeBadge code={record.leaveTypeCode} /></td>
                       <td className="leave-date-cell">{formatDateDisplay(record.departureDate)}</td>
                       <td className="leave-date-cell">{formatDateDisplay(record.returnDate)}</td>
