@@ -1532,63 +1532,185 @@ function InductionModal({ employees, record, onClose, onSave }: {
   )
 }
 
-function InductionViewModal({ record, onClose }: { record: InductionRecord; onClose: () => void }) {
+function InductionViewModal({ record, employees = [], onClose, onPrint }: {
+  record: InductionRecord
+  employees?: Employee[]
+  onClose: () => void
+  onPrint?: () => void
+}) {
+  const fullRef = fullInductionRef(record.refNo, record.inductionDate)
+  const dateStr = record.inductionDate ? formatDateDisplay(record.inductionDate) : '—'
+  const conductedByEmp = employees.find((e) => e.employeeId === record.conductedByEmpId)
+  const conductedByDept = conductedByEmp?.department || 'Human Resources'
+  const conductedByDesig = conductedByEmp?.designation || ''
+  const conductedByDisplay = (record.conductedBy || '—') + (record.conductedByEmpId ? ` (${record.conductedByEmpId})` : '')
+  const countStr = String(record.participants.length).padStart(2, '0')
+
+  return (
+    <div className="modal-backdrop" role="presentation">
+      <section className="registration-modal ind-preview-modal" role="dialog" aria-modal="true">
+        <div className="modal-header">
+          <div>
+            <p className="eyebrow">Print Preview</p>
+            <h2>{fullRef}</h2>
+          </div>
+          <button className="icon-button" onClick={onClose} type="button">×</button>
+        </div>
+
+        <div className="ind-preview-scroll">
+          <div className="ind-preview-doc">
+
+            {/* ── Page 1 Header ── */}
+            <div className="ind-prev-hdr">
+              <div className="ind-prev-title">STAFF INDUCTION</div>
+              <div className="ind-prev-sub">VHPL | Thilafushi Industrial Complex</div>
+            </div>
+
+            {/* ── Info table ── */}
+            <table className="ind-prev-info">
+              <tbody>
+                <tr>
+                  <td className="ind-pi-lbl">Reference No:</td>
+                  <td className="ind-pi-val">{fullRef}</td>
+                  <td className="ind-pi-lbl">Status:</td>
+                  <td className="ind-pi-val ind-pi-completed">{record.status}</td>
+                </tr>
+                <tr>
+                  <td className="ind-pi-lbl">Date:</td>
+                  <td className="ind-pi-val">{dateStr}</td>
+                  <td className="ind-pi-lbl">No. of Participants:</td>
+                  <td className="ind-pi-val">{countStr}</td>
+                </tr>
+                <tr>
+                  <td className="ind-pi-lbl">Department:</td>
+                  <td className="ind-pi-val" colSpan={3}>{conductedByDept}</td>
+                </tr>
+                <tr>
+                  <td className="ind-pi-lbl">Conducted by:</td>
+                  <td className="ind-pi-val" colSpan={3}>{conductedByDisplay}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            {/* ── Participants table ── */}
+            <p className="ind-prev-tbl-label">Participants</p>
+            <table className="data-table ind-prev-ptbl">
+              <thead>
+                <tr>
+                  <th style={{ width: 28 }}>#</th>
+                  <th style={{ width: 68 }}>Emp ID</th>
+                  <th>Full Name</th>
+                  <th style={{ width: 110 }}>NIC / PP No</th>
+                  <th style={{ width: 88 }}>Section</th>
+                  <th style={{ width: 110 }}>Department</th>
+                  <th style={{ width: 78 }}>Signature</th>
+                </tr>
+              </thead>
+              <tbody>
+                {record.participants.length === 0 ? (
+                  <tr><td colSpan={7} className="empty-row">No participants recorded.</td></tr>
+                ) : record.participants.map((p, i) => (
+                  <tr key={i}>
+                    <td style={{ textAlign: 'center' }}>{i + 1}</td>
+                    <td>{p.employeeId || '—'}</td>
+                    <td>{p.name}</td>
+                    <td>{p.nicPassportNo || '—'}</td>
+                    <td></td>
+                    <td>{p.department}</td>
+                    <td className="ind-sig-cell-view"></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* ── Signature blocks ── */}
+            <div className="ind-prev-sig-row">
+              <div className="ind-prev-sig-block">
+                <div className="ind-prev-sig-space"></div>
+                <div className="ind-prev-sig-btm">
+                  <div className="ind-prev-sig-role">Conducted By:</div>
+                  <div className="ind-prev-sig-name">{conductedByDisplay}</div>
+                  {conductedByDesig && <div className="ind-prev-sig-desig">{conductedByDesig}</div>}
+                </div>
+              </div>
+              <div className="ind-prev-sig-block">
+                <div className="ind-prev-sig-space"></div>
+                <div className="ind-prev-sig-btm">
+                  <div className="ind-prev-sig-role">Approved By:</div>
+                  <div className="ind-prev-sig-name">&nbsp;</div>
+                  <div className="ind-prev-sig-desig">&nbsp;</div>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Page 2 preview ── */}
+            <div className="ind-prev-pg2">
+              <p className="ind-prev-pg2-label">— Page 2: Induction Content Summary —</p>
+              {record.inductionContent ? (
+                <p className="ind-prev-content-text">{record.inductionContent}</p>
+              ) : (
+                <p className="ind-prev-content-default">
+                  Company Introduction · Site Safety &amp; Rules · HR Policies · Work Permit &amp; Documentation · Accommodation &amp; Facilities · Bank Account Opening
+                </p>
+              )}
+              {record.remarks && (
+                <p className="ind-prev-remarks"><strong>Remarks:</strong> {record.remarks}</p>
+              )}
+            </div>
+
+          </div>
+        </div>
+
+        <div className="modal-actions">
+          {onPrint && (
+            <button className="primary-button" onClick={onPrint} type="button">🖨 Print</button>
+          )}
+          <button className="back-btn-sm" onClick={onClose} type="button">Close</button>
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function InductionParticipantsModal({ record, onClose }: { record: InductionRecord; onClose: () => void }) {
+  const fullRef = fullInductionRef(record.refNo, record.inductionDate)
   return (
     <div className="modal-backdrop" role="presentation">
       <section className="registration-modal wide-modal" role="dialog" aria-modal="true">
         <div className="modal-header">
           <div>
-            <p className="eyebrow">Induction Session</p>
-            <h2>{fullInductionRef(record.refNo, record.inductionDate)}</h2>
-            <p>{record.inductionDate ? formatDateDisplay(record.inductionDate) : '—'} · Conducted by {record.conductedBy || '—'}</p>
+            <p className="eyebrow">Participants</p>
+            <h2>{fullRef}</h2>
+            <p>{record.inductionDate ? formatDateDisplay(record.inductionDate) : '—'} &nbsp;·&nbsp; {record.participants.length} participant{record.participants.length !== 1 ? 's' : ''}</p>
           </div>
           <button className="icon-button" onClick={onClose} type="button">×</button>
         </div>
-
-        <div className="induction-view-meta">
-          <div><strong>Date</strong><span>{record.inductionDate ? formatDateDisplay(record.inductionDate) : '—'}</span></div>
-          <div><strong>Status</strong><span><StatusBadge status={record.status} /></span></div>
-          <div><strong>Conducted By</strong><span>{record.conductedBy || '—'}{record.conductedByEmpId ? ` (ID: ${record.conductedByEmpId})` : ''}</span></div>
-          {record.remarks && <div><strong>Remarks</strong><span>{record.remarks}</span></div>}
-        </div>
-
-        <h3 className="induction-participants-title">Participants ({record.participants.length})</h3>
-        {record.participants.length > 0 ? (
-          <table className="data-table participants-view-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Emp ID</th>
-                <th>Full Name</th>
-                <th>NIC / PP No</th>
-                <th>Section</th>
-                <th className="signature-col-header">Signature</th>
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th style={{ width: 32 }}>#</th>
+              <th style={{ width: 78 }}>Emp ID</th>
+              <th>Full Name</th>
+              <th style={{ width: 130 }}>NIC / PP No</th>
+              <th style={{ width: 100 }}>Section</th>
+              <th style={{ width: 140 }}>Department</th>
+            </tr>
+          </thead>
+          <tbody>
+            {record.participants.length === 0 ? (
+              <tr><td colSpan={6} className="empty-row">No participants recorded for this session.</td></tr>
+            ) : record.participants.map((p, i) => (
+              <tr key={i}>
+                <td style={{ textAlign: 'center' }}>{i + 1}</td>
+                <td>{p.employeeId || '—'}</td>
+                <td>{p.name}</td>
+                <td>{p.nicPassportNo || '—'}</td>
+                <td></td>
+                <td>{p.department}</td>
               </tr>
-            </thead>
-            <tbody>
-              {record.participants.map((p, i) => (
-                <tr key={p.employeeId}>
-                  <td>{i + 1}</td>
-                  <td>{p.employeeId}</td>
-                  <td>{p.name}</td>
-                  <td>{p.nicPassportNo || '—'}</td>
-                  <td>{p.department}</td>
-                  <td className="signature-cell-view"></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p className="participants-empty">No participants recorded for this session.</p>
-        )}
-
-        {record.inductionContent && (
-          <div className="induction-content-box">
-            <h3>Topics Covered</h3>
-            <p className="induction-content-text">{record.inductionContent}</p>
-          </div>
-        )}
-
+            ))}
+          </tbody>
+        </table>
         <div className="modal-actions">
           <button className="primary-button" onClick={onClose} type="button">Close</button>
         </div>
@@ -1597,26 +1719,36 @@ function InductionViewModal({ record, onClose }: { record: InductionRecord; onCl
   )
 }
 
-function printInductionRecord(record: InductionRecord) {
+function printInductionRecord(record: InductionRecord, employees: Employee[] = []) {
   const fullRef = fullInductionRef(record.refNo, record.inductionDate)
   const dateStr = record.inductionDate ? formatDateDisplay(record.inductionDate) : '—'
-  const conductedByStr = (record.conductedBy || 'HR Officer') +
-    (record.conductedByEmpId ? ` (ID: ${record.conductedByEmpId})` : '')
+  const conductedByEmp = employees.find((e) => e.employeeId === record.conductedByEmpId)
+  const conductedByDept = conductedByEmp?.department || 'Human Resources'
+  const conductedByDesig = conductedByEmp?.designation || ''
+  const conductedByDisplay = (record.conductedBy || 'HR Officer') + (record.conductedByEmpId ? ` (${record.conductedByEmpId})` : '')
+  const countStr = String(record.participants.length).padStart(2, '0')
 
   const esc = (s: string) =>
     s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
-  const participantRows = record.participants.length > 0
-    ? record.participants.map((p, i) => `
-      <tr>
-        <td class="tc">${i + 1}</td>
-        <td>${esc(p.employeeId)}</td>
-        <td>${esc(p.name)}</td>
-        <td>${esc(p.nicPassportNo || '—')}</td>
-        <td>${esc(p.department)}</td>
-        <td class="sig-cell"></td>
-      </tr>`).join('')
-    : `<tr><td colspan="6" style="text-align:center;font-style:italic;color:#666;padding:12pt 6pt">No participants recorded for this session.</td></tr>`
+  const filledRows = record.participants.map((p, i) => `
+    <tr>
+      <td class="tc">${i + 1}</td>
+      <td>${esc(p.employeeId || '')}</td>
+      <td>${esc(p.name)}</td>
+      <td>${esc(p.nicPassportNo || '')}</td>
+      <td></td>
+      <td>${esc(p.department)}</td>
+      <td class="sig-cell"></td>
+    </tr>`).join('')
+
+  const emptyCount = Math.max(0, 8 - record.participants.length)
+  const emptyRows = Array.from({ length: emptyCount }, (_, i) => `
+    <tr>
+      <td class="tc">${record.participants.length + i + 1}</td>
+      <td></td><td></td><td></td><td></td><td></td>
+      <td class="sig-cell"></td>
+    </tr>`).join('')
 
   const defaultContent = `
     <p><strong>1. Company Introduction</strong><br>Overview of Thilafushi Industrial Complex Pvt. Ltd., its operations, core values, and organisational structure.</p>
@@ -1634,11 +1766,11 @@ function printInductionRecord(record: InductionRecord) {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Induction ${esc(fullRef)}</title>
+  <title>Staff Induction ${esc(fullRef)}</title>
   <style>
     @page { size: A4 portrait; margin: 18mm 16mm; }
     *, *::before, *::after { box-sizing: border-box; }
-    body { font-family: 'Times New Roman', Times, serif; font-size: 10.5pt; color: #000; background: #f8f9fa; margin: 0; padding: 0; }
+    body { font-family: 'Times New Roman', Times, serif; font-size: 10.5pt; color: #000; background: #f1f5f9; margin: 0; padding: 0; }
 
     /* ── Screen toolbar ── */
     .screen-bar {
@@ -1656,43 +1788,44 @@ function printInductionRecord(record: InductionRecord) {
 
     /* ── A4 page shells ── */
     .a4-wrap { max-width: 210mm; margin: 24px auto; display: flex; flex-direction: column; gap: 20px; padding-bottom: 40px; }
-    .a4-page {
-      background: #fff; padding: 20mm 18mm;
-      box-shadow: 0 3px 16px rgba(0,0,0,0.13);
-    }
+    .a4-page { background: #fff; padding: 18mm 16mm; box-shadow: 0 3px 16px rgba(0,0,0,0.13); }
 
-    /* ── Document header ── */
+    /* ══ PAGE 1 ══ */
+    .p1-hdr { text-align: center; padding-bottom: 10pt; border-bottom: 2.5pt solid #000; margin-bottom: 13pt; }
+    .p1-title { font-size: 21pt; font-weight: 900; letter-spacing: 2.5px; text-transform: uppercase; font-family: Arial, Helvetica, sans-serif; }
+    .p1-sub { font-size: 11pt; margin-top: 4pt; letter-spacing: 0.4px; }
+
+    /* Info table */
+    .info-tbl { width: 100%; border-collapse: collapse; margin-bottom: 13pt; }
+    .info-tbl td { border: 0.75pt solid #000; padding: 4.5pt 8pt; font-size: 10pt; }
+    .info-tbl .lbl { font-weight: bold; background: #f0f0f0; width: 115pt; white-space: nowrap; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .info-tbl .status-ok { font-weight: bold; color: #166534; }
+
+    /* Participants table */
+    table.p-tbl { width: 100%; border-collapse: collapse; margin-bottom: 14pt; font-size: 9.5pt; table-layout: fixed; }
+    .p-tbl th, .p-tbl td { border: 0.75pt solid #444; padding: 4pt 5pt; vertical-align: middle; }
+    .p-tbl thead th { background: #ede9fe; font-weight: bold; text-align: left; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .p-tbl .tc { text-align: center; }
+    .p-tbl .sig-cell { height: 22pt; }
+
+    /* Signature blocks */
+    .sig-row { display: flex; gap: 20pt; margin-top: 18pt; }
+    .sig-block { flex: 1; border: 1pt solid #333; }
+    .sig-space { height: 66pt; }
+    .sig-info { padding: 6pt 8pt; border-top: 1pt solid #333; }
+    .sig-role { font-size: 8.5pt; color: #555; }
+    .sig-person { font-weight: bold; font-size: 10pt; margin-top: 2pt; }
+    .sig-desig { font-size: 9pt; color: #333; margin-top: 2pt; }
+
+    /* ══ PAGE 2 ══ */
     .doc-header { text-align: center; border-bottom: 2pt solid #000; padding-bottom: 9pt; margin-bottom: 13pt; }
     .org-name { font-size: 13pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.4px; }
     .doc-title { font-size: 11pt; font-weight: bold; margin-top: 4pt; text-transform: uppercase; letter-spacing: 0.2px; }
     .doc-ref { font-size: 9.5pt; color: #444; margin-top: 3pt; }
-
-    /* ── Meta info ── */
-    .meta-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 4pt 20pt;
-      margin-bottom: 13pt; font-size: 9.5pt;
-      border: 0.75pt solid #ddd; padding: 7pt 10pt; background: #f9f6ff;
-    }
-    .meta-grid div { padding: 1.5pt 0; }
-
-    /* ── Participant table ── */
-    table { width: 100%; border-collapse: collapse; margin-bottom: 14pt; font-size: 9.5pt; }
-    th, td { border: 0.75pt solid #444; padding: 4.5pt 6pt; vertical-align: middle; }
-    thead th { background: #ede9fe; font-weight: bold; text-align: left; white-space: nowrap; }
-    .tc { text-align: center; }
-    .sig-cell { height: 36pt; min-width: 80pt; }
-
-    /* ── Signature blocks ── */
-    .sig-row { display: flex; justify-content: space-between; gap: 32pt; margin-top: 28pt; }
-    .sig-block { flex: 1; text-align: center; font-size: 9.5pt; }
-    .sig-line { border-top: 1pt solid #000; height: 40pt; margin-bottom: 5pt; }
-    .sig-name { font-weight: bold; }
-
-    /* ── Content page ── */
     .section-title { font-size: 11pt; font-weight: bold; margin: 0 0 9pt; padding-bottom: 4pt; border-bottom: 1pt solid #aaa; }
     .content-text { font-size: 10.5pt; line-height: 1.7; }
     .content-text p { margin: 0 0 8pt; }
-    .remarks-box { margin-top: 14pt; padding: 6pt 10pt; border: 1pt solid #ccc; font-size: 9.5pt; background: #fafafa; }
+    .remarks-box { margin-top: 14pt; padding: 6pt 10pt; border: 1pt solid #ccc; font-size: 9.5pt; background: #fafafa; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
     /* ── Print ── */
     @media print {
@@ -1701,7 +1834,6 @@ function printInductionRecord(record: InductionRecord) {
       .a4-wrap { max-width: none; margin: 0; padding: 0; gap: 0; }
       .a4-page { padding: 0; box-shadow: none; }
       .page-break { page-break-before: always; }
-      thead th, .meta-grid { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
   </style>
 </head>
@@ -1715,49 +1847,76 @@ function printInductionRecord(record: InductionRecord) {
 
 <div class="a4-wrap">
 
-  <!-- ══ PAGE 1 — Participants ══ -->
+  <!-- ══ PAGE 1 — Staff Induction ══ -->
   <div class="a4-page">
-    <div class="doc-header">
-      <div class="org-name">Thilafushi Industrial Complex Pvt. Ltd.</div>
-      <div class="doc-title">Employee Induction Record</div>
-      <div class="doc-ref">${esc(fullRef)}</div>
+
+    <div class="p1-hdr">
+      <div class="p1-title">STAFF INDUCTION</div>
+      <div class="p1-sub">VHPL | Thilafushi Industrial Complex</div>
     </div>
 
-    <div class="meta-grid">
-      <div><strong>Induction Date:</strong>&nbsp; ${dateStr}</div>
-      <div><strong>Status:</strong>&nbsp; ${esc(record.status)}</div>
-      <div><strong>Conducted By:</strong>&nbsp; ${esc(conductedByStr)}</div>
-      <div><strong>No. of Participants:</strong>&nbsp; ${record.participants.length}</div>
-    </div>
+    <table class="info-tbl">
+      <tbody>
+        <tr>
+          <td class="lbl">Reference No:</td>
+          <td>${esc(fullRef)}</td>
+          <td class="lbl">Status:</td>
+          <td class="status-ok">${esc(record.status)}</td>
+        </tr>
+        <tr>
+          <td class="lbl">Date:</td>
+          <td>${dateStr}</td>
+          <td class="lbl">No. of Participants:</td>
+          <td>${countStr}</td>
+        </tr>
+        <tr>
+          <td class="lbl">Department:</td>
+          <td colspan="3">${esc(conductedByDept)}</td>
+        </tr>
+        <tr>
+          <td class="lbl">Conducted by:</td>
+          <td colspan="3">${esc(conductedByDisplay)}</td>
+        </tr>
+      </tbody>
+    </table>
 
-    <table>
+    <table class="p-tbl">
       <thead>
         <tr>
-          <th style="width:22pt" class="tc">#</th>
-          <th style="width:54pt">Emp ID</th>
+          <th style="width:20pt" class="tc">#</th>
+          <th style="width:52pt">Emp ID</th>
           <th>Full Name</th>
-          <th style="width:90pt">NIC / PP No</th>
-          <th style="width:130pt">Section / Department</th>
-          <th style="width:88pt">Signature</th>
+          <th style="width:84pt">NIC/PP No</th>
+          <th style="width:72pt">Section</th>
+          <th style="width:82pt">Department</th>
+          <th style="width:64pt">Signature</th>
         </tr>
       </thead>
       <tbody>
-        ${participantRows}
+        ${filledRows}
+        ${emptyRows}
       </tbody>
     </table>
 
     <div class="sig-row">
       <div class="sig-block">
-        <div class="sig-line"></div>
-        <div class="sig-name">HR Representative</div>
-        <div>${esc(record.conductedBy || 'HR Officer')}</div>
+        <div class="sig-space"></div>
+        <div class="sig-info">
+          <div class="sig-role">Conducted By:</div>
+          <div class="sig-person">${esc(conductedByDisplay)}</div>
+          ${conductedByDesig ? `<div class="sig-desig">${esc(conductedByDesig)}</div>` : ''}
+        </div>
       </div>
       <div class="sig-block">
-        <div class="sig-line"></div>
-        <div class="sig-name">Department Head</div>
-        <div>&nbsp;</div>
+        <div class="sig-space"></div>
+        <div class="sig-info">
+          <div class="sig-role">Approved By:</div>
+          <div class="sig-person">&nbsp;</div>
+          <div class="sig-desig">&nbsp;</div>
+        </div>
       </div>
     </div>
+
   </div>
 
   <!-- ══ PAGE 2 — Content Summary ══ -->
@@ -1773,16 +1932,20 @@ function printInductionRecord(record: InductionRecord) {
 
     <div class="remarks-box"><strong>Remarks:</strong>&nbsp; ${esc(record.remarks || '—')}</div>
 
-    <div class="sig-row">
+    <div class="sig-row" style="margin-top:28pt">
       <div class="sig-block">
-        <div class="sig-line"></div>
-        <div class="sig-name">HR Representative</div>
-        <div>${esc(record.conductedBy || 'HR Officer')}</div>
+        <div class="sig-space"></div>
+        <div class="sig-info">
+          <div class="sig-role">HR Representative</div>
+          <div class="sig-person">${esc(record.conductedBy || 'HR Officer')}</div>
+        </div>
       </div>
       <div class="sig-block">
-        <div class="sig-line"></div>
-        <div class="sig-name">Acknowledged By (Group Representative)</div>
-        <div>&nbsp;</div>
+        <div class="sig-space"></div>
+        <div class="sig-info">
+          <div class="sig-role">Acknowledged By (Group Representative)</div>
+          <div class="sig-person">&nbsp;</div>
+        </div>
       </div>
     </div>
   </div>
@@ -2137,6 +2300,7 @@ function InductionSection({ employees, records, onUpdate }: {
   const [search, setSearch] = useState('')
   const [editing, setEditing] = useState<InductionRecord | null>(null)
   const [viewing, setViewing] = useState<InductionRecord | null>(null)
+  const [viewingParticipants, setViewingParticipants] = useState<InductionRecord | null>(null)
 
   const rows = useMemo(() => records.filter((r) => {
     const participantText = r.participants.map((p) => `${p.employeeId} ${p.name}`).join(' ')
@@ -2211,7 +2375,7 @@ function InductionSection({ employees, records, onUpdate }: {
                   <td>{record.conductedBy || '—'}</td>
                   <td>
                     {record.participants.length > 0 ? (
-                      <button className="participants-count-btn" onClick={() => setViewing(record)} type="button">
+                      <button className="participants-count-btn" onClick={() => setViewingParticipants(record)} type="button">
                         {record.participants.length} participant{record.participants.length !== 1 ? 's' : ''}
                       </button>
                     ) : (
@@ -2222,7 +2386,7 @@ function InductionSection({ employees, records, onUpdate }: {
                   <td>
                     <div className="row-actions ind-actions">
                       <button className="action-glyph" onClick={() => setViewing(record)} type="button" title="View participants" aria-label="View participants">👁</button>
-                      <button className="action-glyph" onClick={() => printInductionRecord(record)} type="button" title="Print" aria-label="Print induction">🖨</button>
+                      <button className="action-glyph" onClick={() => printInductionRecord(record, employees)} type="button" title="Print" aria-label="Print induction">🖨</button>
                       <button className="action-glyph edit" onClick={() => setEditing(record)} type="button" title="Edit" aria-label="Edit">✎</button>
                       <button className="action-glyph delete" onClick={() => deleteRecord(record.id)} type="button" title="Delete" aria-label="Delete">🗑</button>
                     </div>
@@ -2234,7 +2398,8 @@ function InductionSection({ employees, records, onUpdate }: {
         </div>
       </section>
       {editing && <InductionModal employees={employees} record={editing} onClose={() => setEditing(null)} onSave={saveRecord} />}
-      {viewing && <InductionViewModal record={viewing} onClose={() => setViewing(null)} />}
+      {viewing && <InductionViewModal record={viewing} employees={employees} onClose={() => setViewing(null)} onPrint={() => printInductionRecord(viewing, employees)} />}
+      {viewingParticipants && <InductionParticipantsModal record={viewingParticipants} onClose={() => setViewingParticipants(null)} />}
     </>
   )
 }

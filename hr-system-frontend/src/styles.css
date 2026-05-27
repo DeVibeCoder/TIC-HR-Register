@@ -5483,3 +5483,151 @@ button.step-pill:hover { filter: brightness(0.98); }
   opacity: 0.7;
 }
 .ind-remove-row:hover { opacity: 1 !important; }
+
+/* ── Induction print-preview modal ── */
+.ind-preview-modal {
+  max-width: 860px !important;
+  width: 95vw !important;
+}
+.ind-preview-scroll {
+  max-height: 60vh;
+  overflow-y: auto;
+  background: #f1f5f9;
+  padding: 14px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+.ind-preview-doc {
+  background: #fff;
+  padding: 22px 28px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.09);
+  max-width: 720px;
+  margin: 0 auto;
+  font-size: 0.82rem;
+  color: #1e293b;
+  line-height: 1.4;
+}
+/* Page 1 header */
+.ind-prev-hdr {
+  text-align: center;
+  border-bottom: 2px solid #000;
+  padding-bottom: 9px;
+  margin-bottom: 13px;
+}
+.ind-prev-title {
+  font-size: 1.22rem;
+  font-weight: 900;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  font-family: Arial, Helvetica, sans-serif;
+}
+.ind-prev-sub {
+  font-size: 0.76rem;
+  color: #444;
+  margin-top: 3px;
+  letter-spacing: 0.3px;
+}
+/* Info table */
+.ind-prev-info {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 12px;
+  font-size: 0.80rem;
+}
+.ind-prev-info td {
+  border: 1px solid #333;
+  padding: 4px 8px;
+}
+.ind-pi-lbl {
+  font-weight: 700;
+  background: #f0f0f0;
+  width: 120px;
+  white-space: nowrap;
+}
+.ind-pi-val { }
+.ind-pi-completed {
+  font-weight: 700;
+  color: #15803d;
+}
+/* Section label */
+.ind-prev-tbl-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #64748b;
+  margin: 10px 0 4px;
+}
+/* Participant table in preview */
+.ind-prev-ptbl {
+  font-size: 0.76rem !important;
+}
+.ind-sig-cell-view {
+  height: 20px;
+  min-width: 64px;
+}
+/* Signature blocks in preview */
+.ind-prev-sig-row {
+  display: flex;
+  gap: 14px;
+  margin-top: 12px;
+}
+.ind-prev-sig-block {
+  flex: 1;
+  border: 1px solid #444;
+}
+.ind-prev-sig-space {
+  height: 52px;
+}
+.ind-prev-sig-btm {
+  padding: 5px 7px;
+  border-top: 1px solid #444;
+}
+.ind-prev-sig-role {
+  font-size: 0.70rem;
+  color: #666;
+}
+.ind-prev-sig-name {
+  font-weight: 700;
+  font-size: 0.78rem;
+  margin-top: 2px;
+}
+.ind-prev-sig-desig {
+  font-size: 0.70rem;
+  color: #444;
+  margin-top: 1px;
+}
+/* Page 2 preview section */
+.ind-prev-pg2 {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1.5px dashed #cbd5e1;
+}
+.ind-prev-pg2-label {
+  font-size: 0.70rem;
+  color: #94a3b8;
+  text-align: center;
+  margin: 0 0 8px;
+  font-style: italic;
+}
+.ind-prev-content-text {
+  font-size: 0.79rem;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  color: #334155;
+  margin: 0 0 6px;
+}
+.ind-prev-content-default {
+  font-size: 0.77rem;
+  color: #64748b;
+  font-style: italic;
+  margin: 0 0 6px;
+}
+.ind-prev-remarks {
+  font-size: 0.79rem;
+  padding: 5px 9px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  margin-top: 8px;
+}
