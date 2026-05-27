@@ -4782,44 +4782,51 @@ button.step-pill:hover { filter: brightness(0.98); }
 /* ── Section inline tab bar (Ops & Activities) ───────────── */
 .section-inline-tabs {
   display: inline-flex;
-  align-items: center;
-  gap: 0;
-  margin-bottom: 16px;
-  border-bottom: 2px solid rgba(148, 163, 184, 0.2);
-  padding-bottom: 0;
+  align-items: stretch;
+  gap: 3px;
+  background: #1a0d52;
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 18px;
+  box-shadow: 0 4px 14px rgba(30, 10, 80, 0.28);
 }
 .section-inline-tabs button {
   position: relative;
-  padding: 7px 18px;
+  padding: 6px 18px;
   background: transparent;
   border: none;
-  font-size: 0.78rem;
+  border-radius: 7px;
+  font-size: 0.72rem;
   font-weight: 700;
-  color: #94a3b8;
+  color: rgba(221, 214, 254, 0.6);
   cursor: pointer;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -2px;
-  transition: color 140ms, border-color 140ms;
   white-space: nowrap;
+  transition: background 140ms, color 140ms, box-shadow 140ms;
 }
 .section-inline-tabs button:hover {
-  color: #7c3aed;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.08);
 }
 .section-inline-tabs button.active {
-  color: #7c3aed;
-  border-bottom-color: #7c3aed;
+  color: #fff;
+  background: #7c3aed;
+  box-shadow: 0 2px 10px rgba(124, 58, 237, 0.45);
 }
-/* pipe separator between tabs */
-.section-inline-tabs button + button::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 25%;
-  height: 50%;
-  width: 1px;
-  background: rgba(148, 163, 184, 0.4);
+
+/* ── Dark table headers (all data tables) ────────────────── */
+.data-table thead th {
+  background: linear-gradient(135deg, #1e1060 0%, #2e1065 100%) !important;
+  color: #ddd6fe !important;
+  border-bottom: 2px solid rgba(139, 92, 246, 0.35) !important;
+}
+/* Leave tables share same styling */
+.leave-workspace .data-table thead th {
+  background: linear-gradient(135deg, #1e1060 0%, #2e1065 100%) !important;
+  color: #ddd6fe !important;
+  font-size: 0.69rem;
+  padding: 8px 8px;
 }
 
 
