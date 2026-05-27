@@ -4774,8 +4774,10 @@ button.step-pill:hover { filter: brightness(0.98); }
 .status-advance-btn.step-4 { color: #7f1d1d; background: #fee2e2; border-color: #fca5a5; }
 
 /* ── Leave table: centre Leave Type & Status headers ─────── */
-.leave-table .leave-type-th { text-align: center !important; }
+.leave-table .leave-type-th   { text-align: center !important; }
 .leave-table .leave-status-th { text-align: center !important; }
+.leave-table .leave-date-th   { text-align: center !important; }
+.leave-table .leave-days-th   { text-align: center !important; }
 
 
 
