@@ -978,7 +978,7 @@ function PassportHandoverModal({
         <div className="modal-header"><div><p className="eyebrow">Passport handover</p><h2>{record.name ? 'Edit Passport Workflow' : 'Add Passport Workflow'}</h2><p>{employee?.employeeId ?? '-'} - {employee?.fullName ?? '-'}</p></div><button className="icon-button" onClick={onClose} type="button">x</button></div>
         <div className="form-grid">
           <label><span>Employee</span><select value={employeeId} onChange={(event) => setEmployeeId(event.target.value)}>{employees.slice(0, 120).map((item) => <option key={item.employeeId} value={item.employeeId}>{item.employeeId} - {item.fullName}</option>)}</select></label>
-          <label><span>Purpose</span><select value={leaveTypeCode} onChange={(event) => setLeaveTypeCode(event.target.value as LeaveTypeCode)}>{leaveTypeOptions.map((item) => <option key={item.code} value={item.code}>{item.label} ({item.code})</option>)}</select></label>
+          <label><span>Leave Type</span><select value={leaveTypeCode} onChange={(event) => setLeaveTypeCode(event.target.value as LeaveTypeCode)}>{leaveTypeOptions.map((item) => <option key={item.code} value={item.code}>{item.label} ({item.code})</option>)}</select></label>
           <label><span>Departure Date</span><input type="date" value={departureDate} onChange={(event) => setDepartureDate(event.target.value)} /></label>
           <label><span>Return Date</span><input type="date" value={returnDate} onChange={(event) => setReturnDate(event.target.value)} /></label>
           <label><span>Status</span><select value={passportStep} onChange={(event) => setPassportStep(event.target.value as PassportStep)}>{passportSteps.map((step) => <option key={step}>{step}</option>)}</select></label>
@@ -1112,13 +1112,13 @@ function LeavePage({
           <>
             <div className="table-toolbar leave-toolbar leave-toolbar-4 leave-toolbar-has-btn">
               <label className="search-field"><span>Search</span><input type="search" value={requestSearch} onChange={(event) => setRequestSearch(event.target.value)} placeholder="Employee, ID, purpose" /></label>
-              <label><span>Purpose</span><select value={requestTypeFilter} onChange={(event) => setRequestTypeFilter(event.target.value as 'All' | LeaveTypeCode)}><option value="All">All Types</option>{leaveTypeOptions.map((item) => <option key={item.code} value={item.code}>{item.label} ({item.code})</option>)}</select></label>
+              <label><span>Leave Type</span><select value={requestTypeFilter} onChange={(event) => setRequestTypeFilter(event.target.value as 'All' | LeaveTypeCode)}><option value="All">All Types</option>{leaveTypeOptions.map((item) => <option key={item.code} value={item.code}>{item.label} ({item.code})</option>)}</select></label>
               <label><span>Status</span><select value={requestStatusFilter} onChange={(event) => setRequestStatusFilter(event.target.value as 'All' | LeaveRequestStep)}><option value="All">All Statuses</option>{requestSteps.map((step) => <option key={step}>{step}</option>)}</select></label>
               <label><span>Section</span><select value={requestDepartmentFilter} onChange={(event) => setRequestDepartmentFilter(event.target.value)}><option>All Departments</option>{departmentsList.map((item) => <option key={item}>{item}</option>)}</select></label>
               <button className="primary-button toolbar-add-btn" onClick={onAddRequest} type="button">Add Leave Request</button>
             </div>
             <div className="employee-table-shell compact-scroll">
-              <table className="data-table leave-table"><thead><tr><th>Emp ID</th><th>Name</th><th>NIC / PP No</th><th>Section</th><th>Purpose</th><th>Departure</th><th>Return</th><th>Days</th><th>Remarks</th><th>Status</th><th>Action</th></tr></thead><tbody>
+              <table className="data-table leave-table"><thead><tr><th>Emp ID</th><th>Name</th><th>NIC / PP No</th><th>Section</th><th className="leave-type-th">Leave Type</th><th>Departure</th><th>Return</th><th>Days</th><th>Remarks</th><th className="leave-status-th">Status</th><th>Action</th></tr></thead><tbody>
                 {requestRows.map((record) => {
                   const stepIdx = requestSteps.indexOf(record.step)
                   return (
@@ -1154,10 +1154,10 @@ function LeavePage({
             <div className="table-toolbar leave-toolbar leave-toolbar-3">
               <label className="search-field"><span>Search</span><input type="search" value={activeSearch} onChange={(event) => setActiveSearch(event.target.value)} placeholder="Employee, ID, purpose" /></label>
               <label><span>Section</span><select value={activeDepartmentFilter} onChange={(event) => setActiveDepartmentFilter(event.target.value)}><option>All Departments</option>{departmentsList.map((item) => <option key={item}>{item}</option>)}</select></label>
-              <label><span>Purpose</span><select value={activeTypeFilter} onChange={(event) => setActiveTypeFilter(event.target.value as 'All' | LeaveTypeCode)}><option value="All">All Types</option>{leaveTypeOptions.map((item) => <option key={item.code} value={item.code}>{item.label} ({item.code})</option>)}</select></label>
+              <label><span>Leave Type</span><select value={activeTypeFilter} onChange={(event) => setActiveTypeFilter(event.target.value as 'All' | LeaveTypeCode)}><option value="All">All Types</option>{leaveTypeOptions.map((item) => <option key={item.code} value={item.code}>{item.label} ({item.code})</option>)}</select></label>
             </div>
             <div className="employee-table-shell compact-scroll">
-              <table className="data-table leave-table"><thead><tr><th>Emp ID</th><th>Name</th><th>NIC / PP No</th><th>Section</th><th>Purpose</th><th>Departure</th><th>Return</th><th>Days</th><th>Remarks</th><th>Status</th></tr></thead><tbody>
+              <table className="data-table leave-table"><thead><tr><th>Emp ID</th><th>Name</th><th>NIC / PP No</th><th>Section</th><th className="leave-type-th">Leave Type</th><th>Departure</th><th>Return</th><th>Days</th><th>Remarks</th><th className="leave-status-th">Status</th></tr></thead><tbody>
                 {activeRows.map((record) => <tr key={record.id}><td>{record.employeeId}</td><td>{record.name}</td><td>{getNic(record.employeeId)}</td><td>{record.department}</td><td className="leave-type-cell"><LeaveTypeBadge code={record.leaveTypeCode} /></td><td className="leave-date-cell">{formatDateDisplay(record.departureDate)}</td><td className="leave-date-cell">{formatDateDisplay(record.returnDate)}</td><td className="leave-days-cell">{record.days}</td><td className="leave-remarks-cell">{record.remarks || <span className="muted-dash">—</span>}</td><td className="leave-status-cell-sm"><StatusBadge status="Departed" /></td></tr>)}
               </tbody></table>
             </div>
@@ -1173,7 +1173,7 @@ function LeavePage({
               <label><span>Section</span><select value={historyDepartmentFilter} onChange={(event) => setHistoryDepartmentFilter(event.target.value)}><option>All Departments</option>{departmentsList.map((item) => <option key={item}>{item}</option>)}</select></label>
             </div>
             <div className="employee-table-shell compact-scroll">
-              <table className="data-table leave-table"><thead><tr><th>Emp ID</th><th>Name</th><th>NIC / PP No</th><th>Section</th><th>Purpose</th><th>Departure</th><th>Return</th><th>Days</th><th>Remarks</th><th>Status</th></tr></thead><tbody>
+              <table className="data-table leave-table"><thead><tr><th>Emp ID</th><th>Name</th><th>NIC / PP No</th><th>Section</th><th className="leave-type-th">Leave Type</th><th>Departure</th><th>Return</th><th>Days</th><th>Remarks</th><th className="leave-status-th">Status</th></tr></thead><tbody>
                 {historyRows.map((record) => <tr className={record.confirmation === 'Not Returned' ? 'not-returned-row' : ''} key={record.id}><td>{record.employeeId}</td><td>{record.name}</td><td>{getNic(record.employeeId)}</td><td>{record.department}</td><td className="leave-type-cell"><LeaveTypeBadge code={record.leaveTypeCode} /></td><td className="leave-date-cell">{formatDateDisplay(record.departureDate)}</td><td className="leave-date-cell">{formatDateDisplay(record.returnDate)}</td><td className="leave-days-cell">{record.days}</td><td className="leave-remarks-cell">{record.remarks || <span className="muted-dash">—</span>}</td><td className="leave-status-cell-sm">{record.confirmation ? <StatusBadge status={record.confirmation} /> : <div className="row-actions history-confirm-actions"><button className="mini-button" onClick={() => onHistoryConfirm(record.id, 'Returned')} type="button">Returned</button><button className="mini-button danger" onClick={() => onHistoryConfirm(record.id, 'Not Returned')} type="button">Not Returned</button></div>}</td></tr>)}
               </tbody></table>
             </div>
@@ -1188,7 +1188,7 @@ function LeavePage({
               <button className="primary-button toolbar-add-btn" onClick={onAddPassport} type="button">Add Passport</button>
             </div>
             <div className="employee-table-shell compact-scroll">
-              <table className="data-table leave-table"><thead><tr><th>Emp ID</th><th>Name</th><th>NIC / PP No</th><th>Section</th><th>Purpose</th><th>Status</th><th>Issued Date</th><th>Returned Date</th><th>Sent to HO Date</th><th>Remarks</th><th>Action</th></tr></thead><tbody>
+              <table className="data-table leave-table"><thead><tr><th>Emp ID</th><th>Name</th><th>NIC / PP No</th><th>Section</th><th className="leave-type-th">Leave Type</th><th className="leave-status-th">Status</th><th>Issued Date</th><th>Returned Date</th><th>Sent to HO Date</th><th>Remarks</th><th>Action</th></tr></thead><tbody>
                 {passportRows.map((record) => <tr key={record.id}><td>{record.employeeId}</td><td>{record.name}</td><td>{getNic(record.employeeId)}</td><td>{record.department}</td><td>{record.leaveTypeCode}</td><td className="passport-status-cell"><StatusBadge status={record.passportStep} /></td><td>{record.givenDate ? formatDateDisplay(record.givenDate) : '-'}</td><td>{record.returnedDate ? formatDateDisplay(record.returnedDate) : '-'}</td><td>{record.sentToHoDate ? formatDateDisplay(record.sentToHoDate) : '-'}</td><td>{record.remarks || '-'}</td><td className="passport-action-cell"><div className="row-actions request-inline-actions"><button className="action-glyph edit" onClick={() => onEditPassport(record)} type="button" title="Edit" aria-label="Edit passport">✎</button><button className="action-glyph delete" onClick={() => onDeletePassport(record.id)} type="button" title="Delete" aria-label="Delete passport">🗑</button></div></td></tr>)}
               </tbody></table>
             </div>
