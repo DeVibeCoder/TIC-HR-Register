@@ -1566,11 +1566,18 @@ function InductionViewModal({ record, employees = [], onClose, onPrint }: {
         <div className="ind-preview-scroll">
           <div className="ind-preview-doc">
 
-            {/* ── Page 1 Header ── */}
-            <div className="ind-prev-hdr">
-              <div className="ind-prev-title">STAFF INDUCTION</div>
-              <div className="ind-prev-sub">VHPL | Thilafushi Industrial Complex</div>
+            {/* ── Branded header ── */}
+            <div className="ind-prev-doc-hdr">
+              <div>
+                <div className="ind-prev-brand">VHPL</div>
+                <div className="ind-prev-co">Thilafushi Industrial Complex Pvt. Ltd.</div>
+              </div>
+              <div className="ind-prev-hdr-right">
+                <div className="ind-prev-dept-lbl">Human Resources</div>
+                <div className="ind-prev-doc-title">STAFF INDUCTION</div>
+              </div>
             </div>
+            <div className="ind-prev-hdr-accent"></div>
 
             {/* ── Info table ── */}
             <table className="ind-prev-info">
@@ -1643,7 +1650,7 @@ function InductionViewModal({ record, employees = [], onClose, onPrint }: {
               <div className="ind-prev-sig-block">
                 <div className="ind-prev-sig-space"></div>
                 <div className="ind-prev-sig-btm">
-                  <div className="ind-prev-sig-role">Conducted By:</div>
+                  <div className="ind-prev-sig-role">Conducted By</div>
                   <div className="ind-prev-sig-name">{conductedByDisplay}</div>
                   {conductedByDesig && <div className="ind-prev-sig-desig">{conductedByDesig}</div>}
                 </div>
@@ -1651,7 +1658,7 @@ function InductionViewModal({ record, employees = [], onClose, onPrint }: {
               <div className="ind-prev-sig-block">
                 <div className="ind-prev-sig-space"></div>
                 <div className="ind-prev-sig-btm">
-                  <div className="ind-prev-sig-role">Approved By:</div>
+                  <div className="ind-prev-sig-role">Approved By</div>
                   <div className="ind-prev-sig-name">Arushulla Rashid (50814)</div>
                   <div className="ind-prev-sig-desig">Administrator</div>
                 </div>
@@ -1819,19 +1826,19 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
 
     /* ══ HEADER BANNER ══ */
     .doc-hdr {
-      background: linear-gradient(135deg, #1e1b4b 0%, #3730a3 100%);
+      background: linear-gradient(135deg, #3730a3 0%, #4f46e5 100%);
       padding: 14pt 20pt 12pt;
       display: flex; justify-content: space-between; align-items: center;
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
     .hdr-brand { font-size: 26pt; font-weight: 900; color: #fff; letter-spacing: 5px; line-height: 1; font-family: Arial, sans-serif; }
-    .hdr-co { font-size: 7.5pt; color: #c4b5fd; letter-spacing: 0.4px; margin-top: 3pt; }
+    .hdr-co { font-size: 7.5pt; color: #e0d9ff; letter-spacing: 0.4px; margin-top: 3pt; }
     .hdr-right { text-align: right; }
-    .hdr-dept-lbl { font-size: 7pt; color: #a5b4fc; letter-spacing: 2px; text-transform: uppercase; }
+    .hdr-dept-lbl { font-size: 7pt; color: #c7d2fe; letter-spacing: 2px; text-transform: uppercase; }
     .hdr-doc-title { font-size: 15pt; font-weight: 900; color: #fff; letter-spacing: 1.5px; margin-top: 2pt; font-family: Arial, sans-serif; }
     .hdr-accent {
       height: 3pt;
-      background: linear-gradient(90deg, #818cf8, #a78bfa, #818cf8);
+      background: linear-gradient(90deg, #a5b4fc, #c4b5fd, #a5b4fc);
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
 
@@ -1842,7 +1849,7 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
     .info-tbl { width: 100%; border-collapse: collapse; margin-bottom: 14pt; }
     .info-tbl td { padding: 5.5pt 9pt; font-size: 9.5pt; border: 0.75pt solid #c4b5fd; vertical-align: middle; }
     .info-tbl .lbl {
-      font-weight: 700; background: #ede9fe; color: #3730a3;
+      font-weight: 700; background: #ede9fe; color: #4338ca;
       width: 110pt; white-space: nowrap;
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
@@ -1854,7 +1861,7 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
 
     /* ── Section heading bar ── */
     .sec-hdr {
-      background: #5b21b6; color: #fff;
+      background: #8b5cf6; color: #fff;
       padding: 5pt 10pt; font-size: 8.5pt; font-weight: 700;
       text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0;
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
@@ -1863,9 +1870,9 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
     /* ── Participants table ── */
     table.p-tbl { width: 100%; border-collapse: collapse; margin-bottom: 14pt; font-size: 9pt; table-layout: fixed; }
     .p-tbl thead th {
-      background: #4338ca; color: #fff;
+      background: #6366f1; color: #fff;
       padding: 5pt 5pt; text-align: left; font-weight: 700;
-      border: 0.75pt solid #4338ca;
+      border: 0.75pt solid #6366f1;
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
     .p-tbl thead th.tc { text-align: center; }
@@ -1876,30 +1883,30 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
 
     /* ── Signature blocks ── */
     .sig-row { display: flex; gap: 14pt; margin-top: 16pt; }
-    .sig-block { flex: 1; border: 0.75pt solid #c4b5fd; border-top: 2.5pt solid #5b21b6; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .sig-block { flex: 1; border: 0.75pt solid #c4b5fd; border-top: 2pt solid #8b5cf6; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .sig-space { height: 52pt; }
     .sig-info { padding: 5pt 9pt; border-top: 0.75pt solid #c4b5fd; background: #f8f6ff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .sig-role { font-size: 7.5pt; color: #5b21b6; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2pt; }
-    .sig-person { font-weight: 700; font-size: 9.5pt; color: #1e1b4b; }
-    .sig-desig { font-size: 8.5pt; color: #5b21b6; margin-top: 1pt; }
+    .sig-role { font-size: 7.5pt; color: #8b5cf6; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2pt; }
+    .sig-person { font-weight: 700; font-size: 9.5pt; color: #1e1b4b; text-transform: uppercase; }
+    .sig-desig { font-size: 8.5pt; color: #6d28d9; margin-top: 1pt; }
 
     /* ══ PAGE 2 ══ */
     .p2-meta-bar {
       display: flex; gap: 24pt;
-      background: #f5f3ff; border-left: 3pt solid #6d28d9;
+      background: #f5f3ff; border-left: 3pt solid #8b5cf6;
       padding: 6pt 10pt; margin-bottom: 13pt; font-size: 9.5pt;
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
     .summary-hdg {
-      font-size: 10.5pt; font-weight: 700; color: #3730a3;
-      border-bottom: 2pt solid #6d28d9; padding-bottom: 5pt; margin-bottom: 11pt;
+      font-size: 10.5pt; font-weight: 700; color: #4338ca;
+      border-bottom: 2pt solid #8b5cf6; padding-bottom: 5pt; margin-bottom: 11pt;
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
     .content-text { font-size: 10pt; line-height: 1.75; color: #1a1a2e; }
     .content-text p { margin: 0 0 8pt; }
     .remarks-box {
       margin-top: 14pt; padding: 7pt 11pt;
-      border-left: 3pt solid #6d28d9; background: #faf5ff; font-size: 9.5pt;
+      border-left: 3pt solid #8b5cf6; background: #faf5ff; font-size: 9.5pt;
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
 
@@ -1968,12 +1975,12 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
         <thead>
           <tr>
             <th style="width:20pt" class="tc">#</th>
-            <th style="width:52pt">Emp ID</th>
+            <th style="width:50pt">Emp ID</th>
             <th>Full Name</th>
-            <th style="width:82pt">NIC / Passport</th>
-            <th style="width:70pt">Section</th>
-            <th style="width:80pt">Department</th>
-            <th style="width:62pt">Signature</th>
+            <th style="width:78pt">NIC / Passport</th>
+            <th style="width:66pt">Section</th>
+            <th style="width:100pt">Department</th>
+            <th style="width:58pt">Signature</th>
           </tr>
         </thead>
         <tbody>
@@ -2351,15 +2358,15 @@ function printTrainingRecord(record: TrainingRecord) {
 
     /* ══ HEADER BANNER ══ */
     .doc-hdr {
-      background: linear-gradient(135deg, #1e1b4b 0%, #3730a3 100%);
+      background: linear-gradient(135deg, #3730a3 0%, #4f46e5 100%);
       padding: 14pt 20pt 12pt;
       display: flex; justify-content: space-between; align-items: center;
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
     .hdr-brand { font-size: 26pt; font-weight: 900; color: #fff; letter-spacing: 5px; line-height: 1; }
-    .hdr-co { font-size: 7.5pt; color: #c4b5fd; letter-spacing: 0.4px; margin-top: 3pt; }
+    .hdr-co { font-size: 7.5pt; color: #e0d9ff; letter-spacing: 0.4px; margin-top: 3pt; }
     .hdr-right { text-align: right; max-width: 58%; }
-    .hdr-dept-lbl { font-size: 7pt; color: #a5b4fc; letter-spacing: 2px; text-transform: uppercase; }
+    .hdr-dept-lbl { font-size: 7pt; color: #c7d2fe; letter-spacing: 2px; text-transform: uppercase; }
     .hdr-doc-title { font-size: 14pt; font-weight: 900; color: #fff; letter-spacing: 0.5px; margin-top: 2pt; word-break: break-word; line-height: 1.25; }
     .hdr-accent {
       height: 3pt;
@@ -2374,7 +2381,7 @@ function printTrainingRecord(record: TrainingRecord) {
     .info-tbl { width: 100%; border-collapse: collapse; margin-bottom: 14pt; }
     .info-tbl td { padding: 5.5pt 9pt; font-size: 9.5pt; border: 0.75pt solid #c4b5fd; vertical-align: middle; }
     .info-tbl .lbl {
-      font-weight: 700; background: #ede9fe; color: #3730a3;
+      font-weight: 700; background: #ede9fe; color: #4338ca;
       width: 110pt; white-space: nowrap;
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
@@ -2391,7 +2398,7 @@ function printTrainingRecord(record: TrainingRecord) {
 
     /* ── Section heading bar ── */
     .sec-hdr {
-      background: #5b21b6; color: #fff;
+      background: #8b5cf6; color: #fff;
       padding: 5pt 10pt; font-size: 8.5pt; font-weight: 700;
       text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0;
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
@@ -2400,9 +2407,9 @@ function printTrainingRecord(record: TrainingRecord) {
     /* ── Participants table ── */
     table.p-tbl { width: 100%; border-collapse: collapse; font-size: 9pt; table-layout: fixed; }
     .p-tbl thead th {
-      background: #4338ca; color: #fff;
+      background: #6366f1; color: #fff;
       padding: 5pt 5pt; text-align: left; font-weight: 700;
-      border: 0.75pt solid #4338ca;
+      border: 0.75pt solid #6366f1;
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
     .p-tbl thead th.tc { text-align: center; }
@@ -2831,8 +2838,8 @@ function TrainingSection({ records, onUpdate, employees }: {
 // ── Bank Account Opening ────────────────────────────────────
 
 type BankName = 'SBI' | 'BOC' | 'CBM'
-type AccountStatus = 'Pending' | 'Completed' | 'Incomplete'
-type AccountType = 'USD Only' | 'MVR Only' | 'Both USD & MVR'
+type AccountStatus = 'Pending' | 'Applied' | 'Completed'
+type AccountType = 'USD' | 'MVR' | 'USD & MVR'
 
 type BankAccountRecord = {
   id: string
@@ -2844,28 +2851,29 @@ type BankAccountRecord = {
   accountType: AccountType
   scheduledDate: string
   status: AccountStatus
+  remarks?: string
 }
 
 const initialBankAccountRecords: BankAccountRecord[] = [
-  { id: 'BNK-35494', employeeId: '35494', fullName: 'GAMARALALAGE AJITH WIJESIRI', department: 'ACCOUNTS AND FINANCE', nationality: 'SRI LANKAN', bank: 'SBI', accountType: 'Both USD & MVR', scheduledDate: '2007-06-01', status: 'Completed' },
-  { id: 'BNK-37916', employeeId: '37916', fullName: 'JAGO', department: 'STORES', nationality: 'BANGLADESHI', bank: 'SBI', accountType: 'Both USD & MVR', scheduledDate: '2008-09-01', status: 'Completed' },
-  { id: 'BNK-43407', employeeId: '43407', fullName: 'MOHAMMAD DELOWAR HOSSAIN', department: 'STORES', nationality: 'BANGLADESHI', bank: 'SBI', accountType: 'Both USD & MVR', scheduledDate: '2013-08-01', status: 'Completed' },
-  { id: 'BNK-44386', employeeId: '44386', fullName: 'MAJIB', department: 'STORES', nationality: 'BANGLADESHI', bank: 'SBI', accountType: 'Both USD & MVR', scheduledDate: '2014-06-01', status: 'Completed' },
-  { id: 'BNK-50223', employeeId: '50223', fullName: 'AYESHAN KUMARA WIJEYATHUNGA MUDALIGE', department: 'STORES', nationality: 'SRI LANKAN', bank: 'BOC', accountType: 'Both USD & MVR', scheduledDate: '2019-04-10', status: 'Completed' },
-  { id: 'BNK-50427', employeeId: '50427', fullName: 'MD SAIFUR RAHMAN', department: 'STORES', nationality: 'BANGLADESHI', bank: 'SBI', accountType: 'Both USD & MVR', scheduledDate: '2019-06-01', status: 'Completed' },
-  { id: 'BNK-52804', employeeId: '52804', fullName: 'AHMED IMRAN', department: 'ACCOUNTS AND FINANCE', nationality: 'BANGLADESHI', bank: 'SBI', accountType: 'Both USD & MVR', scheduledDate: '2020-12-01', status: 'Completed' },
-  { id: 'BNK-53029', employeeId: '53029', fullName: 'KUMARAN VAITHILINGAM', department: 'STORES', nationality: 'INDIAN', bank: 'SBI', accountType: 'Both USD & MVR', scheduledDate: '2022-01-20', status: 'Completed' },
-  { id: 'BNK-53979', employeeId: '53979', fullName: 'NAVEEN SEKAR', department: 'STORES', nationality: 'INDIAN', bank: 'SBI', accountType: 'Both USD & MVR', scheduledDate: '2022-08-10', status: 'Completed' },
-  { id: 'BNK-55427', employeeId: '55427', fullName: 'SARAVANAN RAJENDRAN', department: 'STORES', nationality: 'INDIAN', bank: 'SBI', accountType: 'Both USD & MVR', scheduledDate: '2023-09-01', status: 'Completed' },
-  { id: 'BNK-56141', employeeId: '56141', fullName: 'RAJU PERKA', department: 'CAFE', nationality: 'INDIAN', bank: 'BOC', accountType: 'Both USD & MVR', scheduledDate: '2024-04-01', status: 'Completed' },
-  { id: 'BNK-56530', employeeId: '56530', fullName: 'PUBUDU MADURANGA ALAWATHTHA KANKANAMGE', department: 'ADMINISTRATION', nationality: 'SRI LANKAN', bank: 'SBI', accountType: 'Both USD & MVR', scheduledDate: '2024-07-01', status: 'Completed' },
-  { id: 'BNK-56646', employeeId: '56646', fullName: 'CHANDRASHEKHER PURELLA', department: 'ACCOUNTS AND FINANCE', nationality: 'INDIAN', bank: 'BOC', accountType: 'Both USD & MVR', scheduledDate: '2024-08-01', status: 'Completed' },
-  { id: 'BNK-57637', employeeId: '57637', fullName: 'MUNI ACHARI GUNTI KOVALA', department: 'CAFE', nationality: 'INDIAN', bank: 'SBI', accountType: 'Both USD & MVR', scheduledDate: '2025-02-10', status: 'Completed' },
-  { id: 'BNK-57935', employeeId: '57935', fullName: 'ARUNODA KAVINDU NANAYAKKARA', department: 'ACCOUNTS AND FINANCE', nationality: 'SRI LANKAN', bank: 'SBI', accountType: 'Both USD & MVR', scheduledDate: '2025-04-20', status: 'Completed' },
-  { id: 'BNK-58692', employeeId: '58692', fullName: 'SHANTUMON PATHIYIL CHACKO', department: 'HUMAN RESOURCES', nationality: 'INDIAN', bank: 'SBI', accountType: 'Both USD & MVR', scheduledDate: '2025-10-15', status: 'Completed' },
-  { id: 'BNK-57803', employeeId: '57803', fullName: 'INDIKA SAMPATH SAMARASINGHEGE', department: 'STORES', nationality: 'SRI LANKAN', bank: 'SBI', accountType: 'Both USD & MVR', scheduledDate: '2026-05-20', status: 'Pending' },
-  { id: 'BNK-58034', employeeId: '58034', fullName: 'SAMEERA MADUSANKA GUNARATHNA', department: 'STORES', nationality: 'SRI LANKAN', bank: 'SBI', accountType: 'Both USD & MVR', scheduledDate: '2026-05-22', status: 'Pending' },
-  { id: 'BNK-58686', employeeId: '58686', fullName: 'YASAR ARAFATH BASHEER AHAMED', department: 'STORES', nationality: 'INDIAN', bank: 'SBI', accountType: 'Both USD & MVR', scheduledDate: '2026-05-18', status: 'Incomplete' },
+  { id: 'BNK-35494', employeeId: '35494', fullName: 'GAMARALALAGE AJITH WIJESIRI', department: 'ACCOUNTS AND FINANCE', nationality: 'SRI LANKAN', bank: 'SBI', accountType: 'USD & MVR', scheduledDate: '2007-06-01', status: 'Completed' },
+  { id: 'BNK-37916', employeeId: '37916', fullName: 'JAGO', department: 'STORES', nationality: 'BANGLADESHI', bank: 'SBI', accountType: 'USD & MVR', scheduledDate: '2008-09-01', status: 'Completed' },
+  { id: 'BNK-43407', employeeId: '43407', fullName: 'MOHAMMAD DELOWAR HOSSAIN', department: 'STORES', nationality: 'BANGLADESHI', bank: 'SBI', accountType: 'USD & MVR', scheduledDate: '2013-08-01', status: 'Completed' },
+  { id: 'BNK-44386', employeeId: '44386', fullName: 'MAJIB', department: 'STORES', nationality: 'BANGLADESHI', bank: 'SBI', accountType: 'USD & MVR', scheduledDate: '2014-06-01', status: 'Completed' },
+  { id: 'BNK-50223', employeeId: '50223', fullName: 'AYESHAN KUMARA WIJEYATHUNGA MUDALIGE', department: 'STORES', nationality: 'SRI LANKAN', bank: 'BOC', accountType: 'USD & MVR', scheduledDate: '2019-04-10', status: 'Completed' },
+  { id: 'BNK-50427', employeeId: '50427', fullName: 'MD SAIFUR RAHMAN', department: 'STORES', nationality: 'BANGLADESHI', bank: 'SBI', accountType: 'USD & MVR', scheduledDate: '2019-06-01', status: 'Completed' },
+  { id: 'BNK-52804', employeeId: '52804', fullName: 'AHMED IMRAN', department: 'ACCOUNTS AND FINANCE', nationality: 'BANGLADESHI', bank: 'SBI', accountType: 'USD & MVR', scheduledDate: '2020-12-01', status: 'Completed' },
+  { id: 'BNK-53029', employeeId: '53029', fullName: 'KUMARAN VAITHILINGAM', department: 'STORES', nationality: 'INDIAN', bank: 'SBI', accountType: 'USD & MVR', scheduledDate: '2022-01-20', status: 'Completed' },
+  { id: 'BNK-53979', employeeId: '53979', fullName: 'NAVEEN SEKAR', department: 'STORES', nationality: 'INDIAN', bank: 'SBI', accountType: 'USD & MVR', scheduledDate: '2022-08-10', status: 'Completed' },
+  { id: 'BNK-55427', employeeId: '55427', fullName: 'SARAVANAN RAJENDRAN', department: 'STORES', nationality: 'INDIAN', bank: 'SBI', accountType: 'USD & MVR', scheduledDate: '2023-09-01', status: 'Completed' },
+  { id: 'BNK-56141', employeeId: '56141', fullName: 'RAJU PERKA', department: 'CAFE', nationality: 'INDIAN', bank: 'BOC', accountType: 'USD & MVR', scheduledDate: '2024-04-01', status: 'Completed' },
+  { id: 'BNK-56530', employeeId: '56530', fullName: 'PUBUDU MADURANGA ALAWATHTHA KANKANAMGE', department: 'ADMINISTRATION', nationality: 'SRI LANKAN', bank: 'SBI', accountType: 'USD & MVR', scheduledDate: '2024-07-01', status: 'Completed' },
+  { id: 'BNK-56646', employeeId: '56646', fullName: 'CHANDRASHEKHER PURELLA', department: 'ACCOUNTS AND FINANCE', nationality: 'INDIAN', bank: 'BOC', accountType: 'USD & MVR', scheduledDate: '2024-08-01', status: 'Completed' },
+  { id: 'BNK-57637', employeeId: '57637', fullName: 'MUNI ACHARI GUNTI KOVALA', department: 'CAFE', nationality: 'INDIAN', bank: 'SBI', accountType: 'USD & MVR', scheduledDate: '2025-02-10', status: 'Completed' },
+  { id: 'BNK-57935', employeeId: '57935', fullName: 'ARUNODA KAVINDU NANAYAKKARA', department: 'ACCOUNTS AND FINANCE', nationality: 'SRI LANKAN', bank: 'SBI', accountType: 'USD & MVR', scheduledDate: '2025-04-20', status: 'Completed' },
+  { id: 'BNK-58692', employeeId: '58692', fullName: 'SHANTUMON PATHIYIL CHACKO', department: 'HUMAN RESOURCES', nationality: 'INDIAN', bank: 'SBI', accountType: 'USD & MVR', scheduledDate: '2025-10-15', status: 'Completed' },
+  { id: 'BNK-57803', employeeId: '57803', fullName: 'INDIKA SAMPATH SAMARASINGHEGE', department: 'STORES', nationality: 'SRI LANKAN', bank: 'SBI', accountType: 'USD & MVR', scheduledDate: '2026-05-20', status: 'Pending' },
+  { id: 'BNK-58034', employeeId: '58034', fullName: 'SAMEERA MADUSANKA GUNARATHNA', department: 'STORES', nationality: 'SRI LANKAN', bank: 'SBI', accountType: 'USD & MVR', scheduledDate: '2026-05-22', status: 'Pending' },
+  { id: 'BNK-58686', employeeId: '58686', fullName: 'YASAR ARAFATH BASHEER AHAMED', department: 'STORES', nationality: 'INDIAN', bank: 'SBI', accountType: 'USD & MVR', scheduledDate: '2026-05-18', status: 'Pending' },
 ]
 
 function BankAccountModal({ record, employees, onClose, onSave }: {
@@ -2880,6 +2888,7 @@ function BankAccountModal({ record, employees, onClose, onSave }: {
   const [accountType, setAccountType] = useState<AccountType>(record.accountType)
   const [scheduledDate, setScheduledDate] = useState(record.scheduledDate)
   const [status, setStatus] = useState<AccountStatus>(record.status)
+  const [remarks, setRemarks] = useState(record.remarks ?? '')
 
   const nonLocals = employees.filter((e) => e.nationality !== 'MALDIVIAN')
   const selected = isNew
@@ -2899,12 +2908,13 @@ function BankAccountModal({ record, employees, onClose, onSave }: {
       accountType,
       scheduledDate,
       status,
+      remarks,
     })
   }
 
   return (
     <div className="modal-backdrop" role="presentation">
-      <section className="registration-modal wide-modal" role="dialog" aria-modal="true">
+      <section className="registration-modal" role="dialog" aria-modal="true">
         <div className="modal-header">
           <div>
             <p className="eyebrow">Bank Account Opening</p>
@@ -2913,9 +2923,9 @@ function BankAccountModal({ record, employees, onClose, onSave }: {
           <button className="icon-button" onClick={onClose} type="button">×</button>
         </div>
         <form onSubmit={save}>
-          <div className="form-grid">
+          <div className="trn-form-grid">
             {isNew ? (
-              <label className="full-field">
+              <label className="trn-span-3">
                 <span>Employee (Expatriate Staff)</span>
                 <select value={employeeId} onChange={(e) => setEmployeeId(e.target.value)}>
                   {nonLocals.map((emp) => (
@@ -2924,7 +2934,7 @@ function BankAccountModal({ record, employees, onClose, onSave }: {
                 </select>
               </label>
             ) : (
-              <label className="full-field">
+              <label className="trn-span-3">
                 <span>Employee</span>
                 <input disabled value={`${record.employeeId} – ${record.fullName}`} />
               </label>
@@ -2938,9 +2948,9 @@ function BankAccountModal({ record, employees, onClose, onSave }: {
             <label>
               <span>Account Type</span>
               <select value={accountType} onChange={(e) => setAccountType(e.target.value as AccountType)}>
-                <option value="USD Only">USD Only</option>
-                <option value="MVR Only">MVR Only</option>
-                <option value="Both USD &amp; MVR">Both USD &amp; MVR</option>
+                <option value="USD">USD</option>
+                <option value="MVR">MVR</option>
+                <option value="USD & MVR">USD &amp; MVR</option>
               </select>
             </label>
             <label>
@@ -2950,8 +2960,12 @@ function BankAccountModal({ record, employees, onClose, onSave }: {
             <label>
               <span>Status</span>
               <select value={status} onChange={(e) => setStatus(e.target.value as AccountStatus)}>
-                <option>Pending</option><option>Completed</option><option>Incomplete</option>
+                <option>Pending</option><option>Applied</option><option>Completed</option>
               </select>
+            </label>
+            <label className="trn-span-2">
+              <span>Remarks</span>
+              <input value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="Optional notes" />
             </label>
           </div>
           <div className="modal-actions">
@@ -2975,6 +2989,7 @@ function BankAccountSection({ employees, records, onUpdate }: {
   const [bankFilter, setBankFilter] = useState<'All' | BankName>('All')
   const [sectionFilter, setSectionFilter] = useState('All Sections')
   const [editing, setEditing] = useState<BankAccountRecord | null>(null)
+  const [appliedConfirm, setAppliedConfirm] = useState<BankAccountRecord | null>(null)
 
   const isCompleted = (r: BankAccountRecord) => r.status === 'Completed'
 
@@ -2996,6 +3011,14 @@ function BankAccountSection({ employees, records, onUpdate }: {
 
   const activeRows = activeTab === 'pending' ? pendingRows : completedRows
 
+  const handleStatusAdvance = (r: BankAccountRecord) => {
+    if (r.status === 'Pending') {
+      onUpdate((prev) => prev.map((x) => x.id === r.id ? { ...x, status: 'Applied' as AccountStatus } : x))
+    } else if (r.status === 'Applied') {
+      setAppliedConfirm(r)
+    }
+  }
+
   const saveRecord = (rec: BankAccountRecord) => {
     onUpdate((prev) => {
       const exists = prev.some((r) => r.id === rec.id)
@@ -3014,9 +3037,10 @@ function BankAccountSection({ employees, records, onUpdate }: {
     department: '',
     nationality: '',
     bank: 'SBI',
-    accountType: 'Both USD & MVR',
+    accountType: 'USD & MVR',
     scheduledDate: new Date().toISOString().slice(0, 10),
     status: 'Pending',
+    remarks: '',
   })
 
   const BankTable = ({ rows, showEdit }: { rows: BankAccountRecord[]; showEdit: boolean }) => (
@@ -3043,8 +3067,8 @@ function BankAccountSection({ employees, records, onUpdate }: {
             <th>Nationality</th>
             <th>Bank</th>
             <th>Account Type</th>
-            <th>Scheduled Date</th>
-            <th>Status</th>
+            <th style={{ textAlign: 'center' }}>Scheduled Date</th>
+            <th style={{ textAlign: 'center' }}>Status</th>
             {showEdit && <th>Action</th>}
           </tr>
         </thead>
@@ -3060,8 +3084,19 @@ function BankAccountSection({ employees, records, onUpdate }: {
                 <td>{r.nationality}</td>
                 <td><span className="bank-chip">{r.bank}</span></td>
                 <td><span className="account-type-chip">{r.accountType}</span></td>
-                <td>{r.scheduledDate ? formatDateDisplay(r.scheduledDate) : '—'}</td>
-                <td><StatusBadge status={r.status} /></td>
+                <td style={{ textAlign: 'center' }}>{r.scheduledDate ? formatDateDisplay(r.scheduledDate) : '—'}</td>
+                <td style={{ textAlign: 'center' }}>
+                  {r.status === 'Completed' ? (
+                    <StatusBadge status="Completed" />
+                  ) : (
+                    <button
+                      className={`bank-status-btn bank-status-${r.status.toLowerCase()}`}
+                      onClick={() => handleStatusAdvance(r)}
+                      type="button"
+                      title={r.status === 'Pending' ? 'Click to mark as Applied' : 'Click to confirm completion'}
+                    >{r.status}</button>
+                  )}
+                </td>
                 {showEdit && (
                   <td>
                     <div className="row-actions request-inline-actions">
@@ -3110,7 +3145,7 @@ function BankAccountSection({ employees, records, onUpdate }: {
             className={activeTab === 'pending' ? 'active' : ''}
             onClick={() => setActiveTab('pending')}
           >
-            PENDING / INCOMPLETE
+            PENDING
             <span className={`bank-tab-count ${activeTab === 'pending' ? 'active' : ''}`}>{pendingAll}</span>
           </button>
           <button
@@ -3132,7 +3167,7 @@ function BankAccountSection({ employees, records, onUpdate }: {
             ? `Showing ${activeRows.length} of ${activeTab === 'pending' ? pendingAll : completedAll} record${activeRows.length !== 1 ? 's' : ''}`
             : 'No records match current filters.'}
           {activeTab === 'pending' && activeRows.length > 0 && (
-            <span className="bank-footer-hint"> — Edit a record and set Status to Completed to move it to the Completed tab.</span>
+            <span className="bank-footer-hint"> — Click a status badge to advance the workflow: Pending → Applied → Completed.</span>
           )}
         </div>
       </section>
@@ -3144,6 +3179,38 @@ function BankAccountSection({ employees, records, onUpdate }: {
           onClose={() => setEditing(null)}
           onSave={saveRecord}
         />
+      )}
+
+      {appliedConfirm && (
+        <div className="modal-backdrop" role="presentation">
+          <section className="registration-modal" style={{ maxWidth: '480px' }} role="dialog" aria-modal="true">
+            <div className="modal-header">
+              <div>
+                <p className="eyebrow">Confirm Completion</p>
+                <h2>Bank Account Application</h2>
+              </div>
+              <button className="icon-button" onClick={() => setAppliedConfirm(null)} type="button">×</button>
+            </div>
+            <div style={{ padding: '12px 0 18px' }}>
+              <p style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '6px' }}>{appliedConfirm.fullName}</p>
+              <p style={{ fontSize: '0.83rem', color: '#64748b', marginBottom: '14px' }}>
+                {appliedConfirm.bank} &nbsp;·&nbsp; {appliedConfirm.accountType}
+              </p>
+              <p style={{ fontSize: '0.9rem', color: '#1e293b', lineHeight: 1.55 }}>
+                Has the bank account application been <strong>completed</strong> and details <strong>shared to head office</strong>?
+              </p>
+            </div>
+            <div className="modal-actions">
+              <button className="quiet-button light" onClick={() => setAppliedConfirm(null)} type="button">Cancel</button>
+              <button className="primary-button" onClick={() => {
+                onUpdate((prev) => prev.map((x) => x.id === appliedConfirm!.id
+                  ? { ...x, status: 'Completed' as AccountStatus, remarks: 'Details shared to head office' }
+                  : x))
+                setAppliedConfirm(null)
+              }} type="button">Yes, Mark as Completed</button>
+            </div>
+          </section>
+        </div>
       )}
     </>
   )
@@ -3538,7 +3605,7 @@ function OperationsPage({ employees }: { employees: Employee[] }) {
         department: e.department,
         nationality: e.nationality,
         bank: 'SBI',
-        accountType: 'Both USD & MVR',
+        accountType: 'USD & MVR',
         scheduledDate: '',
         status: 'Pending',
       }))]

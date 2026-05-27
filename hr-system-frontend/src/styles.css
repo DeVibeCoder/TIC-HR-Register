@@ -5525,25 +5525,26 @@ button.step-pill:hover { filter: brightness(0.98); }
   color: #1e293b;
   line-height: 1.4;
 }
-/* Page 1 header */
-.ind-prev-hdr {
-  text-align: center;
-  border-bottom: 2px solid #000;
-  padding-bottom: 9px;
-  margin-bottom: 13px;
+/* ── Branded header (PDF-matching) ── */
+.ind-prev-doc-hdr {
+  background: linear-gradient(135deg, #3730a3 0%, #4f46e5 100%);
+  padding: 10px 14px 9px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: -22px -24px 0;
+  border-radius: 6px 6px 0 0;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
 }
-.ind-prev-title {
-  font-size: 1.22rem;
-  font-weight: 900;
-  letter-spacing: 2.5px;
-  text-transform: uppercase;
-  font-family: Arial, Helvetica, sans-serif;
-}
-.ind-prev-sub {
-  font-size: 0.76rem;
-  color: #444;
-  margin-top: 3px;
-  letter-spacing: 0.3px;
+.ind-prev-brand { font-size: 1.05rem; font-weight: 900; color: #fff; letter-spacing: 4px; line-height: 1; }
+.ind-prev-co { font-size: 0.56rem; color: #e0d9ff; margin-top: 2px; letter-spacing: 0.2px; }
+.ind-prev-hdr-right { text-align: right; }
+.ind-prev-dept-lbl { font-size: 0.52rem; color: #c7d2fe; letter-spacing: 1.5px; text-transform: uppercase; }
+.ind-prev-doc-title { font-size: 0.80rem; font-weight: 900; color: #fff; letter-spacing: 1.5px; margin-top: 2px; }
+.ind-prev-hdr-accent {
+  height: 2.5px;
+  background: linear-gradient(90deg, #a5b4fc, #c4b5fd, #a5b4fc);
+  margin: 0 -24px 12px;
 }
 /* Info table */
 .ind-prev-info {
@@ -5553,12 +5554,13 @@ button.step-pill:hover { filter: brightness(0.98); }
   font-size: 0.80rem;
 }
 .ind-prev-info td {
-  border: 1px solid #333;
+  border: 1px solid #c4b5fd;
   padding: 4px 8px;
 }
 .ind-pi-lbl {
   font-weight: 700;
-  background: #f0f0f0;
+  background: #ede9fe;
+  color: #4338ca;
   width: 120px;
   white-space: nowrap;
 }
@@ -5567,14 +5569,17 @@ button.step-pill:hover { filter: brightness(0.98); }
   font-weight: 700;
   color: #15803d;
 }
-/* Section label */
+/* Section bar (Participants / Summary) */
 .ind-prev-tbl-label {
-  font-size: 0.72rem;
+  font-size: 0.70rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: #64748b;
-  margin: 10px 0 4px;
+  letter-spacing: 1.5px;
+  color: #fff;
+  background: #8b5cf6;
+  padding: 4px 8px;
+  margin: 10px -24px 0;
+  display: block;
 }
 /* Participant table in preview */
 .ind-prev-ptbl {
@@ -5595,8 +5600,9 @@ button.step-pill:hover { filter: brightness(0.98); }
   display: flex;
   gap: 24px;
   font-size: 0.79rem;
-  padding: 4px 0 8px;
-  border-bottom: 1px solid #e2e8f0;
+  padding: 5px 8px;
+  background: #f5f3ff;
+  border-left: 3px solid #8b5cf6;
   margin-bottom: 6px;
 }
 /* Participants-only view modal */
@@ -5614,6 +5620,12 @@ button.step-pill:hover { filter: brightness(0.98); }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* Participant table header in preview */
+.ind-prev-ptbl thead th {
+  background: #6366f1 !important;
+  color: #fff !important;
+}
+.ind-prev-ptbl tbody tr:nth-child(even) td { background: #f8f6ff; }
 /* Signature blocks in preview */
 .ind-prev-sig-row {
   display: flex;
@@ -5622,27 +5634,35 @@ button.step-pill:hover { filter: brightness(0.98); }
 }
 .ind-prev-sig-block {
   flex: 1;
-  border: 1px solid #444;
+  border: 0.75px solid #c4b5fd;
+  border-top: 2px solid #8b5cf6;
 }
 .ind-prev-sig-space {
-  height: 52px;
+  height: 48px;
 }
 .ind-prev-sig-btm {
   padding: 5px 7px;
-  border-top: 1px solid #444;
+  border-top: 0.75px solid #c4b5fd;
+  background: #f8f6ff;
 }
 .ind-prev-sig-role {
-  font-size: 0.70rem;
-  color: #666;
+  font-size: 0.62rem;
+  color: #7c3aed;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 2px;
 }
 .ind-prev-sig-name {
   font-weight: 700;
   font-size: 0.78rem;
-  margin-top: 2px;
+  margin-top: 1px;
+  text-transform: uppercase;
+  color: #1e1b4b;
 }
 .ind-prev-sig-desig {
-  font-size: 0.70rem;
-  color: #444;
+  font-size: 0.68rem;
+  color: #6d28d9;
   margin-top: 1px;
 }
 /* Page 2 preview section */
@@ -5674,8 +5694,37 @@ button.step-pill:hover { filter: brightness(0.98); }
 .ind-prev-remarks {
   font-size: 0.79rem;
   padding: 5px 9px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
+  background: #faf5ff;
+  border-left: 3px solid #8b5cf6;
   margin-top: 8px;
 }
+
+/* ── Bank status advance buttons ── */
+.bank-status-btn {
+  display: inline-block;
+  padding: 3px 11px;
+  border-radius: 12px;
+  font-size: 0.73rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  transition: opacity 130ms, transform 80ms;
+  white-space: nowrap;
+}
+.bank-status-btn:hover { opacity: 0.78; transform: scale(0.97); }
+.bank-status-pending {
+  background: #fef3c7;
+  color: #92400e;
+  border-color: #fcd34d;
+}
+.bank-status-applied {
+  background: #dbeafe;
+  color: #1e40af;
+  border-color: #93c5fd;
+}
+
+/* ── Bank toolbar: align button bottom with selects ── */
+.bank-toolbar { align-items: flex-end !important; }
+
+/* ── Grid span helpers ── */
+.trn-span-2 { grid-column: span 2; }
