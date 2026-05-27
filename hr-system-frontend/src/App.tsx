@@ -1366,7 +1366,7 @@ function InductionModal({ employees, record, onClose, onSave }: {
 }) {
   const isNew = record.id.startsWith('IND-new')
 
-  const [refNo, setRefNo] = useState(record.refNo)
+  const [refNo] = useState(record.refNo)
   const [inductionDate, setInductionDate] = useState(
     record.inductionDate || new Date().toISOString().slice(0, 10)
   )
@@ -1435,7 +1435,7 @@ function InductionModal({ employees, record, onClose, onSave }: {
         <div className="ind-form-grid">
           <label>
             <span>Sequence No</span>
-            <input value={refNo} onChange={(e) => setRefNo(e.target.value)} placeholder="e.g. 004" />
+            <input value={refNo} readOnly className="ind-ref-readonly" title="Auto-generated — cannot be changed" />
           </label>
           <label>
             <span>Induction Date</span>
@@ -1741,7 +1741,7 @@ function InductionParticipantsModal({ record, onClose }: { record: InductionReco
                 <td>{p.name}</td>
                 <td>{p.nicPassportNo || '—'}</td>
                 <td>{p.section || '—'}</td>
-                <td>{p.department || '—'}</td>
+                <td style={{ textTransform: 'uppercase' }}>{p.department || '—'}</td>
               </tr>
             ))}
           </tbody>
@@ -2797,7 +2797,7 @@ function TrainingSection({ records, onUpdate, employees }: {
         </div>
         <div className="employee-table-shell compact-scroll">
           <table className="data-table training-table">
-            <thead><tr><th className="trn-title-th">Training Title</th><th>Date</th><th>Conducted By</th><th>Type</th><th>Participants</th><th>Action</th></tr></thead>
+            <thead><tr><th className="trn-title-th">Training Title</th><th>Date</th><th>Conducted By</th><th style={{ textAlign: 'center' }}>Type</th><th style={{ textAlign: 'center' }}>Participants</th><th style={{ textAlign: 'center' }}>Action</th></tr></thead>
             <tbody>
               {rows.length === 0 ? (
                 <tr><td colSpan={6} className="empty-row">No training records found.</td></tr>
@@ -2806,16 +2806,16 @@ function TrainingSection({ records, onUpdate, employees }: {
                   <td className="trn-title-cell">{record.trainingTitle}</td>
                   <td>{record.date ? formatDateDisplay(record.date) : '—'}</td>
                   <td>{record.conductedBy || '—'}</td>
-                  <td><span className={`training-type-badge ${record.trainingType.toLowerCase()}`}>{record.trainingType}</span></td>
-                  <td>
+                  <td style={{ textAlign: 'center' }}><span className={`training-type-badge ${record.trainingType.toLowerCase()}`}>{record.trainingType}</span></td>
+                  <td style={{ textAlign: 'center' }}>
                     {record.participants.length > 0 ? (
                       <button className="participants-count-btn" onClick={() => setViewingParticipants(record)} type="button">
                         {record.participants.length} attended
                       </button>
                     ) : <span className="no-participants-text">—</span>}
                   </td>
-                  <td>
-                    <div className="row-actions ind-actions">
+                  <td style={{ textAlign: 'center' }}>
+                    <div className="row-actions ind-actions" style={{ justifyContent: 'center' }}>
                       <button className="action-glyph" onClick={() => setViewing(record)} type="button" title="View" aria-label="View">👁</button>
                       <button className="action-glyph" onClick={() => printTrainingRecord(record)} type="button" title="Print" aria-label="Print">🖨</button>
                       <button className="action-glyph edit" onClick={() => setEditing(record)} type="button" title="Edit" aria-label="Edit">✎</button>
@@ -3050,13 +3050,14 @@ function BankAccountSection({ employees, records, onUpdate }: {
           <col style={{ width: '36px' }} />
           <col style={{ width: '88px' }} />
           <col />
-          <col style={{ width: '160px' }} />
+          <col style={{ width: '150px' }} />
           <col style={{ width: '110px' }} />
           <col style={{ width: '62px' }} />
-          <col style={{ width: '130px' }} />
+          <col style={{ width: '120px' }} />
           <col style={{ width: '110px' }} />
-          <col style={{ width: '100px' }} />
+          <col style={{ width: '96px' }} />
           {showEdit && <col style={{ width: '72px' }} />}
+          {!showEdit && <col style={{ width: '160px' }} />}
         </colgroup>
         <thead>
           <tr>
@@ -3065,16 +3066,17 @@ function BankAccountSection({ employees, records, onUpdate }: {
             <th>Full Name</th>
             <th>Section</th>
             <th>Nationality</th>
-            <th>Bank</th>
+            <th style={{ textAlign: 'center' }}>Bank</th>
             <th>Account Type</th>
             <th style={{ textAlign: 'center' }}>Scheduled Date</th>
             <th style={{ textAlign: 'center' }}>Status</th>
-            {showEdit && <th>Action</th>}
+            {showEdit && <th style={{ textAlign: 'center' }}>Action</th>}
+            {!showEdit && <th>Remarks</th>}
           </tr>
         </thead>
         <tbody>
           {rows.length === 0
-            ? <tr><td colSpan={showEdit ? 10 : 9} className="empty-row">No records in this section.</td></tr>
+            ? <tr><td colSpan={10} className="empty-row">No records in this section.</td></tr>
             : rows.map((r, i) => (
               <tr key={r.id}>
                 <td className="bank-td-num">{i + 1}</td>
@@ -3082,7 +3084,7 @@ function BankAccountSection({ employees, records, onUpdate }: {
                 <td className="name-cell-plain">{r.fullName}</td>
                 <td>{r.department}</td>
                 <td>{r.nationality}</td>
-                <td><span className="bank-chip">{r.bank}</span></td>
+                <td style={{ textAlign: 'center' }}><span className="bank-chip">{r.bank}</span></td>
                 <td><span className="account-type-chip">{r.accountType}</span></td>
                 <td style={{ textAlign: 'center' }}>{r.scheduledDate ? formatDateDisplay(r.scheduledDate) : '—'}</td>
                 <td style={{ textAlign: 'center' }}>
@@ -3098,12 +3100,15 @@ function BankAccountSection({ employees, records, onUpdate }: {
                   )}
                 </td>
                 {showEdit && (
-                  <td>
-                    <div className="row-actions request-inline-actions">
+                  <td style={{ textAlign: 'center' }}>
+                    <div className="row-actions request-inline-actions" style={{ justifyContent: 'center' }}>
                       <button className="action-glyph edit" onClick={() => setEditing(r)} type="button" title="Edit" aria-label="Edit">✎</button>
                       <button className="action-glyph delete" onClick={() => deleteRecord(r.id)} type="button" title="Delete" aria-label="Delete">🗑</button>
                     </div>
                   </td>
+                )}
+                {!showEdit && (
+                  <td style={{ fontSize: '0.78rem', color: '#64748b' }}>{r.remarks || '—'}</td>
                 )}
               </tr>
             ))

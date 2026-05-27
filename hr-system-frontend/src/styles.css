@@ -5607,7 +5607,7 @@ button.step-pill:hover { filter: brightness(0.98); }
 }
 /* Participants-only view modal */
 .ind-participants-view-modal {
-  max-width: 900px !important;
+  max-width: 1050px !important;
   width: 96vw !important;
 }
 .ind-pv-table {
@@ -5619,6 +5619,19 @@ button.step-pill:hover { filter: brightness(0.98); }
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+/* Lighter header for participants modal table */
+.ind-pv-table thead th {
+  background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%) !important;
+  color: #fff !important;
+}
+/* Department column: allow wrapping so long names don't overflow */
+.ind-pv-table th:last-child,
+.ind-pv-table td:last-child {
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  word-break: break-word;
 }
 /* Participant table header in preview */
 .ind-prev-ptbl thead th {
