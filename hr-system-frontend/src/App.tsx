@@ -81,7 +81,8 @@ type InductionParticipant = {
   employeeId: string
   name: string
   nicPassportNo: string
-  department: string
+  section: string      // sub-unit within the org (HR, Stores, Operations…)
+  department: string   // organisation / company name
 }
 
 type InductionRecord = {
@@ -287,10 +288,10 @@ const initialInductionRecords: InductionRecord[] = [
     conductedBy: 'SHANTUMON PATHIYIL CHACKO',
     conductedByEmpId: '58692',
     participants: [
-      { employeeId: '57803', name: 'INDIKA SAMPATH SAMARASINGHEGE', nicPassportNo: 'N0234561', department: 'STORES' },
-      { employeeId: '57935', name: 'ARUNODA KAVINDU NANAYAKKARA', nicPassportNo: 'N0287342', department: 'ACCOUNTS AND FINANCE' },
-      { employeeId: '57637', name: 'MUNI ACHARI GUNTI KOVALA', nicPassportNo: 'T6678234', department: 'CAFE' },
-      { employeeId: '56530', name: 'PUBUDU MADURANGA ALAWATHTHA KANKANAMGE', nicPassportNo: 'N0189342', department: 'ADMINISTRATION' },
+      { employeeId: '57803', name: 'INDIKA SAMPATH SAMARASINGHEGE', nicPassportNo: 'N0234561', section: 'STORES', department: 'Thilafushi Industrial Complex' },
+      { employeeId: '57935', name: 'ARUNODA KAVINDU NANAYAKKARA', nicPassportNo: 'N0287342', section: 'ACCOUNTS & FINANCE', department: 'Thilafushi Industrial Complex' },
+      { employeeId: '57637', name: 'MUNI ACHARI GUNTI KOVALA', nicPassportNo: 'T6678234', section: 'CAFÉ', department: 'Thilafushi Industrial Complex' },
+      { employeeId: '56530', name: 'PUBUDU MADURANGA ALAWATHTHA KANKANAMGE', nicPassportNo: 'N0189342', section: 'ADMINISTRATION', department: 'Thilafushi Industrial Complex' },
     ],
     inductionContent: 'Company overview and organizational structure of TIC. Site safety rules, PPE requirements, and emergency procedures including evacuation routes. HR policies — working hours, leave types, code of conduct, and grievance handling. Work permit compliance for expatriate staff. Bank account opening requirements (SBI/BOC/CBM). Accommodation rules, mess facilities, and recreational areas.',
     status: 'Completed',
@@ -303,9 +304,9 @@ const initialInductionRecords: InductionRecord[] = [
     conductedBy: 'SHANTUMON PATHIYIL CHACKO',
     conductedByEmpId: '58692',
     participants: [
-      { employeeId: '58034', name: 'SAMEERA MADUSANKA GUNARATHNA', nicPassportNo: 'N0187423', department: 'STORES' },
-      { employeeId: '58686', name: 'YASAR ARAFATH BASHEER AHAMED', nicPassportNo: 'R8821054', department: 'STORES' },
-      { employeeId: '58692', name: 'SHANTUMON PATHIYIL CHACKO', nicPassportNo: 'T4482910', department: 'HUMAN RESOURCES' },
+      { employeeId: '58034', name: 'SAMEERA MADUSANKA GUNARATHNA', nicPassportNo: 'N0187423', section: 'STORES', department: 'Thilafushi Industrial Complex' },
+      { employeeId: '58686', name: 'YASAR ARAFATH BASHEER AHAMED', nicPassportNo: 'R8821054', section: 'STORES', department: 'Thilafushi Industrial Complex' },
+      { employeeId: '58692', name: 'SHANTUMON PATHIYIL CHACKO', nicPassportNo: 'T4482910', section: 'HUMAN RESOURCES', department: 'Thilafushi Industrial Complex' },
     ],
     inductionContent: 'Welcome briefing and site tour. Introduction to key departments and reporting structure. Safety orientation including fire drill procedures, first aid kit locations, and emergency contacts. Payroll cycle and bank account setup. IT access and communication tools usage.',
     status: 'Completed',
@@ -317,10 +318,14 @@ const initialInductionRecords: InductionRecord[] = [
     inductionDate: '2026-06-15',
     conductedBy: 'SHANTUMON PATHIYIL CHACKO',
     conductedByEmpId: '58692',
-    participants: [],
-    inductionContent: '',
-    status: 'Scheduled',
-    remarks: 'Participants to be confirmed.',
+    participants: [
+      { employeeId: '59104', name: 'RAJESH KUMAR PILLAI', nicPassportNo: 'V2341876', section: 'STORES', department: 'Thilafushi Industrial Complex' },
+      { employeeId: '59105', name: 'MOHD ARIF HUSSAIN', nicPassportNo: 'Z1122334', section: 'CAFÉ', department: 'Thilafushi Industrial Complex' },
+      { employeeId: '', name: 'PRADEEP NATH SHARMA', nicPassportNo: 'S3321456', section: 'OPERATIONS', department: 'Thilafushi Industrial Complex' },
+    ],
+    inductionContent: 'Company overview and organizational structure of TIC. Site safety rules, PPE requirements, and emergency procedures. HR policies — working hours, leave entitlements, code of conduct. Work permit compliance. Bank account opening requirements (SBI/BOC/CBM). Accommodation rules and mess facilities.',
+    status: 'Completed',
+    remarks: '',
   },
 ]
 
@@ -1371,7 +1376,7 @@ function InductionModal({ employees, record, onClose, onSave }: {
   const [remarks, setRemarks] = useState(record.remarks)
 
   // Start with at least one blank row when creating new, else existing participants
-  const blankRow = (): InductionParticipant => ({ employeeId: '', name: '', nicPassportNo: '', department: '' })
+  const blankRow = (): InductionParticipant => ({ employeeId: '', name: '', nicPassportNo: '', section: '', department: '' })
   const [participants, setParticipants] = useState<InductionParticipant[]>(
     record.participants.length > 0 ? record.participants : [blankRow()]
   )
@@ -1495,12 +1500,13 @@ function InductionModal({ employees, record, onClose, onSave }: {
             <table className="data-table ind-edit-table">
               <thead>
                 <tr>
-                  <th style={{ width: 34 }}>#</th>
-                  <th style={{ width: 82 }}>Emp ID</th>
+                  <th style={{ width: 30 }}>#</th>
+                  <th style={{ width: 76 }}>Emp ID</th>
                   <th>Full Name</th>
-                  <th style={{ width: 120 }}>NIC / PP No</th>
-                  <th style={{ width: 170 }}>Section / Department</th>
-                  <th style={{ width: 34 }}></th>
+                  <th style={{ width: 110 }}>NIC / PP No</th>
+                  <th style={{ width: 116 }}>Section</th>
+                  <th style={{ width: 140 }}>Department</th>
+                  <th style={{ width: 30 }}></th>
                 </tr>
               </thead>
               <tbody>
@@ -1510,7 +1516,8 @@ function InductionModal({ employees, record, onClose, onSave }: {
                     <td><input className="cell-input" value={p.employeeId} onChange={(e) => updateRow(i, 'employeeId', e.target.value)} placeholder="ID" /></td>
                     <td><input className="cell-input cell-input-name" value={p.name} onChange={(e) => updateRow(i, 'name', e.target.value)} placeholder="Full name" /></td>
                     <td><input className="cell-input" value={p.nicPassportNo} onChange={(e) => updateRow(i, 'nicPassportNo', e.target.value)} placeholder="NIC or PP" /></td>
-                    <td><input className="cell-input" value={p.department} onChange={(e) => updateRow(i, 'department', e.target.value)} placeholder="Section / dept" /></td>
+                    <td><input className="cell-input" value={p.section} onChange={(e) => updateRow(i, 'section', e.target.value)} placeholder="e.g. HR, Stores" /></td>
+                    <td><input className="cell-input" value={p.department} onChange={(e) => updateRow(i, 'department', e.target.value)} placeholder="e.g. Thilafushi Industrial Complex" /></td>
                     <td>
                       <button className="action-glyph delete ind-remove-row" onClick={() => removeRow(i)} type="button" title="Remove row">×</button>
                     </td>
@@ -1541,7 +1548,6 @@ function InductionViewModal({ record, employees = [], onClose, onPrint }: {
   const fullRef = fullInductionRef(record.refNo, record.inductionDate)
   const dateStr = record.inductionDate ? formatDateDisplay(record.inductionDate) : '—'
   const conductedByEmp = employees.find((e) => e.employeeId === record.conductedByEmpId)
-  const conductedByDept = conductedByEmp?.department || 'Human Resources'
   const conductedByDesig = conductedByEmp?.designation || ''
   const conductedByDisplay = (record.conductedBy || '—') + (record.conductedByEmpId ? ` (${record.conductedByEmpId})` : '')
   const countStr = String(record.participants.length).padStart(2, '0')
@@ -1583,7 +1589,7 @@ function InductionViewModal({ record, employees = [], onClose, onPrint }: {
                 </tr>
                 <tr>
                   <td className="ind-pi-lbl">Department:</td>
-                  <td className="ind-pi-val" colSpan={3}>{conductedByDept}</td>
+                  <td className="ind-pi-val" colSpan={3}>Thilafushi Industrial Complex</td>
                 </tr>
                 <tr>
                   <td className="ind-pi-lbl">Conducted by:</td>
@@ -1595,15 +1601,24 @@ function InductionViewModal({ record, employees = [], onClose, onPrint }: {
             {/* ── Participants table ── */}
             <p className="ind-prev-tbl-label">Participants</p>
             <table className="data-table ind-prev-ptbl">
+              <colgroup>
+                <col style={{ width: '4%' }} />
+                <col style={{ width: '9%' }} />
+                <col style={{ width: '24%' }} />
+                <col style={{ width: '14%' }} />
+                <col style={{ width: '13%' }} />
+                <col style={{ width: '22%' }} />
+                <col style={{ width: '14%' }} />
+              </colgroup>
               <thead>
                 <tr>
-                  <th style={{ width: 28 }}>#</th>
-                  <th style={{ width: 68 }}>Emp ID</th>
+                  <th>#</th>
+                  <th>Emp ID</th>
                   <th>Full Name</th>
-                  <th style={{ width: 110 }}>NIC / PP No</th>
-                  <th style={{ width: 88 }}>Section</th>
-                  <th style={{ width: 110 }}>Department</th>
-                  <th style={{ width: 78 }}>Signature</th>
+                  <th>NIC / PP No</th>
+                  <th>Section</th>
+                  <th>Department</th>
+                  <th>Signature</th>
                 </tr>
               </thead>
               <tbody>
@@ -1615,8 +1630,8 @@ function InductionViewModal({ record, employees = [], onClose, onPrint }: {
                     <td>{p.employeeId || '—'}</td>
                     <td>{p.name}</td>
                     <td>{p.nicPassportNo || '—'}</td>
-                    <td></td>
-                    <td>{p.department}</td>
+                    <td>{p.section || '—'}</td>
+                    <td>{p.department || '—'}</td>
                     <td className="ind-sig-cell-view"></td>
                   </tr>
                 ))}
@@ -1637,15 +1652,20 @@ function InductionViewModal({ record, employees = [], onClose, onPrint }: {
                 <div className="ind-prev-sig-space"></div>
                 <div className="ind-prev-sig-btm">
                   <div className="ind-prev-sig-role">Approved By:</div>
-                  <div className="ind-prev-sig-name">&nbsp;</div>
-                  <div className="ind-prev-sig-desig">&nbsp;</div>
+                  <div className="ind-prev-sig-name">Arushulla Rashid (50814)</div>
+                  <div className="ind-prev-sig-desig">Administrator</div>
                 </div>
               </div>
             </div>
 
             {/* ── Page 2 preview ── */}
             <div className="ind-prev-pg2">
-              <p className="ind-prev-pg2-label">— Page 2: Induction Content Summary —</p>
+              <p className="ind-prev-pg2-label">— Page 2: Summary —</p>
+              <div className="ind-prev-pg2-meta">
+                <span><strong>Ref No:</strong> {fullRef}</span>
+                <span><strong>Date:</strong> {dateStr}</span>
+              </div>
+              <p className="ind-prev-tbl-label" style={{ marginTop: 8 }}>Summary</p>
               {record.inductionContent ? (
                 <p className="ind-prev-content-text">{record.inductionContent}</p>
               ) : (
@@ -1676,7 +1696,7 @@ function InductionParticipantsModal({ record, onClose }: { record: InductionReco
   const fullRef = fullInductionRef(record.refNo, record.inductionDate)
   return (
     <div className="modal-backdrop" role="presentation">
-      <section className="registration-modal wide-modal" role="dialog" aria-modal="true">
+      <section className="registration-modal ind-participants-view-modal" role="dialog" aria-modal="true">
         <div className="modal-header">
           <div>
             <p className="eyebrow">Participants</p>
@@ -1685,15 +1705,23 @@ function InductionParticipantsModal({ record, onClose }: { record: InductionReco
           </div>
           <button className="icon-button" onClick={onClose} type="button">×</button>
         </div>
-        <table className="data-table">
+        <table className="data-table ind-pv-table">
+          <colgroup>
+            <col style={{ width: '4%' }} />
+            <col style={{ width: '10%' }} />
+            <col style={{ width: '26%' }} />
+            <col style={{ width: '16%' }} />
+            <col style={{ width: '14%' }} />
+            <col style={{ width: '30%' }} />
+          </colgroup>
           <thead>
             <tr>
-              <th style={{ width: 32 }}>#</th>
-              <th style={{ width: 78 }}>Emp ID</th>
+              <th>#</th>
+              <th>Emp ID</th>
               <th>Full Name</th>
-              <th style={{ width: 130 }}>NIC / PP No</th>
-              <th style={{ width: 100 }}>Section</th>
-              <th style={{ width: 140 }}>Department</th>
+              <th>NIC / PP No</th>
+              <th>Section</th>
+              <th>Department</th>
             </tr>
           </thead>
           <tbody>
@@ -1705,8 +1733,8 @@ function InductionParticipantsModal({ record, onClose }: { record: InductionReco
                 <td>{p.employeeId || '—'}</td>
                 <td>{p.name}</td>
                 <td>{p.nicPassportNo || '—'}</td>
-                <td></td>
-                <td>{p.department}</td>
+                <td>{p.section || '—'}</td>
+                <td>{p.department || '—'}</td>
               </tr>
             ))}
           </tbody>
@@ -1723,7 +1751,6 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
   const fullRef = fullInductionRef(record.refNo, record.inductionDate)
   const dateStr = record.inductionDate ? formatDateDisplay(record.inductionDate) : '—'
   const conductedByEmp = employees.find((e) => e.employeeId === record.conductedByEmpId)
-  const conductedByDept = conductedByEmp?.department || 'Human Resources'
   const conductedByDesig = conductedByEmp?.designation || ''
   const conductedByDisplay = (record.conductedBy || 'HR Officer') + (record.conductedByEmpId ? ` (${record.conductedByEmpId})` : '')
   const countStr = String(record.participants.length).padStart(2, '0')
@@ -1737,8 +1764,8 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
       <td>${esc(p.employeeId || '')}</td>
       <td>${esc(p.name)}</td>
       <td>${esc(p.nicPassportNo || '')}</td>
-      <td></td>
-      <td>${esc(p.department)}</td>
+      <td>${esc(p.section || '')}</td>
+      <td>${esc(p.department || '')}</td>
       <td class="sig-cell"></td>
     </tr>`).join('')
 
@@ -1818,10 +1845,7 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
     .sig-desig { font-size: 9pt; color: #333; margin-top: 2pt; }
 
     /* ══ PAGE 2 ══ */
-    .doc-header { text-align: center; border-bottom: 2pt solid #000; padding-bottom: 9pt; margin-bottom: 13pt; }
-    .org-name { font-size: 13pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.4px; }
-    .doc-title { font-size: 11pt; font-weight: bold; margin-top: 4pt; text-transform: uppercase; letter-spacing: 0.2px; }
-    .doc-ref { font-size: 9.5pt; color: #444; margin-top: 3pt; }
+    .p2-meta { display: flex; gap: 32pt; margin-bottom: 12pt; font-size: 10pt; padding: 5pt 0; border-bottom: 0.75pt solid #ccc; }
     .section-title { font-size: 11pt; font-weight: bold; margin: 0 0 9pt; padding-bottom: 4pt; border-bottom: 1pt solid #aaa; }
     .content-text { font-size: 10.5pt; line-height: 1.7; }
     .content-text p { margin: 0 0 8pt; }
@@ -1871,7 +1895,7 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
         </tr>
         <tr>
           <td class="lbl">Department:</td>
-          <td colspan="3">${esc(conductedByDept)}</td>
+          <td colspan="3">Thilafushi Industrial Complex</td>
         </tr>
         <tr>
           <td class="lbl">Conducted by:</td>
@@ -1911,8 +1935,8 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
         <div class="sig-space"></div>
         <div class="sig-info">
           <div class="sig-role">Approved By:</div>
-          <div class="sig-person">&nbsp;</div>
-          <div class="sig-desig">&nbsp;</div>
+          <div class="sig-person">Arushulla Rashid (50814)</div>
+          <div class="sig-desig">Administrator</div>
         </div>
       </div>
     </div>
@@ -1921,33 +1945,22 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
 
   <!-- ══ PAGE 2 — Content Summary ══ -->
   <div class="a4-page page-break">
-    <div class="doc-header">
-      <div class="org-name">Thilafushi Industrial Complex Pvt. Ltd.</div>
-      <div class="doc-title">Induction Content Summary</div>
-      <div class="doc-ref">${esc(fullRef)} &nbsp;·&nbsp; ${dateStr}</div>
+
+    <div class="p1-hdr">
+      <div class="p1-title">STAFF INDUCTION</div>
+      <div class="p1-sub">VHPL | Thilafushi Industrial Complex</div>
     </div>
 
-    <div class="section-title">Topics Covered During Induction</div>
+    <div class="p2-meta">
+      <span><strong>Ref No:</strong> ${esc(fullRef)}</span>
+      <span><strong>Date:</strong> ${dateStr}</span>
+    </div>
+
+    <div class="section-title">Summary</div>
     <div class="content-text">${contentHtml}</div>
 
-    <div class="remarks-box"><strong>Remarks:</strong>&nbsp; ${esc(record.remarks || '—')}</div>
+    ${record.remarks ? `<div class="remarks-box"><strong>Remarks:</strong>&nbsp; ${esc(record.remarks)}</div>` : ''}
 
-    <div class="sig-row" style="margin-top:28pt">
-      <div class="sig-block">
-        <div class="sig-space"></div>
-        <div class="sig-info">
-          <div class="sig-role">HR Representative</div>
-          <div class="sig-person">${esc(record.conductedBy || 'HR Officer')}</div>
-        </div>
-      </div>
-      <div class="sig-block">
-        <div class="sig-space"></div>
-        <div class="sig-info">
-          <div class="sig-role">Acknowledged By (Group Representative)</div>
-          <div class="sig-person">&nbsp;</div>
-        </div>
-      </div>
-    </div>
   </div>
 
 </div>
