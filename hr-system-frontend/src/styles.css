@@ -2620,9 +2620,9 @@ button.step-pill:hover { filter: brightness(0.98); }
 }
 
 .participants-count-btn {
-  background: none;
-  border: 1px solid var(--line);
-  border-radius: 6px;
+  background: rgba(124, 58, 237, 0.07);
+  border: 1.5px solid rgba(124, 58, 237, 0.22);
+  border-radius: 8px;
   padding: 3px 10px;
   font-size: 0.78rem;
   font-weight: 700;
@@ -2631,7 +2631,7 @@ button.step-pill:hover { filter: brightness(0.98); }
   transition: background 0.12s;
   white-space: nowrap;
 }
-.participants-count-btn:hover { background: var(--surface-soft); }
+.participants-count-btn:hover { background: rgba(124, 58, 237, 0.14); border-color: rgba(124, 58, 237, 0.4); }
 
 .participants-count-label {
   margin: 0 0 12px;
@@ -4847,14 +4847,69 @@ button.step-pill:hover { filter: brightness(0.98); }
   font-size: 0.69rem;
 }
 
+/* ── Induction table — column alignment overrides ───────────
+   Layout: 1:Ref No  2:Date  3:Conducted By  4:Participants
+           5:Status  6:Remarks  7:Actions                     */
+.induction-table {
+  table-layout: fixed;
+}
+.induction-table th:nth-child(1),
+.induction-table td:nth-child(1) {
+  width: 76px !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+.induction-table th:nth-child(2),
+.induction-table td:nth-child(2) {
+  width: 96px !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  white-space: nowrap !important;
+}
+.induction-table th:nth-child(3),
+.induction-table td:nth-child(3) {
+  text-align: left !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.induction-table th:nth-child(4),
+.induction-table td:nth-child(4) {
+  width: 130px !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+.induction-table th:nth-child(5),
+.induction-table td:nth-child(5) {
+  width: 110px !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+.induction-table th:nth-child(6),
+.induction-table td:nth-child(6) {
+  text-align: left !important;
+  color: #475569;
+  font-size: 0.78rem;
+}
+.induction-table th:last-child,
+.induction-table td:last-child {
+  width: 118px !important;
+  text-align: center !important;
+}
+
 /* ── Induction ref chip ──────────────────────────────────── */
 .induction-ref-chip {
   display: inline-block;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 800;
   color: #2e1065;
-  letter-spacing: 0.04em;
+  background: rgba(139, 92, 246, 0.09);
+  border: 1.5px solid rgba(139, 92, 246, 0.22);
+  border-radius: 6px;
+  padding: 2px 10px;
+  letter-spacing: 0.06em;
   cursor: default;
+  white-space: nowrap;
 }
 
 /* ── Participant editor (Induction & Training modals) ────── */

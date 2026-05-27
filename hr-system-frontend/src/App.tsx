@@ -1570,131 +1570,206 @@ function InductionViewModal({ record, onClose }: { record: InductionRecord; onCl
   )
 }
 
-function InductionPrintDoc({ record, onClose }: { record: InductionRecord; onClose: () => void }) {
+function printInductionRecord(record: InductionRecord) {
   const fullRef = fullInductionRef(record.refNo)
+  const dateStr = record.inductionDate ? formatDateDisplay(record.inductionDate) : '—'
+  const conductedByStr = (record.conductedBy || 'HR Officer') +
+    (record.conductedByEmpId ? ` (ID: ${record.conductedByEmpId})` : '')
 
-  const handlePrint = () => { window.print() }
+  const esc = (s: string) =>
+    s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
-  return (
-    <div className="modal-backdrop print-preview-backdrop" role="presentation">
-      <section className="registration-modal wide-modal print-preview-modal" role="dialog" aria-modal="true">
-        <div className="modal-header no-print">
-          <div>
-            <p className="eyebrow">Print Preview</p>
-            <h2>{fullRef}</h2>
-            <p>{record.inductionDate ? formatDateDisplay(record.inductionDate) : '—'} · {record.participants.length} participant{record.participants.length !== 1 ? 's' : ''}</p>
-          </div>
-          <button className="icon-button" onClick={onClose} type="button">×</button>
-        </div>
+  const participantRows = record.participants.length > 0
+    ? record.participants.map((p, i) => `
+      <tr>
+        <td class="tc">${i + 1}</td>
+        <td>${esc(p.employeeId)}</td>
+        <td>${esc(p.name)}</td>
+        <td>${esc(p.nicPassportNo || '—')}</td>
+        <td>${esc(p.department)}</td>
+        <td class="sig-cell"></td>
+      </tr>`).join('')
+    : `<tr><td colspan="6" style="text-align:center;font-style:italic;color:#666;padding:12pt 6pt">No participants recorded for this session.</td></tr>`
 
-        <div className="print-document" id="induction-print-doc">
-          {/* ── Page 1: Participants ── */}
-          <div className="print-page">
-            <div className="print-header">
-              <div className="print-org">THILAFUSHI INDUSTRIAL COMPLEX PVT. LTD.</div>
-              <div className="print-title">EMPLOYEE INDUCTION RECORD</div>
-              <div className="print-ref">{fullRef}</div>
-            </div>
+  const defaultContent = `
+    <p><strong>1. Company Introduction</strong><br>Overview of Thilafushi Industrial Complex Pvt. Ltd., its operations, core values, and organisational structure.</p>
+    <p><strong>2. Site Safety &amp; Rules</strong><br>Workplace safety procedures, PPE requirements, emergency evacuation routes, fire drill procedures, and first aid kit locations.</p>
+    <p><strong>3. HR Policies</strong><br>Working hours, leave entitlements, code of conduct, disciplinary procedures, and grievance handling process.</p>
+    <p><strong>4. Work Permit &amp; Documentation</strong><br>Work permit requirements, document submission timelines, and compliance obligations for expatriate employees.</p>
+    <p><strong>5. Accommodation &amp; Facilities</strong><br>Site accommodation rules, mess facilities, internet access, curfew policy, and recreational areas.</p>
+    <p><strong>6. Bank Account Opening</strong><br>SBI / BOC / CBM account requirements, payroll cycle, salary payment dates, and wage protection procedures.</p>`
 
-            <div className="print-meta-grid">
-              <div><strong>Induction Date:</strong>&nbsp;{record.inductionDate ? formatDateDisplay(record.inductionDate) : '—'}</div>
-              <div><strong>Status:</strong>&nbsp;{record.status}</div>
-              <div><strong>Conducted By:</strong>&nbsp;{record.conductedBy || '—'}{record.conductedByEmpId ? ` (ID: ${record.conductedByEmpId})` : ''}</div>
-              <div><strong>No. of Participants:</strong>&nbsp;{record.participants.length}</div>
-            </div>
+  const contentHtml = record.inductionContent
+    ? esc(record.inductionContent).replace(/\n/g, '<br>')
+    : defaultContent
 
-            <table className="print-table">
-              <thead>
-                <tr>
-                  <th style={{ width: 28 }}>#</th>
-                  <th style={{ width: 72 }}>Emp ID</th>
-                  <th>Full Name</th>
-                  <th style={{ width: 110 }}>NIC / PP No</th>
-                  <th style={{ width: 160 }}>Section / Department</th>
-                  <th style={{ width: 120 }}>Signature</th>
-                </tr>
-              </thead>
-              <tbody>
-                {record.participants.map((p, i) => (
-                  <tr key={p.employeeId}>
-                    <td>{i + 1}</td>
-                    <td>{p.employeeId}</td>
-                    <td>{p.name}</td>
-                    <td>{p.nicPassportNo || '—'}</td>
-                    <td>{p.department}</td>
-                    <td className="signature-cell">&nbsp;</td>
-                  </tr>
-                ))}
-                {record.participants.length === 0 && (
-                  <tr><td colSpan={6} style={{ textAlign: 'center', fontStyle: 'italic', color: '#666' }}>No participants recorded.</td></tr>
-                )}
-              </tbody>
-            </table>
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Induction ${esc(fullRef)}</title>
+  <style>
+    @page { size: A4 portrait; margin: 18mm 16mm; }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Times New Roman', Times, serif; font-size: 10.5pt; color: #000; background: #f8f9fa; margin: 0; padding: 0; }
 
-            <div className="print-footer-sigs">
-              <div className="print-sig-block">
-                <div className="print-sig-line">&nbsp;</div>
-                <div><strong>HR Representative Signature</strong></div>
-                <div>{record.conductedBy || 'HR Officer'}</div>
-              </div>
-              <div className="print-sig-block">
-                <div className="print-sig-line">&nbsp;</div>
-                <div><strong>Department Head Signature</strong></div>
-                <div>&nbsp;</div>
-              </div>
-            </div>
-          </div>
+    /* ── Screen toolbar ── */
+    .screen-bar {
+      display: flex; align-items: center; gap: 14px;
+      padding: 10px 20px; background: #1a0d52; position: sticky; top: 0; z-index: 10;
+      font-family: system-ui, -apple-system, sans-serif; font-size: 13px;
+    }
+    .screen-bar button {
+      padding: 7px 20px; background: #7c3aed; color: #fff; border: none;
+      border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; letter-spacing: 0.03em;
+    }
+    .screen-bar button:hover { background: #6d28d9; }
+    .screen-bar .ref-label { font-weight: 700; color: #ddd6fe; font-size: 13px; }
+    .screen-bar .meta-label { color: rgba(221,214,254,0.7); font-size: 12px; }
 
-          {/* ── Page 2: Content Summary ── */}
-          <div className="print-page print-page-break">
-            <div className="print-header">
-              <div className="print-org">THILAFUSHI INDUSTRIAL COMPLEX PVT. LTD.</div>
-              <div className="print-title">INDUCTION CONTENT SUMMARY</div>
-              <div className="print-ref">{fullRef} · {record.inductionDate ? formatDateDisplay(record.inductionDate) : '—'}</div>
-            </div>
+    /* ── A4 page shells ── */
+    .a4-wrap { max-width: 210mm; margin: 24px auto; display: flex; flex-direction: column; gap: 20px; padding-bottom: 40px; }
+    .a4-page {
+      background: #fff; padding: 20mm 18mm;
+      box-shadow: 0 3px 16px rgba(0,0,0,0.13);
+    }
 
-            <div className="print-content-section">
-              <h3>Topics Covered During Induction</h3>
-              {record.inductionContent ? (
-                <div className="print-content-text">{record.inductionContent}</div>
-              ) : (
-                <div className="print-content-text print-example-content">
-                  <p><strong>1. Company Introduction</strong><br />Overview of Thilafushi Industrial Complex Pvt. Ltd., its operations, core values, and organisational structure.</p>
-                  <p><strong>2. Site Safety &amp; Rules</strong><br />Workplace safety procedures, PPE requirements, emergency evacuation routes, fire drill procedures, and first aid kit locations.</p>
-                  <p><strong>3. HR Policies</strong><br />Working hours, leave entitlements, code of conduct, disciplinary procedures, and grievance handling process.</p>
-                  <p><strong>4. Work Permit &amp; Documentation</strong><br />Work permit requirements, document submission timelines, and compliance obligations for expatriate employees.</p>
-                  <p><strong>5. Accommodation &amp; Facilities</strong><br />Site accommodation rules, mess facilities, internet access, curfew policy, and recreational areas.</p>
-                  <p><strong>6. Bank Account Opening</strong><br />SBI / BOC / CBM account requirements, payroll cycle, salary payment dates, and wage protection procedures.</p>
-                </div>
-              )}
-            </div>
+    /* ── Document header ── */
+    .doc-header { text-align: center; border-bottom: 2pt solid #000; padding-bottom: 9pt; margin-bottom: 13pt; }
+    .org-name { font-size: 13pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.4px; }
+    .doc-title { font-size: 11pt; font-weight: bold; margin-top: 4pt; text-transform: uppercase; letter-spacing: 0.2px; }
+    .doc-ref { font-size: 9.5pt; color: #444; margin-top: 3pt; }
 
-            <div className="print-remarks-box">
-              <strong>Remarks:</strong> {record.remarks || '—'}
-            </div>
+    /* ── Meta info ── */
+    .meta-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 4pt 20pt;
+      margin-bottom: 13pt; font-size: 9.5pt;
+      border: 0.75pt solid #ddd; padding: 7pt 10pt; background: #f9f6ff;
+    }
+    .meta-grid div { padding: 1.5pt 0; }
 
-            <div className="print-footer-sigs">
-              <div className="print-sig-block">
-                <div className="print-sig-line">&nbsp;</div>
-                <div><strong>HR Representative</strong></div>
-                <div>{record.conductedBy || 'HR Officer'}</div>
-              </div>
-              <div className="print-sig-block">
-                <div className="print-sig-line">&nbsp;</div>
-                <div><strong>Acknowledged By (Group Representative)</strong></div>
-                <div>&nbsp;</div>
-              </div>
-            </div>
-          </div>
-        </div>
+    /* ── Participant table ── */
+    table { width: 100%; border-collapse: collapse; margin-bottom: 14pt; font-size: 9.5pt; }
+    th, td { border: 0.75pt solid #444; padding: 4.5pt 6pt; vertical-align: middle; }
+    thead th { background: #ede9fe; font-weight: bold; text-align: left; white-space: nowrap; }
+    .tc { text-align: center; }
+    .sig-cell { height: 36pt; min-width: 80pt; }
 
-        <div className="modal-actions no-print">
-          <button className="quiet-button light" onClick={onClose} type="button">Close</button>
-          <button className="primary-button" onClick={handlePrint} type="button">🖨&nbsp;Print</button>
-        </div>
-      </section>
+    /* ── Signature blocks ── */
+    .sig-row { display: flex; justify-content: space-between; gap: 32pt; margin-top: 28pt; }
+    .sig-block { flex: 1; text-align: center; font-size: 9.5pt; }
+    .sig-line { border-top: 1pt solid #000; height: 40pt; margin-bottom: 5pt; }
+    .sig-name { font-weight: bold; }
+
+    /* ── Content page ── */
+    .section-title { font-size: 11pt; font-weight: bold; margin: 0 0 9pt; padding-bottom: 4pt; border-bottom: 1pt solid #aaa; }
+    .content-text { font-size: 10.5pt; line-height: 1.7; }
+    .content-text p { margin: 0 0 8pt; }
+    .remarks-box { margin-top: 14pt; padding: 6pt 10pt; border: 1pt solid #ccc; font-size: 9.5pt; background: #fafafa; }
+
+    /* ── Print ── */
+    @media print {
+      body { background: white; }
+      .screen-bar { display: none !important; }
+      .a4-wrap { max-width: none; margin: 0; padding: 0; gap: 0; }
+      .a4-page { padding: 0; box-shadow: none; }
+      .page-break { page-break-before: always; }
+      thead th, .meta-grid { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="screen-bar">
+  <button onclick="window.print()">🖨&nbsp; Print / Save as PDF</button>
+  <span class="ref-label">${esc(fullRef)}</span>
+  <span class="meta-label">${dateStr} &nbsp;·&nbsp; ${record.participants.length} participant${record.participants.length !== 1 ? 's' : ''} &nbsp;·&nbsp; ${esc(record.status)}</span>
+</div>
+
+<div class="a4-wrap">
+
+  <!-- ══ PAGE 1 — Participants ══ -->
+  <div class="a4-page">
+    <div class="doc-header">
+      <div class="org-name">Thilafushi Industrial Complex Pvt. Ltd.</div>
+      <div class="doc-title">Employee Induction Record</div>
+      <div class="doc-ref">${esc(fullRef)}</div>
     </div>
-  )
+
+    <div class="meta-grid">
+      <div><strong>Induction Date:</strong>&nbsp; ${dateStr}</div>
+      <div><strong>Status:</strong>&nbsp; ${esc(record.status)}</div>
+      <div><strong>Conducted By:</strong>&nbsp; ${esc(conductedByStr)}</div>
+      <div><strong>No. of Participants:</strong>&nbsp; ${record.participants.length}</div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width:22pt" class="tc">#</th>
+          <th style="width:54pt">Emp ID</th>
+          <th>Full Name</th>
+          <th style="width:90pt">NIC / PP No</th>
+          <th style="width:130pt">Section / Department</th>
+          <th style="width:88pt">Signature</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${participantRows}
+      </tbody>
+    </table>
+
+    <div class="sig-row">
+      <div class="sig-block">
+        <div class="sig-line"></div>
+        <div class="sig-name">HR Representative</div>
+        <div>${esc(record.conductedBy || 'HR Officer')}</div>
+      </div>
+      <div class="sig-block">
+        <div class="sig-line"></div>
+        <div class="sig-name">Department Head</div>
+        <div>&nbsp;</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE 2 — Content Summary ══ -->
+  <div class="a4-page page-break">
+    <div class="doc-header">
+      <div class="org-name">Thilafushi Industrial Complex Pvt. Ltd.</div>
+      <div class="doc-title">Induction Content Summary</div>
+      <div class="doc-ref">${esc(fullRef)} &nbsp;·&nbsp; ${dateStr}</div>
+    </div>
+
+    <div class="section-title">Topics Covered During Induction</div>
+    <div class="content-text">${contentHtml}</div>
+
+    <div class="remarks-box"><strong>Remarks:</strong>&nbsp; ${esc(record.remarks || '—')}</div>
+
+    <div class="sig-row">
+      <div class="sig-block">
+        <div class="sig-line"></div>
+        <div class="sig-name">HR Representative</div>
+        <div>${esc(record.conductedBy || 'HR Officer')}</div>
+      </div>
+      <div class="sig-block">
+        <div class="sig-line"></div>
+        <div class="sig-name">Acknowledged By (Group Representative)</div>
+        <div>&nbsp;</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>`
+
+  const win = window.open('', '_blank')
+  if (win) {
+    win.document.write(html)
+    win.document.close()
+    win.focus()
+  }
 }
 
 function TrainingModal({ record, employees, onClose, onSave }: {
@@ -2036,7 +2111,6 @@ function InductionSection({ employees, records, onUpdate }: {
   const [statusFilter, setStatusFilter] = useState<'All' | InductionRecord['status']>('All')
   const [editing, setEditing] = useState<InductionRecord | null>(null)
   const [viewing, setViewing] = useState<InductionRecord | null>(null)
-  const [printing, setPrinting] = useState<InductionRecord | null>(null)
 
   const rows = useMemo(() => records.filter((r) => {
     const participantText = r.participants.map((p) => `${p.employeeId} ${p.name}`).join(' ')
@@ -2114,7 +2188,7 @@ function InductionSection({ employees, records, onUpdate }: {
                   <td>
                     <div className="row-actions request-inline-actions">
                       <button className="action-glyph" onClick={() => setViewing(record)} type="button" title="View participants" aria-label="View participants">👁</button>
-                      <button className="action-glyph print-glyph" onClick={() => setPrinting(record)} type="button" title="Print" aria-label="Print induction">🖨</button>
+                      <button className="action-glyph print-glyph" onClick={() => printInductionRecord(record)} type="button" title="Print" aria-label="Print induction">🖨</button>
                       <button className="action-glyph edit" onClick={() => setEditing(record)} type="button" title="Edit" aria-label="Edit">✎</button>
                       <button className="action-glyph delete" onClick={() => deleteRecord(record.id)} type="button" title="Delete" aria-label="Delete">🗑</button>
                     </div>
@@ -2127,7 +2201,6 @@ function InductionSection({ employees, records, onUpdate }: {
       </section>
       {editing && <InductionModal employees={employees} record={editing} onClose={() => setEditing(null)} onSave={saveRecord} />}
       {viewing && <InductionViewModal record={viewing} onClose={() => setViewing(null)} />}
-      {printing && <InductionPrintDoc record={printing} onClose={() => setPrinting(null)} />}
     </>
   )
 }
