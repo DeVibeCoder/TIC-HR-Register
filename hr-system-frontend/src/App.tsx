@@ -1589,7 +1589,7 @@ function InductionViewModal({ record, employees = [], onClose, onPrint }: {
                 </tr>
                 <tr>
                   <td className="ind-pi-lbl">Department:</td>
-                  <td className="ind-pi-val" colSpan={3}>Thilafushi Industrial Complex</td>
+                  <td className="ind-pi-val" colSpan={3} style={{ textTransform: 'uppercase' }}>Thilafushi Industrial Complex</td>
                 </tr>
                 <tr>
                   <td className="ind-pi-lbl">Conducted by:</td>
@@ -1631,7 +1631,7 @@ function InductionViewModal({ record, employees = [], onClose, onPrint }: {
                     <td>{p.name}</td>
                     <td>{p.nicPassportNo || '—'}</td>
                     <td>{p.section || '—'}</td>
-                    <td>{p.department || '—'}</td>
+                    <td style={{ textTransform: 'uppercase' }}>{p.department || '—'}</td>
                     <td className="ind-sig-cell-view"></td>
                   </tr>
                 ))}
@@ -1765,7 +1765,7 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
       <td>${esc(p.name)}</td>
       <td>${esc(p.nicPassportNo || '')}</td>
       <td>${esc(p.section || '')}</td>
-      <td>${esc(p.department || '')}</td>
+      <td style="text-transform:uppercase">${esc(p.department || '')}</td>
       <td class="sig-cell"></td>
     </tr>`).join('')
 
@@ -1895,7 +1895,7 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
         </tr>
         <tr>
           <td class="lbl">Department:</td>
-          <td colspan="3">Thilafushi Industrial Complex</td>
+          <td colspan="3" style="text-transform:uppercase">Thilafushi Industrial Complex</td>
         </tr>
         <tr>
           <td class="lbl">Conducted by:</td>
