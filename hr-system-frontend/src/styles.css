@@ -4681,6 +4681,98 @@ button.step-pill:hover { filter: brightness(0.98); }
   .emp-form-grid .ef-span2 { grid-column: 1 / -1; }
 }
 
+/* ── Leave type colored pill badges ──────────────────────── */
+.lv-type-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  border: 1.5px solid;
+  white-space: nowrap;
+  letter-spacing: 0.4px;
+  cursor: default;
+  text-transform: none !important;
+}
+
+/* ── Leave table cell alignment ──────────────────────────── */
+.leave-type-cell {
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+.leave-date-cell {
+  text-align: center !important;
+  white-space: nowrap;
+}
+.leave-days-cell {
+  text-align: center !important;
+  font-weight: 700;
+}
+
+/* ── Leave remarks: normal case (not uppercase) ──────────── */
+.leave-remarks-cell {
+  text-transform: none !important;
+  max-width: 180px;
+  white-space: normal;
+  font-size: 0.75rem;
+  color: #475569;
+  line-height: 1.35;
+}
+.leave-remarks-cell .muted-dash {
+  color: #cbd5e1;
+  text-transform: none !important;
+}
+
+/* ── Leave Request status cell: fixed, centered ──────────── */
+.leave-status-cell {
+  width: 160px !important;
+  min-width: 160px !important;
+  max-width: 160px !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  padding: 6px 6px !important;
+}
+.leave-status-cell-sm {
+  text-align: center !important;
+  vertical-align: middle !important;
+  white-space: nowrap;
+}
+
+/* ── Status advance button: fixed size, only color changes ── */
+.status-advance-btn {
+  display: inline-block;
+  width: 142px;
+  min-width: 142px;
+  max-width: 142px;
+  padding: 4px 6px;
+  border-radius: 20px;
+  font-size: 0.67rem;
+  font-weight: 700;
+  border: 1.5px solid;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  transition: filter 120ms;
+  min-height: unset;
+  text-transform: none !important;
+}
+.status-advance-btn:hover:not(:disabled) { filter: brightness(0.9); }
+.status-advance-btn:disabled { cursor: default; opacity: 0.85; }
+/* step-0: Letter Submitted — slate */
+.status-advance-btn.step-0 { color: #334155; background: #f1f5f9; border-color: #94a3b8; }
+/* step-1: Approved — green */
+.status-advance-btn.step-1 { color: #14532d; background: #dcfce7; border-color: #86efac; }
+/* step-2: Dates Shared — blue */
+.status-advance-btn.step-2 { color: #1e3a5f; background: #dbeafe; border-color: #93c5fd; }
+/* step-3: Ticket Booked — amber */
+.status-advance-btn.step-3 { color: #713f12; background: #fef9c3; border-color: #fcd34d; }
+/* step-4: Pending Departure — rose */
+.status-advance-btn.step-4 { color: #7f1d1d; background: #fee2e2; border-color: #fca5a5; }
+
 
 
 

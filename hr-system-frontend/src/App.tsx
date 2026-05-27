@@ -39,11 +39,11 @@ type LeaveBase = {
   departureDate: string
   returnDate: string
   days: number
+  remarks?: string
 }
 
 type LeaveRequestRecord = LeaveBase & {
   step: LeaveRequestStep
-  remarks?: string
 }
 
 type ActiveLeaveRecord = LeaveBase & {
@@ -330,6 +330,7 @@ function toActiveLeave(record: LeaveRequestRecord): ActiveLeaveRecord {
     departureDate: record.departureDate,
     returnDate: record.returnDate,
     days: record.days,
+    remarks: record.remarks,
     status: 'Departed',
   }
 }
@@ -345,6 +346,7 @@ function toHistoryLeave(record: ActiveLeaveRecord): LeaveHistoryRecord {
     departureDate: record.departureDate,
     returnDate: record.returnDate,
     days: record.days,
+    remarks: record.remarks,
   }
 }
 
@@ -412,6 +414,27 @@ function parseCsv(text: string): string[][] {
     rows.push(fields)
   }
   return rows
+}
+
+const leaveTypeMeta: Record<LeaveTypeCode, { bg: string; border: string; color: string }> = {
+  AL:  { bg: '#dcfce7', border: '#86efac', color: '#14532d' },
+  FRL: { bg: '#ffedd5', border: '#fdba74', color: '#7c2d12' },
+  NP:  { bg: '#fee2e2', border: '#fca5a5', color: '#7f1d1d' },
+  PT:  { bg: '#dbeafe', border: '#93c5fd', color: '#1e3a5f' },
+  CC:  { bg: '#ede9fe', border: '#a78bfa', color: '#4c1d95' },
+}
+
+function LeaveTypeBadge({ code }: { code: LeaveTypeCode }) {
+  const meta = leaveTypeMeta[code] ?? { bg: '#f1f5f9', border: '#94a3b8', color: '#334155' }
+  return (
+    <span
+      className="lv-type-badge"
+      style={{ background: meta.bg, borderColor: meta.border, color: meta.color }}
+      title={leaveTypeLabel(code)}
+    >
+      {code}
+    </span>
+  )
 }
 
 function OverviewPage({ employees, leaveRequests, activeLeaves, leaveHistory }: { employees: Employee[]; leaveRequests: LeaveRequestRecord[]; activeLeaves: ActiveLeaveRecord[]; leaveHistory: LeaveHistoryRecord[] }) {
@@ -1104,10 +1127,10 @@ function LeavePage({
                       <td>{record.name}</td>
                       <td>{getNic(record.employeeId)}</td>
                       <td>{record.department}</td>
-                      <td>{record.leaveTypeCode}</td>
-                      <td>{formatDateDisplay(record.departureDate)}</td>
-                      <td>{formatDateDisplay(record.returnDate)}</td>
-                      <td>{record.days}</td>
+                      <td className="leave-type-cell"><LeaveTypeBadge code={record.leaveTypeCode} /></td>
+                      <td className="leave-date-cell">{formatDateDisplay(record.departureDate)}</td>
+                      <td className="leave-date-cell">{formatDateDisplay(record.returnDate)}</td>
+                      <td className="leave-days-cell">{record.days}</td>
                       <td className="leave-remarks-cell">{record.remarks || <span className="muted-dash">—</span>}</td>
                       <td className="leave-status-cell">
                         <button type="button" className={`status-advance-btn step-${stepIdx}`} disabled={record.step === 'Pending Departure'} onClick={() => onAdvanceRequestStep(record.id)} title={record.step === 'Pending Departure' ? '' : 'Click to advance'}>{record.step}</button>
@@ -1134,8 +1157,8 @@ function LeavePage({
               <label><span>Purpose</span><select value={activeTypeFilter} onChange={(event) => setActiveTypeFilter(event.target.value as 'All' | LeaveTypeCode)}><option value="All">All Types</option>{leaveTypeOptions.map((item) => <option key={item.code} value={item.code}>{item.label} ({item.code})</option>)}</select></label>
             </div>
             <div className="employee-table-shell compact-scroll">
-              <table className="data-table leave-table"><thead><tr><th>Emp ID</th><th>Name</th><th>NIC / PP No</th><th>Section</th><th>Purpose</th><th>Departure</th><th>Return</th><th>Days</th><th>Status</th></tr></thead><tbody>
-                {activeRows.map((record) => <tr key={record.id}><td>{record.employeeId}</td><td>{record.name}</td><td>{getNic(record.employeeId)}</td><td>{record.department}</td><td>{record.leaveTypeCode}</td><td>{formatDateDisplay(record.departureDate)}</td><td>{formatDateDisplay(record.returnDate)}</td><td>{record.days}</td><td><StatusBadge status="Departed" /></td></tr>)}
+              <table className="data-table leave-table"><thead><tr><th>Emp ID</th><th>Name</th><th>NIC / PP No</th><th>Section</th><th>Purpose</th><th>Departure</th><th>Return</th><th>Days</th><th>Remarks</th><th>Status</th></tr></thead><tbody>
+                {activeRows.map((record) => <tr key={record.id}><td>{record.employeeId}</td><td>{record.name}</td><td>{getNic(record.employeeId)}</td><td>{record.department}</td><td className="leave-type-cell"><LeaveTypeBadge code={record.leaveTypeCode} /></td><td className="leave-date-cell">{formatDateDisplay(record.departureDate)}</td><td className="leave-date-cell">{formatDateDisplay(record.returnDate)}</td><td className="leave-days-cell">{record.days}</td><td className="leave-remarks-cell">{record.remarks || <span className="muted-dash">—</span>}</td><td className="leave-status-cell-sm"><StatusBadge status="Departed" /></td></tr>)}
               </tbody></table>
             </div>
           </>
@@ -1150,8 +1173,8 @@ function LeavePage({
               <label><span>Section</span><select value={historyDepartmentFilter} onChange={(event) => setHistoryDepartmentFilter(event.target.value)}><option>All Departments</option>{departmentsList.map((item) => <option key={item}>{item}</option>)}</select></label>
             </div>
             <div className="employee-table-shell compact-scroll">
-              <table className="data-table leave-table"><thead><tr><th>Emp ID</th><th>Name</th><th>NIC / PP No</th><th>Section</th><th>Purpose</th><th>Departure</th><th>Return</th><th>Days</th><th>Status</th></tr></thead><tbody>
-                {historyRows.map((record) => <tr className={record.confirmation === 'Not Returned' ? 'not-returned-row' : ''} key={record.id}><td>{record.employeeId}</td><td>{record.name}</td><td>{getNic(record.employeeId)}</td><td>{record.department}</td><td>{record.leaveTypeCode}</td><td>{formatDateDisplay(record.departureDate)}</td><td>{formatDateDisplay(record.returnDate)}</td><td>{record.days}</td><td>{record.confirmation ? <StatusBadge status={record.confirmation} /> : <div className="row-actions history-confirm-actions"><button className="mini-button" onClick={() => onHistoryConfirm(record.id, 'Returned')} type="button">Returned</button><button className="mini-button danger" onClick={() => onHistoryConfirm(record.id, 'Not Returned')} type="button">Not Returned</button></div>}</td></tr>)}
+              <table className="data-table leave-table"><thead><tr><th>Emp ID</th><th>Name</th><th>NIC / PP No</th><th>Section</th><th>Purpose</th><th>Departure</th><th>Return</th><th>Days</th><th>Remarks</th><th>Status</th></tr></thead><tbody>
+                {historyRows.map((record) => <tr className={record.confirmation === 'Not Returned' ? 'not-returned-row' : ''} key={record.id}><td>{record.employeeId}</td><td>{record.name}</td><td>{getNic(record.employeeId)}</td><td>{record.department}</td><td className="leave-type-cell"><LeaveTypeBadge code={record.leaveTypeCode} /></td><td className="leave-date-cell">{formatDateDisplay(record.departureDate)}</td><td className="leave-date-cell">{formatDateDisplay(record.returnDate)}</td><td className="leave-days-cell">{record.days}</td><td className="leave-remarks-cell">{record.remarks || <span className="muted-dash">—</span>}</td><td className="leave-status-cell-sm">{record.confirmation ? <StatusBadge status={record.confirmation} /> : <div className="row-actions history-confirm-actions"><button className="mini-button" onClick={() => onHistoryConfirm(record.id, 'Returned')} type="button">Returned</button><button className="mini-button danger" onClick={() => onHistoryConfirm(record.id, 'Not Returned')} type="button">Not Returned</button></div>}</td></tr>)}
               </tbody></table>
             </div>
           </>
