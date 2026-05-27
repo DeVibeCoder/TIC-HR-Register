@@ -1795,14 +1795,14 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
   <meta charset="UTF-8">
   <title>Staff Induction ${esc(fullRef)}</title>
   <style>
-    @page { size: A4 portrait; margin: 18mm 16mm; }
+    @page { size: A4 portrait; margin: 0; }
     *, *::before, *::after { box-sizing: border-box; }
-    body { font-family: 'Times New Roman', Times, serif; font-size: 10.5pt; color: #000; background: #f1f5f9; margin: 0; padding: 0; }
+    body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #1a1a2e; background: #ddd6fe; margin: 0; padding: 0; }
 
     /* ── Screen toolbar ── */
     .screen-bar {
       display: flex; align-items: center; gap: 14px;
-      padding: 10px 20px; background: #1a0d52; position: sticky; top: 0; z-index: 10;
+      padding: 10px 20px; background: #0f0730; position: sticky; top: 0; z-index: 10;
       font-family: system-ui, -apple-system, sans-serif; font-size: 13px;
     }
     .screen-bar button {
@@ -1815,48 +1815,111 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
 
     /* ── A4 page shells ── */
     .a4-wrap { max-width: 210mm; margin: 24px auto; display: flex; flex-direction: column; gap: 20px; padding-bottom: 40px; }
-    .a4-page { background: #fff; padding: 18mm 16mm; box-shadow: 0 3px 16px rgba(0,0,0,0.13); min-height: 257mm; }
+    .a4-page { background: #fff; box-shadow: 0 6px 32px rgba(26,13,82,0.22); min-height: 297mm; overflow: hidden; display: flex; flex-direction: column; }
 
-    /* ══ PAGE 1 ══ */
-    .p1-hdr { text-align: center; padding-bottom: 10pt; border-bottom: 2.5pt solid #000; margin-bottom: 13pt; }
-    .p1-title { font-size: 21pt; font-weight: 900; letter-spacing: 2.5px; text-transform: uppercase; font-family: Arial, Helvetica, sans-serif; }
-    .p1-sub { font-size: 11pt; margin-top: 4pt; letter-spacing: 0.4px; }
+    /* ══ HEADER BANNER ══ */
+    .doc-hdr {
+      background: linear-gradient(120deg, #0f0730 0%, #1a0d52 55%, #2e1472 100%);
+      padding: 15pt 20pt 13pt;
+      display: flex; justify-content: space-between; align-items: center;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .hdr-brand { font-size: 28pt; font-weight: 900; color: #fff; letter-spacing: 5px; line-height: 1; font-family: Arial, sans-serif; }
+    .hdr-co { font-size: 7.5pt; color: #c4b5fd; letter-spacing: 0.4px; margin-top: 3pt; }
+    .hdr-right { text-align: right; }
+    .hdr-dept-lbl { font-size: 7pt; color: #a78bfa; letter-spacing: 2.5px; text-transform: uppercase; }
+    .hdr-doc-title { font-size: 16pt; font-weight: 900; color: #fff; letter-spacing: 2px; margin-top: 2pt; font-family: Arial, sans-serif; }
+    .hdr-ref-pill {
+      display: inline-block; margin-top: 5pt;
+      background: rgba(124,58,237,0.4); border: 0.75pt solid rgba(196,181,253,0.5);
+      color: #ddd6fe; padding: 2pt 10pt; border-radius: 20pt;
+      font-size: 8pt; font-family: 'Courier New', monospace; letter-spacing: 0.5px;
+    }
+    .hdr-accent {
+      height: 4pt;
+      background: linear-gradient(90deg, #7c3aed 0%, #a78bfa 45%, #6366f1 100%);
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
 
-    /* Info table */
-    .info-tbl { width: 100%; border-collapse: collapse; margin-bottom: 13pt; }
-    .info-tbl td { border: 0.75pt solid #000; padding: 4.5pt 8pt; font-size: 10pt; }
-    .info-tbl .lbl { font-weight: bold; background: #f0f0f0; width: 115pt; white-space: nowrap; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .info-tbl .status-ok { font-weight: bold; color: #166534; }
+    /* ══ PAGE BODY ══ */
+    .page-body { padding: 14pt 20pt 18pt; flex: 1; }
 
-    /* Participants table */
-    table.p-tbl { width: 100%; border-collapse: collapse; margin-bottom: 14pt; font-size: 9.5pt; table-layout: fixed; }
-    .p-tbl th, .p-tbl td { border: 0.75pt solid #444; padding: 4pt 5pt; vertical-align: middle; }
-    .p-tbl thead th { background: #ede9fe; font-weight: bold; text-align: left; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    /* ── Info table ── */
+    .info-tbl { width: 100%; border-collapse: collapse; margin-bottom: 14pt; }
+    .info-tbl td { padding: 5.5pt 9pt; font-size: 9.5pt; border: 0.75pt solid #c4b5fd; vertical-align: middle; }
+    .info-tbl .lbl {
+      font-weight: 700; background: #1a0d52; color: #fff;
+      width: 110pt; white-space: nowrap;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .status-badge {
+      display: inline-block; background: #dcfce7; color: #166534;
+      padding: 1.5pt 8pt; border-radius: 12pt; font-weight: 700; font-size: 8.5pt;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+
+    /* ── Section heading bar ── */
+    .sec-hdr {
+      background: #7c3aed; color: #fff;
+      padding: 5pt 10pt; font-size: 8.5pt; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+
+    /* ── Participants table ── */
+    table.p-tbl { width: 100%; border-collapse: collapse; margin-bottom: 14pt; font-size: 9pt; table-layout: fixed; }
+    .p-tbl thead th {
+      background: #1a0d52; color: #fff;
+      padding: 5pt 5pt; text-align: left; font-weight: 700;
+      border: 0.75pt solid #4c1d95;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .p-tbl thead th.tc { text-align: center; }
+    .p-tbl tbody td { border: 0.75pt solid #e2d9f3; padding: 4pt 5pt; vertical-align: middle; }
+    .p-tbl tbody tr:nth-child(even) td { background: #f5f3ff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .p-tbl .tc { text-align: center; }
-    .p-tbl .sig-cell { height: 22pt; }
+    .p-tbl .sig-cell { height: 20pt; }
 
-    /* Signature blocks */
-    .sig-row { display: flex; gap: 20pt; margin-top: 18pt; }
-    .sig-block { flex: 1; border: 1pt solid #333; }
-    .sig-space { height: 66pt; }
-    .sig-info { padding: 6pt 8pt; border-top: 1pt solid #333; }
-    .sig-role { font-size: 8.5pt; color: #555; }
-    .sig-person { font-weight: bold; font-size: 10pt; margin-top: 2pt; }
-    .sig-desig { font-size: 9pt; color: #333; margin-top: 2pt; }
+    /* ── Signature blocks ── */
+    .sig-row { display: flex; gap: 14pt; margin-top: 16pt; }
+    .sig-block { flex: 1; border: 0.75pt solid #c4b5fd; border-radius: 4pt; overflow: hidden; }
+    .sig-blk-hdr {
+      background: #7c3aed; color: #fff;
+      padding: 4pt 9pt; font-size: 7.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .sig-space { height: 52pt; background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .sig-info { padding: 5pt 9pt; border-top: 0.75pt solid #c4b5fd; background: #f5f3ff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .sig-person { font-weight: 700; font-size: 9.5pt; color: #1a0d52; }
+    .sig-desig { font-size: 8.5pt; color: #7c3aed; margin-top: 1pt; }
 
     /* ══ PAGE 2 ══ */
-    .p2-meta { display: flex; gap: 32pt; margin-bottom: 12pt; font-size: 10pt; padding: 5pt 0; border-bottom: 0.75pt solid #ccc; }
-    .section-title { font-size: 11pt; font-weight: bold; margin: 0 0 9pt; padding-bottom: 4pt; border-bottom: 1pt solid #aaa; }
-    .content-text { font-size: 10.5pt; line-height: 1.7; }
+    .p2-meta-bar {
+      display: flex; gap: 24pt;
+      background: #f5f3ff; border-left: 3.5pt solid #7c3aed;
+      padding: 6pt 10pt; margin-bottom: 13pt; font-size: 9.5pt;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .summary-hdg {
+      font-size: 10pt; font-weight: 700; color: #fff;
+      background: #1a0d52; padding: 5pt 10pt;
+      margin-bottom: 11pt; letter-spacing: 0.5px;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .content-text { font-size: 10pt; line-height: 1.75; color: #1a1a2e; }
     .content-text p { margin: 0 0 8pt; }
-    .remarks-box { margin-top: 14pt; padding: 6pt 10pt; border: 1pt solid #ccc; font-size: 9.5pt; background: #fafafa; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .remarks-box {
+      margin-top: 14pt; padding: 7pt 11pt;
+      border-left: 3.5pt solid #7c3aed; background: #faf5ff; font-size: 9.5pt;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
 
-    /* ── Print ── */
+    /* ── Print overrides ── */
     @media print {
       body { background: white; }
       .screen-bar { display: none !important; }
       .a4-wrap { max-width: none; margin: 0; padding: 0; gap: 0; }
-      .a4-page { padding: 0; box-shadow: none; min-height: 261mm; }
+      .a4-page { box-shadow: none; min-height: unset; }
       .page-break { page-break-before: always; }
     }
   </style>
@@ -1871,96 +1934,115 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
 
 <div class="a4-wrap">
 
-  <!-- ══ PAGE 1 — Staff Induction ══ -->
+  <!-- ══ PAGE 1 ══ -->
   <div class="a4-page">
-
-    <div class="p1-hdr">
-      <div class="p1-title">STAFF INDUCTION</div>
-      <div class="p1-sub">VHPL | Thilafushi Industrial Complex</div>
-    </div>
-
-    <table class="info-tbl">
-      <tbody>
-        <tr>
-          <td class="lbl">Reference No:</td>
-          <td>${esc(fullRef)}</td>
-          <td class="lbl">Status:</td>
-          <td class="status-ok">${esc(record.status)}</td>
-        </tr>
-        <tr>
-          <td class="lbl">Date:</td>
-          <td>${dateStr}</td>
-          <td class="lbl">No. of Participants:</td>
-          <td>${countStr}</td>
-        </tr>
-        <tr>
-          <td class="lbl">Department:</td>
-          <td colspan="3" style="text-transform:uppercase">Thilafushi Industrial Complex</td>
-        </tr>
-        <tr>
-          <td class="lbl">Conducted by:</td>
-          <td colspan="3">${esc(conductedByDisplay)}</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <table class="p-tbl">
-      <thead>
-        <tr>
-          <th style="width:20pt" class="tc">#</th>
-          <th style="width:52pt">Emp ID</th>
-          <th>Full Name</th>
-          <th style="width:84pt">NIC/PP No</th>
-          <th style="width:72pt">Section</th>
-          <th style="width:82pt">Department</th>
-          <th style="width:64pt">Signature</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${filledRows}
-        ${emptyRows}
-      </tbody>
-    </table>
-
-    <div class="sig-row">
-      <div class="sig-block">
-        <div class="sig-space"></div>
-        <div class="sig-info">
-          <div class="sig-role">Conducted By:</div>
-          <div class="sig-person">${esc(conductedByDisplay)}</div>
-          ${conductedByDesig ? `<div class="sig-desig">${esc(conductedByDesig)}</div>` : ''}
-        </div>
+    <div class="doc-hdr">
+      <div>
+        <div class="hdr-brand">VHPL</div>
+        <div class="hdr-co">Thilafushi Industrial Complex Pvt. Ltd. &nbsp;·&nbsp; Maldives</div>
       </div>
-      <div class="sig-block">
-        <div class="sig-space"></div>
-        <div class="sig-info">
-          <div class="sig-role">Approved By:</div>
-          <div class="sig-person">Arushulla Rashid (50814)</div>
-          <div class="sig-desig">Administrator</div>
-        </div>
+      <div class="hdr-right">
+        <div class="hdr-dept-lbl">Human Resources</div>
+        <div class="hdr-doc-title">STAFF INDUCTION</div>
+        <div class="hdr-ref-pill">${esc(fullRef)}</div>
       </div>
     </div>
+    <div class="hdr-accent"></div>
+    <div class="page-body">
 
+      <table class="info-tbl">
+        <tbody>
+          <tr>
+            <td class="lbl">Reference No.</td>
+            <td>${esc(fullRef)}</td>
+            <td class="lbl">Status</td>
+            <td><span class="status-badge">${esc(record.status)}</span></td>
+          </tr>
+          <tr>
+            <td class="lbl">Date</td>
+            <td>${dateStr}</td>
+            <td class="lbl">No. of Participants</td>
+            <td>${countStr}</td>
+          </tr>
+          <tr>
+            <td class="lbl">Department</td>
+            <td colspan="3" style="text-transform:uppercase">Thilafushi Industrial Complex</td>
+          </tr>
+          <tr>
+            <td class="lbl">Conducted By</td>
+            <td colspan="3">${esc(conductedByDisplay)}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="sec-hdr">Participants</div>
+      <table class="p-tbl">
+        <thead>
+          <tr>
+            <th style="width:20pt" class="tc">#</th>
+            <th style="width:52pt">Emp ID</th>
+            <th>Full Name</th>
+            <th style="width:82pt">NIC / Passport</th>
+            <th style="width:70pt">Section</th>
+            <th style="width:80pt">Department</th>
+            <th style="width:62pt">Signature</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filledRows}
+          ${emptyRows}
+        </tbody>
+      </table>
+
+      <div class="sig-row">
+        <div class="sig-block">
+          <div class="sig-blk-hdr">Conducted By</div>
+          <div class="sig-space"></div>
+          <div class="sig-info">
+            <div class="sig-person">${esc(conductedByDisplay)}</div>
+            ${conductedByDesig ? `<div class="sig-desig">${esc(conductedByDesig)}</div>` : ''}
+          </div>
+        </div>
+        <div class="sig-block">
+          <div class="sig-blk-hdr">Approved By</div>
+          <div class="sig-space"></div>
+          <div class="sig-info">
+            <div class="sig-person">Arushulla Rashid (50814)</div>
+            <div class="sig-desig">Administrator</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
   </div>
 
-  <!-- ══ PAGE 2 — Content Summary ══ -->
+  <!-- ══ PAGE 2 ══ -->
   <div class="a4-page page-break">
-
-    <div class="p1-hdr">
-      <div class="p1-title">STAFF INDUCTION</div>
-      <div class="p1-sub">VHPL | Thilafushi Industrial Complex</div>
+    <div class="doc-hdr">
+      <div>
+        <div class="hdr-brand">VHPL</div>
+        <div class="hdr-co">Thilafushi Industrial Complex Pvt. Ltd. &nbsp;·&nbsp; Maldives</div>
+      </div>
+      <div class="hdr-right">
+        <div class="hdr-dept-lbl">Human Resources</div>
+        <div class="hdr-doc-title">STAFF INDUCTION</div>
+        <div class="hdr-ref-pill">${esc(fullRef)}</div>
+      </div>
     </div>
+    <div class="hdr-accent"></div>
+    <div class="page-body">
 
-    <div class="p2-meta">
-      <span><strong>Ref No:</strong> ${esc(fullRef)}</span>
-      <span><strong>Date:</strong> ${dateStr}</span>
+      <div class="p2-meta-bar">
+        <span><strong>Ref No:</strong>&nbsp;${esc(fullRef)}</span>
+        <span><strong>Date:</strong>&nbsp;${dateStr}</span>
+      </div>
+
+      <div class="summary-hdg">Summary</div>
+      <div class="content-text">${contentHtml}</div>
+
+      ${record.remarks ? `<div class="remarks-box"><strong>Remarks:</strong>&nbsp; ${esc(record.remarks)}</div>` : ''}
+
     </div>
-
-    <div class="section-title">Summary</div>
-    <div class="content-text">${contentHtml}</div>
-
-    ${record.remarks ? `<div class="remarks-box"><strong>Remarks:</strong>&nbsp; ${esc(record.remarks)}</div>` : ''}
-
   </div>
 
 </div>
@@ -2252,19 +2334,23 @@ function printTrainingRecord(record: TrainingRecord) {
       <td class="sig-cell"></td>
     </tr>`).join('')
 
+  const typeBadgeBg = record.trainingType === 'External' ? '#dbeafe' : '#dcfce7'
+  const typeBadgeColor = record.trainingType === 'External' ? '#1e40af' : '#166534'
+
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Training — ${esc(record.trainingTitle)}</title>
   <style>
-    @page { size: A4 portrait; margin: 18mm 16mm; }
+    @page { size: A4 portrait; margin: 0; }
     *, *::before, *::after { box-sizing: border-box; }
-    body { font-family: 'Times New Roman', Times, serif; font-size: 10.5pt; color: #000; background: #f1f5f9; margin: 0; padding: 0; }
+    body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #1a1a2e; background: #ddd6fe; margin: 0; padding: 0; }
 
+    /* ── Screen toolbar ── */
     .screen-bar {
       display: flex; align-items: center; gap: 14px;
-      padding: 10px 20px; background: #1a0d52; position: sticky; top: 0; z-index: 10;
+      padding: 10px 20px; background: #0f0730; position: sticky; top: 0; z-index: 10;
       font-family: system-ui, sans-serif; font-size: 13px;
     }
     .screen-bar button { padding: 7px 20px; background: #7c3aed; color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; }
@@ -2272,28 +2358,84 @@ function printTrainingRecord(record: TrainingRecord) {
     .screen-bar .ref-label { font-weight: 700; color: #ddd6fe; }
     .screen-bar .meta-label { color: rgba(221,214,254,0.7); font-size: 12px; }
 
+    /* ── A4 shell ── */
     .a4-wrap { max-width: 210mm; margin: 24px auto; padding-bottom: 40px; }
-    .a4-page { background: #fff; padding: 18mm 16mm; box-shadow: 0 3px 16px rgba(0,0,0,0.13); min-height: 257mm; }
+    .a4-page { background: #fff; box-shadow: 0 6px 32px rgba(26,13,82,0.22); min-height: 297mm; overflow: hidden; display: flex; flex-direction: column; }
 
-    .p1-hdr { text-align: center; padding-bottom: 10pt; border-bottom: 2.5pt solid #000; margin-bottom: 13pt; }
-    .p1-title { font-size: 18pt; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; font-family: Arial, Helvetica, sans-serif; }
-    .p1-sub { font-size: 11pt; margin-top: 4pt; letter-spacing: 0.4px; }
+    /* ══ HEADER BANNER ══ */
+    .doc-hdr {
+      background: linear-gradient(120deg, #0f0730 0%, #1a0d52 55%, #2e1472 100%);
+      padding: 15pt 20pt 13pt;
+      display: flex; justify-content: space-between; align-items: center;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .hdr-brand { font-size: 28pt; font-weight: 900; color: #fff; letter-spacing: 5px; line-height: 1; }
+    .hdr-co { font-size: 7.5pt; color: #c4b5fd; letter-spacing: 0.4px; margin-top: 3pt; }
+    .hdr-right { text-align: right; max-width: 58%; }
+    .hdr-dept-lbl { font-size: 7pt; color: #a78bfa; letter-spacing: 2.5px; text-transform: uppercase; }
+    .hdr-doc-title { font-size: 14pt; font-weight: 900; color: #fff; letter-spacing: 0.5px; margin-top: 2pt; word-break: break-word; line-height: 1.25; }
+    .hdr-ref-pill {
+      display: inline-block; margin-top: 5pt;
+      background: rgba(124,58,237,0.4); border: 0.75pt solid rgba(196,181,253,0.5);
+      color: #ddd6fe; padding: 2pt 10pt; border-radius: 20pt;
+      font-size: 8pt; letter-spacing: 0.5px;
+    }
+    .hdr-accent {
+      height: 4pt;
+      background: linear-gradient(90deg, #7c3aed 0%, #a78bfa 45%, #6366f1 100%);
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
 
-    .info-tbl { width: 100%; border-collapse: collapse; margin-bottom: 13pt; }
-    .info-tbl td { border: 0.75pt solid #000; padding: 4.5pt 8pt; font-size: 10pt; }
-    .info-tbl .lbl { font-weight: bold; background: #f0f0f0; width: 115pt; white-space: nowrap; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    /* ── Page body ── */
+    .page-body { padding: 14pt 20pt 18pt; flex: 1; }
 
-    table.p-tbl { width: 100%; border-collapse: collapse; font-size: 9.5pt; table-layout: fixed; }
-    .p-tbl th, .p-tbl td { border: 0.75pt solid #444; padding: 4pt 5pt; vertical-align: middle; }
-    .p-tbl thead th { background: #ede9fe; font-weight: bold; text-align: left; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    /* ── Info table ── */
+    .info-tbl { width: 100%; border-collapse: collapse; margin-bottom: 14pt; }
+    .info-tbl td { padding: 5.5pt 9pt; font-size: 9.5pt; border: 0.75pt solid #c4b5fd; vertical-align: middle; }
+    .info-tbl .lbl {
+      font-weight: 700; background: #1a0d52; color: #fff;
+      width: 110pt; white-space: nowrap;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .type-badge {
+      display: inline-block; padding: 1.5pt 8pt; border-radius: 12pt; font-weight: 700; font-size: 8.5pt;
+      background: ${typeBadgeBg}; color: ${typeBadgeColor};
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .count-badge {
+      display: inline-block; background: #ede9fe; color: #4c1d95;
+      padding: 1.5pt 8pt; border-radius: 12pt; font-weight: 700; font-size: 8.5pt;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+
+    /* ── Section heading bar ── */
+    .sec-hdr {
+      background: #7c3aed; color: #fff;
+      padding: 5pt 10pt; font-size: 8.5pt; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+
+    /* ── Participants table ── */
+    table.p-tbl { width: 100%; border-collapse: collapse; font-size: 9pt; table-layout: fixed; }
+    .p-tbl thead th {
+      background: #1a0d52; color: #fff;
+      padding: 5pt 5pt; text-align: left; font-weight: 700;
+      border: 0.75pt solid #4c1d95;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .p-tbl thead th.tc { text-align: center; }
+    .p-tbl tbody td { border: 0.75pt solid #e2d9f3; padding: 4pt 5pt; vertical-align: middle; }
+    .p-tbl tbody tr:nth-child(even) td { background: #f5f3ff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .p-tbl .tc { text-align: center; }
-    .p-tbl .sig-cell { height: 22pt; }
+    .p-tbl .sig-cell { height: 20pt; }
 
+    /* ── Print overrides ── */
     @media print {
       body { background: white; }
       .screen-bar { display: none !important; }
       .a4-wrap { max-width: none; margin: 0; padding: 0; }
-      .a4-page { padding: 0; box-shadow: none; min-height: 261mm; }
+      .a4-page { box-shadow: none; min-height: unset; }
     }
   </style>
 </head>
@@ -2307,47 +2449,57 @@ function printTrainingRecord(record: TrainingRecord) {
 
 <div class="a4-wrap">
   <div class="a4-page">
-
-    <div class="p1-hdr">
-      <div class="p1-title">${esc(record.trainingTitle)}</div>
-      <div class="p1-sub">VHPL | Thilafushi Industrial Complex</div>
+    <div class="doc-hdr">
+      <div>
+        <div class="hdr-brand">VHPL</div>
+        <div class="hdr-co">Thilafushi Industrial Complex Pvt. Ltd. &nbsp;·&nbsp; Maldives</div>
+      </div>
+      <div class="hdr-right">
+        <div class="hdr-dept-lbl">Training Record</div>
+        <div class="hdr-doc-title">${esc(record.trainingTitle)}</div>
+        <div class="hdr-ref-pill">${dateStr}</div>
+      </div>
     </div>
+    <div class="hdr-accent"></div>
+    <div class="page-body">
 
-    <table class="info-tbl">
-      <tbody>
-        <tr>
-          <td class="lbl">Date:</td>
-          <td>${dateStr}</td>
-          <td class="lbl">Training Type:</td>
-          <td>${esc(record.trainingType)}</td>
-        </tr>
-        <tr>
-          <td class="lbl">Conducted By:</td>
-          <td colspan="3">${esc(record.conductedBy || '—')}</td>
-        </tr>
-        <tr>
-          <td class="lbl">No. of Participants:</td>
-          <td colspan="3">${record.participants.length} attended</td>
-        </tr>
-      </tbody>
-    </table>
+      <table class="info-tbl">
+        <tbody>
+          <tr>
+            <td class="lbl">Date</td>
+            <td>${dateStr}</td>
+            <td class="lbl">Training Type</td>
+            <td><span class="type-badge">${esc(record.trainingType)}</span></td>
+          </tr>
+          <tr>
+            <td class="lbl">Conducted By</td>
+            <td colspan="3">${esc(record.conductedBy || '—')}</td>
+          </tr>
+          <tr>
+            <td class="lbl">No. of Participants</td>
+            <td colspan="3"><span class="count-badge">${record.participants.length} attended</span></td>
+          </tr>
+        </tbody>
+      </table>
 
-    <table class="p-tbl">
-      <thead>
-        <tr>
-          <th style="width:20pt" class="tc">#</th>
-          <th style="width:54pt">Emp ID</th>
-          <th>Name</th>
-          <th style="width:130pt">Section</th>
-          <th style="width:66pt">Signature</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${participantRows}
-        ${emptyRows}
-      </tbody>
-    </table>
+      <div class="sec-hdr">Participants</div>
+      <table class="p-tbl">
+        <thead>
+          <tr>
+            <th style="width:20pt" class="tc">#</th>
+            <th style="width:54pt">Emp ID</th>
+            <th>Name</th>
+            <th style="width:130pt">Section</th>
+            <th style="width:66pt">Signature</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${participantRows}
+          ${emptyRows}
+        </tbody>
+      </table>
 
+    </div>
   </div>
 </div>
 </body>
