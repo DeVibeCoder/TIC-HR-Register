@@ -77,17 +77,30 @@ type PersonalFileRecord = {
   remarks: string
 }
 
-type InductionRecord = {
-  id: string
-  refNo: string
+type InductionParticipant = {
   employeeId: string
   name: string
+  nicPassportNo: string
   department: string
+}
+
+type InductionRecord = {
+  id: string
+  refNo: string            // short number, e.g. "001"
   inductionDate: string
   conductedBy: string
+  conductedByEmpId?: string
+  participants: InductionParticipant[]
   inductionContent: string
   status: 'Completed' | 'Pending' | 'Scheduled'
   remarks: string
+}
+
+type TrainingParticipant = {
+  employeeId: string
+  name: string
+  department: string
+  attended: boolean
 }
 
 type TrainingRecord = {
@@ -96,7 +109,7 @@ type TrainingRecord = {
   date: string
   conductedBy: string
   trainingType: 'Internal' | 'External'
-  participants: string[]
+  participants: TrainingParticipant[]
   status: 'Completed' | 'Pending'
   remarks: string
 }
@@ -241,9 +254,130 @@ const initialPassportHandovers: PassportHandoverRecord[] = []
 const initialNoticeTerminations: EnhancedTerminationRecord[] = []
 const initialCompletedTerminations: CompletedTerminationRecord[] = []
 const allTerminationStages: TerminationStage[] = ['Letter Submitted', 'Exit Interview', 'Ticket', 'Pending Departure']
-const initialPersonalFiles: PersonalFileRecord[] = []
-const initialInductionRecords: InductionRecord[] = []
-const initialTrainingRecords: TrainingRecord[] = []
+const initialPersonalFiles: PersonalFileRecord[] = [
+  { fileNo: '0001', employeeId: '25431', fullName: 'THILINA LAKSHAN PERERA', department: 'STORES', isFormerStaff: true, coc: true, jd: true, cont: true, contractExpiryDate: '2022-12-31', remarks: 'Left company Dec 2022' },
+  { fileNo: '0002', employeeId: '31672', fullName: 'MD RAFIQUL ISLAM', department: 'ADMINISTRATION', isFormerStaff: true, coc: true, jd: true, cont: true, contractExpiryDate: '2023-06-30', remarks: 'Contract not renewed' },
+  { fileNo: '0003', employeeId: '33856', fullName: 'KRISHNA PRASAD RIMAL', department: 'MECHANICAL', isFormerStaff: true, coc: true, jd: false, cont: true, contractExpiryDate: '2024-01-15', remarks: 'Resigned' },
+  { fileNo: '0004', employeeId: '35494', fullName: 'GAMARALALAGE AJITH WIJESIRI', department: 'ACCOUNTS AND FINANCE', isFormerStaff: false, coc: true, jd: true, cont: true, contractExpiryDate: '2027-05-31', remarks: '' },
+  { fileNo: '0005', employeeId: '37916', fullName: 'JAGO', department: 'STORES', isFormerStaff: false, coc: true, jd: true, cont: true, contractExpiryDate: '2026-09-01', remarks: '' },
+  { fileNo: '0006', employeeId: '43407', fullName: 'MOHAMMAD DELOWAR HOSSAIN', department: 'STORES', isFormerStaff: false, coc: true, jd: true, cont: true, contractExpiryDate: '2026-08-01', remarks: '' },
+  { fileNo: '0007', employeeId: '44386', fullName: 'MAJIB', department: 'STORES', isFormerStaff: false, coc: true, jd: true, cont: true, contractExpiryDate: '2026-06-01', remarks: '' },
+  { fileNo: '0008', employeeId: '50223', fullName: 'AYESHAN KUMARA WIJEYATHUNGA MUDALIGE', department: 'STORES', isFormerStaff: false, coc: true, jd: true, cont: true, contractExpiryDate: '2027-04-10', remarks: '' },
+  { fileNo: '0009', employeeId: '50427', fullName: 'MD SAIFUR RAHMAN', department: 'STORES', isFormerStaff: false, coc: true, jd: true, cont: false, contractExpiryDate: '2027-06-01', remarks: 'Contract renewal pending' },
+  { fileNo: '0010', employeeId: '52804', fullName: 'AHMED IMRAN', department: 'ACCOUNTS AND FINANCE', isFormerStaff: false, coc: true, jd: true, cont: true, contractExpiryDate: '2027-12-01', remarks: '' },
+  { fileNo: '0011', employeeId: '53029', fullName: 'KUMARAN VAITHILINGAM', department: 'STORES', isFormerStaff: false, coc: true, jd: true, cont: true, contractExpiryDate: '2026-01-20', remarks: '' },
+  { fileNo: '0012', employeeId: '53979', fullName: 'NAVEEN SEKAR', department: 'STORES', isFormerStaff: false, coc: true, jd: false, cont: true, contractExpiryDate: '2026-08-10', remarks: 'JD pending signature' },
+  { fileNo: '0013', employeeId: '55427', fullName: 'SARAVANAN RAJENDRAN', department: 'STORES', isFormerStaff: false, coc: true, jd: true, cont: true, contractExpiryDate: '2025-09-01', remarks: '' },
+  { fileNo: '0014', employeeId: '56141', fullName: 'RAJU PERKA', department: 'CAFE', isFormerStaff: false, coc: true, jd: true, cont: true, contractExpiryDate: '2026-04-01', remarks: '' },
+  { fileNo: '0015', employeeId: '56530', fullName: 'PUBUDU MADURANGA ALAWATHTHA KANKANAMGE', department: 'ADMINISTRATION', isFormerStaff: false, coc: true, jd: true, cont: true, contractExpiryDate: '2026-07-01', remarks: '' },
+  { fileNo: '0016', employeeId: '56646', fullName: 'CHANDRASHEKHER PURELLA', department: 'ACCOUNTS AND FINANCE', isFormerStaff: false, coc: true, jd: true, cont: true, contractExpiryDate: '2026-08-01', remarks: '' },
+  { fileNo: '0017', employeeId: '57637', fullName: 'MUNI ACHARI GUNTI KOVALA', department: 'CAFE', isFormerStaff: false, coc: true, jd: true, cont: true, contractExpiryDate: '2027-02-10', remarks: '' },
+  { fileNo: '0018', employeeId: '57803', fullName: 'INDIKA SAMPATH SAMARASINGHEGE', department: 'STORES', isFormerStaff: false, coc: true, jd: false, cont: false, contractExpiryDate: '2027-05-20', remarks: 'JD and contract pending' },
+  { fileNo: '0019', employeeId: '57935', fullName: 'ARUNODA KAVINDU NANAYAKKARA', department: 'ACCOUNTS AND FINANCE', isFormerStaff: false, coc: true, jd: true, cont: false, contractExpiryDate: '2027-04-20', remarks: 'Contract pending' },
+  { fileNo: '0020', employeeId: '58034', fullName: 'SAMEERA MADUSANKA GUNARATHNA', department: 'STORES', isFormerStaff: false, coc: true, jd: false, cont: false, contractExpiryDate: '2027-05-22', remarks: 'JD and contract pending' },
+  { fileNo: '0021', employeeId: '58686', fullName: 'YASAR ARAFATH BASHEER AHAMED', department: 'STORES', isFormerStaff: false, coc: false, jd: false, cont: false, contractExpiryDate: '2027-05-18', remarks: 'All documents pending' },
+  { fileNo: '0022', employeeId: '58692', fullName: 'SHANTUMON PATHIYIL CHACKO', department: 'HUMAN RESOURCES', isFormerStaff: false, coc: true, jd: true, cont: true, contractExpiryDate: '2027-10-15', remarks: '' },
+]
+
+const initialInductionRecords: InductionRecord[] = [
+  {
+    id: 'IND-001',
+    refNo: '001',
+    inductionDate: '2025-11-20',
+    conductedBy: 'SHANTUMON PATHIYIL CHACKO',
+    conductedByEmpId: '58692',
+    participants: [
+      { employeeId: '57803', name: 'INDIKA SAMPATH SAMARASINGHEGE', nicPassportNo: 'N0234561', department: 'STORES' },
+      { employeeId: '57935', name: 'ARUNODA KAVINDU NANAYAKKARA', nicPassportNo: 'N0287342', department: 'ACCOUNTS AND FINANCE' },
+      { employeeId: '57637', name: 'MUNI ACHARI GUNTI KOVALA', nicPassportNo: 'T6678234', department: 'CAFE' },
+      { employeeId: '56530', name: 'PUBUDU MADURANGA ALAWATHTHA KANKANAMGE', nicPassportNo: 'N0189342', department: 'ADMINISTRATION' },
+    ],
+    inductionContent: 'Company overview and organizational structure of TIC. Site safety rules, PPE requirements, and emergency procedures including evacuation routes. HR policies — working hours, leave types, code of conduct, and grievance handling. Work permit compliance for expatriate staff. Bank account opening requirements (SBI/BOC/CBM). Accommodation rules, mess facilities, and recreational areas.',
+    status: 'Completed',
+    remarks: 'All participants completed induction successfully.',
+  },
+  {
+    id: 'IND-002',
+    refNo: '002',
+    inductionDate: '2026-03-10',
+    conductedBy: 'SHANTUMON PATHIYIL CHACKO',
+    conductedByEmpId: '58692',
+    participants: [
+      { employeeId: '58034', name: 'SAMEERA MADUSANKA GUNARATHNA', nicPassportNo: 'N0187423', department: 'STORES' },
+      { employeeId: '58686', name: 'YASAR ARAFATH BASHEER AHAMED', nicPassportNo: 'R8821054', department: 'STORES' },
+      { employeeId: '58692', name: 'SHANTUMON PATHIYIL CHACKO', nicPassportNo: 'T4482910', department: 'HUMAN RESOURCES' },
+    ],
+    inductionContent: 'Welcome briefing and site tour. Introduction to key departments and reporting structure. Safety orientation including fire drill procedures, first aid kit locations, and emergency contacts. Payroll cycle and bank account setup. IT access and communication tools usage.',
+    status: 'Completed',
+    remarks: '',
+  },
+  {
+    id: 'IND-003',
+    refNo: '003',
+    inductionDate: '2026-06-15',
+    conductedBy: 'SHANTUMON PATHIYIL CHACKO',
+    conductedByEmpId: '58692',
+    participants: [],
+    inductionContent: '',
+    status: 'Scheduled',
+    remarks: 'Participants to be confirmed.',
+  },
+]
+
+const initialTrainingRecords: TrainingRecord[] = [
+  {
+    id: 'TRN-001',
+    trainingTitle: 'Fire Safety & Emergency Procedures',
+    date: '2026-01-22',
+    conductedBy: 'EXTERNAL SAFETY CONSULTANT',
+    trainingType: 'External',
+    participants: [
+      { employeeId: '58692', name: 'SHANTUMON PATHIYIL CHACKO', department: 'HUMAN RESOURCES', attended: true },
+      { employeeId: '56530', name: 'PUBUDU MADURANGA ALAWATHTHA KANKANAMGE', department: 'ADMINISTRATION', attended: true },
+      { employeeId: '56646', name: 'CHANDRASHEKHER PURELLA', department: 'ACCOUNTS AND FINANCE', attended: true },
+      { employeeId: '53029', name: 'KUMARAN VAITHILINGAM', department: 'STORES', attended: true },
+      { employeeId: '53979', name: 'NAVEEN SEKAR', department: 'STORES', attended: true },
+      { employeeId: '55427', name: 'SARAVANAN RAJENDRAN', department: 'STORES', attended: false },
+      { employeeId: '56141', name: 'RAJU PERKA', department: 'CAFE', attended: true },
+      { employeeId: '57637', name: 'MUNI ACHARI GUNTI KOVALA', department: 'CAFE', attended: true },
+    ],
+    status: 'Completed',
+    remarks: 'SARAVANAN RAJENDRAN absent — will join next session.',
+  },
+  {
+    id: 'TRN-002',
+    trainingTitle: 'First Aid & Basic CPR',
+    date: '2026-03-18',
+    conductedBy: 'RED CRESCENT MALDIVES',
+    trainingType: 'External',
+    participants: [
+      { employeeId: '58692', name: 'SHANTUMON PATHIYIL CHACKO', department: 'HUMAN RESOURCES', attended: true },
+      { employeeId: '56530', name: 'PUBUDU MADURANGA ALAWATHTHA KANKANAMGE', department: 'ADMINISTRATION', attended: true },
+      { employeeId: '57803', name: 'INDIKA SAMPATH SAMARASINGHEGE', department: 'STORES', attended: true },
+      { employeeId: '58034', name: 'SAMEERA MADUSANKA GUNARATHNA', department: 'STORES', attended: true },
+      { employeeId: '57935', name: 'ARUNODA KAVINDU NANAYAKKARA', department: 'ACCOUNTS AND FINANCE', attended: true },
+      { employeeId: '56141', name: 'RAJU PERKA', department: 'CAFE', attended: false },
+    ],
+    status: 'Completed',
+    remarks: 'RAJU PERKA absent — rescheduled for next batch.',
+  },
+  {
+    id: 'TRN-003',
+    trainingTitle: 'Forklift Operation Safety',
+    date: '2026-06-10',
+    conductedBy: 'SHANTUMON PATHIYIL CHACKO',
+    trainingType: 'Internal',
+    participants: [
+      { employeeId: '43407', name: 'MOHAMMAD DELOWAR HOSSAIN', department: 'STORES', attended: false },
+      { employeeId: '44386', name: 'MAJIB', department: 'STORES', attended: false },
+      { employeeId: '50427', name: 'MD SAIFUR RAHMAN', department: 'STORES', attended: false },
+      { employeeId: '53029', name: 'KUMARAN VAITHILINGAM', department: 'STORES', attended: false },
+      { employeeId: '53979', name: 'NAVEEN SEKAR', department: 'STORES', attended: false },
+    ],
+    status: 'Pending',
+    remarks: '',
+  },
+]
 const initialStaffRequests: StaffRequestRecord[] = []
 const initialVisitRecords: VisitRecord[] = []
 const initialIncidentRecords: IncidentRecord[] = []
@@ -311,6 +445,10 @@ function formatMonthLabel(key: string) {
 
 function leaveTypeLabel(code: LeaveTypeCode) {
   return leaveTypeOptions.find((item) => item.code === code)?.label ?? code
+}
+
+function fullInductionRef(refNo: string): string {
+  return `VHPL/TIC/HR/IND/26/${refNo.padStart(3, '0')}`
 }
 
 function leaveSearchText(record: LeaveBase) {
@@ -1209,29 +1347,159 @@ function InductionModal({ employees, record, onClose, onSave }: {
   onClose: () => void
   onSave: (record: InductionRecord) => void
 }) {
-  const [employeeId, setEmployeeId] = useState(record.employeeId)
+  const isNew = record.id.startsWith('IND-new')
   const [refNo, setRefNo] = useState(record.refNo)
   const [inductionDate, setInductionDate] = useState(record.inductionDate)
   const [conductedBy, setConductedBy] = useState(record.conductedBy)
+  const [conductedByEmpId, setConductedByEmpId] = useState(record.conductedByEmpId ?? '')
   const [inductionContent, setInductionContent] = useState(record.inductionContent)
   const [status, setStatus] = useState<InductionRecord['status']>(record.status)
   const [remarks, setRemarks] = useState(record.remarks)
-  const employee = employees.find((e) => e.employeeId === employeeId) ?? employees[0]
+  const [participants, setParticipants] = useState<InductionParticipant[]>(record.participants)
+  const [participantSearch, setParticipantSearch] = useState('')
+
+  const searchResults = useMemo(() => {
+    const q = participantSearch.trim().toLowerCase()
+    if (!q) return []
+    return employees
+      .filter((e) => !participants.some((p) => p.employeeId === e.employeeId))
+      .filter((e) => `${e.employeeId} ${e.fullName} ${e.department}`.toLowerCase().includes(q))
+      .slice(0, 8)
+  }, [employees, participants, participantSearch])
+
+  const addParticipant = (emp: Employee) => {
+    setParticipants((prev) => [...prev, {
+      employeeId: emp.employeeId,
+      name: emp.fullName,
+      nicPassportNo: emp.nicPassportNo,
+      department: emp.department,
+    }])
+    setParticipantSearch('')
+  }
+
+  const removeParticipant = (empId: string) => {
+    setParticipants((prev) => prev.filter((p) => p.employeeId !== empId))
+  }
+
+  const handleConductedByEmpId = (id: string) => {
+    setConductedByEmpId(id)
+    const emp = employees.find((e) => e.employeeId === id)
+    if (emp) setConductedBy(emp.fullName)
+  }
+
+  const save = () => {
+    onSave({
+      ...record,
+      refNo,
+      inductionDate,
+      conductedBy,
+      conductedByEmpId: conductedByEmpId || undefined,
+      participants,
+      inductionContent,
+      status,
+      remarks,
+    })
+  }
 
   return (
     <div className="modal-backdrop" role="presentation">
       <section className="registration-modal wide-modal" role="dialog" aria-modal="true">
-        <div className="modal-header"><div><p className="eyebrow">Induction</p><h2>{record.id.startsWith('IND-new') ? 'Add Induction' : 'Edit Induction'}</h2></div><button className="icon-button" onClick={onClose} type="button">x</button></div>
-        <div className="form-grid">
-          <label><span>Employee</span><select value={employeeId} onChange={(e) => setEmployeeId(e.target.value)}>{employees.slice(0, 120).map((emp) => <option key={emp.employeeId} value={emp.employeeId}>{emp.employeeId} – {emp.fullName}</option>)}</select></label>
-          <label><span>Reference No</span><input value={refNo} onChange={(e) => setRefNo(e.target.value)} placeholder="e.g. IND-REF-005" /></label>
-          <label><span>Status</span><select value={status} onChange={(e) => setStatus(e.target.value as InductionRecord['status'])}><option>Completed</option><option>Pending</option><option>Scheduled</option></select></label>
-          <label><span>Induction Date</span><input type="date" value={inductionDate} onChange={(e) => setInductionDate(e.target.value)} /></label>
-          <label className="full-field"><span>Conducted By (HR Person Name)</span><input value={conductedBy} onChange={(e) => setConductedBy(e.target.value)} placeholder="Name of HR person conducting the induction" /></label>
-          <label className="full-field"><span>Induction Content</span><textarea className="induction-textarea" rows={6} value={inductionContent} onChange={(e) => setInductionContent(e.target.value)} placeholder="Describe what was covered during the induction session — topics explained, policies briefed, areas toured..." /></label>
-          <label className="full-field"><span>Remarks</span><input value={remarks} onChange={(e) => setRemarks(e.target.value)} /></label>
+        <div className="modal-header">
+          <div>
+            <p className="eyebrow">Induction</p>
+            <h2>{isNew ? 'Add Induction Session' : `Edit — ${fullInductionRef(record.refNo)}`}</h2>
+          </div>
+          <button className="icon-button" onClick={onClose} type="button">×</button>
         </div>
-        <div className="modal-actions"><button className="quiet-button light" onClick={onClose} type="button">Cancel</button><button className="primary-button" onClick={() => onSave({ ...record, employeeId: employee?.employeeId ?? '', name: employee?.fullName ?? '', department: employee?.department ?? '', refNo, inductionDate, conductedBy, inductionContent, status, remarks })} type="button">Save</button></div>
+
+        <div className="form-grid" style={{ marginBottom: 12 }}>
+          <label>
+            <span>Reference No (Short)</span>
+            <input value={refNo} onChange={(e) => setRefNo(e.target.value)} placeholder="e.g. 004" />
+          </label>
+          <label>
+            <span>Induction Date</span>
+            <input type="date" value={inductionDate} onChange={(e) => setInductionDate(e.target.value)} />
+          </label>
+          <label>
+            <span>Status</span>
+            <select value={status} onChange={(e) => setStatus(e.target.value as InductionRecord['status'])}>
+              <option>Scheduled</option><option>Pending</option><option>Completed</option>
+            </select>
+          </label>
+          <label>
+            <span>Conducted By — Emp ID</span>
+            <input value={conductedByEmpId} onChange={(e) => handleConductedByEmpId(e.target.value)} placeholder="Employee ID of HR person" />
+          </label>
+          <label className="full-field">
+            <span>Conducted By — Name</span>
+            <input value={conductedBy} onChange={(e) => setConductedBy(e.target.value)} placeholder="Name of HR person conducting induction" />
+          </label>
+          <label className="full-field">
+            <span>Remarks</span>
+            <input value={remarks} onChange={(e) => setRemarks(e.target.value)} />
+          </label>
+        </div>
+
+        <div className="induction-participants-editor">
+          <div className="participants-editor-header">
+            <h3>Participants <span className="participants-count-label-inline">({participants.length})</span></h3>
+            <div className="participant-search-wrap">
+              <input
+                className="participant-search-input"
+                type="search"
+                value={participantSearch}
+                onChange={(e) => setParticipantSearch(e.target.value)}
+                placeholder="Search employee by ID or name to add…"
+              />
+              {searchResults.length > 0 && (
+                <div className="participant-search-results">
+                  {searchResults.map((emp) => (
+                    <button
+                      key={emp.employeeId}
+                      className="participant-search-result-item"
+                      type="button"
+                      onClick={() => addParticipant(emp)}
+                    >
+                      <strong>{emp.employeeId}</strong> {emp.fullName} <span>{emp.department}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+          {participants.length > 0 ? (
+            <table className="data-table participants-editor-table">
+              <thead><tr><th>#</th><th>Emp ID</th><th>Name</th><th>NIC / PP No</th><th>Section</th><th></th></tr></thead>
+              <tbody>
+                {participants.map((p, i) => (
+                  <tr key={p.employeeId}>
+                    <td>{i + 1}</td>
+                    <td>{p.employeeId}</td>
+                    <td>{p.name}</td>
+                    <td>{p.nicPassportNo || '—'}</td>
+                    <td>{p.department}</td>
+                    <td><button className="action-glyph delete" onClick={() => removeParticipant(p.employeeId)} type="button" title="Remove" aria-label="Remove participant">×</button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="participants-empty">No participants added yet. Search above to add employees.</p>
+          )}
+        </div>
+
+        <div className="form-grid" style={{ marginTop: 12 }}>
+          <label className="full-field">
+            <span>Induction Content / Topics Covered</span>
+            <textarea className="induction-textarea" rows={5} value={inductionContent} onChange={(e) => setInductionContent(e.target.value)} placeholder="Describe topics covered — company intro, safety rules, HR policies, accommodation rules, bank account setup…" />
+          </label>
+        </div>
+
+        <div className="modal-actions">
+          <button className="quiet-button light" onClick={onClose} type="button">Cancel</button>
+          <button className="primary-button" onClick={save} type="button">Save Session</button>
+        </div>
       </section>
     </div>
   )
@@ -1243,70 +1511,320 @@ function InductionViewModal({ record, onClose }: { record: InductionRecord; onCl
       <section className="registration-modal wide-modal" role="dialog" aria-modal="true">
         <div className="modal-header">
           <div>
-            <p className="eyebrow">Induction Record</p>
-            <h2>{record.name}</h2>
-            <p>{record.refNo ? `${record.refNo} · ` : ''}{record.employeeId} – {record.department}</p>
+            <p className="eyebrow">Induction Session</p>
+            <h2>{fullInductionRef(record.refNo)}</h2>
+            <p>{record.inductionDate ? formatDateDisplay(record.inductionDate) : '—'} · Conducted by {record.conductedBy || '—'}</p>
           </div>
-          <button className="icon-button" onClick={onClose} type="button">x</button>
+          <button className="icon-button" onClick={onClose} type="button">×</button>
         </div>
-        <div className="induction-view-grid">
-          <div className="induction-detail-row"><strong>Induction Date</strong><span>{record.inductionDate ? formatDateDisplay(record.inductionDate) : '—'}</span></div>
-          <div className="induction-detail-row"><strong>Conducted By</strong><span>{record.conductedBy || '—'}</span></div>
-          <div className="induction-detail-row"><strong>Status</strong><span><StatusBadge status={record.status} /></span></div>
-          <div className="induction-detail-row"><strong>Remarks</strong><span>{record.remarks || '—'}</span></div>
+
+        <div className="induction-view-meta">
+          <div><strong>Date</strong><span>{record.inductionDate ? formatDateDisplay(record.inductionDate) : '—'}</span></div>
+          <div><strong>Status</strong><span><StatusBadge status={record.status} /></span></div>
+          <div><strong>Conducted By</strong><span>{record.conductedBy || '—'}{record.conductedByEmpId ? ` (ID: ${record.conductedByEmpId})` : ''}</span></div>
+          {record.remarks && <div><strong>Remarks</strong><span>{record.remarks}</span></div>}
         </div>
-        <div className="induction-content-box">
-          <h3>Induction Content</h3>
-          <p className="induction-content-text">{record.inductionContent || 'No induction content recorded for this session.'}</p>
+
+        <h3 className="induction-participants-title">Participants ({record.participants.length})</h3>
+        {record.participants.length > 0 ? (
+          <table className="data-table participants-view-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Emp ID</th>
+                <th>Full Name</th>
+                <th>NIC / PP No</th>
+                <th>Section</th>
+                <th className="signature-col-header">Signature</th>
+              </tr>
+            </thead>
+            <tbody>
+              {record.participants.map((p, i) => (
+                <tr key={p.employeeId}>
+                  <td>{i + 1}</td>
+                  <td>{p.employeeId}</td>
+                  <td>{p.name}</td>
+                  <td>{p.nicPassportNo || '—'}</td>
+                  <td>{p.department}</td>
+                  <td className="signature-cell-view"></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p className="participants-empty">No participants recorded for this session.</p>
+        )}
+
+        {record.inductionContent && (
+          <div className="induction-content-box">
+            <h3>Topics Covered</h3>
+            <p className="induction-content-text">{record.inductionContent}</p>
+          </div>
+        )}
+
+        <div className="modal-actions">
+          <button className="primary-button" onClick={onClose} type="button">Close</button>
         </div>
-        <div className="modal-actions"><button className="primary-button" onClick={onClose} type="button">Close</button></div>
       </section>
     </div>
   )
 }
 
-function TrainingModal({ record, onClose, onSave }: {
+function InductionPrintDoc({ record, onClose }: { record: InductionRecord; onClose: () => void }) {
+  const fullRef = fullInductionRef(record.refNo)
+
+  const handlePrint = () => { window.print() }
+
+  return (
+    <div className="modal-backdrop print-preview-backdrop" role="presentation">
+      <section className="registration-modal wide-modal print-preview-modal" role="dialog" aria-modal="true">
+        <div className="modal-header no-print">
+          <div>
+            <p className="eyebrow">Print Preview</p>
+            <h2>{fullRef}</h2>
+            <p>{record.inductionDate ? formatDateDisplay(record.inductionDate) : '—'} · {record.participants.length} participant{record.participants.length !== 1 ? 's' : ''}</p>
+          </div>
+          <button className="icon-button" onClick={onClose} type="button">×</button>
+        </div>
+
+        <div className="print-document" id="induction-print-doc">
+          {/* ── Page 1: Participants ── */}
+          <div className="print-page">
+            <div className="print-header">
+              <div className="print-org">THILAFUSHI INDUSTRIAL COMPLEX PVT. LTD.</div>
+              <div className="print-title">EMPLOYEE INDUCTION RECORD</div>
+              <div className="print-ref">{fullRef}</div>
+            </div>
+
+            <div className="print-meta-grid">
+              <div><strong>Induction Date:</strong>&nbsp;{record.inductionDate ? formatDateDisplay(record.inductionDate) : '—'}</div>
+              <div><strong>Status:</strong>&nbsp;{record.status}</div>
+              <div><strong>Conducted By:</strong>&nbsp;{record.conductedBy || '—'}{record.conductedByEmpId ? ` (ID: ${record.conductedByEmpId})` : ''}</div>
+              <div><strong>No. of Participants:</strong>&nbsp;{record.participants.length}</div>
+            </div>
+
+            <table className="print-table">
+              <thead>
+                <tr>
+                  <th style={{ width: 28 }}>#</th>
+                  <th style={{ width: 72 }}>Emp ID</th>
+                  <th>Full Name</th>
+                  <th style={{ width: 110 }}>NIC / PP No</th>
+                  <th style={{ width: 160 }}>Section / Department</th>
+                  <th style={{ width: 120 }}>Signature</th>
+                </tr>
+              </thead>
+              <tbody>
+                {record.participants.map((p, i) => (
+                  <tr key={p.employeeId}>
+                    <td>{i + 1}</td>
+                    <td>{p.employeeId}</td>
+                    <td>{p.name}</td>
+                    <td>{p.nicPassportNo || '—'}</td>
+                    <td>{p.department}</td>
+                    <td className="signature-cell">&nbsp;</td>
+                  </tr>
+                ))}
+                {record.participants.length === 0 && (
+                  <tr><td colSpan={6} style={{ textAlign: 'center', fontStyle: 'italic', color: '#666' }}>No participants recorded.</td></tr>
+                )}
+              </tbody>
+            </table>
+
+            <div className="print-footer-sigs">
+              <div className="print-sig-block">
+                <div className="print-sig-line">&nbsp;</div>
+                <div><strong>HR Representative Signature</strong></div>
+                <div>{record.conductedBy || 'HR Officer'}</div>
+              </div>
+              <div className="print-sig-block">
+                <div className="print-sig-line">&nbsp;</div>
+                <div><strong>Department Head Signature</strong></div>
+                <div>&nbsp;</div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Page 2: Content Summary ── */}
+          <div className="print-page print-page-break">
+            <div className="print-header">
+              <div className="print-org">THILAFUSHI INDUSTRIAL COMPLEX PVT. LTD.</div>
+              <div className="print-title">INDUCTION CONTENT SUMMARY</div>
+              <div className="print-ref">{fullRef} · {record.inductionDate ? formatDateDisplay(record.inductionDate) : '—'}</div>
+            </div>
+
+            <div className="print-content-section">
+              <h3>Topics Covered During Induction</h3>
+              {record.inductionContent ? (
+                <div className="print-content-text">{record.inductionContent}</div>
+              ) : (
+                <div className="print-content-text print-example-content">
+                  <p><strong>1. Company Introduction</strong><br />Overview of Thilafushi Industrial Complex Pvt. Ltd., its operations, core values, and organisational structure.</p>
+                  <p><strong>2. Site Safety &amp; Rules</strong><br />Workplace safety procedures, PPE requirements, emergency evacuation routes, fire drill procedures, and first aid kit locations.</p>
+                  <p><strong>3. HR Policies</strong><br />Working hours, leave entitlements, code of conduct, disciplinary procedures, and grievance handling process.</p>
+                  <p><strong>4. Work Permit &amp; Documentation</strong><br />Work permit requirements, document submission timelines, and compliance obligations for expatriate employees.</p>
+                  <p><strong>5. Accommodation &amp; Facilities</strong><br />Site accommodation rules, mess facilities, internet access, curfew policy, and recreational areas.</p>
+                  <p><strong>6. Bank Account Opening</strong><br />SBI / BOC / CBM account requirements, payroll cycle, salary payment dates, and wage protection procedures.</p>
+                </div>
+              )}
+            </div>
+
+            <div className="print-remarks-box">
+              <strong>Remarks:</strong> {record.remarks || '—'}
+            </div>
+
+            <div className="print-footer-sigs">
+              <div className="print-sig-block">
+                <div className="print-sig-line">&nbsp;</div>
+                <div><strong>HR Representative</strong></div>
+                <div>{record.conductedBy || 'HR Officer'}</div>
+              </div>
+              <div className="print-sig-block">
+                <div className="print-sig-line">&nbsp;</div>
+                <div><strong>Acknowledged By (Group Representative)</strong></div>
+                <div>&nbsp;</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="modal-actions no-print">
+          <button className="quiet-button light" onClick={onClose} type="button">Close</button>
+          <button className="primary-button" onClick={handlePrint} type="button">🖨&nbsp;Print</button>
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function TrainingModal({ record, employees, onClose, onSave }: {
   record: TrainingRecord
+  employees: Employee[]
   onClose: () => void
   onSave: (record: TrainingRecord) => void
 }) {
+  const isNew = record.id.startsWith('TRN-new')
   const [trainingTitle, setTrainingTitle] = useState(record.trainingTitle)
   const [date, setDate] = useState(record.date)
   const [conductedBy, setConductedBy] = useState(record.conductedBy)
   const [trainingType, setTrainingType] = useState<TrainingRecord['trainingType']>(record.trainingType)
-  const [participantsText, setParticipantsText] = useState(record.participants.join('\n'))
+  const [participants, setParticipants] = useState<TrainingParticipant[]>(record.participants)
+  const [participantSearch, setParticipantSearch] = useState('')
   const [status, setStatus] = useState<TrainingRecord['status']>(record.status)
   const [remarks, setRemarks] = useState(record.remarks)
 
+  const searchResults = useMemo(() => {
+    const q = participantSearch.trim().toLowerCase()
+    if (!q) return []
+    return employees
+      .filter((e) => !participants.some((p) => p.employeeId === e.employeeId))
+      .filter((e) => `${e.employeeId} ${e.fullName} ${e.department}`.toLowerCase().includes(q))
+      .slice(0, 8)
+  }, [employees, participants, participantSearch])
+
+  const addParticipant = (emp: Employee) => {
+    setParticipants((prev) => [...prev, { employeeId: emp.employeeId, name: emp.fullName, department: emp.department, attended: true }])
+    setParticipantSearch('')
+  }
+
+  const removeParticipant = (empId: string) => {
+    setParticipants((prev) => prev.filter((p) => p.employeeId !== empId))
+  }
+
+  const toggleAttended = (empId: string) => {
+    setParticipants((prev) => prev.map((p) => p.employeeId === empId ? { ...p, attended: !p.attended } : p))
+  }
+
+  const attendedCount = participants.filter((p) => p.attended).length
+
   const save = () => {
-    const participants = participantsText.split('\n').map((p) => p.trim()).filter(Boolean)
     onSave({ ...record, trainingTitle, date, conductedBy, trainingType, participants, status, remarks })
   }
 
   return (
     <div className="modal-backdrop" role="presentation">
       <section className="registration-modal wide-modal" role="dialog" aria-modal="true">
-        <div className="modal-header"><div><p className="eyebrow">Training</p><h2>{record.id.startsWith('TRN-new') ? 'Add Training Record' : 'Edit Training Record'}</h2></div><button className="icon-button" onClick={onClose} type="button">x</button></div>
-        <div className="form-grid">
-          <label className="full-field"><span>Training Title</span><input value={trainingTitle} onChange={(e) => setTrainingTitle(e.target.value)} /></label>
+        <div className="modal-header">
+          <div>
+            <p className="eyebrow">Training</p>
+            <h2>{isNew ? 'Add Training Record' : 'Edit Training Record'}</h2>
+          </div>
+          <button className="icon-button" onClick={onClose} type="button">×</button>
+        </div>
+
+        <div className="form-grid" style={{ marginBottom: 12 }}>
+          <label className="full-field"><span>Training Title</span><input value={trainingTitle} onChange={(e) => setTrainingTitle(e.target.value)} placeholder="e.g. Fire Safety Training" /></label>
           <label><span>Training Date</span><input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></label>
           <label><span>Type</span><select value={trainingType} onChange={(e) => setTrainingType(e.target.value as TrainingRecord['trainingType'])}><option value="Internal">Internal</option><option value="External">External</option></select></label>
-          <label><span>Status</span><select value={status} onChange={(e) => setStatus(e.target.value as TrainingRecord['status'])}><option value="Completed">Completed</option><option value="Pending">Pending</option></select></label>
-          <label className="full-field"><span>Conducted By / Trainer Name</span><input value={conductedBy} onChange={(e) => setConductedBy(e.target.value)} placeholder="Name of trainer or organisation" /></label>
-          <label className="full-field"><span>Participants (one name per line)</span><textarea className="induction-textarea" rows={6} value={participantsText} onChange={(e) => setParticipantsText(e.target.value)} placeholder="Enter each participant name on a new line..." /></label>
+          <label><span>Status</span><select value={status} onChange={(e) => setStatus(e.target.value as TrainingRecord['status'])}><option value="Pending">Pending</option><option value="Completed">Completed</option></select></label>
+          <label className="full-field"><span>Conducted By / Trainer</span><input value={conductedBy} onChange={(e) => setConductedBy(e.target.value)} placeholder="Name of trainer or organisation" /></label>
           <label className="full-field"><span>Remarks</span><input value={remarks} onChange={(e) => setRemarks(e.target.value)} /></label>
         </div>
-        <div className="modal-actions"><button className="quiet-button light" onClick={onClose} type="button">Cancel</button><button className="primary-button" onClick={save} type="button">Save</button></div>
+
+        <div className="induction-participants-editor">
+          <div className="participants-editor-header">
+            <h3>Participants <span className="participants-count-label-inline">({participants.length} invited{attendedCount > 0 ? `, ${attendedCount} attended` : ''})</span></h3>
+            <div className="participant-search-wrap">
+              <input
+                className="participant-search-input"
+                type="search"
+                value={participantSearch}
+                onChange={(e) => setParticipantSearch(e.target.value)}
+                placeholder="Search employee by ID or name to add…"
+              />
+              {searchResults.length > 0 && (
+                <div className="participant-search-results">
+                  {searchResults.map((emp) => (
+                    <button
+                      key={emp.employeeId}
+                      className="participant-search-result-item"
+                      type="button"
+                      onClick={() => addParticipant(emp)}
+                    >
+                      <strong>{emp.employeeId}</strong> {emp.fullName} <span>{emp.department}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+          {participants.length > 0 ? (
+            <table className="data-table participants-editor-table">
+              <thead><tr><th>#</th><th>Emp ID</th><th>Name</th><th>Section</th><th>Attended</th><th></th></tr></thead>
+              <tbody>
+                {participants.map((p, i) => (
+                  <tr key={p.employeeId}>
+                    <td>{i + 1}</td>
+                    <td>{p.employeeId}</td>
+                    <td>{p.name}</td>
+                    <td>{p.department}</td>
+                    <td>
+                      <label className="attended-toggle">
+                        <input type="checkbox" checked={p.attended} onChange={() => toggleAttended(p.employeeId)} />
+                        <span className={p.attended ? 'attended-yes' : 'attended-no'}>{p.attended ? 'Yes' : 'No'}</span>
+                      </label>
+                    </td>
+                    <td><button className="action-glyph delete" onClick={() => removeParticipant(p.employeeId)} type="button" title="Remove" aria-label="Remove participant">×</button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="participants-empty">No participants added. Search above to add employees.</p>
+          )}
+        </div>
+
+        <div className="modal-actions">
+          <button className="quiet-button light" onClick={onClose} type="button">Cancel</button>
+          <button className="primary-button" onClick={save} type="button">Save Record</button>
+        </div>
       </section>
     </div>
   )
 }
 
-function TrainingParticipantsModal({ record, employees, onClose }: { record: TrainingRecord; employees: Employee[]; onClose: () => void }) {
-  const participantDetails = record.participants.map((name) => {
-    const emp = employees.find((e) => e.fullName.toUpperCase() === name.toUpperCase())
-    return { name, employeeId: emp?.employeeId || '—', department: emp?.department || '—' }
-  })
+function TrainingParticipantsModal({ record, onClose }: { record: TrainingRecord; onClose: () => void }) {
+  const attendedCount = record.participants.filter((p) => p.attended).length
 
   return (
     <div className="modal-backdrop" role="presentation">
@@ -1315,16 +1833,50 @@ function TrainingParticipantsModal({ record, employees, onClose }: { record: Tra
           <div>
             <p className="eyebrow">Training Participants</p>
             <h2>{record.trainingTitle}</h2>
-            <p>{record.date ? formatDateDisplay(record.date) : '—'} · <span className={`training-type-badge ${record.trainingType.toLowerCase()}`}>{record.trainingType}</span> · {record.conductedBy}</p>
+            <p>
+              {record.date ? formatDateDisplay(record.date) : '—'} ·{' '}
+              <span className={`training-type-badge ${record.trainingType.toLowerCase()}`}>{record.trainingType}</span> ·{' '}
+              {record.conductedBy || '—'}
+            </p>
           </div>
-          <button className="icon-button" onClick={onClose} type="button">x</button>
+          <button className="icon-button" onClick={onClose} type="button">×</button>
         </div>
-        <p className="participants-count-label">{record.participants.length} participant{record.participants.length !== 1 ? 's' : ''}</p>
-        {record.participants.length > 0
-          ? <table className="participants-table"><thead><tr><th>Employee ID</th><th>Name</th><th>Department</th></tr></thead><tbody>{participantDetails.map((p, i) => <tr key={i}><td>{p.employeeId}</td><td>{p.name}</td><td>{p.department}</td></tr>)}</tbody></table>
-          : <p className="participants-empty">No participants recorded for this training.</p>
-        }
-        <div className="modal-actions"><button className="primary-button" onClick={onClose} type="button">Close</button></div>
+        <p className="participants-count-label">
+          {record.participants.length} invited · <strong>{attendedCount} attended</strong>
+        </p>
+        {record.participants.length > 0 ? (
+          <table className="data-table participants-view-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Emp ID</th>
+                <th>Name</th>
+                <th>Section</th>
+                <th>Attended</th>
+              </tr>
+            </thead>
+            <tbody>
+              {record.participants.map((p, i) => (
+                <tr key={p.employeeId}>
+                  <td>{i + 1}</td>
+                  <td>{p.employeeId}</td>
+                  <td>{p.name}</td>
+                  <td>{p.department}</td>
+                  <td>
+                    <span className={p.attended ? 'attended-badge-yes' : 'attended-badge-no'}>
+                      {p.attended ? '✓ Yes' : '— No'}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p className="participants-empty">No participants recorded for this training.</p>
+        )}
+        <div className="modal-actions">
+          <button className="primary-button" onClick={onClose} type="button">Close</button>
+        </div>
       </section>
     </div>
   )
@@ -1403,14 +1955,14 @@ function PersonalFilesSection({ employees, records, onUpdate }: {
   onBack?: () => void
 }) {
   const [search, setSearch] = useState('')
-  const [deptFilter, setDeptFilter] = useState('All Departments')
+  const [deptFilter, setDeptFilter] = useState('All Sections')
   const [staffFilter, setStaffFilter] = useState<'Active' | 'Inactive' | 'All'>('Active')
   const [editingFileNo, setEditingFileNo] = useState<string | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
 
   const rows = useMemo(() => records.filter((r) => {
     const matchSearch = [r.fileNo, r.employeeId, r.fullName, r.department].join(' ').toLowerCase().includes(search.trim().toLowerCase())
-    const matchDept = deptFilter === 'All Departments' || r.department === deptFilter
+    const matchDept = deptFilter === 'All Sections' || r.department === deptFilter
     const matchStaff = staffFilter === 'All' || (staffFilter === 'Active' && !r.isFormerStaff) || (staffFilter === 'Inactive' && r.isFormerStaff)
     return matchSearch && matchDept && matchStaff
   }), [records, search, deptFilter, staffFilter])
@@ -1442,13 +1994,13 @@ function PersonalFilesSection({ employees, records, onUpdate }: {
       <section className="employee-workspace">
         <div className="table-toolbar pf-toolbar">
           <label className="search-field"><span>Search</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="File no, employee, department" /></label>
-          <label><span>Department</span><select value={deptFilter} onChange={(e) => setDeptFilter(e.target.value)}><option>All Departments</option>{departmentsList.map((d) => <option key={d}>{d}</option>)}</select></label>
+          <label><span>Section</span><select value={deptFilter} onChange={(e) => setDeptFilter(e.target.value)}><option>All Sections</option>{departmentsList.map((d) => <option key={d}>{d}</option>)}</select></label>
           <label><span>Staff</span><select value={staffFilter} onChange={(e) => setStaffFilter(e.target.value as typeof staffFilter)}><option value="Active">Active</option><option value="Inactive">Inactive</option><option value="All">All</option></select></label>
           <button className="primary-button" onClick={() => setShowAddModal(true)} type="button">Add</button>
         </div>
         <div className="employee-table-shell compact-scroll">
           <table className="data-table personal-files-table">
-            <thead><tr><th>File No</th><th>Employee ID</th><th>Full Name</th><th>Department</th><th>COC</th><th>JD</th><th>CONT</th><th>Contract Expiry</th><th>Status</th><th>Action</th></tr></thead>
+            <thead><tr><th>File No</th><th>Employee ID</th><th>Full Name</th><th>Section</th><th>COC</th><th>JD</th><th>CONT</th><th>Contract Expiry</th><th>Status</th><th>Action</th></tr></thead>
             <tbody>
               {rows.map((file) => (
                 <tr key={file.fileNo} className={file.isFormerStaff ? 'former-staff-row' : ''}>
@@ -1481,17 +2033,17 @@ function InductionSection({ employees, records, onUpdate }: {
   onBack?: () => void
 }) {
   const [search, setSearch] = useState('')
-  const [deptFilter, setDeptFilter] = useState('All Departments')
   const [statusFilter, setStatusFilter] = useState<'All' | InductionRecord['status']>('All')
   const [editing, setEditing] = useState<InductionRecord | null>(null)
   const [viewing, setViewing] = useState<InductionRecord | null>(null)
+  const [printing, setPrinting] = useState<InductionRecord | null>(null)
 
   const rows = useMemo(() => records.filter((r) => {
-    const matchSearch = [r.refNo, r.employeeId, r.name, r.department, r.conductedBy].join(' ').toLowerCase().includes(search.trim().toLowerCase())
-    const matchDept = deptFilter === 'All Departments' || r.department === deptFilter
+    const participantText = r.participants.map((p) => `${p.employeeId} ${p.name}`).join(' ')
+    const matchSearch = !search.trim() || [r.refNo, r.conductedBy, participantText].join(' ').toLowerCase().includes(search.trim().toLowerCase())
     const matchStatus = statusFilter === 'All' || r.status === statusFilter
-    return matchSearch && matchDept && matchStatus
-  }).sort((a, b) => a.department.localeCompare(b.department)), [records, search, deptFilter, statusFilter])
+    return matchSearch && matchStatus
+  }).sort((a, b) => b.inductionDate.localeCompare(a.inductionDate)), [records, search, statusFilter])
 
   const saveRecord = (record: InductionRecord) => {
     onUpdate((prev) => {
@@ -1503,33 +2055,70 @@ function InductionSection({ employees, records, onUpdate }: {
 
   const deleteRecord = (id: string) => onUpdate((prev) => prev.filter((r) => r.id !== id))
 
-  const newRecord = (): InductionRecord => ({ id: `IND-new-${Date.now()}`, refNo: '', employeeId: employees[0]?.employeeId ?? '', name: employees[0]?.fullName ?? '', department: employees[0]?.department ?? '', inductionDate: new Date().toISOString().slice(0, 10), conductedBy: '', inductionContent: '', status: 'Pending', remarks: '' })
+  const newRecord = (): InductionRecord => ({
+    id: `IND-new-${Date.now()}`,
+    refNo: String(records.length + 1).padStart(3, '0'),
+    inductionDate: new Date().toISOString().slice(0, 10),
+    conductedBy: '',
+    conductedByEmpId: undefined,
+    participants: [],
+    inductionContent: '',
+    status: 'Scheduled',
+    remarks: '',
+  })
 
   return (
     <>
       <section className="employee-workspace">
         <div className="table-toolbar ops-section-toolbar">
-          <label className="search-field"><span>Search</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Ref, employee, ID, department" /></label>
-          <label><span>Status</span><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}><option value="All">All Status</option><option>Completed</option><option>Pending</option><option>Scheduled</option></select></label>
-          <label><span>Department</span><select value={deptFilter} onChange={(e) => setDeptFilter(e.target.value)}><option>All Departments</option>{departmentsList.map((d) => <option key={d}>{d}</option>)}</select></label>
-          <button className="primary-button" onClick={() => setEditing(newRecord())} type="button">Add</button>
+          <label className="search-field"><span>Search</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Ref no, conducted by, participant name/ID" /></label>
+          <label><span>Status</span><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}><option value="All">All Status</option><option>Scheduled</option><option>Pending</option><option>Completed</option></select></label>
+          <button className="primary-button" onClick={() => setEditing(newRecord())} type="button">Add Session</button>
         </div>
         <div className="employee-table-shell compact-scroll">
           <table className="data-table induction-table">
-            <thead><tr><th>Ref No</th><th>Employee ID</th><th>Name</th><th>Department</th><th>Induction Date</th><th>Conducted By</th><th>Status</th><th>Remarks</th><th>Action</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Ref No</th>
+                <th>Date</th>
+                <th>Conducted By</th>
+                <th>Participants</th>
+                <th>Status</th>
+                <th>Remarks</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
             <tbody>
-              {rows.map((record) => (
+              {rows.length === 0 ? (
+                <tr><td colSpan={7} className="empty-row">No induction sessions found.</td></tr>
+              ) : rows.map((record) => (
                 <tr key={record.id}>
-                  <td>{record.refNo || '—'}</td><td>{record.employeeId}</td><td>{record.name}</td><td>{record.department}</td>
+                  <td>
+                    <span className="induction-ref-chip" title={fullInductionRef(record.refNo)}>
+                      {record.refNo || '—'}
+                    </span>
+                  </td>
                   <td>{record.inductionDate ? formatDateDisplay(record.inductionDate) : '—'}</td>
-                  <td>{record.conductedBy ? record.conductedBy.split(' ')[0] : '—'}</td>
+                  <td>{record.conductedBy || '—'}</td>
+                  <td>
+                    {record.participants.length > 0 ? (
+                      <button className="participants-count-btn" onClick={() => setViewing(record)} type="button">
+                        {record.participants.length} participant{record.participants.length !== 1 ? 's' : ''}
+                      </button>
+                    ) : (
+                      <span className="no-participants-text">—</span>
+                    )}
+                  </td>
                   <td><StatusBadge status={record.status} /></td>
                   <td>{record.remarks || '—'}</td>
-                  <td><div className="row-actions request-inline-actions">
-                    <button className="action-glyph" onClick={() => setViewing(record)} type="button" title="View" aria-label="View induction">👁</button>
-                    <button className="action-glyph edit" onClick={() => setEditing(record)} type="button" title="Edit" aria-label="Edit">✎</button>
-                    <button className="action-glyph delete" onClick={() => deleteRecord(record.id)} type="button" title="Delete" aria-label="Delete">🗑</button>
-                  </div></td>
+                  <td>
+                    <div className="row-actions request-inline-actions">
+                      <button className="action-glyph" onClick={() => setViewing(record)} type="button" title="View participants" aria-label="View participants">👁</button>
+                      <button className="action-glyph print-glyph" onClick={() => setPrinting(record)} type="button" title="Print" aria-label="Print induction">🖨</button>
+                      <button className="action-glyph edit" onClick={() => setEditing(record)} type="button" title="Edit" aria-label="Edit">✎</button>
+                      <button className="action-glyph delete" onClick={() => deleteRecord(record.id)} type="button" title="Delete" aria-label="Delete">🗑</button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -1538,6 +2127,7 @@ function InductionSection({ employees, records, onUpdate }: {
       </section>
       {editing && <InductionModal employees={employees} record={editing} onClose={() => setEditing(null)} onSave={saveRecord} />}
       {viewing && <InductionViewModal record={viewing} onClose={() => setViewing(null)} />}
+      {printing && <InductionPrintDoc record={printing} onClose={() => setPrinting(null)} />}
     </>
   )
 }
@@ -1605,8 +2195,8 @@ function TrainingSection({ records, onUpdate, employees }: {
           </table>
         </div>
       </section>
-      {editing && <TrainingModal record={editing} onClose={() => setEditing(null)} onSave={saveRecord} />}
-      {viewingParticipants && <TrainingParticipantsModal record={viewingParticipants} employees={employees} onClose={() => setViewingParticipants(null)} />}
+      {editing && <TrainingModal record={editing} employees={employees} onClose={() => setEditing(null)} onSave={saveRecord} />}
+      {viewingParticipants && <TrainingParticipantsModal record={viewingParticipants} onClose={() => setViewingParticipants(null)} />}
     </>
   )
 }
@@ -1615,6 +2205,7 @@ function TrainingSection({ records, onUpdate, employees }: {
 
 type BankName = 'SBI' | 'BOC' | 'CBM'
 type AccountStatus = 'Pending' | 'Completed' | 'Incomplete'
+type AccountType = 'USD Only' | 'MVR Only' | 'Both USD & MVR'
 
 type BankAccountRecord = {
   id: string
@@ -1623,32 +2214,31 @@ type BankAccountRecord = {
   department: string
   nationality: string
   bank: BankName
-  usdStatus: AccountStatus
-  usdScheduledDate: string
-  mvrStatus: AccountStatus
-  mvrScheduledDate: string
+  accountType: AccountType
+  scheduledDate: string
+  status: AccountStatus
 }
 
 const initialBankAccountRecords: BankAccountRecord[] = [
-  { id: 'BNK-35494', employeeId: '35494', fullName: 'GAMARALALAGE AJITH WIJESIRI', department: 'ACCOUNTS AND FINANCE', nationality: 'SRI LANKAN', bank: 'SBI', usdStatus: 'Completed', usdScheduledDate: '2007-06-01', mvrStatus: 'Completed', mvrScheduledDate: '2007-06-01' },
-  { id: 'BNK-37916', employeeId: '37916', fullName: 'JAGO', department: 'STORES', nationality: 'BANGLADESHI', bank: 'SBI', usdStatus: 'Completed', usdScheduledDate: '2008-09-01', mvrStatus: 'Completed', mvrScheduledDate: '2008-09-01' },
-  { id: 'BNK-43407', employeeId: '43407', fullName: 'MOHAMMAD DELOWAR HOSSAIN', department: 'STORES', nationality: 'BANGLADESHI', bank: 'SBI', usdStatus: 'Completed', usdScheduledDate: '2013-08-01', mvrStatus: 'Completed', mvrScheduledDate: '2013-08-01' },
-  { id: 'BNK-44386', employeeId: '44386', fullName: 'MAJIB', department: 'STORES', nationality: 'BANGLADESHI', bank: 'SBI', usdStatus: 'Completed', usdScheduledDate: '2014-06-01', mvrStatus: 'Completed', mvrScheduledDate: '2014-06-01' },
-  { id: 'BNK-50223', employeeId: '50223', fullName: 'AYESHAN KUMARA WIJEYATHUNGA MUDALIGE', department: 'STORES', nationality: 'SRI LANKAN', bank: 'BOC', usdStatus: 'Completed', usdScheduledDate: '2019-04-10', mvrStatus: 'Completed', mvrScheduledDate: '2019-04-10' },
-  { id: 'BNK-50427', employeeId: '50427', fullName: 'MD SAIFUR RAHMAN', department: 'STORES', nationality: 'BANGLADESHI', bank: 'SBI', usdStatus: 'Completed', usdScheduledDate: '2019-06-01', mvrStatus: 'Completed', mvrScheduledDate: '2019-06-01' },
-  { id: 'BNK-52804', employeeId: '52804', fullName: 'AHMED IMRAN', department: 'ACCOUNTS AND FINANCE', nationality: 'BANGLADESHI', bank: 'SBI', usdStatus: 'Completed', usdScheduledDate: '2020-12-01', mvrStatus: 'Completed', mvrScheduledDate: '2020-12-01' },
-  { id: 'BNK-53029', employeeId: '53029', fullName: 'KUMARAN VAITHILINGAM', department: 'STORES', nationality: 'INDIAN', bank: 'SBI', usdStatus: 'Completed', usdScheduledDate: '2022-01-20', mvrStatus: 'Completed', mvrScheduledDate: '2022-01-20' },
-  { id: 'BNK-53979', employeeId: '53979', fullName: 'NAVEEN SEKAR', department: 'STORES', nationality: 'INDIAN', bank: 'SBI', usdStatus: 'Completed', usdScheduledDate: '2022-08-10', mvrStatus: 'Completed', mvrScheduledDate: '2022-08-10' },
-  { id: 'BNK-55427', employeeId: '55427', fullName: 'SARAVANAN RAJENDRAN', department: 'STORES', nationality: 'INDIAN', bank: 'SBI', usdStatus: 'Completed', usdScheduledDate: '2023-09-01', mvrStatus: 'Completed', mvrScheduledDate: '2023-09-01' },
-  { id: 'BNK-56141', employeeId: '56141', fullName: 'RAJU PERKA', department: 'CAFE', nationality: 'INDIAN', bank: 'BOC', usdStatus: 'Completed', usdScheduledDate: '2024-04-01', mvrStatus: 'Completed', mvrScheduledDate: '2024-04-01' },
-  { id: 'BNK-56530', employeeId: '56530', fullName: 'PUBUDU MADURANGA ALAWATHTHA KANKANAMGE', department: 'ADMINISTRATION', nationality: 'SRI LANKAN', bank: 'SBI', usdStatus: 'Completed', usdScheduledDate: '2024-07-01', mvrStatus: 'Completed', mvrScheduledDate: '2024-07-01' },
-  { id: 'BNK-56646', employeeId: '56646', fullName: 'CHANDRASHEKHER PURELLA', department: 'ACCOUNTS AND FINANCE', nationality: 'INDIAN', bank: 'BOC', usdStatus: 'Completed', usdScheduledDate: '2024-08-01', mvrStatus: 'Completed', mvrScheduledDate: '2024-08-01' },
-  { id: 'BNK-57637', employeeId: '57637', fullName: 'MUNI ACHARI GUNTI KOVALA', department: 'CAFE', nationality: 'INDIAN', bank: 'SBI', usdStatus: 'Completed', usdScheduledDate: '2025-02-10', mvrStatus: 'Completed', mvrScheduledDate: '2025-02-10' },
-  { id: 'BNK-57935', employeeId: '57935', fullName: 'ARUNODA KAVINDU NANAYAKKARA', department: 'ACCOUNTS AND FINANCE', nationality: 'SRI LANKAN', bank: 'SBI', usdStatus: 'Completed', usdScheduledDate: '2025-04-20', mvrStatus: 'Completed', mvrScheduledDate: '2025-04-20' },
-  { id: 'BNK-58692', employeeId: '58692', fullName: 'SHANTUMON PATHIYIL CHACKO', department: 'HUMAN RESOURCES', nationality: 'INDIAN', bank: 'SBI', usdStatus: 'Completed', usdScheduledDate: '2025-10-15', mvrStatus: 'Completed', mvrScheduledDate: '2025-10-15' },
-  { id: 'BNK-57803', employeeId: '57803', fullName: 'INDIKA SAMPATH SAMARASINGHEGE', department: 'STORES', nationality: 'SRI LANKAN', bank: 'SBI', usdStatus: 'Pending', usdScheduledDate: '2026-05-20', mvrStatus: 'Pending', mvrScheduledDate: '2026-05-20' },
-  { id: 'BNK-58034', employeeId: '58034', fullName: 'SAMEERA MADUSANKA GUNARATHNA', department: 'STORES', nationality: 'SRI LANKAN', bank: 'SBI', usdStatus: 'Pending', usdScheduledDate: '2026-05-22', mvrStatus: 'Pending', mvrScheduledDate: '2026-05-22' },
-  { id: 'BNK-58686', employeeId: '58686', fullName: 'YASAR ARAFATH BASHEER AHAMED', department: 'STORES', nationality: 'INDIAN', bank: 'SBI', usdStatus: 'Pending', usdScheduledDate: '2026-05-18', mvrStatus: 'Incomplete', mvrScheduledDate: '2026-05-18' },
+  { id: 'BNK-35494', employeeId: '35494', fullName: 'GAMARALALAGE AJITH WIJESIRI', department: 'ACCOUNTS AND FINANCE', nationality: 'SRI LANKAN', bank: 'SBI', accountType: 'Both USD & MVR', scheduledDate: '2007-06-01', status: 'Completed' },
+  { id: 'BNK-37916', employeeId: '37916', fullName: 'JAGO', department: 'STORES', nationality: 'BANGLADESHI', bank: 'SBI', accountType: 'Both USD & MVR', scheduledDate: '2008-09-01', status: 'Completed' },
+  { id: 'BNK-43407', employeeId: '43407', fullName: 'MOHAMMAD DELOWAR HOSSAIN', department: 'STORES', nationality: 'BANGLADESHI', bank: 'SBI', accountType: 'Both USD & MVR', scheduledDate: '2013-08-01', status: 'Completed' },
+  { id: 'BNK-44386', employeeId: '44386', fullName: 'MAJIB', department: 'STORES', nationality: 'BANGLADESHI', bank: 'SBI', accountType: 'Both USD & MVR', scheduledDate: '2014-06-01', status: 'Completed' },
+  { id: 'BNK-50223', employeeId: '50223', fullName: 'AYESHAN KUMARA WIJEYATHUNGA MUDALIGE', department: 'STORES', nationality: 'SRI LANKAN', bank: 'BOC', accountType: 'Both USD & MVR', scheduledDate: '2019-04-10', status: 'Completed' },
+  { id: 'BNK-50427', employeeId: '50427', fullName: 'MD SAIFUR RAHMAN', department: 'STORES', nationality: 'BANGLADESHI', bank: 'SBI', accountType: 'Both USD & MVR', scheduledDate: '2019-06-01', status: 'Completed' },
+  { id: 'BNK-52804', employeeId: '52804', fullName: 'AHMED IMRAN', department: 'ACCOUNTS AND FINANCE', nationality: 'BANGLADESHI', bank: 'SBI', accountType: 'Both USD & MVR', scheduledDate: '2020-12-01', status: 'Completed' },
+  { id: 'BNK-53029', employeeId: '53029', fullName: 'KUMARAN VAITHILINGAM', department: 'STORES', nationality: 'INDIAN', bank: 'SBI', accountType: 'Both USD & MVR', scheduledDate: '2022-01-20', status: 'Completed' },
+  { id: 'BNK-53979', employeeId: '53979', fullName: 'NAVEEN SEKAR', department: 'STORES', nationality: 'INDIAN', bank: 'SBI', accountType: 'Both USD & MVR', scheduledDate: '2022-08-10', status: 'Completed' },
+  { id: 'BNK-55427', employeeId: '55427', fullName: 'SARAVANAN RAJENDRAN', department: 'STORES', nationality: 'INDIAN', bank: 'SBI', accountType: 'Both USD & MVR', scheduledDate: '2023-09-01', status: 'Completed' },
+  { id: 'BNK-56141', employeeId: '56141', fullName: 'RAJU PERKA', department: 'CAFE', nationality: 'INDIAN', bank: 'BOC', accountType: 'Both USD & MVR', scheduledDate: '2024-04-01', status: 'Completed' },
+  { id: 'BNK-56530', employeeId: '56530', fullName: 'PUBUDU MADURANGA ALAWATHTHA KANKANAMGE', department: 'ADMINISTRATION', nationality: 'SRI LANKAN', bank: 'SBI', accountType: 'Both USD & MVR', scheduledDate: '2024-07-01', status: 'Completed' },
+  { id: 'BNK-56646', employeeId: '56646', fullName: 'CHANDRASHEKHER PURELLA', department: 'ACCOUNTS AND FINANCE', nationality: 'INDIAN', bank: 'BOC', accountType: 'Both USD & MVR', scheduledDate: '2024-08-01', status: 'Completed' },
+  { id: 'BNK-57637', employeeId: '57637', fullName: 'MUNI ACHARI GUNTI KOVALA', department: 'CAFE', nationality: 'INDIAN', bank: 'SBI', accountType: 'Both USD & MVR', scheduledDate: '2025-02-10', status: 'Completed' },
+  { id: 'BNK-57935', employeeId: '57935', fullName: 'ARUNODA KAVINDU NANAYAKKARA', department: 'ACCOUNTS AND FINANCE', nationality: 'SRI LANKAN', bank: 'SBI', accountType: 'Both USD & MVR', scheduledDate: '2025-04-20', status: 'Completed' },
+  { id: 'BNK-58692', employeeId: '58692', fullName: 'SHANTUMON PATHIYIL CHACKO', department: 'HUMAN RESOURCES', nationality: 'INDIAN', bank: 'SBI', accountType: 'Both USD & MVR', scheduledDate: '2025-10-15', status: 'Completed' },
+  { id: 'BNK-57803', employeeId: '57803', fullName: 'INDIKA SAMPATH SAMARASINGHEGE', department: 'STORES', nationality: 'SRI LANKAN', bank: 'SBI', accountType: 'Both USD & MVR', scheduledDate: '2026-05-20', status: 'Pending' },
+  { id: 'BNK-58034', employeeId: '58034', fullName: 'SAMEERA MADUSANKA GUNARATHNA', department: 'STORES', nationality: 'SRI LANKAN', bank: 'SBI', accountType: 'Both USD & MVR', scheduledDate: '2026-05-22', status: 'Pending' },
+  { id: 'BNK-58686', employeeId: '58686', fullName: 'YASAR ARAFATH BASHEER AHAMED', department: 'STORES', nationality: 'INDIAN', bank: 'SBI', accountType: 'Both USD & MVR', scheduledDate: '2026-05-18', status: 'Incomplete' },
 ]
 
 function BankAccountModal({ record, employees, onClose, onSave }: {
@@ -1660,26 +2250,28 @@ function BankAccountModal({ record, employees, onClose, onSave }: {
   const isNew = record.id.startsWith('BNK-new')
   const [employeeId, setEmployeeId] = useState(record.employeeId)
   const [bank, setBank] = useState<BankName>(record.bank)
-  const [usdStatus, setUsdStatus] = useState<AccountStatus>(record.usdStatus)
-  const [usdScheduledDate, setUsdScheduledDate] = useState(record.usdScheduledDate)
-  const [mvrStatus, setMvrStatus] = useState<AccountStatus>(record.mvrStatus)
-  const [mvrScheduledDate, setMvrScheduledDate] = useState(record.mvrScheduledDate)
+  const [accountType, setAccountType] = useState<AccountType>(record.accountType)
+  const [scheduledDate, setScheduledDate] = useState(record.scheduledDate)
+  const [status, setStatus] = useState<AccountStatus>(record.status)
 
   const nonLocals = employees.filter((e) => e.nationality !== 'MALDIVIAN')
-  const selected = nonLocals.find((e) => e.employeeId === employeeId) ?? nonLocals[0]
+  const selected = isNew
+    ? (nonLocals.find((e) => e.employeeId === employeeId) ?? nonLocals[0])
+    : employees.find((e) => e.employeeId === record.employeeId)
 
   const save = (e: FormEvent) => {
     e.preventDefault()
-    if (!selected) return
     onSave({
       ...record,
-      id: isNew ? `BNK-${selected.employeeId}` : record.id,
-      employeeId: selected.employeeId,
-      fullName: selected.fullName,
-      department: selected.department,
-      nationality: selected.nationality,
-      bank, usdStatus, usdScheduledDate,
-      mvrStatus, mvrScheduledDate,
+      id: isNew && selected ? `BNK-${selected.employeeId}` : record.id,
+      employeeId: selected?.employeeId ?? record.employeeId,
+      fullName: selected?.fullName ?? record.fullName,
+      department: selected?.department ?? record.department,
+      nationality: selected?.nationality ?? record.nationality,
+      bank,
+      accountType,
+      scheduledDate,
+      status,
     })
   }
 
@@ -1694,7 +2286,7 @@ function BankAccountModal({ record, employees, onClose, onSave }: {
           <button className="icon-button" onClick={onClose} type="button">×</button>
         </div>
         <form onSubmit={save}>
-          <div className="form-grid" style={{ marginBottom: 16 }}>
+          <div className="form-grid">
             {isNew ? (
               <label className="full-field">
                 <span>Employee (Expatriate Staff)</span>
@@ -1716,37 +2308,25 @@ function BankAccountModal({ record, employees, onClose, onSave }: {
                 <option>SBI</option><option>BOC</option><option>CBM</option>
               </select>
             </label>
+            <label>
+              <span>Account Type</span>
+              <select value={accountType} onChange={(e) => setAccountType(e.target.value as AccountType)}>
+                <option value="USD Only">USD Only</option>
+                <option value="MVR Only">MVR Only</option>
+                <option value="Both USD &amp; MVR">Both USD &amp; MVR</option>
+              </select>
+            </label>
+            <label>
+              <span>Scheduled Date</span>
+              <input type="date" value={scheduledDate} onChange={(e) => setScheduledDate(e.target.value)} />
+            </label>
+            <label>
+              <span>Status</span>
+              <select value={status} onChange={(e) => setStatus(e.target.value as AccountStatus)}>
+                <option>Pending</option><option>Completed</option><option>Incomplete</option>
+              </select>
+            </label>
           </div>
-
-          <div className="bank-account-sections">
-            <div className="bank-account-block usd-block">
-              <h3 className="bank-block-title">USD Account</h3>
-              <div className="form-grid">
-                <label><span>Status</span>
-                  <select value={usdStatus} onChange={(e) => setUsdStatus(e.target.value as AccountStatus)}>
-                    <option>Pending</option><option>Completed</option><option>Incomplete</option>
-                  </select>
-                </label>
-                <label><span>Scheduled Date</span>
-                  <input type="date" value={usdScheduledDate} onChange={(e) => setUsdScheduledDate(e.target.value)} />
-                </label>
-              </div>
-            </div>
-            <div className="bank-account-block mvr-block">
-              <h3 className="bank-block-title">MVR Account</h3>
-              <div className="form-grid">
-                <label><span>Status</span>
-                  <select value={mvrStatus} onChange={(e) => setMvrStatus(e.target.value as AccountStatus)}>
-                    <option>Pending</option><option>Completed</option><option>Incomplete</option>
-                  </select>
-                </label>
-                <label><span>Scheduled Date</span>
-                  <input type="date" value={mvrScheduledDate} onChange={(e) => setMvrScheduledDate(e.target.value)} />
-                </label>
-              </div>
-            </div>
-          </div>
-
           <div className="modal-actions">
             <button className="quiet-button light" onClick={onClose} type="button">Cancel</button>
             <button className="primary-button" type="submit">Save Record</button>
@@ -1766,23 +2346,23 @@ function BankAccountSection({ employees, records, onUpdate }: {
   const [activeTab, setActiveTab] = useState<'pending' | 'completed'>('pending')
   const [search, setSearch] = useState('')
   const [bankFilter, setBankFilter] = useState<'All' | BankName>('All')
-  const [deptFilter, setDeptFilter] = useState('All Departments')
+  const [sectionFilter, setSectionFilter] = useState('All Sections')
   const [editing, setEditing] = useState<BankAccountRecord | null>(null)
 
-  const isCompleted = (r: BankAccountRecord) => r.usdStatus === 'Completed' && r.mvrStatus === 'Completed'
+  const isCompleted = (r: BankAccountRecord) => r.status === 'Completed'
 
   const applyFilters = (list: BankAccountRecord[]) => {
     const q = search.trim().toLowerCase()
     return list.filter((r) => {
-      const matchSearch = !q || [r.employeeId, r.fullName, r.department, r.nationality, r.bank].join(' ').toLowerCase().includes(q)
+      const matchSearch = !q || [r.employeeId, r.fullName, r.department, r.nationality, r.bank, r.accountType].join(' ').toLowerCase().includes(q)
       const matchBank = bankFilter === 'All' || r.bank === bankFilter
-      const matchDept = deptFilter === 'All Departments' || r.department === deptFilter
-      return matchSearch && matchBank && matchDept
+      const matchSection = sectionFilter === 'All Sections' || r.department === sectionFilter
+      return matchSearch && matchBank && matchSection
     }).sort((a, b) => a.fullName.localeCompare(b.fullName))
   }
 
-  const pendingRows = useMemo(() => applyFilters(records.filter((r) => !isCompleted(r))), [records, search, bankFilter, deptFilter])
-  const completedRows = useMemo(() => applyFilters(records.filter((r) => isCompleted(r))), [records, search, bankFilter, deptFilter])
+  const pendingRows = useMemo(() => applyFilters(records.filter((r) => !isCompleted(r))), [records, search, bankFilter, sectionFilter])
+  const completedRows = useMemo(() => applyFilters(records.filter((r) => isCompleted(r))), [records, search, bankFilter, sectionFilter])
 
   const pendingAll = records.filter((r) => !isCompleted(r)).length
   const completedAll = records.filter((r) => isCompleted(r)).length
@@ -1807,10 +2387,9 @@ function BankAccountSection({ employees, records, onUpdate }: {
     department: '',
     nationality: '',
     bank: 'SBI',
-    usdStatus: 'Pending',
-    usdScheduledDate: new Date().toISOString().slice(0, 10),
-    mvrStatus: 'Pending',
-    mvrScheduledDate: new Date().toISOString().slice(0, 10),
+    accountType: 'Both USD & MVR',
+    scheduledDate: new Date().toISOString().slice(0, 10),
+    status: 'Pending',
   })
 
   const BankTable = ({ rows, showEdit }: { rows: BankAccountRecord[]; showEdit: boolean }) => (
@@ -1823,10 +2402,9 @@ function BankAccountSection({ employees, records, onUpdate }: {
           <col style={{ width: '160px' }} />
           <col style={{ width: '110px' }} />
           <col style={{ width: '62px' }} />
-          <col style={{ width: '100px' }} />
+          <col style={{ width: '130px' }} />
           <col style={{ width: '110px' }} />
           <col style={{ width: '100px' }} />
-          <col style={{ width: '110px' }} />
           {showEdit && <col style={{ width: '72px' }} />}
         </colgroup>
         <thead>
@@ -1834,19 +2412,18 @@ function BankAccountSection({ employees, records, onUpdate }: {
             <th>#</th>
             <th>Emp ID</th>
             <th>Full Name</th>
-            <th>Department</th>
+            <th>Section</th>
             <th>Nationality</th>
             <th>Bank</th>
-            <th>USD Status</th>
-            <th>USD Scheduled</th>
-            <th>MVR Status</th>
-            <th>MVR Scheduled</th>
+            <th>Account Type</th>
+            <th>Scheduled Date</th>
+            <th>Status</th>
             {showEdit && <th>Action</th>}
           </tr>
         </thead>
         <tbody>
           {rows.length === 0
-            ? <tr><td colSpan={showEdit ? 11 : 10} className="empty-row">No records in this section.</td></tr>
+            ? <tr><td colSpan={showEdit ? 10 : 9} className="empty-row">No records in this section.</td></tr>
             : rows.map((r, i) => (
               <tr key={r.id}>
                 <td className="bank-td-num">{i + 1}</td>
@@ -1855,10 +2432,9 @@ function BankAccountSection({ employees, records, onUpdate }: {
                 <td>{r.department}</td>
                 <td>{r.nationality}</td>
                 <td><span className="bank-chip">{r.bank}</span></td>
-                <td><StatusBadge status={r.usdStatus} /></td>
-                <td>{r.usdScheduledDate ? formatDateDisplay(r.usdScheduledDate) : '—'}</td>
-                <td><StatusBadge status={r.mvrStatus} /></td>
-                <td>{r.mvrScheduledDate ? formatDateDisplay(r.mvrScheduledDate) : '—'}</td>
+                <td><span className="account-type-chip">{r.accountType}</span></td>
+                <td>{r.scheduledDate ? formatDateDisplay(r.scheduledDate) : '—'}</td>
+                <td><StatusBadge status={r.status} /></td>
                 {showEdit && (
                   <td>
                     <div className="row-actions request-inline-actions">
@@ -1883,7 +2459,7 @@ function BankAccountSection({ employees, records, onUpdate }: {
         <div className="table-toolbar bank-toolbar">
           <label className="search-field">
             <span>Search</span>
-            <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Name, ID, department, nationality" />
+            <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Name, ID, section, nationality" />
           </label>
           <label><span>Bank</span>
             <select value={bankFilter} onChange={(e) => setBankFilter(e.target.value as typeof bankFilter)}>
@@ -1891,9 +2467,9 @@ function BankAccountSection({ employees, records, onUpdate }: {
               <option>SBI</option><option>BOC</option><option>CBM</option>
             </select>
           </label>
-          <label><span>Department</span>
-            <select value={deptFilter} onChange={(e) => setDeptFilter(e.target.value)}>
-              <option>All Departments</option>
+          <label><span>Section</span>
+            <select value={sectionFilter} onChange={(e) => setSectionFilter(e.target.value)}>
+              <option>All Sections</option>
               {departmentsList.map((d) => <option key={d}>{d}</option>)}
             </select>
           </label>
@@ -1929,7 +2505,7 @@ function BankAccountSection({ employees, records, onUpdate }: {
             ? `Showing ${activeRows.length} of ${activeTab === 'pending' ? pendingAll : completedAll} record${activeRows.length !== 1 ? 's' : ''}`
             : 'No records match current filters.'}
           {activeTab === 'pending' && activeRows.length > 0 && (
-            <span className="bank-footer-hint"> — Edit a record and set both USD and MVR to Completed to move it to the Completed tab.</span>
+            <span className="bank-footer-hint"> — Edit a record and set Status to Completed to move it to the Completed tab.</span>
           )}
         </div>
       </section>
@@ -2335,10 +2911,9 @@ function OperationsPage({ employees }: { employees: Employee[] }) {
         department: e.department,
         nationality: e.nationality,
         bank: 'SBI',
-        usdStatus: 'Pending',
-        usdScheduledDate: '',
-        mvrStatus: 'Pending',
-        mvrScheduledDate: '',
+        accountType: 'Both USD & MVR',
+        scheduledDate: '',
+        status: 'Pending',
       }))]
     })
   }, [employees])
