@@ -117,7 +117,35 @@ type TrainingRecord = {
   remarks: string
 }
 
-type ActivitiesSection = 'requests' | 'visits' | 'incidents' | 'passport'
+type ActivitiesSection = 'requests' | 'visits' | 'incidents' | 'passport' | 'inventory'
+
+type InventoryCategory = 'Stationery' | 'Tools' | 'Safety Equipment' | 'Electronics' | 'Cleaning Supplies' | 'Kitchen' | 'Medical' | 'Other'
+
+type InventoryItem = {
+  id: string
+  name: string
+  category: InventoryCategory
+  quantity: number
+  unit: string
+  minQuantity: number
+  location: string
+  lastUpdated: string
+  remarks: string
+}
+
+type InventoryUsageRecord = {
+  id: string
+  itemId: string
+  itemName: string
+  quantityUsed: number
+  unit: string
+  usedBy: string
+  employeeId: string
+  department: string
+  usedDate: string
+  purpose: string
+  remarks: string
+}
 
 type MedicalCaseRecord = {
   id: string
@@ -194,7 +222,7 @@ type IncidentRecord = {
 }
 
 type TerminationStage = 'Letter Submitted' | 'Exit Interview' | 'Ticket' | 'Pending Departure'
-type TerminationTab = 'notice' | 'completed' | 'exit-interview'
+type TerminationTab = 'notice' | 'history' | 'exit-interview'
 type TerminationType = 'Resignation' | 'Dismissal' | 'Probation End' | 'Contract Expiry' | 'Absconded' | 'Other'
 type SatisfactionRating = 1 | 2 | 3 | 4 | 5
 
@@ -523,6 +551,28 @@ const initialStaffRequests: StaffRequestRecord[] = [
   { id: 'REQ-2026-004', employeeId: '57637', employeeName: 'MUNI ACHARI GUNTI KOVALA', department: 'CAFE', requestType: 'Transfer', priority: 'Medium', description: 'Requesting department transfer to Kitchen. Have 8 years of culinary experience and believe skills are better utilised there.', submittedDate: '2026-05-08', completedDate: '2026-05-20', status: 'Rejected', remarks: 'Transfer declined — CAFE currently understaffed' },
   { id: 'REQ-2026-005', employeeId: '59217', employeeName: 'RAJKUMAR GUPTA', department: 'MECHANICAL', requestType: 'Leave', priority: 'Low', description: 'Requesting 2 days emergency leave on 5-6 June 2026 to handle urgent banking matters in Male.', submittedDate: '2026-05-25', completedDate: '', status: 'Open', remarks: '' },
   { id: 'REQ-2026-006', employeeId: '61245', employeeName: 'ARUSHULLA RASHID', department: 'HUMAN RESOURCES', requestType: 'Equipment', priority: 'Low', description: 'Requesting ergonomic chair for HR office workstation. Current chair causing back strain during extended working hours.', submittedDate: '2026-05-02', completedDate: '2026-05-14', status: 'Resolved', remarks: 'Ergonomic chair procured and delivered' },
+]
+
+const initialInventoryItems: InventoryItem[] = [
+  { id: 'INV-001', name: 'A4 Paper (500 sheets)', category: 'Stationery', quantity: 25, unit: 'reams', minQuantity: 5, location: 'HR Storeroom', lastUpdated: '2026-05-20', remarks: '' },
+  { id: 'INV-002', name: 'Safety Helmet', category: 'Safety Equipment', quantity: 48, unit: 'pcs', minQuantity: 20, location: 'Safety Store', lastUpdated: '2026-05-15', remarks: 'Hard hats — various sizes' },
+  { id: 'INV-003', name: 'Safety Boots (Size 42)', category: 'Safety Equipment', quantity: 12, unit: 'pairs', minQuantity: 5, location: 'Safety Store', lastUpdated: '2026-04-10', remarks: '' },
+  { id: 'INV-004', name: 'High-Vis Vest', category: 'Safety Equipment', quantity: 35, unit: 'pcs', minQuantity: 15, location: 'Safety Store', lastUpdated: '2026-05-01', remarks: '' },
+  { id: 'INV-005', name: 'First Aid Kit (Standard)', category: 'Medical', quantity: 8, unit: 'kits', minQuantity: 3, location: 'Various Departments', lastUpdated: '2026-05-10', remarks: 'Check expiry dates monthly' },
+  { id: 'INV-006', name: 'Printer Cartridge (HP Black)', category: 'Electronics', quantity: 4, unit: 'pcs', minQuantity: 2, location: 'HR Office', lastUpdated: '2026-05-18', remarks: '' },
+  { id: 'INV-007', name: 'Ball Pen (Blue)', category: 'Stationery', quantity: 120, unit: 'pcs', minQuantity: 30, location: 'HR Storeroom', lastUpdated: '2026-04-25', remarks: '' },
+  { id: 'INV-008', name: 'Multipurpose Gloves', category: 'Safety Equipment', quantity: 3, unit: 'pairs', minQuantity: 20, location: 'Safety Store', lastUpdated: '2026-05-22', remarks: 'LOW STOCK — reorder required' },
+  { id: 'INV-009', name: 'Cleaning Detergent (5L)', category: 'Cleaning Supplies', quantity: 15, unit: 'bottles', minQuantity: 5, location: 'Housekeeping Store', lastUpdated: '2026-05-12', remarks: '' },
+  { id: 'INV-010', name: 'Stapler', category: 'Stationery', quantity: 7, unit: 'pcs', minQuantity: 2, location: 'HR Office', lastUpdated: '2026-03-15', remarks: '' },
+  { id: 'INV-011', name: 'Safety Goggles', category: 'Safety Equipment', quantity: 22, unit: 'pcs', minQuantity: 10, location: 'Safety Store', lastUpdated: '2026-04-20', remarks: '' },
+  { id: 'INV-012', name: 'Mop & Bucket Set', category: 'Cleaning Supplies', quantity: 6, unit: 'sets', minQuantity: 3, location: 'Housekeeping Store', lastUpdated: '2026-03-28', remarks: '' },
+]
+const initialInventoryUsage: InventoryUsageRecord[] = [
+  { id: 'USG-001', itemId: 'INV-002', itemName: 'Safety Helmet', quantityUsed: 2, unit: 'pcs', usedBy: 'SURESH BAHADUR THAPA', employeeId: '60104', department: 'MAINTENANCE', usedDate: '2026-05-20', purpose: 'New site allocation', remarks: '' },
+  { id: 'USG-002', itemId: 'INV-001', itemName: 'A4 Paper (500 sheets)', quantityUsed: 3, unit: 'reams', usedBy: 'SHANTUMON PATHIYIL CHACKO', employeeId: '58692', department: 'HUMAN RESOURCES', usedDate: '2026-05-18', purpose: 'HR documentation printing', remarks: '' },
+  { id: 'USG-003', itemId: 'INV-008', itemName: 'Multipurpose Gloves', quantityUsed: 5, unit: 'pairs', usedBy: 'CHAMINDA WIJESINGHE', employeeId: '60512', department: 'PAINTING PROJECT', usedDate: '2026-05-15', purpose: 'Painting project site work', remarks: 'Stock now critically low' },
+  { id: 'USG-004', itemId: 'INV-005', itemName: 'First Aid Kit (Standard)', quantityUsed: 1, unit: 'kits', usedBy: 'SHANTUMON PATHIYIL CHACKO', employeeId: '58692', department: 'MAINTENANCE', usedDate: '2026-05-27', purpose: 'Worksite injury response', remarks: '' },
+  { id: 'USG-005', itemId: 'INV-006', itemName: 'Printer Cartridge (HP Black)', quantityUsed: 1, unit: 'pcs', usedBy: 'ARUSHULLA RASHID', employeeId: '61245', department: 'HUMAN RESOURCES', usedDate: '2026-05-10', purpose: 'HR printer replacement', remarks: '' },
 ]
 
 const initialVisitRecords: VisitRecord[] = [
@@ -949,7 +999,7 @@ function EmployeeFormModal({ form, mode, onClose, onSave, setForm }: {
 
 type SortKey = 'employeeId' | 'fullName' | 'department' | 'designation' | 'nationality' | 'dateOfJoin' | 'siteStatus'
 
-function EmployeesPage({ employees, onAdd, onEdit, onExport, onImport, onTemplate, onShowTasks }: {
+function EmployeesPage({ employees, onAdd, onEdit, onExport, onImport, onTemplate, onShowTasks, medicalCases, noticeTerminations }: {
   employees: Employee[]
   onAdd: () => void
   onEdit: (employee: Employee) => void
@@ -957,6 +1007,8 @@ function EmployeesPage({ employees, onAdd, onEdit, onExport, onImport, onTemplat
   onImport: () => void
   onTemplate: () => void
   onShowTasks: () => void
+  medicalCases: MedicalCaseRecord[]
+  noticeTerminations: EnhancedTerminationRecord[]
 }) {
   const [query, setQuery] = useState('')
   const [department, setDepartment] = useState('All Sections')
@@ -966,6 +1018,12 @@ function EmployeesPage({ employees, onAdd, onEdit, onExport, onImport, onTemplat
   const [pageSize, setPageSize] = useState<PageSize>(50)
   const [sortKey, setSortKey] = useState<SortKey>('department')
   const [sortAsc, setSortAsc] = useState(true)
+
+  const today = new Date().toISOString().slice(0, 10)
+  const onLeaveIds = useMemo(() => new Set(
+    medicalCases.filter(r => r.sickLeaveFrom <= today && r.sickLeaveTo >= today).map(r => r.employeeId)
+  ), [medicalCases, today])
+  const noticeIds = useMemo(() => new Set(noticeTerminations.map(r => r.employeeId)), [noticeTerminations])
 
   const departments = useMemo(() => ['All Sections', ...Array.from(new Set(employees.map((employee) => employee.department))).sort()], [employees])
   const nationalityList = useMemo(() => {
@@ -1060,7 +1118,7 @@ function EmployeesPage({ employees, onAdd, onEdit, onExport, onImport, onTemplat
             </thead>
             <tbody>
               {visibleRows.map((employee, index) => (
-                <tr className={`${recordStatus(employee) === 'Pending' ? 'pending-row' : ''} status-row-${employee.siteStatus.toLowerCase().replaceAll(' ', '-')}`} key={`${employee.employeeId}-${employee.fullName}`}>
+                <tr className={`${recordStatus(employee) === 'Pending' ? 'pending-row' : ''} status-row-${employee.siteStatus.toLowerCase().replaceAll(' ', '-')}${noticeIds.has(employee.employeeId) ? ' emp-in-notice' : onLeaveIds.has(employee.employeeId) ? ' emp-on-medical' : ''}`} key={`${employee.employeeId}-${employee.fullName}`}>
                   <td>{pageSize === 'All' ? index + 1 : (safePage - 1) * pageSize + index + 1}</td>
                   <td className="col-empid">{employee.employeeId || 'Pending'}</td>
                   <td><div className="col-name">{employee.fullName}</div></td>
@@ -1442,6 +1500,10 @@ function MedicalCaseModal({ record, employees, onClose, onSave }: {
           <button className="icon-button" onClick={onClose} type="button">×</button>
         </div>
         <form onSubmit={save}>
+          <div className="mc-form-section-hdr mc-section-patient">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Patient Details
+          </div>
           {/* Row 1: Visit Date | Employee Search | Section | Reason */}
           <div className="mc-form-grid">
             <label>
@@ -1489,7 +1551,10 @@ function MedicalCaseModal({ record, employees, onClose, onSave }: {
             </label>
           </div>
           {/* Row 3: Hospital | MC Provided | Depart | Return */}
-          <div className="mc-form-divider">Clinic Details</div>
+          <div className="mc-form-section-hdr mc-section-clinic">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            Clinic Details
+          </div>
           <div className="mc-form-grid">
             <label>
               <span>Hospital / Clinic</span>
@@ -1519,7 +1584,10 @@ function MedicalCaseModal({ record, employees, onClose, onSave }: {
             </label>
           </div>
           {/* Row 4: Sick Leave dates */}
-          <div className="mc-form-divider">Sick Leave</div>
+          <div className="mc-form-section-hdr mc-section-leave">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Sick Leave
+          </div>
           <div className="mc-form-grid">
             <label>
               <span>From</span>
@@ -1552,6 +1620,21 @@ function MedicalAnalyticsModal({ records, onClose }: {
   records: MedicalCaseRecord[]
   onClose: () => void
 }) {
+  const [selectedMonth, setSelectedMonth] = useState<'All' | string>('All')
+
+  const months = useMemo(() => {
+    const keys = Array.from(new Set(records.map(r => monthKey(r.caseDate)).filter(Boolean)))
+    return keys.sort().reverse()
+  }, [records])
+
+  const filtered = useMemo(() => selectedMonth === 'All' ? records : records.filter(r => monthKey(r.caseDate) === selectedMonth), [records, selectedMonth])
+
+  const today = new Date().toISOString().slice(0, 10)
+  const totalCases = filtered.length
+  const todayCases = filtered.filter(r => r.caseDate === today).length
+  const mcProvided = filtered.filter(r => r.mcProvided).length
+  const onSickToday = filtered.filter(r => r.sickLeaveFrom <= today && r.sickLeaveTo >= today).length
+
   const monthlyData = useMemo(() => {
     const map = new Map<string, { days: number; cases: number }>()
     records.forEach((r) => {
@@ -1566,16 +1649,28 @@ function MedicalAnalyticsModal({ records, onClose }: {
 
   const sectionData = useMemo(() => {
     const map = new Map<string, { days: number; cases: number }>()
-    records.forEach((r) => {
+    filtered.forEach((r) => {
       const dep = r.department || 'Unknown'
       const cur = map.get(dep) ?? { days: 0, cases: 0 }
       map.set(dep, { days: cur.days + (r.sickLeaveDays || 1), cases: cur.cases + 1 })
     })
     return Array.from(map.entries()).sort((a, b) => b[1].days - a[1].days)
-  }, [records])
+  }, [filtered])
+
+  const topStaff = useMemo(() => {
+    const map = new Map<string, { name: string; days: number; cases: number }>()
+    filtered.forEach((r) => {
+      const cur = map.get(r.employeeId) ?? { name: r.name, days: 0, cases: 0 }
+      map.set(r.employeeId, { name: r.name, days: cur.days + (r.sickLeaveDays || 1), cases: cur.cases + 1 })
+    })
+    return Array.from(map.entries())
+      .sort((a, b) => b[1].days - a[1].days)
+      .slice(0, 5)
+  }, [filtered])
 
   const maxMonthDays = Math.max(...monthlyData.map(([, v]) => v.days), 1)
   const maxSectDays  = Math.max(...sectionData.map(([, v]) => v.days), 1)
+  const maxStaffDays = Math.max(...topStaff.map(([, v]) => v.days), 1)
   const totalDays    = records.reduce((s, r) => s + (r.sickLeaveDays || 1), 0)
   const noMcCount    = records.filter((r) => !r.mcProvided).length
 
@@ -1588,21 +1683,38 @@ function MedicalAnalyticsModal({ records, onClose }: {
             <h2>Analytics</h2>
             <p style={{ fontSize: '0.82rem', color: '#64748b', marginTop: 2 }}>{records.length} cases · {totalDays} total sick days · {noMcCount} without MC</p>
           </div>
-          <button className="icon-button" onClick={onClose} type="button">×</button>
+          <div style={{display:'flex',alignItems:'center',gap:12}}>
+            <label style={{display:'flex',flexDirection:'column',gap:4}}>
+              <span style={{fontSize:'0.70rem',fontWeight:700,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.04em'}}>Filter Month</span>
+              <select value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)} style={{fontSize:'0.82rem',padding:'5px 10px',borderRadius:8,border:'1px solid #e2e8f0'}}>
+                <option value="All">All Months</option>
+                {months.map(key => <option key={key} value={key}>{formatMonthLabel(key)}</option>)}
+              </select>
+            </label>
+            <button className="icon-button" onClick={onClose} type="button">×</button>
+          </div>
+        </div>
+
+        {/* KPI chips for filtered period */}
+        <div className="mc-kpi-bar" style={{paddingBottom:16,borderBottom:'1px solid #f1f5f9',marginBottom:16}}>
+          <div className="mc-kpi-chip mc-kpi-blue"><span className="mc-kpi-num">{totalCases}</span><span className="mc-kpi-lbl">Total Cases</span></div>
+          <div className="mc-kpi-chip mc-kpi-purple"><span className="mc-kpi-num">{todayCases}</span><span className="mc-kpi-lbl">Today's Cases</span></div>
+          <div className="mc-kpi-chip mc-kpi-green"><span className="mc-kpi-num">{mcProvided}</span><span className="mc-kpi-lbl">MC Provided</span></div>
+          <div className="mc-kpi-chip mc-kpi-amber"><span className="mc-kpi-num">{onSickToday}</span><span className="mc-kpi-lbl">On Sick Leave</span></div>
         </div>
 
         <div className="mc-analytics-grid">
-          {/* Monthly chart */}
+          {/* Monthly chart — all records */}
           <div className="mc-an-panel">
-            <p className="mc-an-title">Monthly Sick Leave Days</p>
+            <p className="mc-an-title">Monthly Sick Leave Days (all months)</p>
             {monthlyData.length === 0
-              ? <p style={{ color: '#94a3b8', fontSize: '0.82rem' }}>No data yet.</p>
+              ? <p style={{ color: '#94a3b8', fontSize: '0.82rem' }}>No data.</p>
               : (
                 <div className="mc-an-bar-chart">
                   {monthlyData.map(([key, val]) => (
                     <div className="mc-an-bar-col" key={key}>
                       <div className="mc-an-bar-wrap">
-                        <span className="mc-an-bar" style={{ height: `${Math.round((val.days / maxMonthDays) * 100)}%` }} title={`${val.days}d · ${val.cases} cases`} />
+                        <span className={`mc-an-bar${selectedMonth === key ? ' mc-an-bar-active' : ''}`} style={{ height: `${Math.round((val.days / maxMonthDays) * 100)}%` }} title={`${val.days}d · ${val.cases} cases`} />
                       </div>
                       <div className="mc-an-bar-val">{val.days}d</div>
                       <div className="mc-an-bar-lbl">{formatMonthLabel(key).slice(0, 3)}</div>
@@ -1612,20 +1724,48 @@ function MedicalAnalyticsModal({ records, onClose }: {
               )}
           </div>
 
-          {/* Section breakdown */}
+          {/* Section breakdown — filtered */}
           <div className="mc-an-panel">
-            <p className="mc-an-title">Section Breakdown</p>
+            <p className="mc-an-title">Section Breakdown{selectedMonth !== 'All' ? ` — ${formatMonthLabel(selectedMonth)}` : ''}</p>
             {sectionData.length === 0
-              ? <p style={{ color: '#94a3b8', fontSize: '0.82rem' }}>No data yet.</p>
+              ? <p style={{ color: '#94a3b8', fontSize: '0.82rem' }}>No data.</p>
               : sectionData.map(([dept, val]) => (
                 <div className="mc-an-h-row" key={dept}>
                   <div className="mc-an-h-label" title={dept}>{dept}</div>
-                  <div className="mc-an-h-track">
-                    <div className="mc-an-h-fill" style={{ width: `${Math.round((val.days / maxSectDays) * 100)}%` }} />
-                  </div>
+                  <div className="mc-an-h-track"><div className="mc-an-h-fill" style={{ width: `${Math.round((val.days / maxSectDays) * 100)}%` }} /></div>
                   <div className="mc-an-h-meta">{val.days}d · {val.cases}</div>
                 </div>
               ))}
+          </div>
+
+          {/* Top 5 staff — filtered */}
+          <div className="mc-an-panel mc-an-wide">
+            <p className="mc-an-title">Top 5 Staff by Sick Leave Days{selectedMonth !== 'All' ? ` — ${formatMonthLabel(selectedMonth)}` : ''}</p>
+            {topStaff.length === 0
+              ? <p style={{ color: '#94a3b8', fontSize: '0.82rem' }}>No data.</p>
+              : (
+                <table style={{width:'100%',borderCollapse:'collapse'}}>
+                  <thead><tr style={{borderBottom:'1px solid #e8eaf0'}}><th style={{textAlign:'left',padding:'4px 8px',fontSize:'0.72rem',color:'#64748b',fontWeight:700,textTransform:'uppercase'}}>Staff</th><th style={{textAlign:'right',padding:'4px 8px',fontSize:'0.72rem',color:'#64748b',fontWeight:700,textTransform:'uppercase'}}>Cases</th><th style={{textAlign:'right',padding:'4px 8px',fontSize:'0.72rem',color:'#64748b',fontWeight:700,textTransform:'uppercase'}}>Days</th><th style={{padding:'4px 8px',width:120}}></th></tr></thead>
+                  <tbody>
+                    {topStaff.map(([empId, v], rank) => (
+                      <tr key={empId} style={{borderBottom:'1px solid #f8fafc'}}>
+                        <td style={{padding:'6px 8px',fontSize:'0.82rem'}}>
+                          <span style={{display:'inline-flex',alignItems:'center',justifyContent:'center',width:20,height:20,borderRadius:'50%',background:rank === 0 ? '#fbbf24' : rank === 1 ? '#94a3b8' : rank === 2 ? '#d97706' : '#e2e8f0',color: rank <= 2 ? '#fff' : '#374151',fontSize:'0.68rem',fontWeight:800,marginRight:8,flexShrink:0}}>{rank+1}</span>
+                          <strong style={{color:'#111827'}}>{v.name}</strong>
+                          <span style={{color:'#94a3b8',fontSize:'0.74rem',marginLeft:6}}>{empId}</span>
+                        </td>
+                        <td style={{padding:'6px 8px',textAlign:'right',fontSize:'0.82rem',color:'#374151'}}>{v.cases}</td>
+                        <td style={{padding:'6px 8px',textAlign:'right',fontWeight:700,color:'#1e40af'}}>{v.days}d</td>
+                        <td style={{padding:'6px 8px'}}>
+                          <div style={{height:8,borderRadius:4,background:'#e2e8f0',overflow:'hidden'}}>
+                            <div style={{width:`${Math.round((v.days/maxStaffDays)*100)}%`,height:'100%',borderRadius:4,background:'linear-gradient(90deg,#6366f1,#a5b4fc)'}} />
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
           </div>
         </div>
 
@@ -1666,10 +1806,10 @@ function MedicalLeaveSection({ records, employees, onUpdate }: {
     return matchSearch && matchMc && matchDept && matchMonth
   }).sort((a, b) => b.caseDate.localeCompare(a.caseDate)), [records, search, mcFilter, deptFilter, monthFilter])
 
-  const onSickToday  = records.filter((r) => r.sickLeaveFrom <= today && r.sickLeaveTo >= today).length
-  const noMc         = records.filter((r) => !r.mcProvided).length
-  const todayVisits  = records.filter((r) => r.caseDate === today).length
   const totalCases   = records.length
+  const todayVisits  = records.filter((r) => r.caseDate === today).length
+  const mcProvided   = records.filter((r) => r.mcProvided).length
+  const onSickToday  = records.filter((r) => r.sickLeaveFrom <= today && r.sickLeaveTo >= today).length
 
   const newCase = (): MedicalCaseRecord => ({
     id: 'MC-new', caseDate: today, employeeId: '', name: '', department: '',
@@ -1692,20 +1832,20 @@ function MedicalLeaveSection({ records, employees, onUpdate }: {
       {/* Compact KPI bar */}
       <div className="mc-kpi-bar">
         <div className="mc-kpi-chip mc-kpi-blue">
-          <span className="mc-kpi-num">{onSickToday}</span>
-          <span className="mc-kpi-lbl">On Sick Leave</span>
-        </div>
-        <div className="mc-kpi-chip mc-kpi-amber">
-          <span className="mc-kpi-num">{noMc}</span>
-          <span className="mc-kpi-lbl">No MC</span>
+          <span className="mc-kpi-num">{totalCases}</span>
+          <span className="mc-kpi-lbl">Total Cases</span>
         </div>
         <div className="mc-kpi-chip mc-kpi-purple">
           <span className="mc-kpi-num">{todayVisits}</span>
-          <span className="mc-kpi-lbl">Today</span>
+          <span className="mc-kpi-lbl">Today's Cases</span>
         </div>
         <div className="mc-kpi-chip mc-kpi-green">
-          <span className="mc-kpi-num">{totalCases}</span>
-          <span className="mc-kpi-lbl">Total Cases</span>
+          <span className="mc-kpi-num">{mcProvided}</span>
+          <span className="mc-kpi-lbl">MC Provided</span>
+        </div>
+        <div className="mc-kpi-chip mc-kpi-amber">
+          <span className="mc-kpi-num">{onSickToday}</span>
+          <span className="mc-kpi-lbl">On Sick Leave</span>
         </div>
         <button className="mc-analytics-btn" onClick={() => setShowAnalytics(true)} type="button">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
@@ -1783,12 +1923,29 @@ function MedicalLeaveSection({ records, employees, onUpdate }: {
                     <tr className="mc-detail-row">
                       <td colSpan={11}>
                         <div className="mc-detail-content">
-                          <div className="mc-detail-meta-row">
-                            {r.hospital && <span className="mc-detail-chip">🏥 {r.hospital}</span>}
-                            {r.departTime && <span className="mc-detail-chip">🚶 Depart {r.departTime}</span>}
-                            {r.returnTime && <span className="mc-detail-chip">↩ Return {r.returnTime}</span>}
-                            {r.recordedBy && <span className="mc-detail-chip mc-detail-chip-muted">Recorded by {r.recordedBy}</span>}
+                          <div className="mc-detail-info-grid">
+                            {r.hospital && (
+                              <div className="mc-detail-info-item">
+                                <span className="mc-detail-info-label">Hospital / Clinic</span>
+                                <span className="mc-detail-info-value">{r.hospital}</span>
+                              </div>
+                            )}
+                            <div className="mc-detail-info-item">
+                              <span className="mc-detail-info-label">Depart</span>
+                              <span className="mc-detail-info-value">{r.departTime || '—'}</span>
+                            </div>
+                            <div className="mc-detail-info-item">
+                              <span className="mc-detail-info-label">Return</span>
+                              <span className="mc-detail-info-value">{r.returnTime || '—'}</span>
+                            </div>
+                            {r.recordedBy && (
+                              <div className="mc-detail-info-item">
+                                <span className="mc-detail-info-label">Recorded By</span>
+                                <span className="mc-detail-info-value">{r.recordedBy}</span>
+                              </div>
+                            )}
                           </div>
+                          <div className="mc-detail-divider" />
                           <strong className="mc-detail-heading">Doctor Advice / Summary</strong>
                           <div className="mc-detail-body">
                             {r.doctorAdvice
@@ -1816,6 +1973,53 @@ function MedicalLeaveSection({ records, employees, onUpdate }: {
   )
 }
 
+function StageDropdown<T extends string>({ steps, current, onSelect, colorMap }: {
+  steps: T[]
+  current: T
+  onSelect: (step: T) => void
+  colorMap?: Record<string, string>
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const currentIdx = steps.indexOf(current)
+
+  useEffect(() => {
+    const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
+    if (open) document.addEventListener('mousedown', h)
+    return () => document.removeEventListener('mousedown', h)
+  }, [open])
+
+  return (
+    <div className="spd-wrap" ref={ref}>
+      <button
+        className={`spd-trigger spd-step-${currentIdx}`}
+        style={colorMap?.[current] ? { background: colorMap[current], color: '#fff', borderColor: colorMap[current] } : undefined}
+        onClick={() => setOpen(o => !o)}
+        type="button"
+      >
+        {current}
+        <svg width="10" height="6" viewBox="0 0 10 6" fill="currentColor" style={{marginLeft:4,opacity:0.7}}><path d="M0 0L5 6L10 0z"/></svg>
+      </button>
+      {open && (
+        <div className="spd-dropdown">
+          {steps.map((step, i) => (
+            <button
+              key={step}
+              className={`spd-item ${i < currentIdx ? 'spd-done' : i === currentIdx ? 'spd-current' : 'spd-future'}`}
+              onClick={() => { onSelect(step); setOpen(false) }}
+              type="button"
+            >
+              <span className="spd-dot" />
+              <span className="spd-label">{step}</span>
+              {i === currentIdx && <span className="spd-here-tag">current</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function LeavePage({
   employees,
   leaveRequests,
@@ -1825,7 +2029,7 @@ function LeavePage({
   onAddRequest,
   onEditRequest,
   onDeleteRequest,
-  onAdvanceRequestStep,
+  onSetRequestStep,
   onHistoryConfirm,
   onUpdateMedical,
 }: {
@@ -1837,7 +2041,7 @@ function LeavePage({
   onAddRequest: () => void
   onEditRequest: (record: LeaveRequestRecord) => void
   onDeleteRequest: (id: string) => void
-  onAdvanceRequestStep: (id: string) => void
+  onSetRequestStep: (id: string, step: LeaveRequestStep) => void
   onHistoryConfirm: (id: string, confirmation: HistoryConfirmation) => void
   onUpdateMedical: (fn: (prev: MedicalCaseRecord[]) => MedicalCaseRecord[]) => void
 }) {
@@ -1915,7 +2119,6 @@ function LeavePage({
             <div className="employee-table-shell compact-scroll">
               <table className="data-table leave-table"><thead><tr><th>Emp ID</th><th>Name</th><th>Section</th><th>NIC / PP No</th><th className="leave-type-th">Leave Type</th><th className="leave-date-th">Departure</th><th className="leave-date-th">Return</th><th className="leave-days-th">Days</th><th>Remarks</th><th className="leave-status-th">Status</th><th>Action</th></tr></thead><tbody>
                 {requestRows.map((record) => {
-                  const stepIdx = requestSteps.indexOf(record.step)
                   return (
                     <tr key={record.id}>
                       <td>{record.employeeId}</td>
@@ -1928,7 +2131,11 @@ function LeavePage({
                       <td className="leave-days-cell">{record.days}</td>
                       <td className="leave-remarks-cell">{record.remarks || <span className="muted-dash">—</span>}</td>
                       <td className="leave-status-cell">
-                        <button type="button" className={`status-advance-btn step-${stepIdx}`} disabled={record.step === 'Pending Departure'} onClick={() => onAdvanceRequestStep(record.id)} title={record.step === 'Pending Departure' ? '' : 'Click to advance'}>{record.step}</button>
+                        <StageDropdown
+                          steps={requestSteps}
+                          current={record.step}
+                          onSelect={(step) => onSetRequestStep(record.id, step)}
+                        />
                       </td>
                       <td>
                         <div className="row-actions request-inline-actions">
@@ -4592,7 +4799,7 @@ function TerminationPage({
   exitInterviews,
   onAdd,
   onEdit,
-  onAdvanceStatus,
+  onSetStage,
   onDelete,
   onViewDetails,
   onUpdateExitInterviews,
@@ -4602,7 +4809,7 @@ function TerminationPage({
   exitInterviews: ExitInterviewRecord[]
   onAdd: () => void
   onEdit: (record: EnhancedTerminationRecord) => void
-  onAdvanceStatus: (id: string) => void
+  onSetStage: (id: string, stage: TerminationStage) => void
   onDelete: (id: string) => void
   onViewDetails: (record: EnhancedTerminationRecord | CompletedTerminationRecord) => void
   onUpdateExitInterviews: (fn: (prev: ExitInterviewRecord[]) => ExitInterviewRecord[]) => void
@@ -4648,8 +4855,8 @@ function TerminationPage({
           <button className={activeTab === 'notice' ? 'active' : ''} onClick={() => setActiveTab('notice')} type="button">
             Notice Period{noticeTerminations.length > 0 && <span className="tab-count">{noticeTerminations.length}</span>}
           </button>
-          <button className={activeTab === 'completed' ? 'active' : ''} onClick={() => setActiveTab('completed')} type="button">
-            Completed{completedTerminations.length > 0 && <span className="tab-count">{completedTerminations.length}</span>}
+          <button className={activeTab === 'history' ? 'active' : ''} onClick={() => setActiveTab('history')} type="button">
+            History{completedTerminations.length > 0 && <span className="tab-count">{completedTerminations.length}</span>}
           </button>
           <button className={activeTab === 'exit-interview' ? 'active' : ''} onClick={() => setActiveTab('exit-interview')} type="button">
             Exit Interviews{exitInterviews.length > 0 && <span className="tab-count">{exitInterviews.length}</span>}
@@ -4671,8 +4878,6 @@ function TerminationPage({
                   {noticeRows.length === 0
                     ? <tr><td colSpan={10} className="empty-row">No notice period records.</td></tr>
                     : noticeRows.map((r) => {
-                      const idx = allTerminationStages.indexOf(r.currentStage)
-                      const pct = ((idx + 1) / allTerminationStages.length) * 100
                       return (
                         <tr key={r.id} className="termination-row">
                           <td>{r.employeeId}</td>
@@ -4684,8 +4889,7 @@ function TerminationPage({
                           <td>{formatDateDisplay(r.lastWorkingDate)}</td>
                           <td>{formatDateDisplay(r.departureDate)}</td>
                           <td className="leave-status-cell termination-status-cell">
-                            <button className={`status-advance-btn status-text status-chip status-step-${r.currentStage.toLowerCase().replaceAll(' ','-')}`} onClick={() => onAdvanceStatus(r.id)} disabled={r.currentStage === 'Pending Departure'} type="button">{r.currentStage}</button>
-                            <div className={`status-progress-track status-step-${r.currentStage.toLowerCase().replaceAll(' ','-')}`}><span style={{ width:`${pct}%` }} /></div>
+                            <StageDropdown steps={allTerminationStages} current={r.currentStage} onSelect={(stage) => onSetStage(r.id, stage)} />
                           </td>
                           <td className="termination-actions">
                             <div className="row-actions">
@@ -4703,7 +4907,7 @@ function TerminationPage({
           </>
         )}
 
-        {activeTab === 'completed' && (
+        {activeTab === 'history' && (
           <>
             <div className="table-toolbar leave-toolbar termination-topbar termination-topbar-completed">
               <label className="search-field"><span>Search</span><input onChange={(e) => setCompletedSearch(e.target.value)} placeholder="Employee, ID, department…" type="search" value={completedSearch} /></label>
@@ -5548,14 +5752,273 @@ function IncidentsSection({ records, employees, onUpdate }: { records: IncidentR
   )
 }
 
+function InventoryItemModal({ item, onClose, onSave }: {
+  item: InventoryItem
+  onClose: () => void
+  onSave: (i: InventoryItem) => void
+}) {
+  const isNew = item.id.startsWith('INV-new')
+  const [form, setForm] = useState<InventoryItem>(item)
+  const set = (f: Partial<InventoryItem>) => setForm(p => ({ ...p, ...f }))
+  const save = (e: FormEvent) => { e.preventDefault(); onSave({ ...form, id: isNew ? `INV-${Date.now()}` : form.id, lastUpdated: new Date().toISOString().slice(0,10) }) }
+  return (
+    <div className="modal-backdrop" role="presentation">
+      <section className="registration-modal" role="dialog" aria-modal="true">
+        <div className="modal-header">
+          <div><p className="eyebrow">Inventory</p><h2>{isNew ? 'Add Item' : `Edit — ${form.name}`}</h2></div>
+          <button className="icon-button" onClick={onClose} type="button">×</button>
+        </div>
+        <form onSubmit={save}>
+          <div className="form-grid">
+            <label className="full-field"><span>Item Name</span><input value={form.name} onChange={e => set({ name: e.target.value })} required placeholder="e.g. Safety Helmet" /></label>
+            <label><span>Category</span>
+              <select value={form.category} onChange={e => set({ category: e.target.value as InventoryCategory })}>
+                {(['Stationery','Tools','Safety Equipment','Electronics','Cleaning Supplies','Kitchen','Medical','Other'] as InventoryCategory[]).map(c => <option key={c}>{c}</option>)}
+              </select>
+            </label>
+            <label><span>Location</span><input value={form.location} onChange={e => set({ location: e.target.value })} placeholder="e.g. HR Storeroom" /></label>
+            <label><span>Quantity</span><input type="number" value={form.quantity} min={0} onChange={e => set({ quantity: parseInt(e.target.value)||0 })} /></label>
+            <label><span>Unit</span><input value={form.unit} onChange={e => set({ unit: e.target.value })} placeholder="pcs, reams, kg…" /></label>
+            <label><span>Min Quantity (alert)</span><input type="number" value={form.minQuantity} min={0} onChange={e => set({ minQuantity: parseInt(e.target.value)||0 })} /></label>
+            <label className="full-field"><span>Remarks</span><input value={form.remarks} onChange={e => set({ remarks: e.target.value })} placeholder="Notes, expiry, etc." /></label>
+          </div>
+          <div className="modal-actions">
+            <button type="button" className="quiet-button light" onClick={onClose}>Cancel</button>
+            <button className="primary-button" type="submit">{isNew ? 'Add Item' : 'Save Changes'}</button>
+          </div>
+        </form>
+      </section>
+    </div>
+  )
+}
+
+function InventoryUseModal({ item, employees, onClose, onSave }: {
+  item: InventoryItem
+  employees: Employee[]
+  onClose: () => void
+  onSave: (usage: InventoryUsageRecord, updatedItem: InventoryItem) => void
+}) {
+  const [qty, setQty] = useState(1)
+  const [empId, setEmpId] = useState('')
+  const [dept, setDept] = useState(departmentsList[0])
+  const [usedDate, setUsedDate] = useState(new Date().toISOString().slice(0,10))
+  const [purpose, setPurpose] = useState('')
+  const [remarks, setRemarks] = useState('')
+  const empName = employees.find(e => e.employeeId === empId)?.fullName ?? ''
+  const handleEmp = (id: string) => {
+    setEmpId(id)
+    const e = employees.find(x => x.employeeId === id)
+    if (e) setDept(e.department)
+  }
+  const save = (e: FormEvent) => {
+    e.preventDefault()
+    if (qty > item.quantity) { alert('Quantity exceeds available stock'); return }
+    const usage: InventoryUsageRecord = {
+      id: `USG-${Date.now()}`, itemId: item.id, itemName: item.name, quantityUsed: qty,
+      unit: item.unit, usedBy: empName || empId, employeeId: empId, department: dept,
+      usedDate, purpose, remarks
+    }
+    const updatedItem: InventoryItem = { ...item, quantity: item.quantity - qty, lastUpdated: new Date().toISOString().slice(0,10) }
+    onSave(usage, updatedItem)
+  }
+  return (
+    <div className="modal-backdrop" role="presentation">
+      <section className="registration-modal" role="dialog" aria-modal="true">
+        <div className="modal-header">
+          <div><p className="eyebrow">Record Usage</p><h2>{item.name}</h2><p style={{fontSize:'0.82rem',color:'#64748b'}}>Available: <strong>{item.quantity} {item.unit}</strong></p></div>
+          <button className="icon-button" onClick={onClose} type="button">×</button>
+        </div>
+        <form onSubmit={save}>
+          <div className="form-grid">
+            <label><span>Qty Used</span><input type="number" value={qty} min={1} max={item.quantity} onChange={e => setQty(parseInt(e.target.value)||1)} required /></label>
+            <label><span>Date Used</span><input type="date" value={usedDate} onChange={e => setUsedDate(e.target.value)} /></label>
+            <label><span>Employee</span>
+              <select value={empId} onChange={e => handleEmp(e.target.value)}>
+                <option value="">— Select —</option>
+                {employees.slice(0,150).map(e => <option key={e.employeeId} value={e.employeeId}>{e.fullName} ({e.employeeId})</option>)}
+              </select>
+            </label>
+            <label><span>Section</span>
+              <select value={dept} onChange={e => setDept(e.target.value)}>
+                {departmentsList.map(d => <option key={d}>{d}</option>)}
+              </select>
+            </label>
+            <label className="full-field"><span>Purpose</span><input value={purpose} onChange={e => setPurpose(e.target.value)} required placeholder="Reason for use" /></label>
+            <label className="full-field"><span>Remarks</span><input value={remarks} onChange={e => setRemarks(e.target.value)} placeholder="Optional notes" /></label>
+          </div>
+          <div className="modal-actions">
+            <button type="button" className="quiet-button light" onClick={onClose}>Cancel</button>
+            <button className="primary-button" type="submit">Record Usage</button>
+          </div>
+        </form>
+      </section>
+    </div>
+  )
+}
+
+function InventorySection({ items, usage, onUpdateItems, onUpdateUsage, employees }: {
+  items: InventoryItem[]
+  usage: InventoryUsageRecord[]
+  onUpdateItems: (fn: (prev: InventoryItem[]) => InventoryItem[]) => void
+  onUpdateUsage: (fn: (prev: InventoryUsageRecord[]) => InventoryUsageRecord[]) => void
+  employees: Employee[]
+}) {
+  const [subTab, setSubTab] = useState<'stock' | 'history'>('stock')
+  const [search, setSearch] = useState('')
+  const [catFilter, setCatFilter] = useState<'All' | InventoryCategory>('All')
+  const [editingItem, setEditingItem] = useState<InventoryItem | null>(null)
+  const [usingItem, setUsingItem] = useState<InventoryItem | null>(null)
+  const [histSearch, setHistSearch] = useState('')
+
+  const lowStockCount = items.filter(i => i.quantity <= i.minQuantity).length
+
+  const filtered = useMemo(() => items.filter(i => {
+    const t = search.trim().toLowerCase()
+    const matchSearch = !t || `${i.name} ${i.category} ${i.location}`.toLowerCase().includes(t)
+    const matchCat = catFilter === 'All' || i.category === catFilter
+    return matchSearch && matchCat
+  }).sort((a, b) => a.name.localeCompare(b.name)), [items, search, catFilter])
+
+  const filteredHistory = useMemo(() => usage.filter(u => {
+    const t = histSearch.trim().toLowerCase()
+    return !t || `${u.itemName} ${u.usedBy} ${u.department} ${u.purpose}`.toLowerCase().includes(t)
+  }).sort((a, b) => b.usedDate.localeCompare(a.usedDate)), [usage, histSearch])
+
+  const newItem = (): InventoryItem => ({
+    id: 'INV-new', name: '', category: 'Stationery', quantity: 0, unit: 'pcs',
+    minQuantity: 0, location: '', lastUpdated: new Date().toISOString().slice(0,10), remarks: ''
+  })
+
+  const saveItem = (item: InventoryItem) => {
+    onUpdateItems(prev => {
+      const exists = prev.some(i => i.id === item.id)
+      return exists ? prev.map(i => i.id === item.id ? item : i) : [...prev, item]
+    })
+    setEditingItem(null)
+  }
+  const delItem = (id: string) => onUpdateItems(prev => prev.filter(i => i.id !== id))
+
+  const saveUsage = (usageRecord: InventoryUsageRecord, updatedItem: InventoryItem) => {
+    onUpdateUsage(prev => [usageRecord, ...prev])
+    onUpdateItems(prev => prev.map(i => i.id === updatedItem.id ? updatedItem : i))
+    setUsingItem(null)
+  }
+
+  return (
+    <section className="employee-workspace">
+      {/* KPI row */}
+      <div className="inv-kpi-row">
+        <div className="inv-kpi inv-kpi-blue"><span className="inv-kpi-num">{items.length}</span><span className="inv-kpi-lbl">Total Items</span></div>
+        <div className="inv-kpi inv-kpi-red"><span className="inv-kpi-num">{lowStockCount}</span><span className="inv-kpi-lbl">Low Stock</span></div>
+        <div className="inv-kpi inv-kpi-green"><span className="inv-kpi-num">{usage.length}</span><span className="inv-kpi-lbl">Usage Records</span></div>
+        <div className="inv-kpi inv-kpi-amber"><span className="inv-kpi-num">{items.reduce((s,i) => s + (i.quantity <= i.minQuantity ? 1 : 0), 0)}</span><span className="inv-kpi-lbl">Need Reorder</span></div>
+      </div>
+
+      {/* Sub-tabs */}
+      <div className="inv-subtabs">
+        <button className={subTab === 'stock' ? 'active' : ''} onClick={() => setSubTab('stock')} type="button">
+          Stock{lowStockCount > 0 && <span className="tab-count" style={{background:'#ef4444'}}>{lowStockCount}</span>}
+        </button>
+        <button className={subTab === 'history' ? 'active' : ''} onClick={() => setSubTab('history')} type="button">
+          Usage History
+        </button>
+      </div>
+
+      {subTab === 'stock' && (
+        <>
+          <div className="table-toolbar leave-toolbar-has-btn" style={{display:'flex',gap:10,padding:'10px 0',flexWrap:'wrap',alignItems:'flex-end'}}>
+            <label className="search-field"><span>Search</span><input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Item name, category, location…" /></label>
+            <label><span>Category</span>
+              <select value={catFilter} onChange={e => setCatFilter(e.target.value as 'All' | InventoryCategory)}>
+                <option value="All">All Categories</option>
+                {(['Stationery','Tools','Safety Equipment','Electronics','Cleaning Supplies','Kitchen','Medical','Other'] as InventoryCategory[]).map(c => <option key={c}>{c}</option>)}
+              </select>
+            </label>
+            <button className="primary-button toolbar-add-btn" onClick={() => setEditingItem(newItem())} type="button">+ Add Item</button>
+          </div>
+          <div className="employee-table-shell compact-scroll">
+            <table className="data-table">
+              <thead><tr><th>Item Name</th><th>Category</th><th>Quantity</th><th>Unit</th><th>Min Qty</th><th>Location</th><th>Last Updated</th><th>Remarks</th><th>Action</th></tr></thead>
+              <tbody>
+                {filtered.map(item => {
+                  const isLow = item.quantity <= item.minQuantity
+                  return (
+                    <tr key={item.id} className={isLow ? 'inv-low-stock-row' : ''}>
+                      <td><strong>{item.name}</strong>{isLow && <span className="inv-low-badge">Low</span>}</td>
+                      <td><span className="inv-cat-badge">{item.category}</span></td>
+                      <td><strong style={{color: isLow ? '#ef4444' : '#111827'}}>{item.quantity}</strong></td>
+                      <td>{item.unit}</td>
+                      <td>{item.minQuantity}</td>
+                      <td>{item.location}</td>
+                      <td>{formatDateDisplay(item.lastUpdated)}</td>
+                      <td style={{maxWidth:180,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.remarks || '—'}</td>
+                      <td>
+                        <div className="row-actions request-inline-actions">
+                          <button className="action-glyph" onClick={() => setUsingItem(item)} type="button" title="Record usage" style={{color:'#059669'}}>↓</button>
+                          <button className="action-glyph edit" onClick={() => setEditingItem(item)} type="button" title="Edit">✎</button>
+                          <button className="action-glyph delete" onClick={() => delItem(item.id)} type="button" title="Delete">🗑</button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+          {filtered.length === 0 && <div className="leave-empty-zone">No items match the filters.</div>}
+        </>
+      )}
+
+      {subTab === 'history' && (
+        <>
+          <div style={{display:'flex',gap:10,padding:'10px 0',alignItems:'flex-end'}}>
+            <label className="search-field"><span>Search</span><input type="search" value={histSearch} onChange={e => setHistSearch(e.target.value)} placeholder="Item, employee, purpose…" /></label>
+          </div>
+          <div className="employee-table-shell compact-scroll">
+            <table className="data-table">
+              <thead><tr><th>Date</th><th>Item</th><th>Qty</th><th>Unit</th><th>Used By</th><th>Section</th><th>Purpose</th><th>Remarks</th></tr></thead>
+              <tbody>
+                {filteredHistory.map(u => (
+                  <tr key={u.id}>
+                    <td style={{whiteSpace:'nowrap'}}>{formatDateDisplay(u.usedDate)}</td>
+                    <td><strong>{u.itemName}</strong></td>
+                    <td>{u.quantityUsed}</td>
+                    <td>{u.unit}</td>
+                    <td>{u.usedBy}</td>
+                    <td>{u.department}</td>
+                    <td>{u.purpose}</td>
+                    <td>{u.remarks || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {filteredHistory.length === 0 && <div className="leave-empty-zone">No usage records yet.</div>}
+        </>
+      )}
+
+      {editingItem && <InventoryItemModal item={editingItem} onClose={() => setEditingItem(null)} onSave={saveItem} />}
+      {usingItem && <InventoryUseModal item={usingItem} employees={employees} onClose={() => setUsingItem(null)} onSave={saveUsage} />}
+    </section>
+  )
+}
+
 function ActivitiesPage({
   employees,
   passportHandovers,
   onUpdatePassport,
+  inventoryItems,
+  inventoryUsage,
+  onUpdateInventoryItems,
+  onUpdateInventoryUsage,
 }: {
   employees: Employee[]
   passportHandovers: PassportHandoverRecord[]
   onUpdatePassport: (fn: (prev: PassportHandoverRecord[]) => PassportHandoverRecord[]) => void
+  inventoryItems: InventoryItem[]
+  inventoryUsage: InventoryUsageRecord[]
+  onUpdateInventoryItems: (fn: (prev: InventoryItem[]) => InventoryItem[]) => void
+  onUpdateInventoryUsage: (fn: (prev: InventoryUsageRecord[]) => InventoryUsageRecord[]) => void
 }) {
   const [activeSection, setActiveSection] = useState<ActivitiesSection>('requests')
   const [staffRequests, setStaffRequests] = useState<StaffRequestRecord[]>(initialStaffRequests)
@@ -5569,11 +6032,13 @@ function ActivitiesPage({
         <button className={activeSection === 'visits' ? 'active' : ''} onClick={() => setActiveSection('visits')} type="button">Visits</button>
         <button className={activeSection === 'incidents' ? 'active' : ''} onClick={() => setActiveSection('incidents')} type="button">Incidents</button>
         <button className={activeSection === 'passport' ? 'active' : ''} onClick={() => setActiveSection('passport')} type="button">Passport Tracking</button>
+        <button className={activeSection === 'inventory' ? 'active' : ''} onClick={() => setActiveSection('inventory')} type="button">Inventory</button>
       </div>
       {activeSection === 'requests' && <RequestsSection records={staffRequests} employees={employees} onUpdate={setStaffRequests} onBack={() => {}} />}
       {activeSection === 'visits' && <VisitsSection records={visitRecords} employees={employees} onUpdate={setVisitRecords} onBack={() => {}} />}
       {activeSection === 'incidents' && <IncidentsSection records={incidentRecords} employees={employees} onUpdate={setIncidentRecords} onBack={() => {}} />}
       {activeSection === 'passport' && <PassportTrackingSection records={passportHandovers} employees={employees} onUpdate={onUpdatePassport} />}
+      {activeSection === 'inventory' && <InventorySection items={inventoryItems} usage={inventoryUsage} onUpdateItems={onUpdateInventoryItems} onUpdateUsage={onUpdateInventoryUsage} employees={employees} />}
     </>
   )
 }
@@ -6022,6 +6487,8 @@ function App() {
   const [completedTerminations, setCompletedTerminations] = useState<CompletedTerminationRecord[]>(() => loadStore('tic_term_done', initialCompletedTerminations))
   const [exitInterviews, setExitInterviews] = useState<ExitInterviewRecord[]>(() => loadStore('tic_exit_interviews', initialExitInterviews))
   const [medicalCases, setMedicalCases] = useState<MedicalCaseRecord[]>(() => loadStore('tic_medical_cases', initialMedicalCases))
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>(() => loadStore('tic_inventory_items', initialInventoryItems))
+  const [inventoryUsage, setInventoryUsage] = useState<InventoryUsageRecord[]>(() => loadStore('tic_inventory_usage', initialInventoryUsage))
   const [showEmployeeForm, setShowEmployeeForm] = useState(false)
   const [employeeMode, setEmployeeMode] = useState<'add' | 'edit'>('add')
   const [employeeForm, setEmployeeForm] = useState<EmployeeForm>(emptyEmployee)
@@ -6058,10 +6525,12 @@ function App() {
   useEffect(() => { localStorage.setItem('tic_term_done', JSON.stringify(completedTerminations)) }, [completedTerminations])
   useEffect(() => { localStorage.setItem('tic_exit_interviews', JSON.stringify(exitInterviews)) }, [exitInterviews])
   useEffect(() => { localStorage.setItem('tic_medical_cases', JSON.stringify(medicalCases)) }, [medicalCases])
+  useEffect(() => { localStorage.setItem('tic_inventory_items', JSON.stringify(inventoryItems)) }, [inventoryItems])
+  useEffect(() => { localStorage.setItem('tic_inventory_usage', JSON.stringify(inventoryUsage)) }, [inventoryUsage])
 
   const resetAllData = () => {
     if (!window.confirm('This will permanently delete ALL data (employees, leave records, etc.). Are you sure?')) return
-    const keys = ['tic_employees','tic_leave_req','tic_leave_active','tic_leave_history','tic_passport','tic_term_notice','tic_term_done','tic_exit_interviews','tic_medical_cases']
+    const keys = ['tic_employees','tic_leave_req','tic_leave_active','tic_leave_history','tic_passport','tic_term_notice','tic_term_done','tic_exit_interviews','tic_medical_cases','tic_inventory_items','tic_inventory_usage']
     keys.forEach((k) => localStorage.removeItem(k))
     setEmployees([])
     setLeaveRequests([])
@@ -6072,6 +6541,8 @@ function App() {
     setCompletedTerminations([])
     setExitInterviews([])
     setMedicalCases([])
+    setInventoryItems([])
+    setInventoryUsage([])
   }
 
   const saveEmployee = () => {
@@ -6167,6 +6638,15 @@ function App() {
     }
   }, [noticeTerminations])
 
+  useEffect(() => {
+    if (completedTerminations.length === 0) return
+    const completedIds = new Set(completedTerminations.map(r => r.employeeId))
+    setEmployees(prev => {
+      const next = prev.filter(e => !completedIds.has(e.employeeId))
+      return next.length === prev.length ? prev : next
+    })
+  }, [completedTerminations.length])
+
   const saveLeaveRequest = (record: LeaveRequestRecord) => {
     setLeaveRequests((current) => {
       const exists = current.some((item) => item.id === record.id)
@@ -6180,17 +6660,8 @@ function App() {
     setLeaveRequests((current) => current.filter((record) => record.id !== id))
   }
 
-  const advanceLeaveRequestStep = (id: string) => {
-    const currentRecord = leaveRequests.find((record) => record.id === id)
-    if (!currentRecord) return
-
-    const currentIndex = requestSteps.indexOf(currentRecord.step)
-    if (currentIndex >= requestSteps.length - 1) return
-
-    const targetStep = requestSteps[currentIndex + 1]
-
-    const nextRecord = { ...currentRecord, step: targetStep }
-    setLeaveRequests((current) => current.map((record) => record.id === id ? nextRecord : record))
+  const setLeaveRequestStep = (id: string, step: LeaveRequestStep) => {
+    setLeaveRequests((current) => current.map((record) => record.id === id ? { ...record, step } : record))
   }
 
   const updateHistoryConfirmation = (id: string, confirmation: HistoryConfirmation) => {
@@ -6237,13 +6708,8 @@ function App() {
     setShowTerminationForm(true)
   }
 
-  const advanceTerminationStatus = (id: string) => {
-    setNoticeTerminations((current) => current.map((record) => {
-      if (record.id !== id) return record
-      const currentIndex = allTerminationStages.indexOf(record.currentStage)
-      if (currentIndex < 0 || currentIndex >= allTerminationStages.length - 1) return record
-      return { ...record, currentStage: allTerminationStages[currentIndex + 1] }
-    }))
+  const setTerminationStage = (id: string, stage: TerminationStage) => {
+    setNoticeTerminations((cur) => cur.map((r) => r.id === id ? { ...r, currentStage: stage } : r))
   }
 
   const saveTerminationRecord = (record: EnhancedTerminationRecord) => {
@@ -6432,11 +6898,11 @@ function App() {
         </div>
         <main className="workspace-inner" id="top">
           {activePage === 'overview' && <OverviewPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} />}
-          {activePage === 'employees' && <EmployeesPage employees={employees} onAdd={() => { setEmployeeMode('add'); setEmployeeForm(emptyEmployee); setShowEmployeeForm(true) }} onEdit={openEditEmployee} onExport={exportCsv} onImport={importCsv} onTemplate={downloadTemplate} onShowTasks={() => setShowPendingTasks(true)} />}
-          {activePage === 'leave' && <LeavePage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} medicalCases={medicalCases} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onAdvanceRequestStep={advanceLeaveRequestStep} onHistoryConfirm={updateHistoryConfirmation} onUpdateMedical={(fn) => setMedicalCases(fn)} />}
+          {activePage === 'employees' && <EmployeesPage employees={employees} medicalCases={medicalCases} noticeTerminations={noticeTerminations} onAdd={() => { setEmployeeMode('add'); setEmployeeForm(emptyEmployee); setShowEmployeeForm(true) }} onEdit={openEditEmployee} onExport={exportCsv} onImport={importCsv} onTemplate={downloadTemplate} onShowTasks={() => setShowPendingTasks(true)} />}
+          {activePage === 'leave' && <LeavePage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} medicalCases={medicalCases} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onSetRequestStep={setLeaveRequestStep} onHistoryConfirm={updateHistoryConfirmation} onUpdateMedical={(fn) => setMedicalCases(fn)} />}
           {activePage === 'operations' && <OperationsPage employees={employees} completedTerminations={completedTerminations} />}
-          {activePage === 'activities' && <ActivitiesPage employees={employees} passportHandovers={passportHandovers} onUpdatePassport={(fn) => setPassportHandovers(fn)} />}
-          {activePage === 'termination' && <TerminationPage noticeTerminations={noticeTerminations} completedTerminations={completedTerminations} exitInterviews={exitInterviews} onAdd={openAddTermination} onEdit={openEditTermination} onAdvanceStatus={advanceTerminationStatus} onDelete={deleteTermination} onViewDetails={(record) => setTerminationDetails(record)} onUpdateExitInterviews={(fn) => setExitInterviews(fn)} />}
+          {activePage === 'activities' && <ActivitiesPage employees={employees} passportHandovers={passportHandovers} onUpdatePassport={(fn) => setPassportHandovers(fn)} inventoryItems={inventoryItems} inventoryUsage={inventoryUsage} onUpdateInventoryItems={(fn) => setInventoryItems(fn)} onUpdateInventoryUsage={(fn) => setInventoryUsage(fn)} />}
+          {activePage === 'termination' && <TerminationPage noticeTerminations={noticeTerminations} completedTerminations={completedTerminations} exitInterviews={exitInterviews} onAdd={openAddTermination} onEdit={openEditTermination} onSetStage={setTerminationStage} onDelete={deleteTermination} onViewDetails={(record) => setTerminationDetails(record)} onUpdateExitInterviews={(fn) => setExitInterviews(fn)} />}
           {activePage === 'settings' && <SettingsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} onReset={resetAllData} />}
         </main>
       </div> {/* .workspace */}
