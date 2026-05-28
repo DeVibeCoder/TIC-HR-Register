@@ -2052,7 +2052,6 @@ function LeavePage({
 
   const [requestSearch, setRequestSearch] = useState('')
   const [requestTypeFilter, setRequestTypeFilter] = useState<'All' | LeaveTypeCode>('All')
-  const [requestStatusFilter, setRequestStatusFilter] = useState<'All' | LeaveRequestStep>('All')
   const [requestDepartmentFilter, setRequestDepartmentFilter] = useState('All Departments')
 
   const [activeSearch, setActiveSearch] = useState('')
@@ -2072,10 +2071,9 @@ function LeavePage({
   const requestRows = useMemo(() => leaveRequests.filter((record) => {
     const matchesSearch = leaveSearchText(record).includes(requestSearch.trim().toLowerCase())
     const matchesType = requestTypeFilter === 'All' || record.leaveTypeCode === requestTypeFilter
-    const matchesStatus = requestStatusFilter === 'All' || record.step === requestStatusFilter
     const matchesDepartment = requestDepartmentFilter === 'All Departments' || record.department === requestDepartmentFilter
-    return matchesSearch && matchesType && matchesStatus && matchesDepartment
-  }).sort((a, b) => a.departureDate.localeCompare(b.departureDate)), [leaveRequests, requestSearch, requestTypeFilter, requestStatusFilter, requestDepartmentFilter])
+    return matchesSearch && matchesType && matchesDepartment
+  }).sort((a, b) => a.departureDate.localeCompare(b.departureDate)), [leaveRequests, requestSearch, requestTypeFilter, requestDepartmentFilter])
 
   const activeRows = useMemo(() => activeLeaves.filter((record) => {
     const matchesSearch = leaveSearchText(record).includes(activeSearch.trim().toLowerCase())
@@ -2099,20 +2097,29 @@ function LeavePage({
       <PageHeader eyebrow="Leave management" title="Leave tracker" subtitle="Leave requests, active leaves, history and medical leave tracking." />
       <section className="employee-workspace leave-workspace">
         <div className="leave-section-tabs">
-          {[
-            ['request', 'LEAVE REQUEST'],
-            ['active', 'ACTIVE LEAVES'],
-            ['history', 'LEAVE HISTORY'],
-            ['medical', 'MEDICAL LEAVE'],
-          ].map(([id, label]) => <button className={activeLeaveView === id ? 'active' : ''} key={id} onClick={() => setActiveLeaveView(id as LeaveView)} type="button">{label}</button>)}
+          <button className={`lst-btn${activeLeaveView === 'request' ? ' active' : ''}`} onClick={() => setActiveLeaveView('request')} type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            Leave Request
+          </button>
+          <button className={`lst-btn${activeLeaveView === 'active' ? ' active' : ''}`} onClick={() => setActiveLeaveView('active')} type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.1a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.07 6.07l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            Active Leaves
+          </button>
+          <button className={`lst-btn${activeLeaveView === 'history' ? ' active' : ''}`} onClick={() => setActiveLeaveView('history')} type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Leave History
+          </button>
+          <button className={`lst-btn${activeLeaveView === 'medical' ? ' active' : ''}`} onClick={() => setActiveLeaveView('medical')} type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            Medical Leave
+          </button>
         </div>
 
         {activeLeaveView === 'request' && (
           <>
-            <div className="table-toolbar leave-toolbar leave-toolbar-4 leave-toolbar-has-btn">
+            <div className="table-toolbar leave-toolbar leave-toolbar-3 leave-toolbar-has-btn">
               <label className="search-field"><span>Search</span><input type="search" value={requestSearch} onChange={(event) => setRequestSearch(event.target.value)} placeholder="Employee, ID, purpose" /></label>
               <label><span>Leave Type</span><select value={requestTypeFilter} onChange={(event) => setRequestTypeFilter(event.target.value as 'All' | LeaveTypeCode)}><option value="All">All Types</option>{leaveTypeOptions.map((item) => <option key={item.code} value={item.code}>{item.label} ({item.code})</option>)}</select></label>
-              <label><span>Status</span><select value={requestStatusFilter} onChange={(event) => setRequestStatusFilter(event.target.value as 'All' | LeaveRequestStep)}><option value="All">All Statuses</option>{requestSteps.map((step) => <option key={step}>{step}</option>)}</select></label>
               <label><span>Section</span><select value={requestDepartmentFilter} onChange={(event) => setRequestDepartmentFilter(event.target.value)}><option>All Departments</option>{departmentsList.map((item) => <option key={item}>{item}</option>)}</select></label>
               <button className="primary-button toolbar-add-btn" onClick={onAddRequest} type="button">Add Leave Request</button>
             </div>
@@ -2642,7 +2649,7 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
   <style>
     @page { size: A4 portrait; margin: 0; }
     *, *::before, *::after { box-sizing: border-box; }
-    body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #1a1a2e; background: #e8e4f3; margin: 0; padding: 0; }
+    body { font-family: Arial, Helvetica, sans-serif; font-size: 8.5pt; color: #1a1a2e; background: #f0f0f0; margin: 0; padding: 0; }
 
     /* ── Screen toolbar ── */
     .screen-bar {
@@ -2662,90 +2669,81 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
     .a4-wrap { max-width: 210mm; margin: 24px auto; display: flex; flex-direction: column; gap: 20px; padding-bottom: 40px; }
     .a4-page { background: #fff; box-shadow: 0 4px 20px rgba(30,27,75,0.16); min-height: 297mm; overflow: hidden; display: flex; flex-direction: column; }
 
-    /* ══ HEADER BANNER ══ */
+    /* ══ HEADER BANNER — white bg, colored text ══ */
     .doc-hdr {
-      background: linear-gradient(135deg, #3730a3 0%, #4f46e5 100%);
-      padding: 14pt 20pt 12pt;
+      background: #fff;
+      padding: 12pt 20pt 10pt;
       display: flex; justify-content: space-between; align-items: center;
-      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+      border-bottom: 2.5pt solid #4f46e5;
     }
-    .hdr-brand { font-size: 26pt; font-weight: 900; color: #fff; letter-spacing: 5px; line-height: 1; font-family: Arial, sans-serif; }
-    .hdr-co { font-size: 7.5pt; color: #e0d9ff; letter-spacing: 0.4px; margin-top: 3pt; }
+    .hdr-brand { font-size: 24pt; font-weight: 900; color: #3730a3; letter-spacing: 5px; line-height: 1; font-family: Arial, sans-serif; }
+    .hdr-co { font-size: 7pt; color: #6b7280; letter-spacing: 0.4px; margin-top: 3pt; }
     .hdr-right { text-align: right; }
-    .hdr-dept-lbl { font-size: 7pt; color: #c7d2fe; letter-spacing: 2px; text-transform: uppercase; }
-    .hdr-doc-title { font-size: 15pt; font-weight: 900; color: #fff; letter-spacing: 1.5px; margin-top: 2pt; font-family: Arial, sans-serif; }
-    .hdr-accent {
-      height: 3pt;
-      background: linear-gradient(90deg, #a5b4fc, #c4b5fd, #a5b4fc);
-      -webkit-print-color-adjust: exact; print-color-adjust: exact;
-    }
+    .hdr-dept-lbl { font-size: 7pt; color: #4f46e5; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; }
+    .hdr-doc-title { font-size: 13pt; font-weight: 900; color: #1e1b4b; letter-spacing: 1px; margin-top: 2pt; font-family: Arial, sans-serif; }
+    .hdr-accent { height: 0; }
 
     /* ══ PAGE BODY ══ */
-    .page-body { padding: 14pt 20pt 18pt; flex: 1; }
+    .page-body { padding: 12pt 20pt 16pt; flex: 1; }
 
     /* ── Info table ── */
-    .info-tbl { width: 100%; border-collapse: collapse; margin-bottom: 14pt; }
-    .info-tbl td { padding: 5.5pt 9pt; font-size: 9.5pt; border: 0.75pt solid #c4b5fd; vertical-align: middle; }
+    .info-tbl { width: 100%; border-collapse: collapse; margin-bottom: 12pt; }
+    .info-tbl td { padding: 4pt 8pt; font-size: 8pt; border: 0.75pt solid #d1d5db; vertical-align: middle; }
     .info-tbl .lbl {
-      font-weight: 700; background: #ede9fe; color: #4338ca;
-      width: 110pt; white-space: nowrap;
-      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+      font-weight: 700; color: #4338ca; background: #fff;
+      width: 100pt; white-space: nowrap;
     }
     .status-badge {
-      display: inline-block; background: #dcfce7; color: #166534;
-      padding: 1.5pt 8pt; border-radius: 12pt; font-weight: 700; font-size: 8.5pt;
-      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+      display: inline-block; color: #166534; border: 1pt solid #166534;
+      padding: 1pt 7pt; border-radius: 10pt; font-weight: 700; font-size: 7.5pt;
     }
 
-    /* ── Section heading bar ── */
+    /* ── Section heading bar — no fill ── */
     .sec-hdr {
-      background: #8b5cf6; color: #fff;
-      padding: 5pt 10pt; font-size: 8.5pt; font-weight: 700;
+      color: #4338ca; background: #fff;
+      padding: 5pt 0 3pt; font-size: 8pt; font-weight: 800;
       text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0;
-      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+      border-bottom: 1.5pt solid #4338ca;
     }
 
     /* ── Participants table ── */
-    table.p-tbl { width: 100%; border-collapse: collapse; margin-bottom: 14pt; font-size: 9pt; table-layout: fixed; }
+    table.p-tbl { width: 100%; border-collapse: collapse; margin-bottom: 12pt; font-size: 7.5pt; table-layout: fixed; }
     .p-tbl thead th {
-      background: #6366f1; color: #fff;
-      padding: 5pt 5pt; text-align: left; font-weight: 700;
-      border: 0.75pt solid #6366f1;
-      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+      background: #fff; color: #1e1b4b;
+      padding: 4.5pt 5pt; text-align: left; font-weight: 800; font-size: 7.5pt;
+      border-top: 1.5pt solid #4338ca; border-bottom: 1.5pt solid #4338ca;
+      border-left: 0.75pt solid #d1d5db; border-right: 0.75pt solid #d1d5db;
+      text-transform: uppercase; letter-spacing: 0.5px;
     }
     .p-tbl thead th.tc { text-align: center; }
-    .p-tbl tbody td { border: 0.75pt solid #e2d9f3; padding: 4pt 5pt; vertical-align: middle; }
-    .p-tbl tbody tr:nth-child(even) td { background: #f8f6ff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .p-tbl tbody td { border: 0.75pt solid #d1d5db; padding: 3.5pt 5pt; vertical-align: middle; }
     .p-tbl .tc { text-align: center; }
-    .p-tbl .sig-cell { height: 20pt; }
+    .p-tbl .sig-cell { height: 18pt; }
 
-    /* ── Signature blocks ── */
-    .sig-row { display: flex; gap: 14pt; margin-top: 16pt; }
-    .sig-block { flex: 1; border: 0.75pt solid #c4b5fd; border-top: 2pt solid #8b5cf6; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .sig-space { height: 52pt; }
-    .sig-info { padding: 5pt 9pt; border-top: 0.75pt solid #c4b5fd; background: #f8f6ff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .sig-role { font-size: 7.5pt; color: #8b5cf6; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2pt; }
-    .sig-person { font-weight: 700; font-size: 9.5pt; color: #1e1b4b; text-transform: uppercase; }
-    .sig-desig { font-size: 8.5pt; color: #6d28d9; margin-top: 1pt; }
+    /* ── Signature block — only Conducted By ── */
+    .sig-row { display: flex; gap: 14pt; margin-top: 14pt; }
+    .sig-block { flex: 1; max-width: 200pt; border: 0.75pt solid #9ca3af; border-top: 2pt solid #4338ca; }
+    .sig-space { height: 46pt; }
+    .sig-info { padding: 4pt 8pt; border-top: 0.75pt solid #d1d5db; }
+    .sig-role { font-size: 7pt; color: #4338ca; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2pt; }
+    .sig-person { font-weight: 700; font-size: 8.5pt; color: #1e1b4b; text-transform: uppercase; }
+    .sig-desig { font-size: 7.5pt; color: #374151; margin-top: 1pt; }
 
     /* ══ PAGE 2 ══ */
     .p2-meta-bar {
       display: flex; gap: 24pt;
-      background: #f5f3ff; border-left: 3pt solid #8b5cf6;
-      padding: 6pt 10pt; margin-bottom: 13pt; font-size: 9.5pt;
-      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+      border-left: 2.5pt solid #4338ca; border: 0.75pt solid #d1d5db; border-left-width: 2.5pt;
+      padding: 5pt 10pt; margin-bottom: 12pt; font-size: 8pt;
     }
     .summary-hdg {
-      font-size: 10.5pt; font-weight: 700; color: #4338ca;
-      border-bottom: 2pt solid #8b5cf6; padding-bottom: 5pt; margin-bottom: 11pt;
-      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+      font-size: 9pt; font-weight: 800; color: #4338ca;
+      border-bottom: 1.5pt solid #4338ca; padding-bottom: 4pt; margin-bottom: 10pt;
     }
-    .content-text { font-size: 10pt; line-height: 1.75; color: #1a1a2e; }
-    .content-text p { margin: 0 0 8pt; }
+    .content-text { font-size: 8.5pt; line-height: 1.65; color: #1a1a2e; }
+    .content-text p { margin: 0 0 6pt; }
     .remarks-box {
-      margin-top: 14pt; padding: 7pt 11pt;
-      border-left: 3pt solid #8b5cf6; background: #faf5ff; font-size: 9.5pt;
-      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+      margin-top: 12pt; padding: 6pt 10pt;
+      border-left: 2.5pt solid #4338ca; border: 0.75pt solid #d1d5db; border-left-width: 2.5pt; font-size: 8pt;
     }
 
     /* ── Print overrides ── */
@@ -2834,14 +2832,6 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
             <div class="sig-role">Conducted By</div>
             <div class="sig-person">${esc(conductedByDisplay)}</div>
             ${conductedByDesig ? `<div class="sig-desig">${esc(conductedByDesig)}</div>` : ''}
-          </div>
-        </div>
-        <div class="sig-block">
-          <div class="sig-space"></div>
-          <div class="sig-info">
-            <div class="sig-role">Approved By</div>
-            <div class="sig-person">Arushulla Rashid (50814)</div>
-            <div class="sig-desig">Administrator</div>
           </div>
         </div>
       </div>
@@ -3192,7 +3182,6 @@ function printTrainingRecord(record: TrainingRecord) {
       <td class="sig-cell"></td>
     </tr>`).join('')
 
-  const typeBadgeBg = record.trainingType === 'External' ? '#dbeafe' : '#dcfce7'
   const typeBadgeColor = record.trainingType === 'External' ? '#1e40af' : '#166534'
 
   const html = `<!DOCTYPE html>
@@ -3203,7 +3192,7 @@ function printTrainingRecord(record: TrainingRecord) {
   <style>
     @page { size: A4 portrait; margin: 0; }
     *, *::before, *::after { box-sizing: border-box; }
-    body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #1a1a2e; background: #e8e4f3; margin: 0; padding: 0; }
+    body { font-family: Arial, Helvetica, sans-serif; font-size: 8.5pt; color: #1a1a2e; background: #f0f0f0; margin: 0; padding: 0; }
 
     /* ── Screen toolbar ── */
     .screen-bar {
@@ -3220,67 +3209,57 @@ function printTrainingRecord(record: TrainingRecord) {
     .a4-wrap { max-width: 210mm; margin: 24px auto; padding-bottom: 40px; }
     .a4-page { background: #fff; box-shadow: 0 4px 20px rgba(30,27,75,0.16); min-height: 297mm; overflow: hidden; display: flex; flex-direction: column; }
 
-    /* ══ HEADER BANNER ══ */
+    /* ══ HEADER BANNER — white bg, colored text ══ */
     .doc-hdr {
-      background: linear-gradient(135deg, #3730a3 0%, #4f46e5 100%);
-      padding: 14pt 20pt 12pt;
+      background: #fff;
+      padding: 12pt 20pt 10pt;
       display: flex; justify-content: space-between; align-items: center;
-      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+      border-bottom: 2.5pt solid #4f46e5;
     }
-    .hdr-brand { font-size: 26pt; font-weight: 900; color: #fff; letter-spacing: 5px; line-height: 1; }
-    .hdr-co { font-size: 7.5pt; color: #e0d9ff; letter-spacing: 0.4px; margin-top: 3pt; }
+    .hdr-brand { font-size: 24pt; font-weight: 900; color: #3730a3; letter-spacing: 5px; line-height: 1; }
+    .hdr-co { font-size: 7pt; color: #6b7280; letter-spacing: 0.4px; margin-top: 3pt; }
     .hdr-right { text-align: right; max-width: 58%; }
-    .hdr-dept-lbl { font-size: 7pt; color: #c7d2fe; letter-spacing: 2px; text-transform: uppercase; }
-    .hdr-doc-title { font-size: 14pt; font-weight: 900; color: #fff; letter-spacing: 0.5px; margin-top: 2pt; word-break: break-word; line-height: 1.25; }
-    .hdr-accent {
-      height: 3pt;
-      background: linear-gradient(90deg, #818cf8, #a78bfa, #818cf8);
-      -webkit-print-color-adjust: exact; print-color-adjust: exact;
-    }
+    .hdr-dept-lbl { font-size: 7pt; color: #4f46e5; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; }
+    .hdr-doc-title { font-size: 12pt; font-weight: 900; color: #1e1b4b; letter-spacing: 0.5px; margin-top: 2pt; word-break: break-word; line-height: 1.25; }
+    .hdr-accent { height: 0; }
 
     /* ── Page body ── */
-    .page-body { padding: 14pt 20pt 18pt; flex: 1; }
+    .page-body { padding: 12pt 20pt 16pt; flex: 1; }
 
     /* ── Info table ── */
-    .info-tbl { width: 100%; border-collapse: collapse; margin-bottom: 14pt; }
-    .info-tbl td { padding: 5.5pt 9pt; font-size: 9.5pt; border: 0.75pt solid #c4b5fd; vertical-align: middle; }
-    .info-tbl .lbl {
-      font-weight: 700; background: #ede9fe; color: #4338ca;
-      width: 110pt; white-space: nowrap;
-      -webkit-print-color-adjust: exact; print-color-adjust: exact;
-    }
+    .info-tbl { width: 100%; border-collapse: collapse; margin-bottom: 12pt; }
+    .info-tbl td { padding: 4pt 8pt; font-size: 8pt; border: 0.75pt solid #d1d5db; vertical-align: middle; }
+    .info-tbl .lbl { font-weight: 700; color: #4338ca; width: 100pt; white-space: nowrap; }
     .type-badge {
-      display: inline-block; padding: 1.5pt 8pt; border-radius: 12pt; font-weight: 700; font-size: 8.5pt;
-      background: ${typeBadgeBg}; color: ${typeBadgeColor};
-      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+      display: inline-block; padding: 1pt 7pt; border-radius: 10pt; font-weight: 700; font-size: 7.5pt;
+      color: ${typeBadgeColor}; border: 0.75pt solid ${typeBadgeColor};
     }
     .count-badge {
-      display: inline-block; background: #ede9fe; color: #4c1d95;
-      padding: 1.5pt 8pt; border-radius: 12pt; font-weight: 700; font-size: 8.5pt;
-      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+      display: inline-block; color: #4338ca; border: 0.75pt solid #4338ca;
+      padding: 1pt 7pt; border-radius: 10pt; font-weight: 700; font-size: 7.5pt;
     }
 
-    /* ── Section heading bar ── */
+    /* ── Section heading bar — no fill ── */
     .sec-hdr {
-      background: #8b5cf6; color: #fff;
-      padding: 5pt 10pt; font-size: 8.5pt; font-weight: 700;
+      color: #4338ca; background: #fff;
+      padding: 5pt 0 3pt; font-size: 8pt; font-weight: 800;
       text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0;
-      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+      border-bottom: 1.5pt solid #4338ca;
     }
 
     /* ── Participants table ── */
-    table.p-tbl { width: 100%; border-collapse: collapse; font-size: 9pt; table-layout: fixed; }
+    table.p-tbl { width: 100%; border-collapse: collapse; font-size: 7.5pt; table-layout: fixed; }
     .p-tbl thead th {
-      background: #6366f1; color: #fff;
-      padding: 5pt 5pt; text-align: left; font-weight: 700;
-      border: 0.75pt solid #6366f1;
-      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+      background: #fff; color: #1e1b4b;
+      padding: 4.5pt 5pt; text-align: left; font-weight: 800; font-size: 7.5pt;
+      border-top: 1.5pt solid #4338ca; border-bottom: 1.5pt solid #4338ca;
+      border-left: 0.75pt solid #d1d5db; border-right: 0.75pt solid #d1d5db;
+      text-transform: uppercase; letter-spacing: 0.5px;
     }
     .p-tbl thead th.tc { text-align: center; }
-    .p-tbl tbody td { border: 0.75pt solid #e2d9f3; padding: 4pt 5pt; vertical-align: middle; }
-    .p-tbl tbody tr:nth-child(even) td { background: #f8f6ff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .p-tbl tbody td { border: 0.75pt solid #d1d5db; padding: 3.5pt 5pt; vertical-align: middle; }
     .p-tbl .tc { text-align: center; }
-    .p-tbl .sig-cell { height: 20pt; }
+    .p-tbl .sig-cell { height: 18pt; }
 
     /* ── Print overrides ── */
     @media print {
@@ -6300,9 +6279,13 @@ function PendingTasksModal({ employees, onEdit, onClose }: { employees: Employee
             : taskRows.map(({ employee, tasks }) => (
               <div className="pending-task-row" key={`${employee.employeeId}-${employee.fullName}`}>
                 <div className="pending-task-info">
-                  <button className="pending-name-btn" type="button" onClick={() => { onEdit(employee); onClose() }}>
-                    {employee.fullName || 'Unnamed Employee'}
-                  </button>
+                  <div className="pending-task-name-row">
+                    <span className="pending-name-text">{employee.fullName || 'Unnamed Employee'}</span>
+                    <button className="pending-edit-btn" type="button" onClick={() => { onEdit(employee); onClose() }} title="Edit employee record">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      Edit
+                    </button>
+                  </div>
                   <span className="pending-task-id">{employee.employeeId || 'No ID'} · {employee.department}</span>
                 </div>
                 <div className="pending-task-fields">
