@@ -6250,6 +6250,210 @@ button.step-pill:hover { filter: brightness(0.98); }
   to   { opacity: 0; transform: scale(0.97); }
 }
 
+/* ════════════════════════════════════════════════════════
+   MEDICAL LEAVE — KPI stat cards
+   ════════════════════════════════════════════════════════ */
+
+.mc-stat-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin: 16px 0;
+}
+@media (max-width: 860px) {
+  .mc-stat-row { grid-template-columns: repeat(2, 1fr); }
+}
+.mc-stat {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px 18px;
+  border: 1px solid #e8eaf0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.mc-stat-value {
+  font-size: 1.9rem;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 3px;
+}
+.mc-stat-label {
+  font-size: 0.71rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.mc-stat-blue   .mc-stat-value { color: #2563eb; }
+.mc-stat-amber  .mc-stat-value { color: #d97706; }
+.mc-stat-purple .mc-stat-value { color: #7c3aed; }
+.mc-stat-green  .mc-stat-value { color: #16a34a; }
+
+/* ════════════════════════════════════════════════════════
+   MEDICAL LEAVE — Monthly bar chart
+   ════════════════════════════════════════════════════════ */
+
+.mc-chart-panel {
+  background: #fff;
+  border: 1px solid #e8eaf0;
+  border-radius: 12px;
+  padding: 16px 20px 14px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.mc-chart-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 14px;
+}
+.mc-chart-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  height: 90px;
+}
+.mc-chart-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  gap: 4px;
+  min-width: 0;
+}
+.mc-chart-bar-wrap {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.mc-chart-bar {
+  display: block;
+  width: 70%;
+  min-height: 4px;
+  border-radius: 4px 4px 0 0;
+  background: linear-gradient(to top, #3b82f6, #60a5fa);
+  transition: height 0.4s ease;
+}
+.mc-chart-val {
+  font-size: 0.70rem;
+  font-weight: 700;
+  color: #1e40af;
+}
+.mc-chart-lbl {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ════════════════════════════════════════════════════════
+   MEDICAL LEAVE — Toolbar
+   ════════════════════════════════════════════════════════ */
+
+.mc-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 12px 0;
+}
+.mc-toolbar label { min-width: 120px; flex: 1; }
+.mc-toolbar .search-field { flex: 2; min-width: 200px; }
+
+/* ════════════════════════════════════════════════════════
+   MEDICAL LEAVE — Table
+   ════════════════════════════════════════════════════════ */
+
+.mc-table { cursor: default; }
+.mc-expand-th { width: 28px; padding: 0 4px !important; }
+.mc-expand-cell {
+  text-align: center;
+  padding: 0 4px !important;
+  width: 28px;
+}
+.mc-arrow {
+  display: inline-block;
+  font-size: 1.1rem;
+  color: #94a3b8;
+  transition: transform 200ms, color 200ms;
+  font-style: normal;
+  line-height: 1;
+}
+.mc-arrow-open {
+  transform: rotate(90deg);
+  color: var(--brand, #6366f1);
+}
+.mc-row {
+  cursor: pointer;
+  transition: background 100ms;
+}
+.mc-row:hover { background: #f8fafc; }
+.mc-row-open { background: #f0f4ff !important; }
+.mc-name-cell { font-weight: 600; color: #1e293b; min-width: 120px; }
+.mc-reason-cell { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Expandable detail row */
+.mc-detail-row td {
+  background: #f8fafc;
+  border-top: none !important;
+  padding: 0 !important;
+}
+.mc-detail-content {
+  padding: 14px 20px 16px 44px;
+  border-left: 3px solid var(--brand, #6366f1);
+  margin: 0 8px 6px;
+  border-radius: 0 0 6px 6px;
+}
+.mc-detail-heading {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+.mc-detail-body {
+  font-size: 0.83rem;
+  color: #374151;
+  line-height: 1.65;
+}
+.mc-detail-body p { margin: 0 0 2px; }
+.mc-detail-meta {
+  font-size: 0.74rem;
+  color: #64748b;
+  margin-top: 10px;
+}
+
+/* Status pill */
+.mc-status-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* MC Provided Yes/No badge */
+.mc-bool-badge {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 10px;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+.mc-bool-badge.mc-yes { background: #dcfce7; color: #166534; }
+.mc-bool-badge.mc-no  { background: #fee2e2; color: #991b1b; }
+
+/* ════════════════════════════════════════════════════════
+   Sidebar logout button: slide arrow on hover
+   ════════════════════════════════════════════════════════ */
+
 /* Sidebar logout button: slide arrow on hover */
 .sidebar-logout {
   transition: background 150ms, color 150ms, transform 150ms;

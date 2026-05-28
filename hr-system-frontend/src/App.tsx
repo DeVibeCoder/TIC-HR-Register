@@ -1,10 +1,10 @@
-﻿import { useEffect, useMemo, useRef, useState } from 'react'
+﻿import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 
 type Page = 'overview' | 'employees' | 'leave' | 'operations' | 'activities' | 'termination' | 'settings'
 type SiteStatus = 'On Site' | 'Off Site' | 'On Leave'
 type RecordStatus = 'Pending' | 'Active'
-type LeaveView = 'request' | 'active' | 'history' | 'passport'
+type LeaveView = 'request' | 'active' | 'history' | 'medical'
 type PageSize = 50 | 100 | 'All'
 type LeaveTypeCode = 'AL' | 'FRL' | 'NP' | 'PT' | 'CC'
 type LeaveRequestStep = 'Letter Submitted' | 'Approved' | 'Dates Shared' | 'Ticket Booked' | 'Pending Departure'
@@ -117,7 +117,29 @@ type TrainingRecord = {
   remarks: string
 }
 
-type ActivitiesSection = 'requests' | 'visits' | 'incidents'
+type ActivitiesSection = 'requests' | 'visits' | 'incidents' | 'passport'
+
+type MedicalCaseStatus = 'On Medical Leave' | 'Pending MC' | 'Medical Visit' | 'Completed'
+
+type MedicalCaseRecord = {
+  id: string
+  caseDate: string
+  employeeId: string
+  pinNo: string
+  name: string
+  department: string
+  reason: string
+  hospital: string
+  departTime: string
+  returnTime: string
+  doctorAdvice: string
+  mcProvided: boolean
+  sickLeaveFrom: string
+  sickLeaveTo: string
+  sickLeaveDays: number
+  status: MedicalCaseStatus
+  recordedBy: string
+}
 
 type RequestPriority = 'Low' | 'Medium' | 'High'
 
@@ -285,6 +307,7 @@ const initialPassportHandovers: PassportHandoverRecord[] = []
 const initialNoticeTerminations: EnhancedTerminationRecord[] = []
 const initialCompletedTerminations: CompletedTerminationRecord[] = []
 const initialExitInterviews: ExitInterviewRecord[] = []
+const initialMedicalCases: MedicalCaseRecord[] = []
 const allTerminationStages: TerminationStage[] = ['Letter Submitted', 'Exit Interview', 'Ticket', 'Pending Departure']
 const initialPersonalFiles: PersonalFileRecord[] = [
   { fileNo: '0001', employeeId: '25431', fullName: 'THILINA LAKSHAN PERERA', department: 'STORES', staffStatus: 'Terminated', coc: true, jd: true, ea: true, eaExpiryDate: '2022-12-31', remarks: 'Left company Dec 2022' },
@@ -1194,34 +1217,402 @@ function PassportHandoverModal({
   )
 }
 
+function PassportTrackingSection({ records, employees, onUpdate }: {
+  records: PassportHandoverRecord[]
+  employees: Employee[]
+  onUpdate: (fn: (prev: PassportHandoverRecord[]) => PassportHandoverRecord[]) => void
+}) {
+  const [search, setSearch] = useState('')
+  const [deptFilter, setDeptFilter] = useState('All Departments')
+  const [editing, setEditing] = useState<PassportHandoverRecord | null>(null)
+
+  const empMap = useMemo(() => new Map(employees.map((e) => [e.employeeId, e])), [employees])
+  const getNic = (id: string) => empMap.get(id)?.nicPassportNo ?? '—'
+
+  const filtered = useMemo(() => records.filter((r) => {
+    const text = [r.employeeId, r.name, r.department, r.nationality].join(' ').toLowerCase()
+    return text.includes(search.trim().toLowerCase()) && (deptFilter === 'All Departments' || r.department === deptFilter)
+  }).sort((a, b) => a.departureDate.localeCompare(b.departureDate)), [records, search, deptFilter])
+
+  const save = (record: PassportHandoverRecord) => {
+    onUpdate((prev) => {
+      const exists = prev.some((r) => r.id === record.id)
+      return exists ? prev.map((r) => r.id === record.id ? record : r) : [record, ...prev]
+    })
+    setEditing(null)
+  }
+  const del = (id: string) => onUpdate((prev) => prev.filter((r) => r.id !== id))
+
+  const newRecord = (): PassportHandoverRecord => ({
+    id: `PP-${Date.now()}`,
+    employeeId: employees[0]?.employeeId ?? '',
+    name: employees[0]?.fullName ?? '',
+    department: employees[0]?.department ?? departmentsList[0],
+    nationality: employees[0]?.nationality ?? 'MALDIVES',
+    leaveTypeCode: 'AL',
+    departureDate: new Date().toISOString().slice(0, 10),
+    returnDate: new Date().toISOString().slice(0, 10),
+    days: 1,
+    passportStep: 'Issued',
+    givenDate: '',
+    returnedDate: '',
+    sentToHoDate: '',
+    remarks: '',
+  })
+
+  return (
+    <section className="employee-workspace">
+      <div className="table-toolbar leave-toolbar leave-toolbar-3 leave-toolbar-has-btn">
+        <label className="search-field"><span>Search</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Employee, ID" /></label>
+        <label><span>Section</span><select value={deptFilter} onChange={(e) => setDeptFilter(e.target.value)}><option>All Departments</option>{departmentsList.map((d) => <option key={d}>{d}</option>)}</select></label>
+        <button className="primary-button toolbar-add-btn" onClick={() => setEditing(newRecord())} type="button">+ Add Passport</button>
+      </div>
+      <div className="employee-table-shell compact-scroll">
+        <table className="data-table leave-table">
+          <thead><tr><th>Emp ID</th><th>Name</th><th>Section</th><th>NIC / PP No</th><th>Leave Type</th><th>Status</th><th>Issued Date</th><th>Returned Date</th><th>Sent to HO</th><th>Remarks</th><th>Action</th></tr></thead>
+          <tbody>
+            {filtered.map((r) => (
+              <tr key={r.id}>
+                <td>{r.employeeId}</td><td>{r.name}</td><td>{r.department}</td><td>{getNic(r.employeeId)}</td>
+                <td>{r.leaveTypeCode}</td>
+                <td className="passport-status-cell"><StatusBadge status={r.passportStep} /></td>
+                <td>{r.givenDate ? formatDateDisplay(r.givenDate) : '—'}</td>
+                <td>{r.returnedDate ? formatDateDisplay(r.returnedDate) : '—'}</td>
+                <td>{r.sentToHoDate ? formatDateDisplay(r.sentToHoDate) : '—'}</td>
+                <td>{r.remarks || '—'}</td>
+                <td><div className="row-actions request-inline-actions">
+                  <button className="action-glyph edit" onClick={() => setEditing(r)} type="button" title="Edit">✎</button>
+                  <button className="action-glyph delete" onClick={() => del(r.id)} type="button" title="Delete">🗑</button>
+                </div></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {filtered.length === 0 && <div className="leave-empty-zone">No passport records yet. Click "+ Add Passport" to get started.</div>}
+      {editing && <PassportHandoverModal record={editing} employees={employees} onClose={() => setEditing(null)} onSave={save} />}
+    </section>
+  )
+}
+
+function MedicalCaseModal({ record, employees, onClose, onSave }: {
+  record: MedicalCaseRecord
+  employees: Employee[]
+  onClose: () => void
+  onSave: (r: MedicalCaseRecord) => void
+}) {
+  const isNew = record.id.startsWith('MC-new')
+  const [form, setForm] = useState<MedicalCaseRecord>(record)
+  const setF = (f: Partial<MedicalCaseRecord>) => setForm((prev) => ({ ...prev, ...f }))
+
+  const handleEmp = (empId: string) => {
+    const emp = employees.find((e) => e.employeeId === empId)
+    if (emp) setF({ employeeId: empId, name: emp.fullName, department: emp.department, pinNo: emp.employeeId })
+  }
+
+  useEffect(() => {
+    if (form.sickLeaveFrom && form.sickLeaveTo && form.sickLeaveTo >= form.sickLeaveFrom) {
+      const diff = Math.round((new Date(form.sickLeaveTo).getTime() - new Date(form.sickLeaveFrom).getTime()) / 86400000) + 1
+      setForm((prev) => ({ ...prev, sickLeaveDays: diff }))
+    }
+  }, [form.sickLeaveFrom, form.sickLeaveTo])
+
+  const save = (e: FormEvent) => {
+    e.preventDefault()
+    onSave({ ...form, id: isNew ? `MC-${Date.now()}` : form.id })
+  }
+
+  return (
+    <div className="modal-backdrop" role="presentation">
+      <section className="registration-modal wide-modal" role="dialog" aria-modal="true">
+        <div className="modal-header">
+          <div><p className="eyebrow">Medical Leave</p><h2>{isNew ? 'Add Medical Case' : `Edit — ${form.name}`}</h2></div>
+          <button className="icon-button" onClick={onClose} type="button">×</button>
+        </div>
+        <form onSubmit={save}>
+          <div className="trn-modal-card">
+            <p className="trn-modal-card-title">Patient Details</p>
+            <div className="form-grid">
+              <label><span>Visit Date</span><input type="date" value={form.caseDate} onChange={(e) => setF({ caseDate: e.target.value })} required /></label>
+              <label><span>Employee</span>
+                <select value={form.employeeId} onChange={(e) => handleEmp(e.target.value)}>
+                  <option value="">— Select employee —</option>
+                  {employees.slice(0, 150).map((e) => <option key={e.employeeId} value={e.employeeId}>{e.fullName} ({e.employeeId})</option>)}
+                </select>
+              </label>
+              <label><span>Pin No</span><input value={form.pinNo} onChange={(e) => setF({ pinNo: e.target.value })} placeholder="Pin number" /></label>
+              <label><span>Department</span><select value={form.department} onChange={(e) => setF({ department: e.target.value })}><option value="">— Select —</option>{departmentsList.map((d) => <option key={d}>{d}</option>)}</select></label>
+              <label className="full-field"><span>Reason for Visit</span><input value={form.reason} onChange={(e) => setF({ reason: e.target.value })} required placeholder="e.g. Fever, Body pain, Cough - Follow up" /></label>
+            </div>
+          </div>
+          <div className="trn-modal-card">
+            <p className="trn-modal-card-title">Clinic Details</p>
+            <div className="form-grid">
+              <label><span>Hospital / Clinic</span><input value={form.hospital} onChange={(e) => setF({ hospital: e.target.value })} placeholder="e.g. IGMH, ADK" /></label>
+              <label><span>MC Provided</span>
+                <select value={form.mcProvided ? 'yes' : 'no'} onChange={(e) => setF({ mcProvided: e.target.value === 'yes' })}>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+                </select>
+              </label>
+              <label><span>Depart Time</span><input type="time" value={form.departTime} onChange={(e) => setF({ departTime: e.target.value })} /></label>
+              <label><span>Return Time</span><input type="time" value={form.returnTime} onChange={(e) => setF({ returnTime: e.target.value })} /></label>
+              <label className="full-field"><span>Doctor Advice / Summary</span><textarea value={form.doctorAdvice} onChange={(e) => setF({ doctorAdvice: e.target.value })} rows={5} placeholder="Symptoms, diagnosis, medication provided, MC dates, follow-up notes..." style={{ resize: 'vertical' }} /></label>
+            </div>
+          </div>
+          <div className="trn-modal-card">
+            <p className="trn-modal-card-title">Sick Leave &amp; Status</p>
+            <div className="form-grid">
+              <label><span>Sick Leave From</span><input type="date" value={form.sickLeaveFrom} onChange={(e) => setF({ sickLeaveFrom: e.target.value })} /></label>
+              <label><span>Sick Leave To</span><input type="date" value={form.sickLeaveTo} onChange={(e) => setF({ sickLeaveTo: e.target.value })} /></label>
+              <label><span>Days</span><input type="number" value={form.sickLeaveDays} min={0} onChange={(e) => setF({ sickLeaveDays: parseInt(e.target.value) || 0 })} /></label>
+              <label><span>Status</span>
+                <select value={form.status} onChange={(e) => setF({ status: e.target.value as MedicalCaseStatus })}>
+                  <option>On Medical Leave</option>
+                  <option>Pending MC</option>
+                  <option>Medical Visit</option>
+                  <option>Completed</option>
+                </select>
+              </label>
+              <label><span>Recorded By</span><input value={form.recordedBy} onChange={(e) => setF({ recordedBy: e.target.value })} placeholder="e.g. HR Admin" /></label>
+            </div>
+          </div>
+          <div className="modal-actions">
+            <button type="button" className="quiet-button light" onClick={onClose}>Cancel</button>
+            <button className="primary-button" type="submit">{isNew ? 'Add Case' : 'Save Changes'}</button>
+          </div>
+        </form>
+      </section>
+    </div>
+  )
+}
+
+function MedicalLeaveSection({ records, employees, onUpdate }: {
+  records: MedicalCaseRecord[]
+  employees: Employee[]
+  onUpdate: (fn: (prev: MedicalCaseRecord[]) => MedicalCaseRecord[]) => void
+}) {
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState<'All' | MedicalCaseStatus>('All')
+  const [mcFilter, setMcFilter] = useState<'All' | 'Yes' | 'No'>('All')
+  const [deptFilter, setDeptFilter] = useState('All Departments')
+  const [monthFilter, setMonthFilter] = useState<'All' | string>('All')
+  const [editing, setEditing] = useState<MedicalCaseRecord | null>(null)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+
+  const today = new Date().toISOString().slice(0, 10)
+
+  const months = useMemo(() => {
+    const keys = Array.from(new Set(records.map((r) => monthKey(r.caseDate)).filter(Boolean)))
+    return keys.sort().reverse()
+  }, [records])
+
+  const filtered = useMemo(() => records.filter((r) => {
+    const text = [r.employeeId, r.pinNo, r.name, r.department, r.reason, r.hospital].join(' ').toLowerCase()
+    const matchSearch = text.includes(search.trim().toLowerCase())
+    const matchStatus = statusFilter === 'All' || r.status === statusFilter
+    const matchMc = mcFilter === 'All' || (mcFilter === 'Yes' ? r.mcProvided : !r.mcProvided)
+    const matchDept = deptFilter === 'All Departments' || r.department === deptFilter
+    const matchMonth = monthFilter === 'All' || monthKey(r.caseDate) === monthFilter
+    return matchSearch && matchStatus && matchMc && matchDept && matchMonth
+  }).sort((a, b) => b.caseDate.localeCompare(a.caseDate)), [records, search, statusFilter, mcFilter, deptFilter, monthFilter])
+
+  const onMedLeave = records.filter((r) => r.status === 'On Medical Leave').length
+  const pendingMc = records.filter((r) => r.status === 'Pending MC').length
+  const todayVisits = records.filter((r) => r.caseDate === today).length
+  const returningToday = records.filter((r) => r.sickLeaveTo === today && r.status === 'On Medical Leave').length
+
+  const monthlyData = useMemo(() => {
+    const map = new Map<string, number>()
+    records.forEach((r) => {
+      if (r.caseDate) {
+        const key = monthKey(r.caseDate)
+        if (key) map.set(key, (map.get(key) ?? 0) + (r.sickLeaveDays || 1))
+      }
+    })
+    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0])).slice(-6)
+  }, [records])
+  const maxDays = Math.max(...monthlyData.map(([, d]) => d), 1)
+
+  const newCase = (): MedicalCaseRecord => ({
+    id: 'MC-new', caseDate: today, employeeId: '', pinNo: '', name: '', department: '',
+    reason: '', hospital: '', departTime: '09:00', returnTime: '13:00',
+    doctorAdvice: '', mcProvided: false, sickLeaveFrom: today, sickLeaveTo: today,
+    sickLeaveDays: 1, status: 'On Medical Leave', recordedBy: '',
+  })
+
+  const save = (r: MedicalCaseRecord) => {
+    onUpdate((prev) => {
+      const exists = prev.some((x) => x.id === r.id)
+      return exists ? prev.map((x) => x.id === r.id ? r : x) : [r, ...prev]
+    })
+    setEditing(null)
+  }
+  const del = (id: string) => onUpdate((prev) => prev.filter((r) => r.id !== id))
+
+  const mcStatusStyle = (s: MedicalCaseStatus): { background: string; color: string } => {
+    if (s === 'On Medical Leave') return { background: '#dcfce7', color: '#166534' }
+    if (s === 'Pending MC') return { background: '#fef9c3', color: '#854d0e' }
+    if (s === 'Medical Visit') return { background: '#dbeafe', color: '#1e40af' }
+    return { background: '#f1f5f9', color: '#475569' }
+  }
+
+  return (
+    <>
+      {/* KPI stat cards */}
+      <div className="mc-stat-row">
+        <div className="mc-stat mc-stat-blue"><div className="mc-stat-value">{onMedLeave}</div><div className="mc-stat-label">On Medical Leave</div></div>
+        <div className="mc-stat mc-stat-amber"><div className="mc-stat-value">{pendingMc}</div><div className="mc-stat-label">Pending MC</div></div>
+        <div className="mc-stat mc-stat-purple"><div className="mc-stat-value">{todayVisits}</div><div className="mc-stat-label">Today's Visits</div></div>
+        <div className="mc-stat mc-stat-green"><div className="mc-stat-value">{returningToday}</div><div className="mc-stat-label">Returning Today</div></div>
+      </div>
+
+      {/* Monthly sick-leave chart */}
+      {monthlyData.length > 0 && (
+        <div className="mc-chart-panel">
+          <p className="mc-chart-title">Monthly Sick Leave Days</p>
+          <div className="mc-chart-bars">
+            {monthlyData.map(([key, days]) => (
+              <div className="mc-chart-col" key={key}>
+                <div className="mc-chart-bar-wrap">
+                  <span className="mc-chart-bar" style={{ height: `${Math.round((days / maxDays) * 100)}%` }} />
+                </div>
+                <div className="mc-chart-val">{days}d</div>
+                <div className="mc-chart-lbl">{formatMonthLabel(key).slice(0, 3)}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Filters + Add */}
+      <div className="table-toolbar mc-toolbar leave-toolbar-has-btn">
+        <label className="search-field"><span>Search</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Name, ID, reason, hospital" /></label>
+        <label><span>Status</span>
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as 'All' | MedicalCaseStatus)}>
+            <option value="All">All Statuses</option>
+            <option>On Medical Leave</option><option>Pending MC</option>
+            <option>Medical Visit</option><option>Completed</option>
+          </select>
+        </label>
+        <label><span>MC Provided</span>
+          <select value={mcFilter} onChange={(e) => setMcFilter(e.target.value as 'All' | 'Yes' | 'No')}>
+            <option value="All">All</option><option>Yes</option><option>No</option>
+          </select>
+        </label>
+        <label><span>Department</span>
+          <select value={deptFilter} onChange={(e) => setDeptFilter(e.target.value)}>
+            <option>All Departments</option>
+            {departmentsList.map((d) => <option key={d}>{d}</option>)}
+          </select>
+        </label>
+        <label><span>Month</span>
+          <select value={monthFilter} onChange={(e) => setMonthFilter(e.target.value)}>
+            <option value="All">All Months</option>
+            {months.map((key) => <option key={key} value={key}>{formatMonthLabel(key)}</option>)}
+          </select>
+        </label>
+        <button className="primary-button toolbar-add-btn" onClick={() => setEditing(newCase())} type="button">+ Add Medical Case</button>
+      </div>
+
+      {/* Expandable table */}
+      <div className="employee-table-shell compact-scroll">
+        <table className="data-table mc-table">
+          <thead>
+            <tr>
+              <th className="mc-expand-th" />
+              <th>Date</th><th>Pin No</th><th>Name</th><th>Department</th>
+              <th>Reason</th><th>Hosp</th><th>Depart</th><th>Return</th>
+              <th>MC</th><th>SL From</th><th>SL To</th><th>Days</th>
+              <th>Status</th><th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((r) => {
+              const isExp = expandedId === r.id
+              return (
+                <Fragment key={r.id}>
+                  <tr className={`mc-row${isExp ? ' mc-row-open' : ''}`} onClick={() => setExpandedId(isExp ? null : r.id)}>
+                    <td className="mc-expand-cell"><span className={`mc-arrow${isExp ? ' mc-arrow-open' : ''}`}>›</span></td>
+                    <td>{formatDateDisplay(r.caseDate)}</td>
+                    <td>{r.pinNo || r.employeeId}</td>
+                    <td className="mc-name-cell">{r.name}</td>
+                    <td>{r.department}</td>
+                    <td className="mc-reason-cell">{r.reason}</td>
+                    <td>{r.hospital}</td>
+                    <td>{r.departTime}</td>
+                    <td>{r.returnTime}</td>
+                    <td onClick={(e) => e.stopPropagation()}>
+                      <span className={`mc-bool-badge${r.mcProvided ? ' mc-yes' : ' mc-no'}`}>{r.mcProvided ? 'Yes' : 'No'}</span>
+                    </td>
+                    <td>{r.sickLeaveFrom ? formatDateDisplay(r.sickLeaveFrom) : '—'}</td>
+                    <td>{r.sickLeaveTo ? formatDateDisplay(r.sickLeaveTo) : '—'}</td>
+                    <td>{r.sickLeaveDays || '—'}</td>
+                    <td onClick={(e) => e.stopPropagation()}>
+                      <span className="mc-status-pill" style={mcStatusStyle(r.status)}>{r.status}</span>
+                    </td>
+                    <td onClick={(e) => e.stopPropagation()}>
+                      <div className="row-actions request-inline-actions">
+                        <button className="action-glyph edit" onClick={() => setEditing(r)} type="button" title="Edit">✎</button>
+                        <button className="action-glyph delete" onClick={() => del(r.id)} type="button" title="Delete">🗑</button>
+                      </div>
+                    </td>
+                  </tr>
+                  {isExp && (
+                    <tr className="mc-detail-row">
+                      <td colSpan={15}>
+                        <div className="mc-detail-content">
+                          <strong className="mc-detail-heading">Doctor Advice / Summary</strong>
+                          <div className="mc-detail-body">
+                            {r.doctorAdvice
+                              ? r.doctorAdvice.split('\n').map((line, i) => <p key={i}>{line}</p>)
+                              : <em style={{ color: '#94a3b8' }}>No doctor advice recorded.</em>}
+                          </div>
+                          {r.recordedBy && <div className="mc-detail-meta">Recorded by: <strong>{r.recordedBy}</strong></div>}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {filtered.length === 0 && (
+        <div className="leave-empty-zone">No medical cases match the current filters.</div>
+      )}
+
+      {editing && <MedicalCaseModal record={editing} employees={employees} onClose={() => setEditing(null)} onSave={save} />}
+    </>
+  )
+}
+
 function LeavePage({
   employees,
   leaveRequests,
   activeLeaves,
   leaveHistory,
-  passportHandovers,
+  medicalCases,
   onAddRequest,
-  onAddPassport,
   onEditRequest,
   onDeleteRequest,
   onAdvanceRequestStep,
   onHistoryConfirm,
-  onEditPassport,
-  onDeletePassport,
+  onUpdateMedical,
 }: {
   employees: Employee[]
   leaveRequests: LeaveRequestRecord[]
   activeLeaves: ActiveLeaveRecord[]
   leaveHistory: LeaveHistoryRecord[]
-  passportHandovers: PassportHandoverRecord[]
+  medicalCases: MedicalCaseRecord[]
   onAddRequest: () => void
-  onAddPassport: () => void
   onEditRequest: (record: LeaveRequestRecord) => void
   onDeleteRequest: (id: string) => void
   onAdvanceRequestStep: (id: string) => void
   onHistoryConfirm: (id: string, confirmation: HistoryConfirmation) => void
-  onEditPassport: (record: PassportHandoverRecord) => void
-  onDeletePassport: (id: string) => void
+  onUpdateMedical: (fn: (prev: MedicalCaseRecord[]) => MedicalCaseRecord[]) => void
 }) {
   const [activeLeaveView, setActiveLeaveView] = useState<LeaveView>('request')
 
@@ -1241,9 +1632,6 @@ function LeavePage({
   const [historyStatusFilter, setHistoryStatusFilter] = useState<'All' | HistoryConfirmation>('All')
   const [historyMonthFilter, setHistoryMonthFilter] = useState<'All' | string>('All')
   const [historyDepartmentFilter, setHistoryDepartmentFilter] = useState('All Departments')
-
-  const [passportSearch, setPassportSearch] = useState('')
-  const [passportDepartmentFilter, setPassportDepartmentFilter] = useState('All Departments')
 
   const historyMonths = useMemo(() => {
     const keys = Array.from(new Set(leaveHistory.map((record) => monthKey(record.returnDate)).filter(Boolean)))
@@ -1273,24 +1661,18 @@ function LeavePage({
     return matchesSearch && matchesStatus && matchesMonth && matchesDepartment
   }).sort((a, b) => a.departureDate.localeCompare(b.departureDate)), [leaveHistory, historySearch, historyStatusFilter, historyMonthFilter, historyDepartmentFilter])
 
-  const passportRows = useMemo(() => passportHandovers.filter((record) => {
-    const matchesSearch = leaveSearchText(record).includes(passportSearch.trim().toLowerCase())
-    const matchesDepartment = passportDepartmentFilter === 'All Departments' || record.department === passportDepartmentFilter
-    return matchesSearch && matchesDepartment
-  }).sort((a, b) => a.departureDate.localeCompare(b.departureDate)), [passportHandovers, passportSearch, passportDepartmentFilter])
-
-  const currentCount = activeLeaveView === 'request' ? requestRows.length : activeLeaveView === 'active' ? activeRows.length : activeLeaveView === 'history' ? historyRows.length : passportRows.length
+  const currentCount = activeLeaveView === 'request' ? requestRows.length : activeLeaveView === 'active' ? activeRows.length : historyRows.length
 
   return (
     <>
-      <PageHeader eyebrow="Leave management" title="Leave tracker" subtitle="Leave Request to Active Leaves to Leave History with passport handover tracking in parallel." />
+      <PageHeader eyebrow="Leave management" title="Leave tracker" subtitle="Leave requests, active leaves, history and medical leave tracking." />
       <section className="employee-workspace leave-workspace">
         <div className="leave-section-tabs">
           {[
             ['request', 'LEAVE REQUEST'],
             ['active', 'ACTIVE LEAVES'],
             ['history', 'LEAVE HISTORY'],
-            ['passport', 'PASSPORT HANDOVER'],
+            ['medical', 'MEDICAL LEAVE'],
           ].map(([id, label]) => <button className={activeLeaveView === id ? 'active' : ''} key={id} onClick={() => setActiveLeaveView(id as LeaveView)} type="button">{label}</button>)}
         </div>
 
@@ -1366,24 +1748,15 @@ function LeavePage({
           </>
         )}
 
-        {activeLeaveView === 'passport' && (
-          <>
-            <div className="table-toolbar leave-toolbar leave-toolbar-3 leave-toolbar-has-btn">
-              <label className="search-field"><span>Search</span><input type="search" value={passportSearch} onChange={(event) => setPassportSearch(event.target.value)} placeholder="Employee, ID, purpose" /></label>
-              <label><span>Section</span><select value={passportDepartmentFilter} onChange={(event) => setPassportDepartmentFilter(event.target.value)}><option>All Departments</option>{departmentsList.map((item) => <option key={item}>{item}</option>)}</select></label>
-              <button className="primary-button toolbar-add-btn" onClick={onAddPassport} type="button">Add Passport</button>
-            </div>
-            <div className="employee-table-shell compact-scroll">
-              <table className="data-table leave-table"><thead><tr><th>Emp ID</th><th>Name</th><th>Section</th><th>NIC / PP No</th><th className="leave-type-th">Leave Type</th><th className="leave-status-th">Status</th><th>Issued Date</th><th>Returned Date</th><th>Sent to HO Date</th><th>Remarks</th><th>Action</th></tr></thead><tbody>
-                {passportRows.map((record) => <tr key={record.id}><td>{record.employeeId}</td><td>{record.name}</td><td>{record.department}</td><td>{getNic(record.employeeId)}</td><td>{record.leaveTypeCode}</td><td className="passport-status-cell"><StatusBadge status={record.passportStep} /></td><td>{record.givenDate ? formatDateDisplay(record.givenDate) : '-'}</td><td>{record.returnedDate ? formatDateDisplay(record.returnedDate) : '-'}</td><td>{record.sentToHoDate ? formatDateDisplay(record.sentToHoDate) : '-'}</td><td>{record.remarks || '-'}</td><td className="passport-action-cell"><div className="row-actions request-inline-actions"><button className="action-glyph edit" onClick={() => onEditPassport(record)} type="button" title="Edit" aria-label="Edit passport">✎</button><button className="action-glyph delete" onClick={() => onDeletePassport(record.id)} type="button" title="Delete" aria-label="Delete passport">🗑</button></div></td></tr>)}
-              </tbody></table>
-            </div>
-          </>
+        {activeLeaveView === 'medical' && (
+          <MedicalLeaveSection records={medicalCases} employees={employees} onUpdate={onUpdateMedical} />
         )}
 
-        <div className="leave-empty-zone">
-          {currentCount === 0 ? 'No records yet. Details will appear here when entries are added.' : `Showing ${currentCount} record${currentCount > 1 ? 's' : ''}.`}
-        </div>
+        {activeLeaveView !== 'medical' && (
+          <div className="leave-empty-zone">
+            {currentCount === 0 ? 'No records yet. Details will appear here when entries are added.' : `Showing ${currentCount} record${currentCount > 1 ? 's' : ''}.`}
+          </div>
+        )}
       </section>
     </>
   )
@@ -4948,7 +5321,15 @@ function IncidentsSection({ records, employees, onUpdate }: { records: IncidentR
   )
 }
 
-function ActivitiesPage({ employees }: { employees: Employee[] }) {
+function ActivitiesPage({
+  employees,
+  passportHandovers,
+  onUpdatePassport,
+}: {
+  employees: Employee[]
+  passportHandovers: PassportHandoverRecord[]
+  onUpdatePassport: (fn: (prev: PassportHandoverRecord[]) => PassportHandoverRecord[]) => void
+}) {
   const [activeSection, setActiveSection] = useState<ActivitiesSection>('requests')
   const [staffRequests, setStaffRequests] = useState<StaffRequestRecord[]>(initialStaffRequests)
   const [visitRecords, setVisitRecords] = useState<VisitRecord[]>(initialVisitRecords)
@@ -4960,10 +5341,12 @@ function ActivitiesPage({ employees }: { employees: Employee[] }) {
         <button className={activeSection === 'requests' ? 'active' : ''} onClick={() => setActiveSection('requests')} type="button">Requests</button>
         <button className={activeSection === 'visits' ? 'active' : ''} onClick={() => setActiveSection('visits')} type="button">Visits</button>
         <button className={activeSection === 'incidents' ? 'active' : ''} onClick={() => setActiveSection('incidents')} type="button">Incidents</button>
+        <button className={activeSection === 'passport' ? 'active' : ''} onClick={() => setActiveSection('passport')} type="button">Passport Tracking</button>
       </div>
       {activeSection === 'requests' && <RequestsSection records={staffRequests} employees={employees} onUpdate={setStaffRequests} onBack={() => {}} />}
       {activeSection === 'visits' && <VisitsSection records={visitRecords} employees={employees} onUpdate={setVisitRecords} onBack={() => {}} />}
       {activeSection === 'incidents' && <IncidentsSection records={incidentRecords} employees={employees} onUpdate={setIncidentRecords} onBack={() => {}} />}
+      {activeSection === 'passport' && <PassportTrackingSection records={passportHandovers} employees={employees} onUpdate={onUpdatePassport} />}
     </>
   )
 }
@@ -5405,13 +5788,13 @@ function App() {
   const [noticeTerminations, setNoticeTerminations] = useState<EnhancedTerminationRecord[]>(() => loadStore('tic_term_notice', initialNoticeTerminations))
   const [completedTerminations, setCompletedTerminations] = useState<CompletedTerminationRecord[]>(() => loadStore('tic_term_done', initialCompletedTerminations))
   const [exitInterviews, setExitInterviews] = useState<ExitInterviewRecord[]>(() => loadStore('tic_exit_interviews', initialExitInterviews))
+  const [medicalCases, setMedicalCases] = useState<MedicalCaseRecord[]>(() => loadStore('tic_medical_cases', initialMedicalCases))
   const [showEmployeeForm, setShowEmployeeForm] = useState(false)
   const [employeeMode, setEmployeeMode] = useState<'add' | 'edit'>('add')
   const [employeeForm, setEmployeeForm] = useState<EmployeeForm>(emptyEmployee)
   const [showPendingTasks, setShowPendingTasks] = useState(false)
   const [showLeaveForm, setShowLeaveForm] = useState(false)
   const [editingLeaveRequest, setEditingLeaveRequest] = useState<LeaveRequestRecord | null>(null)
-  const [editingPassportRecord, setEditingPassportRecord] = useState<PassportHandoverRecord | null>(null)
   const [editingTermination, setEditingTermination] = useState<EnhancedTerminationRecord | null>(null)
   const [showTerminationForm, setShowTerminationForm] = useState(false)
   const [terminationFormMode, setTerminationFormMode] = useState<'add' | 'edit'>('add')
@@ -5441,10 +5824,11 @@ function App() {
   useEffect(() => { localStorage.setItem('tic_term_notice', JSON.stringify(noticeTerminations)) }, [noticeTerminations])
   useEffect(() => { localStorage.setItem('tic_term_done', JSON.stringify(completedTerminations)) }, [completedTerminations])
   useEffect(() => { localStorage.setItem('tic_exit_interviews', JSON.stringify(exitInterviews)) }, [exitInterviews])
+  useEffect(() => { localStorage.setItem('tic_medical_cases', JSON.stringify(medicalCases)) }, [medicalCases])
 
   const resetAllData = () => {
     if (!window.confirm('This will permanently delete ALL data (employees, leave records, etc.). Are you sure?')) return
-    const keys = ['tic_employees','tic_leave_req','tic_leave_active','tic_leave_history','tic_passport','tic_term_notice','tic_term_done','tic_exit_interviews']
+    const keys = ['tic_employees','tic_leave_req','tic_leave_active','tic_leave_history','tic_passport','tic_term_notice','tic_term_done','tic_exit_interviews','tic_medical_cases']
     keys.forEach((k) => localStorage.removeItem(k))
     setEmployees([])
     setLeaveRequests([])
@@ -5454,6 +5838,7 @@ function App() {
     setNoticeTerminations([])
     setCompletedTerminations([])
     setExitInterviews([])
+    setMedicalCases([])
   }
 
   const saveEmployee = () => {
@@ -5585,18 +5970,6 @@ function App() {
         setNoticeTerminations((current) => [{ id: `TERM-${Date.now()}`, employeeId: record.employeeId, name: record.name, department: record.department, designation: employee?.designation ?? '', nationality: record.nationality, passportNo: employee?.nicPassportNo ?? '', wpNo: employee?.workPermitNo ?? '', dateOfJoin: employee?.dateOfJoin ?? '', dateSubmitted: new Date().toISOString().slice(0, 10), lastWorkingDate: new Date().toISOString().slice(0, 10), departureDate: new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10), currentStage: 'Letter Submitted', reasonForLeaving: 'Absconded / Did Not Return', satisfactionRating: 0, rehireEligible: false, exitInterviewCompleted: false, comments: '', terminationType: 'Absconded' }, ...current])
       }
     }
-  }
-
-  const savePassportRecord = (record: PassportHandoverRecord) => {
-    setPassportHandovers((current) => {
-      const exists = current.some((item) => item.id === record.id)
-      return exists ? current.map((item) => item.id === record.id ? record : item) : [record, ...current]
-    })
-    setEditingPassportRecord(null)
-  }
-
-  const deletePassportRecord = (id: string) => {
-    setPassportHandovers((current) => current.filter((record) => record.id !== id))
   }
 
   const openAddTermination = () => {
@@ -5827,9 +6200,9 @@ function App() {
         <main className="workspace-inner" id="top">
           {activePage === 'overview' && <OverviewPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} />}
           {activePage === 'employees' && <EmployeesPage employees={employees} onAdd={() => { setEmployeeMode('add'); setEmployeeForm(emptyEmployee); setShowEmployeeForm(true) }} onEdit={openEditEmployee} onExport={exportCsv} onImport={importCsv} onTemplate={downloadTemplate} onShowTasks={() => setShowPendingTasks(true)} />}
-          {activePage === 'leave' && <LeavePage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} passportHandovers={passportHandovers} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onAddPassport={() => setEditingPassportRecord({ id: `PP-${Date.now()}`, employeeId: employees[0]?.employeeId ?? '', name: employees[0]?.fullName ?? '', department: employees[0]?.department ?? departmentsList[0], nationality: employees[0]?.nationality ?? 'MALDIVES', leaveTypeCode: 'AL', departureDate: new Date().toISOString().slice(0, 10), returnDate: new Date().toISOString().slice(0, 10), days: 1, passportStep: 'Issued', givenDate: '', returnedDate: '', sentToHoDate: '', remarks: '' })} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onAdvanceRequestStep={advanceLeaveRequestStep} onHistoryConfirm={updateHistoryConfirmation} onEditPassport={(record) => setEditingPassportRecord(record)} onDeletePassport={deletePassportRecord} />}
+          {activePage === 'leave' && <LeavePage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} medicalCases={medicalCases} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onAdvanceRequestStep={advanceLeaveRequestStep} onHistoryConfirm={updateHistoryConfirmation} onUpdateMedical={(fn) => setMedicalCases(fn)} />}
           {activePage === 'operations' && <OperationsPage employees={employees} completedTerminations={completedTerminations} />}
-          {activePage === 'activities' && <ActivitiesPage employees={employees} />}
+          {activePage === 'activities' && <ActivitiesPage employees={employees} passportHandovers={passportHandovers} onUpdatePassport={(fn) => setPassportHandovers(fn)} />}
           {activePage === 'termination' && <TerminationPage noticeTerminations={noticeTerminations} completedTerminations={completedTerminations} exitInterviews={exitInterviews} onAdd={openAddTermination} onEdit={openEditTermination} onAdvanceStatus={advanceTerminationStatus} onDelete={deleteTermination} onViewDetails={(record) => setTerminationDetails(record)} onUpdateExitInterviews={(fn) => setExitInterviews(fn)} />}
           {activePage === 'settings' && <SettingsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} onReset={resetAllData} />}
         </main>
@@ -5838,7 +6211,6 @@ function App() {
       {showEmployeeForm && <EmployeeFormModal form={employeeForm} mode={employeeMode} onClose={() => setShowEmployeeForm(false)} onSave={saveEmployee} setForm={setEmployeeForm} />}
       {showPendingTasks && <PendingTasksModal employees={employees} onEdit={openEditEmployee} onClose={() => setShowPendingTasks(false)} />}
       {showLeaveForm && <LeaveFormModal employees={employees} initialRecord={editingLeaveRequest} onClose={() => { setShowLeaveForm(false); setEditingLeaveRequest(null) }} onSave={saveLeaveRequest} />}
-      {editingPassportRecord && <PassportHandoverModal record={editingPassportRecord} employees={employees} onClose={() => setEditingPassportRecord(null)} onSave={savePassportRecord} />}
       {showTerminationForm && editingTermination && <TerminationFormModal mode={terminationFormMode} record={editingTermination} employees={employees} onClose={() => { setShowTerminationForm(false); setEditingTermination(null) }} onSave={saveTerminationRecord} />}
       {terminationDetails && <TerminationDetailsModal record={terminationDetails} onClose={() => setTerminationDetails(null)} />}
 
