@@ -5877,7 +5877,13 @@ function App() {
   const [importResult, setImportResult] = useState<{ added: number; updated: number; skipped: number } | null>(null)
 
   function loadStore<T>(key: string, fallback: T[]): T[] {
-    try { const s = localStorage.getItem(key); return s ? (JSON.parse(s) as T[]) : fallback } catch { return fallback }
+    try {
+      const s = localStorage.getItem(key)
+      if (!s) return fallback
+      const parsed = JSON.parse(s) as T[]
+      // If stored value is an empty array but we now have seed data, show seed data
+      return Array.isArray(parsed) && parsed.length === 0 && fallback.length > 0 ? fallback : parsed
+    } catch { return fallback }
   }
 
   const [employees, setEmployees] = useState<Employee[]>(() => loadStore('tic_employees', initialEmployees))
