@@ -176,8 +176,30 @@ type IncidentRecord = {
 }
 
 type TerminationStage = 'Letter Submitted' | 'Exit Interview' | 'Ticket' | 'Pending Departure'
-type TerminationTab = 'notice' | 'completed'
+type TerminationTab = 'notice' | 'completed' | 'exit-interview'
 type TerminationType = 'Resignation' | 'Dismissal' | 'Probation End' | 'Contract Expiry' | 'Absconded' | 'Other'
+type SatisfactionRating = 1 | 2 | 3 | 4 | 5
+
+type ExitInterviewRecord = {
+  id: string
+  employeeId: string
+  name: string
+  department: string
+  nationality: string
+  terminationType: TerminationType
+  departureDate: string
+  interviewDate: string
+  management: SatisfactionRating
+  workEnvironment: SatisfactionRating
+  compensation: SatisfactionRating
+  workLifeBalance: SatisfactionRating
+  careerGrowth: SatisfactionRating
+  communication: SatisfactionRating
+  overall: SatisfactionRating
+  wouldRecommend: boolean
+  reasonForLeaving: string
+  comments: string
+}
 
 type EnhancedTerminationRecord = {
   id: string
@@ -262,6 +284,7 @@ const initialLeaveHistory: LeaveHistoryRecord[] = []
 const initialPassportHandovers: PassportHandoverRecord[] = []
 const initialNoticeTerminations: EnhancedTerminationRecord[] = []
 const initialCompletedTerminations: CompletedTerminationRecord[] = []
+const initialExitInterviews: ExitInterviewRecord[] = []
 const allTerminationStages: TerminationStage[] = ['Letter Submitted', 'Exit Interview', 'Ticket', 'Pending Departure']
 const initialPersonalFiles: PersonalFileRecord[] = [
   { fileNo: '0001', employeeId: '25431', fullName: 'THILINA LAKSHAN PERERA', department: 'STORES', staffStatus: 'Terminated', coc: true, jd: true, ea: true, eaExpiryDate: '2022-12-31', remarks: 'Left company Dec 2022' },
@@ -3555,22 +3578,434 @@ function TerminationDetailsModal({
   )
 }
 
+/* ─── Exit Interview helpers ─────────────────────────────── */
+const eiCategories: { key: keyof ExitInterviewRecord; label: string }[] = [
+  { key: 'management',     label: 'Management' },
+  { key: 'workEnvironment',label: 'Work Environment' },
+  { key: 'compensation',   label: 'Compensation' },
+  { key: 'workLifeBalance',label: 'Work-Life Balance' },
+  { key: 'careerGrowth',   label: 'Career Growth' },
+  { key: 'communication',  label: 'Communication' },
+  { key: 'overall',        label: 'Overall Experience' },
+]
+const ratingLabel = (r: number) => ['', 'Very Dissatisfied', 'Dissatisfied', 'Neutral', 'Satisfied', 'Very Satisfied'][Math.round(r)] ?? '—'
+const ratingColor = (r: number) => r >= 4 ? '#16a34a' : r >= 3 ? '#d97706' : '#dc2626'
+const ratingBg    = (r: number) => r >= 4 ? '#dcfce7' : r >= 3 ? '#fef3c7' : '#fee2e2'
+
+function ExitInterviewModal({ record, completedTerminations, onClose, onSave }: {
+  record: ExitInterviewRecord
+  completedTerminations: CompletedTerminationRecord[]
+  onClose: () => void
+  onSave: (r: ExitInterviewRecord) => void
+}) {
+  const isNew = record.id.startsWith('EI-new')
+  const [empSearch, setEmpSearch] = useState(record.employeeId ? `${record.employeeId} – ${record.name}` : '')
+  const [form, setForm] = useState(record)
+
+  const empMatches = useMemo(() => {
+    const q = empSearch.trim().toLowerCase()
+    if (!q) return completedTerminations.slice(0, 20)
+    return completedTerminations.filter((r) => `${r.employeeId} ${r.name}`.toLowerCase().includes(q)).slice(0, 20)
+  }, [empSearch, completedTerminations])
+
+  const handleEmpSelect = (id: string) => {
+    const r = completedTerminations.find((x) => x.employeeId === id)
+    if (!r) return
+    setEmpSearch(`${r.employeeId} – ${r.name}`)
+    setForm((prev) => ({ ...prev, employeeId: r.employeeId, name: r.name, department: r.department, nationality: r.nationality, terminationType: r.terminationType, departureDate: r.departureDate, reasonForLeaving: r.reasonForLeaving }))
+  }
+
+  const setRating = (key: keyof ExitInterviewRecord, val: SatisfactionRating) =>
+    setForm((prev) => ({ ...prev, [key]: val }))
+
+  const save = (e: FormEvent) => {
+    e.preventDefault()
+    onSave({ ...form, id: isNew ? `EI-${Date.now()}` : form.id })
+  }
+
+  const RatingRow = ({ catKey, label }: { catKey: keyof ExitInterviewRecord; label: string }) => {
+    const current = form[catKey] as SatisfactionRating
+    return (
+      <div className="ei-rating-row">
+        <span className="ei-rating-label">{label}</span>
+        <div className="ei-stars">
+          {([1,2,3,4,5] as SatisfactionRating[]).map((n) => (
+            <button key={n} type="button"
+              className={`ei-star-btn${current === n ? ' active' : ''}`}
+              onClick={() => setRating(catKey, n)}
+              title={ratingLabel(n)}
+            >{n}</button>
+          ))}
+        </div>
+        <span className="ei-rating-desc" style={{ color: ratingColor(current), background: ratingBg(current) }}>{ratingLabel(current)}</span>
+      </div>
+    )
+  }
+
+  const fStyle = { padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#fff', width:'100%' }
+
+  return (
+    <div className="modal-backdrop" role="presentation">
+      <section className="registration-modal wide-modal" role="dialog" aria-modal="true">
+        <div className="modal-header">
+          <div>
+            <p className="eyebrow">Exit Interview</p>
+            <h2>{isNew ? 'Record Exit Interview' : `Edit — ${record.name}`}</h2>
+          </div>
+          <button className="icon-button" onClick={onClose} type="button">×</button>
+        </div>
+        <form onSubmit={save}>
+          {/* Employee */}
+          <div className="trn-modal-card" style={{ marginBottom:'14px' }}>
+            {isNew && (
+              <div style={{ marginBottom:'10px' }}>
+                <span className="trn-modal-field-lbl">Select from Completed Departures</span>
+                <input value={empSearch} onChange={(e) => setEmpSearch(e.target.value)} placeholder="Search name or ID…" style={{ ...fStyle, marginTop:'4px' }} />
+                {empSearch && !form.employeeId && (
+                  <div className="ei-emp-dropdown">
+                    {empMatches.map((r) => (
+                      <button key={r.employeeId} type="button" className="ei-emp-option" onClick={() => handleEmpSelect(r.employeeId)}>
+                        <strong>{r.employeeId}</strong> {r.name} <span>{r.department}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            <div className="trn-modal-detail-row">
+              <div><span className="trn-modal-field-lbl">Employee</span><p style={{ margin:0, fontWeight:700, fontSize:'0.9rem', color:'#1e1b4b' }}>{form.name || '—'}</p></div>
+              <div><span className="trn-modal-field-lbl">Section</span><p style={{ margin:0, fontSize:'0.85rem', color:'#374151' }}>{form.department || '—'}</p></div>
+              <div><span className="trn-modal-field-lbl">Departure</span><p style={{ margin:0, fontSize:'0.85rem', color:'#374151' }}>{form.departureDate ? formatDateDisplay(form.departureDate) : '—'}</p></div>
+            </div>
+          </div>
+
+          {/* Interview date + basics */}
+          <div className="trn-modal-card" style={{ marginBottom:'14px' }}>
+            <div className="trn-modal-detail-row" style={{ gridTemplateColumns:'1fr 1fr 1fr', marginBottom:'10px' }}>
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                <span className="trn-modal-field-lbl">Interview Date</span>
+                <input type="date" value={form.interviewDate} onChange={(e) => setForm((p) => ({ ...p, interviewDate: e.target.value }))} required style={fStyle} />
+              </label>
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                <span className="trn-modal-field-lbl">Termination Type</span>
+                <select value={form.terminationType} onChange={(e) => setForm((p) => ({ ...p, terminationType: e.target.value as TerminationType }))} style={fStyle}>
+                  <option>Resignation</option><option>Dismissal</option><option>Probation End</option><option>Contract Expiry</option><option>Absconded</option><option>Other</option>
+                </select>
+              </label>
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                <span className="trn-modal-field-lbl" style={{ display:'block', marginBottom:'6px' }}>Would Recommend TIC?</span>
+                <label style={{ display:'flex', alignItems:'center', gap:'8px', marginTop:'6px' }}>
+                  <input type="checkbox" checked={form.wouldRecommend} onChange={(e) => setForm((p) => ({ ...p, wouldRecommend: e.target.checked }))} style={{ width:'16px', height:'16px', accentColor:'#7c3aed' }} />
+                  <span style={{ fontSize:'0.85rem', color:'#374151' }}>Yes, would recommend</span>
+                </label>
+              </label>
+            </div>
+            <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+              <span className="trn-modal-field-lbl">Reason for Leaving</span>
+              <input value={form.reasonForLeaving} onChange={(e) => setForm((p) => ({ ...p, reasonForLeaving: e.target.value }))} placeholder="Primary reason stated by employee" style={fStyle} />
+            </label>
+          </div>
+
+          {/* Satisfaction ratings */}
+          <div className="trn-modal-card" style={{ marginBottom:'14px' }}>
+            <p className="trn-modal-field-lbl" style={{ marginBottom:'12px' }}>Satisfaction Ratings &nbsp;<span style={{ fontWeight:400, color:'#6b7280' }}>1 = Very Dissatisfied · 5 = Very Satisfied</span></p>
+            <div className="ei-ratings-grid">
+              {eiCategories.map(({ key, label }) => <RatingRow key={key} catKey={key} label={label} />)}
+            </div>
+          </div>
+
+          {/* Comments */}
+          <div className="trn-modal-card">
+            <span className="trn-modal-field-lbl">Additional Comments</span>
+            <textarea rows={3} value={form.comments} onChange={(e) => setForm((p) => ({ ...p, comments: e.target.value }))} placeholder="Any additional feedback from the employee…" style={{ ...fStyle, marginTop:'4px', resize:'vertical' }} />
+          </div>
+
+          <div className="modal-actions">
+            <button className="quiet-button light" onClick={onClose} type="button">Cancel</button>
+            <button className="primary-button" type="submit" disabled={!form.employeeId}>{isNew ? 'Save Interview' : 'Save Changes'}</button>
+          </div>
+        </form>
+      </section>
+    </div>
+  )
+}
+
+function ExitInterviewSection({ records, completedTerminations, onUpdate }: {
+  records: ExitInterviewRecord[]
+  completedTerminations: CompletedTerminationRecord[]
+  onUpdate: (fn: (prev: ExitInterviewRecord[]) => ExitInterviewRecord[]) => void
+}) {
+  const [monthFilter, setMonthFilter] = useState('All')
+  const [deptFilter, setDeptFilter] = useState('All Sections')
+  const [editing, setEditing] = useState<ExitInterviewRecord | null>(null)
+  const [viewing, setViewing] = useState<ExitInterviewRecord | null>(null)
+
+  const months = useMemo(() => {
+    const keys = Array.from(new Set(records.map((r) => r.departureDate.slice(0, 7)))).sort().reverse()
+    return ['All', ...keys]
+  }, [records])
+
+  const filtered = useMemo(() => records.filter((r) => {
+    const mOk = monthFilter === 'All' || r.departureDate.startsWith(monthFilter)
+    const dOk = deptFilter === 'All Sections' || r.department === deptFilter
+    return mOk && dOk
+  }), [records, monthFilter, deptFilter])
+
+  const total = filtered.length
+
+  const avg = (key: keyof ExitInterviewRecord) => {
+    if (!total) return 0
+    return filtered.reduce((s, r) => s + (r[key] as number), 0) / total
+  }
+
+  const avgOverall    = avg('overall')
+  const recommendPct  = total ? Math.round(filtered.filter((r) => r.wouldRecommend).length / total * 100) : 0
+
+  const reasonCounts = useMemo(() => {
+    const m: Record<string, number> = {}
+    filtered.forEach((r) => { m[r.terminationType] = (m[r.terminationType] ?? 0) + 1 })
+    return Object.entries(m).sort((a, b) => b[1] - a[1])
+  }, [filtered])
+
+  const topReason = reasonCounts[0]?.[0] ?? '—'
+
+  const save = (r: ExitInterviewRecord) => {
+    onUpdate((prev) => {
+      const idx = prev.findIndex((x) => x.id === r.id)
+      return idx >= 0 ? prev.map((x) => x.id === r.id ? r : x) : [r, ...prev]
+    })
+    setEditing(null)
+  }
+
+  const del = (id: string) => onUpdate((prev) => prev.filter((x) => x.id !== id))
+
+  const exportReport = () => {
+    const headers = ['ID','Employee','Section','Nationality','Departure','Type','Recommend','Management','Work Env','Compensation','Work-Life','Career Growth','Communication','Overall','Reason','Comments']
+    const rows = filtered.map((r) => [r.id, r.name, r.department, r.nationality, formatDateDisplay(r.departureDate), r.terminationType, r.wouldRecommend ? 'Yes' : 'No', String(r.management), String(r.workEnvironment), String(r.compensation), String(r.workLifeBalance), String(r.careerGrowth), String(r.communication), String(r.overall), r.reasonForLeaving, r.comments])
+    downloadCsv('exit-interview-report.csv', [headers, ...rows])
+  }
+
+  const newEI = (): ExitInterviewRecord => ({
+    id: 'EI-new', employeeId: '', name: '', department: '', nationality: '',
+    terminationType: 'Resignation', departureDate: '', interviewDate: new Date().toISOString().slice(0,10),
+    management: 3, workEnvironment: 3, compensation: 3, workLifeBalance: 3,
+    careerGrowth: 3, communication: 3, overall: 3,
+    wouldRecommend: false, reasonForLeaving: '', comments: '',
+  })
+
+  const ScoreBar = ({ label, value }: { label: string; value: number }) => (
+    <div className="ei-score-row">
+      <span className="ei-score-label">{label}</span>
+      <div className="ei-score-track">
+        <div className="ei-score-fill" style={{ width: `${(value / 5) * 100}%`, background: ratingColor(value) }} />
+      </div>
+      <span className="ei-score-num" style={{ color: ratingColor(value) }}>{value ? value.toFixed(1) : '—'}</span>
+      {value > 0 && <span className="ei-score-desc" style={{ color: ratingColor(value), background: ratingBg(value) }}>{ratingLabel(value)}</span>}
+    </div>
+  )
+
+  return (
+    <>
+      {/* Toolbar */}
+      <div className="table-toolbar activities-toolbar">
+        <label><span>Month</span>
+          <select value={monthFilter} onChange={(e) => setMonthFilter(e.target.value)}>
+            {months.map((m) => <option key={m} value={m}>{m === 'All' ? 'All Months' : formatMonthLabel(m)}</option>)}
+          </select>
+        </label>
+        <label><span>Section</span>
+          <select value={deptFilter} onChange={(e) => setDeptFilter(e.target.value)}>
+            <option value="All Sections">All Sections</option>
+            {departmentsList.map((d) => <option key={d}>{d}</option>)}
+          </select>
+        </label>
+        <button className="quiet-button light" type="button" onClick={exportReport} style={{ marginLeft:'auto' }}>⬇ Export Report</button>
+        <button className="primary-button" type="button" onClick={() => setEditing(newEI())}>+ Add Interview</button>
+      </div>
+
+      {/* KPI stat cards */}
+      <div className="ei-stat-row">
+        <div className="ei-stat ei-stat-purple">
+          <strong>{total}</strong>
+          <span>Total Interviews</span>
+        </div>
+        <div className="ei-stat ei-stat-blue">
+          <strong>{avgOverall ? avgOverall.toFixed(1) : '—'}<small>/5</small></strong>
+          <span>Avg Satisfaction</span>
+        </div>
+        <div className="ei-stat ei-stat-green">
+          <strong>{recommendPct}<small>%</small></strong>
+          <span>Would Recommend</span>
+        </div>
+        <div className="ei-stat ei-stat-amber">
+          <strong>{topReason}</strong>
+          <span>Top Exit Reason</span>
+        </div>
+      </div>
+
+      {/* Satisfaction breakdown */}
+      {total > 0 && (
+        <div className="ei-dashboard-grid">
+          <div className="ei-panel">
+            <h3 className="ei-panel-title">Satisfaction by Area</h3>
+            <div className="ei-scores">
+              {eiCategories.map(({ key, label }) => (
+                <ScoreBar key={key} label={label} value={avg(key)} />
+              ))}
+            </div>
+          </div>
+
+          <div className="ei-panel">
+            <h3 className="ei-panel-title">Exit Reasons</h3>
+            <div className="ei-reasons">
+              {reasonCounts.map(([reason, count]) => (
+                <div key={reason} className="ei-reason-row">
+                  <span className="ei-reason-name">{reason}</span>
+                  <div className="ei-reason-track">
+                    <div className="ei-reason-fill" style={{ width: `${(count / total) * 100}%` }} />
+                  </div>
+                  <span className="ei-reason-count">{count} <small>({Math.round(count / total * 100)}%)</small></span>
+                </div>
+              ))}
+            </div>
+            <div className="ei-recommend-ring" style={{ marginTop:'24px' }}>
+              <div className="ei-ring-label">
+                <strong style={{ fontSize:'2rem', color: recommendPct >= 60 ? '#16a34a' : '#dc2626' }}>{recommendPct}%</strong>
+                <span>would recommend TIC as an employer</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {total === 0 && (
+        <div className="ei-empty">
+          <svg viewBox="0 0 48 48" fill="none" stroke="#c4b5fd" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="56" height="56"><circle cx="24" cy="24" r="20"/><path d="M24 14v10l6 4"/></svg>
+          <p>No exit interview records match the current filters.</p>
+          <p style={{ fontSize:'0.8rem', color:'#9ca3af' }}>Add interviews using the button above.</p>
+        </div>
+      )}
+
+      {/* Interview table */}
+      {total > 0 && (
+        <div className="employee-table-shell compact-scroll" style={{ marginTop:'16px' }}>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Emp ID</th><th>Name</th><th>Section</th><th>Departure</th>
+                <th>Type</th>
+                <th style={{textAlign:'center'}}>Overall</th>
+                <th style={{textAlign:'center'}}>Recommend</th>
+                <th>Reason</th>
+                <th style={{textAlign:'center'}}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((r) => (
+                <tr key={r.id}>
+                  <td>{r.employeeId}</td>
+                  <td className="name-cell"><button className="name-link" type="button" onClick={() => setViewing(r)}>{r.name}</button></td>
+                  <td>{r.department}</td>
+                  <td style={{textAlign:'center'}}>{formatDateDisplay(r.departureDate)}</td>
+                  <td><span className="req-type-chip">{r.terminationType}</span></td>
+                  <td style={{textAlign:'center'}}>
+                    <span className="ei-overall-badge" style={{ color: ratingColor(r.overall), background: ratingBg(r.overall) }}>
+                      {r.overall}/5
+                    </span>
+                  </td>
+                  <td style={{textAlign:'center'}}>
+                    {r.wouldRecommend
+                      ? <span className="doc-yes" style={{fontSize:'0.75rem', fontWeight:700}}>✓ Yes</span>
+                      : <span className="doc-no" style={{fontSize:'0.75rem'}}>No</span>}
+                  </td>
+                  <td style={{maxWidth:'180px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{r.reasonForLeaving || '—'}</td>
+                  <td style={{textAlign:'center'}}>
+                    <div className="row-actions">
+                      <button className="action-glyph" title="View" onClick={() => setViewing(r)} type="button">👁</button>
+                      <button className="action-glyph edit" title="Edit" onClick={() => setEditing(r)} type="button">✎</button>
+                      <button className="action-glyph delete" title="Delete" onClick={() => del(r.id)} type="button">🗑</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* View modal */}
+      {viewing && (
+        <div className="modal-backdrop" role="presentation">
+          <section className="registration-modal wide-modal" role="dialog" aria-modal="true">
+            <div className="modal-header">
+              <div>
+                <p className="eyebrow">Exit Interview · {viewing.id}</p>
+                <h2>{viewing.name}</h2>
+                <p style={{margin:0, fontSize:'0.78rem', color:'rgba(255,255,255,0.6)'}}>{viewing.department} · {formatDateDisplay(viewing.departureDate)}</p>
+              </div>
+              <button className="icon-button" onClick={() => setViewing(null)} type="button">×</button>
+            </div>
+            <div className="ei-view-grid">
+              <div className="ei-panel" style={{gridColumn:'1/-1'}}>
+                <div className="trn-modal-detail-row">
+                  <div><span className="trn-modal-field-lbl">Employee</span><p style={{margin:0, fontWeight:700}}>{viewing.name}</p></div>
+                  <div><span className="trn-modal-field-lbl">Section</span><p style={{margin:0}}>{viewing.department}</p></div>
+                  <div><span className="trn-modal-field-lbl">Departure</span><p style={{margin:0}}>{formatDateDisplay(viewing.departureDate)}</p></div>
+                  <div><span className="trn-modal-field-lbl">Type</span><p style={{margin:0}}>{viewing.terminationType}</p></div>
+                  <div><span className="trn-modal-field-lbl">Would Recommend</span><p style={{margin:0, color: viewing.wouldRecommend ? '#16a34a' : '#dc2626', fontWeight:700}}>{viewing.wouldRecommend ? '✓ Yes' : '✗ No'}</p></div>
+                </div>
+              </div>
+              <div className="ei-panel">
+                <h3 className="ei-panel-title">Ratings</h3>
+                {eiCategories.map(({ key, label }) => (
+                  <ScoreBar key={key} label={label} value={viewing[key] as number} />
+                ))}
+              </div>
+              <div className="ei-panel">
+                <h3 className="ei-panel-title">Feedback</h3>
+                <div style={{marginBottom:'12px'}}>
+                  <span className="trn-modal-field-lbl">Reason for Leaving</span>
+                  <p style={{margin:'4px 0 0', fontSize:'0.87rem', color:'#374151'}}>{viewing.reasonForLeaving || '—'}</p>
+                </div>
+                <div>
+                  <span className="trn-modal-field-lbl">Additional Comments</span>
+                  <p style={{margin:'4px 0 0', fontSize:'0.87rem', color:'#374151', lineHeight:1.6}}>{viewing.comments || '—'}</p>
+                </div>
+              </div>
+            </div>
+            <div className="modal-actions">
+              <button className="primary-button" type="button" onClick={() => { setViewing(null); setEditing(viewing) }}>✎ Edit</button>
+              <button className="quiet-button light" type="button" onClick={() => setViewing(null)}>Close</button>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {editing && <ExitInterviewModal record={editing} completedTerminations={completedTerminations} onClose={() => setEditing(null)} onSave={save} />}
+    </>
+  )
+}
+
 function TerminationPage({
   noticeTerminations,
   completedTerminations,
+  exitInterviews,
   onAdd,
   onEdit,
   onAdvanceStatus,
   onDelete,
   onViewDetails,
+  onUpdateExitInterviews,
 }: {
   noticeTerminations: EnhancedTerminationRecord[]
   completedTerminations: CompletedTerminationRecord[]
+  exitInterviews: ExitInterviewRecord[]
   onAdd: () => void
   onEdit: (record: EnhancedTerminationRecord) => void
   onAdvanceStatus: (id: string) => void
   onDelete: (id: string) => void
   onViewDetails: (record: EnhancedTerminationRecord | CompletedTerminationRecord) => void
+  onUpdateExitInterviews: (fn: (prev: ExitInterviewRecord[]) => ExitInterviewRecord[]) => void
 }) {
   const [activeTab, setActiveTab] = useState<TerminationTab>('notice')
   const [noticeSearch, setNoticeSearch] = useState('')
@@ -3585,85 +4020,83 @@ function TerminationPage({
     const now = new Date()
     let years = now.getFullYear() - start.getFullYear()
     let months = now.getMonth() - start.getMonth()
-    if (months < 0) {
-      years -= 1
-      months += 12
-    }
+    if (months < 0) { years -= 1; months += 12 }
     return `${years}y ${months}m`
   }
 
-  const noticeDepartments = useMemo(() => ['All Departments', ...Array.from(new Set(noticeTerminations.map((record) => record.department))).sort()], [noticeTerminations])
-  const completedDepartments = useMemo(() => ['All Departments', ...Array.from(new Set(completedTerminations.map((record) => record.department))).sort()], [completedTerminations])
+  const noticeDepartments = useMemo(() => ['All Departments', ...Array.from(new Set(noticeTerminations.map((r) => r.department))).sort()], [noticeTerminations])
+  const completedDepartments = useMemo(() => ['All Departments', ...Array.from(new Set(completedTerminations.map((r) => r.department))).sort()], [completedTerminations])
 
-  const noticeRows = useMemo(() => noticeTerminations.filter((record) => {
-    const term = noticeSearch.trim().toLowerCase()
-    const matchesSearch = term === '' || `${record.employeeId} ${record.name} ${record.department} ${record.nationality}`.toLowerCase().includes(term)
-    const matchesDepartment = noticeDepartmentFilter === 'All Departments' || record.department === noticeDepartmentFilter
-    const matchesStatus = noticeStageFilter === 'All' || record.currentStage === noticeStageFilter
-    return matchesSearch && matchesDepartment && matchesStatus
+  const noticeRows = useMemo(() => noticeTerminations.filter((r) => {
+    const t = noticeSearch.trim().toLowerCase()
+    return (!t || `${r.employeeId} ${r.name} ${r.department} ${r.nationality}`.toLowerCase().includes(t))
+      && (noticeDepartmentFilter === 'All Departments' || r.department === noticeDepartmentFilter)
+      && (noticeStageFilter === 'All' || r.currentStage === noticeStageFilter)
   }).sort((a, b) => a.departureDate.localeCompare(b.departureDate)), [noticeTerminations, noticeSearch, noticeDepartmentFilter, noticeStageFilter])
 
-  const completedRows = useMemo(() => completedTerminations.filter((record) => {
-    const term = completedSearch.trim().toLowerCase()
-    const matchesSearch = term === '' || `${record.employeeId} ${record.name} ${record.department} ${record.nationality}`.toLowerCase().includes(term)
-    const matchesDepartment = completedDepartmentFilter === 'All Departments' || record.department === completedDepartmentFilter
-    return matchesSearch && matchesDepartment
+  const completedRows = useMemo(() => completedTerminations.filter((r) => {
+    const t = completedSearch.trim().toLowerCase()
+    return (!t || `${r.employeeId} ${r.name} ${r.department} ${r.nationality}`.toLowerCase().includes(t))
+      && (completedDepartmentFilter === 'All Departments' || r.department === completedDepartmentFilter)
   }).sort((a, b) => a.departureDate.localeCompare(b.departureDate)), [completedTerminations, completedSearch, completedDepartmentFilter])
 
   return (
     <>
-      <PageHeader eyebrow="Employee separation" title="Termination" subtitle="Table-first workflow for notice period and completed departures." />
+      <PageHeader eyebrow="Employee separation" title="Termination" subtitle="Manage notice periods, completed departures, and exit interview insights." />
       <section className="employee-workspace leave-workspace termination-workspace">
         <div className="leave-section-tabs termination-tabs">
-          <button className={activeTab === 'notice' ? 'active' : ''} onClick={() => setActiveTab('notice')} type="button">NOTICE PERIOD</button>
-          <button className={activeTab === 'completed' ? 'active' : ''} onClick={() => setActiveTab('completed')} type="button">COMPLETED</button>
+          <button className={activeTab === 'notice' ? 'active' : ''} onClick={() => setActiveTab('notice')} type="button">
+            Notice Period{noticeTerminations.length > 0 && <span className="tab-count">{noticeTerminations.length}</span>}
+          </button>
+          <button className={activeTab === 'completed' ? 'active' : ''} onClick={() => setActiveTab('completed')} type="button">
+            Completed{completedTerminations.length > 0 && <span className="tab-count">{completedTerminations.length}</span>}
+          </button>
+          <button className={activeTab === 'exit-interview' ? 'active' : ''} onClick={() => setActiveTab('exit-interview')} type="button">
+            Exit Interviews{exitInterviews.length > 0 && <span className="tab-count">{exitInterviews.length}</span>}
+          </button>
         </div>
 
         {activeTab === 'notice' && (
           <>
             <div className="table-toolbar leave-toolbar leave-toolbar-3 termination-topbar leave-toolbar-has-btn">
-              <label className="search-field"><span>Search</span><input className="termination-search" onChange={(event) => setNoticeSearch(event.target.value)} placeholder="Search employee, ID, department..." type="search" value={noticeSearch} /></label>
-              <label><span>Department</span><select className="termination-filter" onChange={(event) => setNoticeDepartmentFilter(event.target.value)} value={noticeDepartmentFilter}>{noticeDepartments.map((item) => <option key={item}>{item}</option>)}</select></label>
-              <label><span>Status</span><select className="termination-filter" onChange={(event) => setNoticeStageFilter(event.target.value === 'All' ? 'All' : event.target.value as TerminationStage)} value={noticeStageFilter}><option value="All">All Status</option>{allTerminationStages.map((stage) => <option key={stage} value={stage}>{stage}</option>)}</select></label>
-              <button className="primary-button toolbar-add-btn" onClick={onAdd} type="button">Add</button>
+              <label className="search-field"><span>Search</span><input onChange={(e) => setNoticeSearch(e.target.value)} placeholder="Employee, ID, department…" type="search" value={noticeSearch} /></label>
+              <label><span>Section</span><select onChange={(e) => setNoticeDepartmentFilter(e.target.value)} value={noticeDepartmentFilter}>{noticeDepartments.map((d) => <option key={d}>{d}</option>)}</select></label>
+              <label><span>Stage</span><select onChange={(e) => setNoticeStageFilter(e.target.value === 'All' ? 'All' : e.target.value as TerminationStage)} value={noticeStageFilter}><option value="All">All Stages</option>{allTerminationStages.map((s) => <option key={s}>{s}</option>)}</select></label>
+              <button className="primary-button toolbar-add-btn" onClick={onAdd} type="button">+ Add</button>
             </div>
-
             <div className="employee-table-shell compact-scroll termination-table-shell">
               <table className="data-table termination-table compact">
-                <thead>
-                  <tr>
-                    <th>Employee ID</th>
-                    <th>Name</th>
-                    <th>Department</th>
-                    <th>Nationality</th>
-                    <th>Date of Join</th>
-                    <th>Duration</th>
-                    <th>Last Working Date</th>
-                    <th>Departure Date</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
+                <thead><tr><th>Emp ID</th><th>Name</th><th>Section</th><th>Nationality</th><th>Date of Join</th><th>Duration</th><th>Last Working</th><th>Departure</th><th>Stage</th><th>Actions</th></tr></thead>
                 <tbody>
-                  {noticeRows.map((record) => {
-                    const currentIndex = allTerminationStages.indexOf(record.currentStage)
-                    const progress = ((currentIndex + 1) / allTerminationStages.length) * 100
-
-                    return (
-                      <tr key={record.id} className="termination-row">
-                        <td>{record.employeeId}</td>
-                        <td className="name-cell"><button className="name-link" onClick={() => onViewDetails(record)} type="button">{record.name}</button></td>
-                        <td>{record.department}</td>
-                        <td>{record.nationality}</td>
-                        <td>{formatDateDisplay(record.dateOfJoin)}</td>
-                        <td>{getDuration(record.dateOfJoin)}</td>
-                        <td>{formatDateDisplay(record.lastWorkingDate)}</td>
-                        <td>{formatDateDisplay(record.departureDate)}</td>
-                        <td className="leave-status-cell termination-status-cell"><button className={`status-advance-btn status-text status-chip status-step-${record.currentStage.toLowerCase().replaceAll(' ', '-')}`} onClick={() => onAdvanceStatus(record.id)} disabled={record.currentStage === 'Pending Departure'} type="button" title={record.currentStage === 'Pending Departure' ? 'Final status reached' : 'Click to move to next status'}>{record.currentStage}</button><div className={`status-progress-track status-step-${record.currentStage.toLowerCase().replaceAll(' ', '-')}`}><span style={{ width: `${progress}%` }} /></div></td>
-                        <td className="termination-actions"><div className="row-actions request-inline-actions"><button className="action-glyph" onClick={() => onViewDetails(record)} type="button" title="View details" aria-label="View details">👁</button><button className="action-glyph edit" onClick={() => onEdit(record)} type="button" title="Edit" aria-label="Edit termination">✎</button><button className="action-glyph delete" onClick={() => onDelete(record.id)} type="button" title="Delete" aria-label="Delete termination">🗑</button></div></td>
-                      </tr>
-                    )
-                  })}
+                  {noticeRows.length === 0
+                    ? <tr><td colSpan={10} className="empty-row">No notice period records.</td></tr>
+                    : noticeRows.map((r) => {
+                      const idx = allTerminationStages.indexOf(r.currentStage)
+                      const pct = ((idx + 1) / allTerminationStages.length) * 100
+                      return (
+                        <tr key={r.id} className="termination-row">
+                          <td>{r.employeeId}</td>
+                          <td className="name-cell"><button className="name-link" onClick={() => onViewDetails(r)} type="button">{r.name}</button></td>
+                          <td>{r.department}</td>
+                          <td>{r.nationality}</td>
+                          <td>{formatDateDisplay(r.dateOfJoin)}</td>
+                          <td>{getDuration(r.dateOfJoin)}</td>
+                          <td>{formatDateDisplay(r.lastWorkingDate)}</td>
+                          <td>{formatDateDisplay(r.departureDate)}</td>
+                          <td className="leave-status-cell termination-status-cell">
+                            <button className={`status-advance-btn status-text status-chip status-step-${r.currentStage.toLowerCase().replaceAll(' ','-')}`} onClick={() => onAdvanceStatus(r.id)} disabled={r.currentStage === 'Pending Departure'} type="button">{r.currentStage}</button>
+                            <div className={`status-progress-track status-step-${r.currentStage.toLowerCase().replaceAll(' ','-')}`}><span style={{ width:`${pct}%` }} /></div>
+                          </td>
+                          <td className="termination-actions">
+                            <div className="row-actions">
+                              <button className="action-glyph" onClick={() => onViewDetails(r)} type="button" title="View">👁</button>
+                              <button className="action-glyph edit" onClick={() => onEdit(r)} type="button" title="Edit">✎</button>
+                              <button className="action-glyph delete" onClick={() => onDelete(r.id)} type="button" title="Delete">🗑</button>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
                 </tbody>
               </table>
             </div>
@@ -3673,52 +4106,42 @@ function TerminationPage({
         {activeTab === 'completed' && (
           <>
             <div className="table-toolbar leave-toolbar termination-topbar termination-topbar-completed">
-              <label className="search-field"><span>Search</span><input className="termination-search" onChange={(event) => setCompletedSearch(event.target.value)} placeholder="Search employee, ID, department..." type="search" value={completedSearch} /></label>
-              <label><span>Department</span><select className="termination-filter" onChange={(event) => setCompletedDepartmentFilter(event.target.value)} value={completedDepartmentFilter}>{completedDepartments.map((item) => <option key={item}>{item}</option>)}</select></label>
+              <label className="search-field"><span>Search</span><input onChange={(e) => setCompletedSearch(e.target.value)} placeholder="Employee, ID, department…" type="search" value={completedSearch} /></label>
+              <label><span>Section</span><select onChange={(e) => setCompletedDepartmentFilter(e.target.value)} value={completedDepartmentFilter}>{completedDepartments.map((d) => <option key={d}>{d}</option>)}</select></label>
             </div>
-
             <div className="employee-table-shell compact-scroll termination-table-shell">
               <table className="data-table termination-table compact">
-                <thead>
-                  <tr>
-                    <th>Employee ID</th>
-                    <th>Name</th>
-                    <th>Department</th>
-                    <th>Nationality</th>
-                    <th>Date of Join</th>
-                    <th>Duration</th>
-                    <th>Last Working Date</th>
-                    <th>Departure Date</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
+                <thead><tr><th>Emp ID</th><th>Name</th><th>Section</th><th>Nationality</th><th>Date of Join</th><th>Duration</th><th>Last Working</th><th>Departure</th><th>Type</th><th>Action</th></tr></thead>
                 <tbody>
-                  {completedRows.map((record) => (
-                    <tr key={record.id} className="termination-row">
-                      <td>{record.employeeId}</td>
-                      <td className="name-cell"><button className="name-link" onClick={() => onViewDetails(record)} type="button">{record.name}</button></td>
-                      <td>{record.department}</td>
-                      <td>{record.nationality}</td>
-                      <td>{formatDateDisplay(record.dateOfJoin)}</td>
-                      <td>{getDuration(record.dateOfJoin)}</td>
-                      <td>{formatDateDisplay(record.lastWorkingDate)}</td>
-                      <td>{formatDateDisplay(record.departureDate)}</td>
-                      <td><button className="status-advance-btn status-text status-chip status-step-pending-departure" disabled type="button">Departed</button></td>
-                      <td className="termination-actions"><button className="action-glyph" onClick={() => onViewDetails(record)} type="button" title="View details" aria-label="View details">👁</button></td>
-                    </tr>
-                  ))}
+                  {completedRows.length === 0
+                    ? <tr><td colSpan={10} className="empty-row">No completed departures.</td></tr>
+                    : completedRows.map((r) => (
+                      <tr key={r.id} className="termination-row">
+                        <td>{r.employeeId}</td>
+                        <td className="name-cell"><button className="name-link" onClick={() => onViewDetails(r)} type="button">{r.name}</button></td>
+                        <td>{r.department}</td>
+                        <td>{r.nationality}</td>
+                        <td>{formatDateDisplay(r.dateOfJoin)}</td>
+                        <td>{getDuration(r.dateOfJoin)}</td>
+                        <td>{formatDateDisplay(r.lastWorkingDate)}</td>
+                        <td>{formatDateDisplay(r.departureDate)}</td>
+                        <td><span className="req-type-chip">{r.terminationType}</span></td>
+                        <td className="termination-actions"><button className="action-glyph" onClick={() => onViewDetails(r)} type="button" title="View">👁</button></td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
             </div>
           </>
         )}
 
-        <div className="leave-empty-zone">
-          {(activeTab === 'notice' ? noticeRows.length : completedRows.length) === 0
-            ? 'No records yet. Details will appear here when entries are added.'
-            : `Showing ${(activeTab === 'notice' ? noticeRows.length : completedRows.length)} record${(activeTab === 'notice' ? noticeRows.length : completedRows.length) > 1 ? 's' : ''}.`}
-        </div>
+        {activeTab === 'exit-interview' && (
+          <ExitInterviewSection
+            records={exitInterviews}
+            completedTerminations={completedTerminations}
+            onUpdate={onUpdateExitInterviews}
+          />
+        )}
       </section>
     </>
   )
@@ -4981,6 +5404,7 @@ function App() {
   const [passportHandovers, setPassportHandovers] = useState<PassportHandoverRecord[]>(() => loadStore('tic_passport', initialPassportHandovers))
   const [noticeTerminations, setNoticeTerminations] = useState<EnhancedTerminationRecord[]>(() => loadStore('tic_term_notice', initialNoticeTerminations))
   const [completedTerminations, setCompletedTerminations] = useState<CompletedTerminationRecord[]>(() => loadStore('tic_term_done', initialCompletedTerminations))
+  const [exitInterviews, setExitInterviews] = useState<ExitInterviewRecord[]>(() => loadStore('tic_exit_interviews', initialExitInterviews))
   const [showEmployeeForm, setShowEmployeeForm] = useState(false)
   const [employeeMode, setEmployeeMode] = useState<'add' | 'edit'>('add')
   const [employeeForm, setEmployeeForm] = useState<EmployeeForm>(emptyEmployee)
@@ -5016,10 +5440,11 @@ function App() {
   useEffect(() => { localStorage.setItem('tic_passport', JSON.stringify(passportHandovers)) }, [passportHandovers])
   useEffect(() => { localStorage.setItem('tic_term_notice', JSON.stringify(noticeTerminations)) }, [noticeTerminations])
   useEffect(() => { localStorage.setItem('tic_term_done', JSON.stringify(completedTerminations)) }, [completedTerminations])
+  useEffect(() => { localStorage.setItem('tic_exit_interviews', JSON.stringify(exitInterviews)) }, [exitInterviews])
 
   const resetAllData = () => {
     if (!window.confirm('This will permanently delete ALL data (employees, leave records, etc.). Are you sure?')) return
-    const keys = ['tic_employees','tic_leave_req','tic_leave_active','tic_leave_history','tic_passport','tic_term_notice','tic_term_done']
+    const keys = ['tic_employees','tic_leave_req','tic_leave_active','tic_leave_history','tic_passport','tic_term_notice','tic_term_done','tic_exit_interviews']
     keys.forEach((k) => localStorage.removeItem(k))
     setEmployees([])
     setLeaveRequests([])
@@ -5028,6 +5453,7 @@ function App() {
     setPassportHandovers([])
     setNoticeTerminations([])
     setCompletedTerminations([])
+    setExitInterviews([])
   }
 
   const saveEmployee = () => {
@@ -5404,7 +5830,7 @@ function App() {
           {activePage === 'leave' && <LeavePage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} passportHandovers={passportHandovers} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onAddPassport={() => setEditingPassportRecord({ id: `PP-${Date.now()}`, employeeId: employees[0]?.employeeId ?? '', name: employees[0]?.fullName ?? '', department: employees[0]?.department ?? departmentsList[0], nationality: employees[0]?.nationality ?? 'MALDIVES', leaveTypeCode: 'AL', departureDate: new Date().toISOString().slice(0, 10), returnDate: new Date().toISOString().slice(0, 10), days: 1, passportStep: 'Issued', givenDate: '', returnedDate: '', sentToHoDate: '', remarks: '' })} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onAdvanceRequestStep={advanceLeaveRequestStep} onHistoryConfirm={updateHistoryConfirmation} onEditPassport={(record) => setEditingPassportRecord(record)} onDeletePassport={deletePassportRecord} />}
           {activePage === 'operations' && <OperationsPage employees={employees} completedTerminations={completedTerminations} />}
           {activePage === 'activities' && <ActivitiesPage employees={employees} />}
-          {activePage === 'termination' && <TerminationPage noticeTerminations={noticeTerminations} completedTerminations={completedTerminations} onAdd={openAddTermination} onEdit={openEditTermination} onAdvanceStatus={advanceTerminationStatus} onDelete={deleteTermination} onViewDetails={(record) => setTerminationDetails(record)} />}
+          {activePage === 'termination' && <TerminationPage noticeTerminations={noticeTerminations} completedTerminations={completedTerminations} exitInterviews={exitInterviews} onAdd={openAddTermination} onEdit={openEditTermination} onAdvanceStatus={advanceTerminationStatus} onDelete={deleteTermination} onViewDetails={(record) => setTerminationDetails(record)} onUpdateExitInterviews={(fn) => setExitInterviews(fn)} />}
           {activePage === 'settings' && <SettingsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} onReset={resetAllData} />}
         </main>
       </div> {/* .workspace */}

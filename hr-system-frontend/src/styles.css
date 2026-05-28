@@ -6262,3 +6262,337 @@ button.step-pill:hover { filter: brightness(0.98); }
   transform: translateX(3px);
   transition: transform 200ms;
 }
+
+/* ════════════════════════════════════════════════════════
+   TERMINATION — Tab count badges
+   ════════════════════════════════════════════════════════ */
+
+.tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--brand);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  margin-left: 6px;
+  line-height: 1;
+}
+
+/* ════════════════════════════════════════════════════════
+   EXIT INTERVIEW — Stat cards row
+   ════════════════════════════════════════════════════════ */
+
+.ei-stat-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+@media (max-width: 900px) {
+  .ei-stat-row { grid-template-columns: repeat(2, 1fr); }
+}
+.ei-stat {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px 18px;
+  border: 1px solid #e8eaf0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.ei-stat-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 2px;
+}
+.ei-stat-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.ei-stat-purple .ei-stat-value { color: #7c3aed; }
+.ei-stat-blue   .ei-stat-value { color: #2563eb; }
+.ei-stat-green  .ei-stat-value { color: #16a34a; }
+.ei-stat-amber  .ei-stat-value { color: #d97706; }
+
+/* ════════════════════════════════════════════════════════
+   EXIT INTERVIEW — Dashboard two-column grid
+   ════════════════════════════════════════════════════════ */
+
+.ei-dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+@media (max-width: 960px) {
+  .ei-dashboard-grid { grid-template-columns: 1fr; }
+}
+.ei-panel {
+  background: #fff;
+  border: 1px solid #e8eaf0;
+  border-radius: 12px;
+  padding: 18px 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.ei-panel-title {
+  font-size: 0.80rem;
+  font-weight: 700;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+/* ════════════════════════════════════════════════════════
+   EXIT INTERVIEW — Satisfaction score bars
+   ════════════════════════════════════════════════════════ */
+
+.ei-score-row {
+  display: grid;
+  grid-template-columns: 130px 1fr 44px 90px;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.ei-score-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #374151;
+}
+.ei-score-track {
+  height: 8px;
+  border-radius: 4px;
+  background: #f1f5f9;
+  overflow: hidden;
+}
+.ei-score-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+.ei-score-num {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-align: right;
+}
+.ei-score-desc {
+  font-size: 0.70rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+/* ════════════════════════════════════════════════════════
+   EXIT INTERVIEW — Reason bars (horizontal bar chart)
+   ════════════════════════════════════════════════════════ */
+
+.ei-reason-row {
+  display: grid;
+  grid-template-columns: 130px 1fr 32px;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 9px;
+}
+.ei-reason-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #374151;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ei-reason-track {
+  height: 16px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  overflow: hidden;
+}
+.ei-reason-fill {
+  height: 100%;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #6366f1, #8b5cf6);
+  transition: width 0.4s ease;
+}
+.ei-reason-count {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #374151;
+  text-align: right;
+}
+
+/* ════════════════════════════════════════════════════════
+   EXIT INTERVIEW — Recommend ring display
+   ════════════════════════════════════════════════════════ */
+
+.ei-recommend-wrap {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 12px 0;
+}
+.ei-recommend-ring {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+}
+.ei-recommend-ring svg {
+  transform: rotate(-90deg);
+}
+.ei-recommend-pct {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #16a34a;
+}
+.ei-recommend-legend { font-size: 0.80rem; color: #374151; }
+.ei-recommend-legend strong { display: block; font-size: 1.1rem; font-weight: 800; color: #111827; }
+
+/* ════════════════════════════════════════════════════════
+   EXIT INTERVIEW — Rating buttons (form)
+   ════════════════════════════════════════════════════════ */
+
+.ei-ratings-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ei-rating-row {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  align-items: center;
+  gap: 12px;
+}
+.ei-rating-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #374151;
+}
+.ei-stars {
+  display: flex;
+  gap: 6px;
+}
+.ei-star-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1.5px solid #e2e8f0;
+  background: #f8fafc;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 120ms;
+  color: #64748b;
+}
+.ei-star-btn:hover {
+  border-color: #6366f1;
+  background: #eef2ff;
+  color: #4338ca;
+}
+.ei-star-btn.selected {
+  border-color: transparent;
+  font-weight: 800;
+  color: #fff;
+}
+.ei-star-btn.selected-1 { background: #dc2626; }
+.ei-star-btn.selected-2 { background: #ef4444; }
+.ei-star-btn.selected-3 { background: #d97706; }
+.ei-star-btn.selected-4 { background: #16a34a; }
+.ei-star-btn.selected-5 { background: #15803d; }
+
+/* ════════════════════════════════════════════════════════
+   EXIT INTERVIEW — View modal grid
+   ════════════════════════════════════════════════════════ */
+
+.ei-view-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 680px) {
+  .ei-view-grid { grid-template-columns: 1fr; }
+}
+
+/* ════════════════════════════════════════════════════════
+   EXIT INTERVIEW — Overall badge in table
+   ════════════════════════════════════════════════════════ */
+
+.ei-overall-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 10px;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+/* ════════════════════════════════════════════════════════
+   EXIT INTERVIEW — Empty state
+   ════════════════════════════════════════════════════════ */
+
+.ei-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  color: #94a3b8;
+  gap: 12px;
+  text-align: center;
+}
+.ei-empty svg {
+  opacity: 0.35;
+}
+.ei-empty p {
+  font-size: 0.88rem;
+  font-weight: 500;
+  max-width: 260px;
+}
+
+/* ════════════════════════════════════════════════════════
+   EXIT INTERVIEW — Employee dropdown in modal
+   ════════════════════════════════════════════════════════ */
+
+.ei-emp-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  z-index: 999;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.ei-emp-option {
+  padding: 9px 14px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  transition: background 100ms;
+}
+.ei-emp-option:hover { background: #f1f5f9; }
+.ei-emp-option strong { color: #111827; font-weight: 600; }
+.ei-emp-option span   { color: #64748b; font-size: 0.74rem; }
