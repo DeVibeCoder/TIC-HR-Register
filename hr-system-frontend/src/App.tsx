@@ -119,15 +119,12 @@ type TrainingRecord = {
 
 type ActivitiesSection = 'requests' | 'visits' | 'incidents' | 'passport'
 
-type MedicalCaseStatus = 'On Medical Leave' | 'Pending MC' | 'Medical Visit' | 'Completed'
-
 type MedicalCaseRecord = {
   id: string
   caseDate: string
   employeeId: string
-  pinNo: string
   name: string
-  department: string
+  department: string   // displayed as "Section" in UI
   reason: string
   hospital: string
   departTime: string
@@ -137,7 +134,6 @@ type MedicalCaseRecord = {
   sickLeaveFrom: string
   sickLeaveTo: string
   sickLeaveDays: number
-  status: MedicalCaseStatus
   recordedBy: string
 }
 
@@ -378,14 +374,18 @@ const initialExitInterviews: ExitInterviewRecord[] = [
 ]
 
 const initialMedicalCases: MedicalCaseRecord[] = [
-  { id: 'MC-2026-001', caseDate: '2026-04-26', employeeId: '55426', pinNo: '55426', name: 'ABHISHEK CHETRY', department: 'LOSS PREVENTION', reason: 'Fever, Body pain - Follow up', hospital: 'IGMH', departTime: '09:00', returnTime: '14:00', doctorAdvice: '- Fever x 3 DAYS\n- Headache+, body pain+\n- Productive cough+, pleuritic chest pain\n- Sore throat+\n- No vomiting, abdominal pain\n- Poor appetite\n- No altered bowl habits\n- Medication provided for 5 days\n- MC : 26/04/26 to 27/04/26', mcProvided: true, sickLeaveFrom: '2026-04-26', sickLeaveTo: '2026-04-27', sickLeaveDays: 2, status: 'Completed', recordedBy: 'HR Admin' },
-  { id: 'MC-2026-002', caseDate: '2026-04-26', employeeId: '59361', pinNo: '59361', name: 'DIBIN ROY', department: 'LPG PLANT', reason: 'Fever, Dizziness, Vomiting', hospital: 'IGMH', departTime: '09:00', returnTime: '12:30', doctorAdvice: '- Fever since 25/04/26\n- Day 2 of illness\n- Coryza+, mild productive cough+\n- One episode of vomiting yesterday\n- Body pain+, headache+, dizziness+\n- No abdominal pain, loose motion\n- Bladder habits normal\n- Medication provided for 5 days\n- MC : 26/04/26 to 27/04/26', mcProvided: true, sickLeaveFrom: '2026-04-26', sickLeaveTo: '2026-04-27', sickLeaveDays: 2, status: 'Completed', recordedBy: 'HR Admin' },
-  { id: 'MC-2026-003', caseDate: '2026-04-26', employeeId: '44160', pinNo: '44160', name: 'ANURA PUSHPA KUMARA K W', department: 'CEMENT PLANT', reason: 'Back pain', hospital: 'IGMH', departTime: '09:00', returnTime: '12:30', doctorAdvice: '- Prescription not RECEIVED\n- MC : 26/04/26 to 27/04/26', mcProvided: true, sickLeaveFrom: '2026-04-26', sickLeaveTo: '2026-04-27', sickLeaveDays: 2, status: 'Pending MC', recordedBy: 'HR Admin' },
-  { id: 'MC-2026-004', caseDate: '2026-04-26', employeeId: '59217', pinNo: '59217', name: 'RAJKUMAR GUPTA', department: 'MECHANICAL', reason: 'Cough - Follow Up', hospital: 'IGMH', departTime: '09:00', returnTime: '12:30', doctorAdvice: '- Worsened cough x 1 week, productive cough, yellowish sputum\n- Loss of appetite+\n- No hx of vomiting\n- Initially had fever for 10 days was afebrile for 2 days and complains of fever again today\n- Medication provided for 5 days\n- MC : 26/04/26 to 28/04/26', mcProvided: true, sickLeaveFrom: '2026-04-26', sickLeaveTo: '2026-04-28', sickLeaveDays: 3, status: 'On Medical Leave', recordedBy: 'HR Admin' },
-  { id: 'MC-2026-005', caseDate: '2026-05-05', employeeId: '58034', pinNo: '58034', name: 'SAMEERA MADUSANKA GUNARATHNA', department: 'STORES', reason: 'Headache, Dizziness', hospital: 'IGMH', departTime: '09:30', returnTime: '13:00', doctorAdvice: '- Headache x 2 days, throbbing in nature\n- Dizziness+, mild nausea\n- No vomiting, fever\n- BP slightly elevated at clinic — advised monitoring\n- Medication for 3 days\n- MC : 05/05/26 to 07/05/26', mcProvided: true, sickLeaveFrom: '2026-05-05', sickLeaveTo: '2026-05-07', sickLeaveDays: 3, status: 'Completed', recordedBy: 'HR Admin' },
-  { id: 'MC-2026-006', caseDate: '2026-05-12', employeeId: '59820', pinNo: '59820', name: 'NARAYANAN KUTTY', department: 'HOUSEKEEPING', reason: 'Abdominal pain, Loose motion', hospital: 'IGMH', departTime: '09:00', returnTime: '14:30', doctorAdvice: '- Abdominal cramps + loose motions x 3 days\n- No blood in stool\n- Mild fever — 37.9°C\n- Dehydration signs, advised oral rehydration\n- Medication provided for 5 days\n- MC : 12/05/26 to 14/05/26', mcProvided: true, sickLeaveFrom: '2026-05-12', sickLeaveTo: '2026-05-14', sickLeaveDays: 3, status: 'Completed', recordedBy: 'HR Admin' },
-  { id: 'MC-2026-007', caseDate: '2026-05-20', employeeId: '61033', pinNo: '61033', name: 'MD ARIF HOSSAIN', department: 'STORES', reason: 'Eye infection, Redness', hospital: 'IGMH', departTime: '10:00', returnTime: '12:00', doctorAdvice: '- Right eye redness and discharge x 2 days\n- Conjunctivitis diagnosed\n- Eye drops prescribed for 5 days\n- No systemic symptoms\n- MC : 20/05/26 to 21/05/26', mcProvided: true, sickLeaveFrom: '2026-05-20', sickLeaveTo: '2026-05-21', sickLeaveDays: 2, status: 'Completed', recordedBy: 'HR Admin' },
-  { id: 'MC-2026-008', caseDate: '2026-05-27', employeeId: '60104', pinNo: '60104', name: 'SURESH BAHADUR THAPA', department: 'MAINTENANCE', reason: 'Knee pain, Swelling after work injury', hospital: 'IGMH', departTime: '09:00', returnTime: '15:00', doctorAdvice: '- Right knee pain and swelling post fall at worksite\n- X-ray done — no fracture, soft tissue injury\n- Advised rest and physiotherapy\n- MC : 27/05/26 to 02/06/26', mcProvided: true, sickLeaveFrom: '2026-05-27', sickLeaveTo: '2026-06-02', sickLeaveDays: 7, status: 'On Medical Leave', recordedBy: 'HR Admin' },
+  { id: 'MC-2026-001', caseDate: '2026-04-26', employeeId: '55426', name: 'ABHISHEK CHETRY', department: 'LOSS PREVENTION', reason: 'Fever, Body pain - Follow up', hospital: 'IGMH', departTime: '09:00', returnTime: '14:00', doctorAdvice: '- Fever x 3 DAYS\n- Headache+, body pain+\n- Productive cough+, pleuritic chest pain\n- Sore throat+\n- No vomiting, abdominal pain\n- Poor appetite\n- No altered bowl habits\n- Medication provided for 5 days\n- MC : 26/04/26 to 27/04/26', mcProvided: true, sickLeaveFrom: '2026-04-26', sickLeaveTo: '2026-04-27', sickLeaveDays: 2, recordedBy: 'HR Admin' },
+  { id: 'MC-2026-002', caseDate: '2026-04-26', employeeId: '59361', name: 'DIBIN ROY', department: 'LPG PLANT', reason: 'Fever, Dizziness, Vomiting', hospital: 'IGMH', departTime: '09:00', returnTime: '12:30', doctorAdvice: '- Fever since 25/04/26\n- Day 2 of illness\n- Coryza+, mild productive cough+\n- One episode of vomiting yesterday\n- Body pain+, headache+, dizziness+\n- No abdominal pain, loose motion\n- Bladder habits normal\n- Medication provided for 5 days\n- MC : 26/04/26 to 27/04/26', mcProvided: true, sickLeaveFrom: '2026-04-26', sickLeaveTo: '2026-04-27', sickLeaveDays: 2, recordedBy: 'HR Admin' },
+  { id: 'MC-2026-003', caseDate: '2026-04-26', employeeId: '44160', name: 'ANURA PUSHPA KUMARA K W', department: 'CEMENT PLANT', reason: 'Back pain', hospital: 'IGMH', departTime: '09:00', returnTime: '12:30', doctorAdvice: '- Prescription not RECEIVED\n- MC : 26/04/26 to 27/04/26', mcProvided: false, sickLeaveFrom: '2026-04-26', sickLeaveTo: '2026-04-26', sickLeaveDays: 1, recordedBy: 'HR Admin' },
+  { id: 'MC-2026-004', caseDate: '2026-04-26', employeeId: '59217', name: 'RAJKUMAR GUPTA', department: 'MECHANICAL', reason: 'Cough - Follow Up', hospital: 'IGMH', departTime: '09:00', returnTime: '12:30', doctorAdvice: '- Worsened cough x 1 week, productive cough, yellowish sputum\n- Loss of appetite+\n- No hx of vomiting\n- Initially had fever for 10 days was afebrile for 2 days and complains of fever again today\n- Medication provided for 5 days\n- MC : 26/04/26 to 28/04/26', mcProvided: true, sickLeaveFrom: '2026-04-26', sickLeaveTo: '2026-04-28', sickLeaveDays: 3, recordedBy: 'HR Admin' },
+  { id: 'MC-2026-005', caseDate: '2026-05-05', employeeId: '58034', name: 'SAMEERA MADUSANKA GUNARATHNA', department: 'STORES', reason: 'Headache, Dizziness', hospital: 'IGMH', departTime: '09:30', returnTime: '13:00', doctorAdvice: '- Headache x 2 days, throbbing in nature\n- Dizziness+, mild nausea\n- No vomiting, fever\n- BP slightly elevated at clinic — advised monitoring\n- Medication for 3 days\n- MC : 05/05/26 to 07/05/26', mcProvided: true, sickLeaveFrom: '2026-05-05', sickLeaveTo: '2026-05-07', sickLeaveDays: 3, recordedBy: 'HR Admin' },
+  { id: 'MC-2026-006', caseDate: '2026-05-12', employeeId: '59820', name: 'NARAYANAN KUTTY', department: 'HOUSEKEEPING', reason: 'Abdominal pain, Loose motion', hospital: 'IGMH', departTime: '09:00', returnTime: '14:30', doctorAdvice: '- Abdominal cramps + loose motions x 3 days\n- No blood in stool\n- Mild fever — 37.9°C\n- Dehydration signs, advised oral rehydration\n- Medication provided for 5 days\n- MC : 12/05/26 to 14/05/26', mcProvided: true, sickLeaveFrom: '2026-05-12', sickLeaveTo: '2026-05-14', sickLeaveDays: 3, recordedBy: 'HR Admin' },
+  { id: 'MC-2026-007', caseDate: '2026-05-20', employeeId: '61033', name: 'MD ARIF HOSSAIN', department: 'STORES', reason: 'Eye infection, Redness', hospital: 'IGMH', departTime: '10:00', returnTime: '12:00', doctorAdvice: '- Right eye redness and discharge x 2 days\n- Conjunctivitis diagnosed\n- Eye drops prescribed for 5 days\n- No systemic symptoms\n- MC : 20/05/26 to 21/05/26', mcProvided: true, sickLeaveFrom: '2026-05-20', sickLeaveTo: '2026-05-21', sickLeaveDays: 2, recordedBy: 'HR Admin' },
+  { id: 'MC-2026-008', caseDate: '2026-05-27', employeeId: '60104', name: 'SURESH BAHADUR THAPA', department: 'MAINTENANCE', reason: 'Knee pain, Swelling after work injury', hospital: 'IGMH', departTime: '09:00', returnTime: '15:00', doctorAdvice: '- Right knee pain and swelling post fall at worksite\n- X-ray done — no fracture, soft tissue injury\n- Advised rest and physiotherapy\n- MC : 27/05/26 to 02/06/26', mcProvided: true, sickLeaveFrom: '2026-05-27', sickLeaveTo: '2026-06-02', sickLeaveDays: 7, recordedBy: 'HR Admin' },
+  { id: 'MC-2026-009', caseDate: '2026-05-14', employeeId: '56530', name: 'PUBUDU MADURANGA ALAWATHTHA KANKANAMGE', department: 'ADMINISTRATION', reason: 'Fever, Sore throat', hospital: 'ADK Hospital', departTime: '08:30', returnTime: '11:00', doctorAdvice: '- Fever 38.2°C on presentation\n- Sore throat, difficulty swallowing\n- Tonsillitis diagnosed\n- Antibiotics prescribed for 7 days\n- Rest advised, avoid cold food/drinks\n- MC : 14/05/26 to 16/05/26', mcProvided: true, sickLeaveFrom: '2026-05-14', sickLeaveTo: '2026-05-16', sickLeaveDays: 3, recordedBy: 'HR Admin' },
+  { id: 'MC-2026-010', caseDate: '2026-05-19', employeeId: '43407', name: 'MOHAMMAD DELOWAR HOSSAIN', department: 'STORES', reason: 'Lower back pain', hospital: 'IGMH', departTime: '09:00', returnTime: '13:30', doctorAdvice: '- Chronic lower back pain, worsened after heavy lifting\n- No radiation of pain to legs\n- Paracetamol + muscle relaxant prescribed\n- Advised physiotherapy and ergonomic assessment\n- Light duties recommended for 3 days\n- MC : 19/05/26 to 19/05/26', mcProvided: false, sickLeaveFrom: '2026-05-19', sickLeaveTo: '2026-05-19', sickLeaveDays: 1, recordedBy: 'HR Admin' },
+  { id: 'MC-2026-011', caseDate: '2026-03-10', employeeId: '57637', name: 'MUNI ACHARI GUNTI KOVALA', department: 'CAFE', reason: 'Food poisoning symptoms', hospital: 'IGMH', departTime: '08:00', returnTime: '14:00', doctorAdvice: '- Nausea, vomiting x 4 episodes\n- Diarrhoea x 5 episodes since last night\n- Abdominal cramps+\n- IV fluids administered at IGMH\n- Anti-emetics prescribed\n- Advised clear fluids, BRAT diet\n- MC : 10/03/26 to 12/03/26', mcProvided: true, sickLeaveFrom: '2026-03-10', sickLeaveTo: '2026-03-12', sickLeaveDays: 3, recordedBy: 'HR Admin' },
+  { id: 'MC-2026-012', caseDate: '2026-03-22', employeeId: '53029', name: 'KUMARAN VAITHILINGAM', department: 'STORES', reason: 'Chest pain, Palpitations', hospital: 'ADK Hospital', departTime: '10:30', returnTime: '16:00', doctorAdvice: '- Chest discomfort, palpitations since morning\n- ECG performed — normal sinus rhythm\n- Stress-related symptoms\n- Advised to reduce caffeine, manage stress\n- Medication for 5 days\n- Follow-up in 2 weeks recommended\n- MC : 22/03/26 to 23/03/26', mcProvided: true, sickLeaveFrom: '2026-03-22', sickLeaveTo: '2026-03-23', sickLeaveDays: 2, recordedBy: 'HR Admin' },
 ]
 const allTerminationStages: TerminationStage[] = ['Letter Submitted', 'Exit Interview', 'Ticket', 'Pending Departure']
 const initialPersonalFiles: PersonalFileRecord[] = [
@@ -1405,9 +1405,21 @@ function MedicalCaseModal({ record, employees, onClose, onSave }: {
   const [form, setForm] = useState<MedicalCaseRecord>(record)
   const setF = (f: Partial<MedicalCaseRecord>) => setForm((prev) => ({ ...prev, ...f }))
 
-  const handleEmp = (empId: string) => {
-    const emp = employees.find((e) => e.employeeId === empId)
-    if (emp) setF({ employeeId: empId, name: emp.fullName, department: emp.department, pinNo: emp.employeeId })
+  const [empSearch, setEmpSearch] = useState(form.name ? `${form.name} (${form.employeeId})` : '')
+  const [showEmpList, setShowEmpList] = useState(false)
+
+  const empMatches = useMemo(() => {
+    const q = empSearch.trim().toLowerCase()
+    if (!q || q.includes('(')) return []
+    return employees.filter((e) =>
+      e.fullName.toLowerCase().includes(q) || e.employeeId.includes(q)
+    ).slice(0, 8)
+  }, [empSearch, employees])
+
+  const pickEmp = (emp: Employee) => {
+    setF({ employeeId: emp.employeeId, name: emp.fullName, department: emp.department })
+    setEmpSearch(`${emp.fullName} (${emp.employeeId})`)
+    setShowEmpList(false)
   }
 
   useEffect(() => {
@@ -1424,58 +1436,107 @@ function MedicalCaseModal({ record, employees, onClose, onSave }: {
 
   return (
     <div className="modal-backdrop" role="presentation">
-      <section className="registration-modal wide-modal" role="dialog" aria-modal="true">
+      <section className="registration-modal mc-wide-modal" role="dialog" aria-modal="true">
         <div className="modal-header">
           <div><p className="eyebrow">Medical Leave</p><h2>{isNew ? 'Add Medical Case' : `Edit — ${form.name}`}</h2></div>
           <button className="icon-button" onClick={onClose} type="button">×</button>
         </div>
         <form onSubmit={save}>
-          <div className="trn-modal-card">
-            <p className="trn-modal-card-title">Patient Details</p>
-            <div className="form-grid">
-              <label><span>Visit Date</span><input type="date" value={form.caseDate} onChange={(e) => setF({ caseDate: e.target.value })} required /></label>
-              <label><span>Employee</span>
-                <select value={form.employeeId} onChange={(e) => handleEmp(e.target.value)}>
-                  <option value="">— Select employee —</option>
-                  {employees.slice(0, 150).map((e) => <option key={e.employeeId} value={e.employeeId}>{e.fullName} ({e.employeeId})</option>)}
-                </select>
-              </label>
-              <label><span>Pin No</span><input value={form.pinNo} onChange={(e) => setF({ pinNo: e.target.value })} placeholder="Pin number" /></label>
-              <label><span>Department</span><select value={form.department} onChange={(e) => setF({ department: e.target.value })}><option value="">— Select —</option>{departmentsList.map((d) => <option key={d}>{d}</option>)}</select></label>
-              <label className="full-field"><span>Reason for Visit</span><input value={form.reason} onChange={(e) => setF({ reason: e.target.value })} required placeholder="e.g. Fever, Body pain, Cough - Follow up" /></label>
-            </div>
+          {/* Row 1: Visit Date | Employee Search | Section | Reason */}
+          <div className="mc-form-grid">
+            <label>
+              <span>Visit Date</span>
+              <input type="date" value={form.caseDate} onChange={(e) => setF({ caseDate: e.target.value })} required />
+            </label>
+            <label style={{ position: 'relative' }}>
+              <span>Search Employee</span>
+              <input
+                value={empSearch}
+                onChange={(e) => { setEmpSearch(e.target.value); setShowEmpList(true) }}
+                onFocus={() => setShowEmpList(true)}
+                onBlur={() => setTimeout(() => setShowEmpList(false), 150)}
+                placeholder="Name or Employee ID…"
+                autoComplete="off"
+              />
+              {showEmpList && empMatches.length > 0 && (
+                <div className="ei-emp-dropdown">
+                  {empMatches.map((emp) => (
+                    <div key={emp.employeeId} className="ei-emp-option" onMouseDown={() => pickEmp(emp)}>
+                      <strong>{emp.fullName}</strong>
+                      <span>{emp.employeeId} · {emp.department}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </label>
+            <label>
+              <span>Emp ID</span>
+              <input value={form.employeeId} onChange={(e) => setF({ employeeId: e.target.value })} placeholder="Auto-filled on select" />
+            </label>
+            <label>
+              <span>Section</span>
+              <select value={form.department} onChange={(e) => setF({ department: e.target.value })}>
+                <option value="">— Select —</option>
+                {departmentsList.map((d) => <option key={d}>{d}</option>)}
+              </select>
+            </label>
           </div>
-          <div className="trn-modal-card">
-            <p className="trn-modal-card-title">Clinic Details</p>
-            <div className="form-grid">
-              <label><span>Hospital / Clinic</span><input value={form.hospital} onChange={(e) => setF({ hospital: e.target.value })} placeholder="e.g. IGMH, ADK" /></label>
-              <label><span>MC Provided</span>
-                <select value={form.mcProvided ? 'yes' : 'no'} onChange={(e) => setF({ mcProvided: e.target.value === 'yes' })}>
-                  <option value="yes">Yes</option>
-                  <option value="no">No</option>
-                </select>
-              </label>
-              <label><span>Depart Time</span><input type="time" value={form.departTime} onChange={(e) => setF({ departTime: e.target.value })} /></label>
-              <label><span>Return Time</span><input type="time" value={form.returnTime} onChange={(e) => setF({ returnTime: e.target.value })} /></label>
-              <label className="full-field"><span>Doctor Advice / Summary</span><textarea value={form.doctorAdvice} onChange={(e) => setF({ doctorAdvice: e.target.value })} rows={5} placeholder="Symptoms, diagnosis, medication provided, MC dates, follow-up notes..." style={{ resize: 'vertical' }} /></label>
-            </div>
+          {/* Row 2: Reason full-width */}
+          <div className="mc-form-grid mc-form-1col">
+            <label>
+              <span>Reason for Visit</span>
+              <input value={form.reason} onChange={(e) => setF({ reason: e.target.value })} required placeholder="e.g. Fever, Body pain, Cough - Follow up" />
+            </label>
           </div>
-          <div className="trn-modal-card">
-            <p className="trn-modal-card-title">Sick Leave &amp; Status</p>
-            <div className="form-grid">
-              <label><span>Sick Leave From</span><input type="date" value={form.sickLeaveFrom} onChange={(e) => setF({ sickLeaveFrom: e.target.value })} /></label>
-              <label><span>Sick Leave To</span><input type="date" value={form.sickLeaveTo} onChange={(e) => setF({ sickLeaveTo: e.target.value })} /></label>
-              <label><span>Days</span><input type="number" value={form.sickLeaveDays} min={0} onChange={(e) => setF({ sickLeaveDays: parseInt(e.target.value) || 0 })} /></label>
-              <label><span>Status</span>
-                <select value={form.status} onChange={(e) => setF({ status: e.target.value as MedicalCaseStatus })}>
-                  <option>On Medical Leave</option>
-                  <option>Pending MC</option>
-                  <option>Medical Visit</option>
-                  <option>Completed</option>
-                </select>
-              </label>
-              <label><span>Recorded By</span><input value={form.recordedBy} onChange={(e) => setF({ recordedBy: e.target.value })} placeholder="e.g. HR Admin" /></label>
-            </div>
+          {/* Row 3: Hospital | MC Provided | Depart | Return */}
+          <div className="mc-form-divider">Clinic Details</div>
+          <div className="mc-form-grid">
+            <label>
+              <span>Hospital / Clinic</span>
+              <input value={form.hospital} onChange={(e) => setF({ hospital: e.target.value })} placeholder="e.g. IGMH, ADK" />
+            </label>
+            <label>
+              <span>MC Provided</span>
+              <select value={form.mcProvided ? 'yes' : 'no'} onChange={(e) => setF({ mcProvided: e.target.value === 'yes' })}>
+                <option value="yes">Yes — MC issued</option>
+                <option value="no">No — 1 day without document</option>
+              </select>
+            </label>
+            <label>
+              <span>Depart Time</span>
+              <input type="time" value={form.departTime} onChange={(e) => setF({ departTime: e.target.value })} />
+            </label>
+            <label>
+              <span>Return Time</span>
+              <input type="time" value={form.returnTime} onChange={(e) => setF({ returnTime: e.target.value })} />
+            </label>
+          </div>
+          {/* Doctor Advice */}
+          <div className="mc-form-grid mc-form-1col">
+            <label>
+              <span>Doctor Advice / Summary</span>
+              <textarea value={form.doctorAdvice} onChange={(e) => setF({ doctorAdvice: e.target.value })} rows={5} placeholder="Symptoms, diagnosis, medication, MC dates, follow-up notes…" style={{ resize: 'vertical' }} />
+            </label>
+          </div>
+          {/* Row 4: Sick Leave dates */}
+          <div className="mc-form-divider">Sick Leave</div>
+          <div className="mc-form-grid">
+            <label>
+              <span>From</span>
+              <input type="date" value={form.sickLeaveFrom} onChange={(e) => setF({ sickLeaveFrom: e.target.value })} />
+            </label>
+            <label>
+              <span>To</span>
+              <input type="date" value={form.sickLeaveTo} onChange={(e) => setF({ sickLeaveTo: e.target.value })} />
+            </label>
+            <label>
+              <span>Days (auto-calc)</span>
+              <input type="number" value={form.sickLeaveDays} min={0} onChange={(e) => setF({ sickLeaveDays: parseInt(e.target.value) || 0 })} />
+            </label>
+            <label>
+              <span>Recorded By</span>
+              <input value={form.recordedBy} onChange={(e) => setF({ recordedBy: e.target.value })} placeholder="e.g. HR Admin" />
+            </label>
           </div>
           <div className="modal-actions">
             <button type="button" className="quiet-button light" onClick={onClose}>Cancel</button>
@@ -1487,18 +1548,107 @@ function MedicalCaseModal({ record, employees, onClose, onSave }: {
   )
 }
 
+function MedicalAnalyticsModal({ records, onClose }: {
+  records: MedicalCaseRecord[]
+  onClose: () => void
+}) {
+  const monthlyData = useMemo(() => {
+    const map = new Map<string, { days: number; cases: number }>()
+    records.forEach((r) => {
+      if (!r.caseDate) return
+      const key = monthKey(r.caseDate)
+      if (!key) return
+      const cur = map.get(key) ?? { days: 0, cases: 0 }
+      map.set(key, { days: cur.days + (r.sickLeaveDays || 1), cases: cur.cases + 1 })
+    })
+    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]))
+  }, [records])
+
+  const sectionData = useMemo(() => {
+    const map = new Map<string, { days: number; cases: number }>()
+    records.forEach((r) => {
+      const dep = r.department || 'Unknown'
+      const cur = map.get(dep) ?? { days: 0, cases: 0 }
+      map.set(dep, { days: cur.days + (r.sickLeaveDays || 1), cases: cur.cases + 1 })
+    })
+    return Array.from(map.entries()).sort((a, b) => b[1].days - a[1].days)
+  }, [records])
+
+  const maxMonthDays = Math.max(...monthlyData.map(([, v]) => v.days), 1)
+  const maxSectDays  = Math.max(...sectionData.map(([, v]) => v.days), 1)
+  const totalDays    = records.reduce((s, r) => s + (r.sickLeaveDays || 1), 0)
+  const noMcCount    = records.filter((r) => !r.mcProvided).length
+
+  return (
+    <div className="modal-backdrop" role="presentation">
+      <section className="registration-modal mc-analytics-modal" role="dialog" aria-modal="true">
+        <div className="modal-header">
+          <div>
+            <p className="eyebrow">Medical Leave</p>
+            <h2>Analytics</h2>
+            <p style={{ fontSize: '0.82rem', color: '#64748b', marginTop: 2 }}>{records.length} cases · {totalDays} total sick days · {noMcCount} without MC</p>
+          </div>
+          <button className="icon-button" onClick={onClose} type="button">×</button>
+        </div>
+
+        <div className="mc-analytics-grid">
+          {/* Monthly chart */}
+          <div className="mc-an-panel">
+            <p className="mc-an-title">Monthly Sick Leave Days</p>
+            {monthlyData.length === 0
+              ? <p style={{ color: '#94a3b8', fontSize: '0.82rem' }}>No data yet.</p>
+              : (
+                <div className="mc-an-bar-chart">
+                  {monthlyData.map(([key, val]) => (
+                    <div className="mc-an-bar-col" key={key}>
+                      <div className="mc-an-bar-wrap">
+                        <span className="mc-an-bar" style={{ height: `${Math.round((val.days / maxMonthDays) * 100)}%` }} title={`${val.days}d · ${val.cases} cases`} />
+                      </div>
+                      <div className="mc-an-bar-val">{val.days}d</div>
+                      <div className="mc-an-bar-lbl">{formatMonthLabel(key).slice(0, 3)}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+          </div>
+
+          {/* Section breakdown */}
+          <div className="mc-an-panel">
+            <p className="mc-an-title">Section Breakdown</p>
+            {sectionData.length === 0
+              ? <p style={{ color: '#94a3b8', fontSize: '0.82rem' }}>No data yet.</p>
+              : sectionData.map(([dept, val]) => (
+                <div className="mc-an-h-row" key={dept}>
+                  <div className="mc-an-h-label" title={dept}>{dept}</div>
+                  <div className="mc-an-h-track">
+                    <div className="mc-an-h-fill" style={{ width: `${Math.round((val.days / maxSectDays) * 100)}%` }} />
+                  </div>
+                  <div className="mc-an-h-meta">{val.days}d · {val.cases}</div>
+                </div>
+              ))}
+          </div>
+        </div>
+
+        <div className="modal-actions" style={{ paddingTop: 8 }}>
+          <button className="quiet-button light" onClick={onClose} type="button">Close</button>
+        </div>
+      </section>
+    </div>
+  )
+}
+
 function MedicalLeaveSection({ records, employees, onUpdate }: {
   records: MedicalCaseRecord[]
   employees: Employee[]
   onUpdate: (fn: (prev: MedicalCaseRecord[]) => MedicalCaseRecord[]) => void
 }) {
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState<'All' | MedicalCaseStatus>('All')
   const [mcFilter, setMcFilter] = useState<'All' | 'Yes' | 'No'>('All')
   const [deptFilter, setDeptFilter] = useState('All Departments')
   const [monthFilter, setMonthFilter] = useState<'All' | string>('All')
   const [editing, setEditing] = useState<MedicalCaseRecord | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [showAnalytics, setShowAnalytics] = useState(false)
 
   const today = new Date().toISOString().slice(0, 10)
 
@@ -1508,37 +1658,24 @@ function MedicalLeaveSection({ records, employees, onUpdate }: {
   }, [records])
 
   const filtered = useMemo(() => records.filter((r) => {
-    const text = [r.employeeId, r.pinNo, r.name, r.department, r.reason, r.hospital].join(' ').toLowerCase()
+    const text = [r.employeeId, r.name, r.department, r.reason, r.hospital].join(' ').toLowerCase()
     const matchSearch = text.includes(search.trim().toLowerCase())
-    const matchStatus = statusFilter === 'All' || r.status === statusFilter
     const matchMc = mcFilter === 'All' || (mcFilter === 'Yes' ? r.mcProvided : !r.mcProvided)
     const matchDept = deptFilter === 'All Departments' || r.department === deptFilter
     const matchMonth = monthFilter === 'All' || monthKey(r.caseDate) === monthFilter
-    return matchSearch && matchStatus && matchMc && matchDept && matchMonth
-  }).sort((a, b) => b.caseDate.localeCompare(a.caseDate)), [records, search, statusFilter, mcFilter, deptFilter, monthFilter])
+    return matchSearch && matchMc && matchDept && matchMonth
+  }).sort((a, b) => b.caseDate.localeCompare(a.caseDate)), [records, search, mcFilter, deptFilter, monthFilter])
 
-  const onMedLeave = records.filter((r) => r.status === 'On Medical Leave').length
-  const pendingMc = records.filter((r) => r.status === 'Pending MC').length
-  const todayVisits = records.filter((r) => r.caseDate === today).length
-  const returningToday = records.filter((r) => r.sickLeaveTo === today && r.status === 'On Medical Leave').length
-
-  const monthlyData = useMemo(() => {
-    const map = new Map<string, number>()
-    records.forEach((r) => {
-      if (r.caseDate) {
-        const key = monthKey(r.caseDate)
-        if (key) map.set(key, (map.get(key) ?? 0) + (r.sickLeaveDays || 1))
-      }
-    })
-    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0])).slice(-6)
-  }, [records])
-  const maxDays = Math.max(...monthlyData.map(([, d]) => d), 1)
+  const onSickToday  = records.filter((r) => r.sickLeaveFrom <= today && r.sickLeaveTo >= today).length
+  const noMc         = records.filter((r) => !r.mcProvided).length
+  const todayVisits  = records.filter((r) => r.caseDate === today).length
+  const totalCases   = records.length
 
   const newCase = (): MedicalCaseRecord => ({
-    id: 'MC-new', caseDate: today, employeeId: '', pinNo: '', name: '', department: '',
+    id: 'MC-new', caseDate: today, employeeId: '', name: '', department: '',
     reason: '', hospital: '', departTime: '09:00', returnTime: '13:00',
     doctorAdvice: '', mcProvided: false, sickLeaveFrom: today, sickLeaveTo: today,
-    sickLeaveDays: 1, status: 'On Medical Leave', recordedBy: '',
+    sickLeaveDays: 1, recordedBy: '',
   })
 
   const save = (r: MedicalCaseRecord) => {
@@ -1550,57 +1687,41 @@ function MedicalLeaveSection({ records, employees, onUpdate }: {
   }
   const del = (id: string) => onUpdate((prev) => prev.filter((r) => r.id !== id))
 
-  const mcStatusStyle = (s: MedicalCaseStatus): { background: string; color: string } => {
-    if (s === 'On Medical Leave') return { background: '#dcfce7', color: '#166534' }
-    if (s === 'Pending MC') return { background: '#fef9c3', color: '#854d0e' }
-    if (s === 'Medical Visit') return { background: '#dbeafe', color: '#1e40af' }
-    return { background: '#f1f5f9', color: '#475569' }
-  }
-
   return (
     <>
-      {/* KPI stat cards */}
-      <div className="mc-stat-row">
-        <div className="mc-stat mc-stat-blue"><div className="mc-stat-value">{onMedLeave}</div><div className="mc-stat-label">On Medical Leave</div></div>
-        <div className="mc-stat mc-stat-amber"><div className="mc-stat-value">{pendingMc}</div><div className="mc-stat-label">Pending MC</div></div>
-        <div className="mc-stat mc-stat-purple"><div className="mc-stat-value">{todayVisits}</div><div className="mc-stat-label">Today's Visits</div></div>
-        <div className="mc-stat mc-stat-green"><div className="mc-stat-value">{returningToday}</div><div className="mc-stat-label">Returning Today</div></div>
-      </div>
-
-      {/* Monthly sick-leave chart */}
-      {monthlyData.length > 0 && (
-        <div className="mc-chart-panel">
-          <p className="mc-chart-title">Monthly Sick Leave Days</p>
-          <div className="mc-chart-bars">
-            {monthlyData.map(([key, days]) => (
-              <div className="mc-chart-col" key={key}>
-                <div className="mc-chart-bar-wrap">
-                  <span className="mc-chart-bar" style={{ height: `${Math.round((days / maxDays) * 100)}%` }} />
-                </div>
-                <div className="mc-chart-val">{days}d</div>
-                <div className="mc-chart-lbl">{formatMonthLabel(key).slice(0, 3)}</div>
-              </div>
-            ))}
-          </div>
+      {/* Compact KPI bar */}
+      <div className="mc-kpi-bar">
+        <div className="mc-kpi-chip mc-kpi-blue">
+          <span className="mc-kpi-num">{onSickToday}</span>
+          <span className="mc-kpi-lbl">On Sick Leave</span>
         </div>
-      )}
+        <div className="mc-kpi-chip mc-kpi-amber">
+          <span className="mc-kpi-num">{noMc}</span>
+          <span className="mc-kpi-lbl">No MC</span>
+        </div>
+        <div className="mc-kpi-chip mc-kpi-purple">
+          <span className="mc-kpi-num">{todayVisits}</span>
+          <span className="mc-kpi-lbl">Today</span>
+        </div>
+        <div className="mc-kpi-chip mc-kpi-green">
+          <span className="mc-kpi-num">{totalCases}</span>
+          <span className="mc-kpi-lbl">Total Cases</span>
+        </div>
+        <button className="mc-analytics-btn" onClick={() => setShowAnalytics(true)} type="button">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Analytics
+        </button>
+      </div>
 
       {/* Filters + Add */}
       <div className="table-toolbar mc-toolbar leave-toolbar-has-btn">
-        <label className="search-field"><span>Search</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Name, ID, reason, hospital" /></label>
-        <label><span>Status</span>
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as 'All' | MedicalCaseStatus)}>
-            <option value="All">All Statuses</option>
-            <option>On Medical Leave</option><option>Pending MC</option>
-            <option>Medical Visit</option><option>Completed</option>
-          </select>
-        </label>
-        <label><span>MC Provided</span>
+        <label className="search-field"><span>Search</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Name, Emp ID, reason…" /></label>
+        <label><span>MC</span>
           <select value={mcFilter} onChange={(e) => setMcFilter(e.target.value as 'All' | 'Yes' | 'No')}>
             <option value="All">All</option><option>Yes</option><option>No</option>
           </select>
         </label>
-        <label><span>Department</span>
+        <label><span>Section</span>
           <select value={deptFilter} onChange={(e) => setDeptFilter(e.target.value)}>
             <option>All Departments</option>
             {departmentsList.map((d) => <option key={d}>{d}</option>)}
@@ -1615,16 +1736,22 @@ function MedicalLeaveSection({ records, employees, onUpdate }: {
         <button className="primary-button toolbar-add-btn" onClick={() => setEditing(newCase())} type="button">+ Add Medical Case</button>
       </div>
 
-      {/* Expandable table */}
+      {/* Table */}
       <div className="employee-table-shell compact-scroll">
         <table className="data-table mc-table">
           <thead>
             <tr>
               <th className="mc-expand-th" />
-              <th>Date</th><th>Pin No</th><th>Name</th><th>Department</th>
-              <th>Reason</th><th>Hosp</th><th>Depart</th><th>Return</th>
-              <th>MC</th><th>SL From</th><th>SL To</th><th>Days</th>
-              <th>Status</th><th>Action</th>
+              <th>Date</th>
+              <th>Emp ID</th>
+              <th>Name</th>
+              <th>Section</th>
+              <th>Reason</th>
+              <th>MC</th>
+              <th>SL From</th>
+              <th>SL To</th>
+              <th>Days</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
@@ -1634,23 +1761,17 @@ function MedicalLeaveSection({ records, employees, onUpdate }: {
                 <Fragment key={r.id}>
                   <tr className={`mc-row${isExp ? ' mc-row-open' : ''}`} onClick={() => setExpandedId(isExp ? null : r.id)}>
                     <td className="mc-expand-cell"><span className={`mc-arrow${isExp ? ' mc-arrow-open' : ''}`}>›</span></td>
-                    <td>{formatDateDisplay(r.caseDate)}</td>
-                    <td>{r.pinNo || r.employeeId}</td>
+                    <td style={{ whiteSpace: 'nowrap' }}>{formatDateDisplay(r.caseDate)}</td>
+                    <td>{r.employeeId}</td>
                     <td className="mc-name-cell">{r.name}</td>
                     <td>{r.department}</td>
                     <td className="mc-reason-cell">{r.reason}</td>
-                    <td>{r.hospital}</td>
-                    <td>{r.departTime}</td>
-                    <td>{r.returnTime}</td>
                     <td onClick={(e) => e.stopPropagation()}>
                       <span className={`mc-bool-badge${r.mcProvided ? ' mc-yes' : ' mc-no'}`}>{r.mcProvided ? 'Yes' : 'No'}</span>
                     </td>
-                    <td>{r.sickLeaveFrom ? formatDateDisplay(r.sickLeaveFrom) : '—'}</td>
-                    <td>{r.sickLeaveTo ? formatDateDisplay(r.sickLeaveTo) : '—'}</td>
-                    <td>{r.sickLeaveDays || '—'}</td>
-                    <td onClick={(e) => e.stopPropagation()}>
-                      <span className="mc-status-pill" style={mcStatusStyle(r.status)}>{r.status}</span>
-                    </td>
+                    <td style={{ whiteSpace: 'nowrap' }}>{r.sickLeaveFrom ? formatDateDisplay(r.sickLeaveFrom) : '—'}</td>
+                    <td style={{ whiteSpace: 'nowrap' }}>{r.sickLeaveTo ? formatDateDisplay(r.sickLeaveTo) : '—'}</td>
+                    <td><strong>{r.sickLeaveDays || '—'}</strong></td>
                     <td onClick={(e) => e.stopPropagation()}>
                       <div className="row-actions request-inline-actions">
                         <button className="action-glyph edit" onClick={() => setEditing(r)} type="button" title="Edit">✎</button>
@@ -1660,15 +1781,20 @@ function MedicalLeaveSection({ records, employees, onUpdate }: {
                   </tr>
                   {isExp && (
                     <tr className="mc-detail-row">
-                      <td colSpan={15}>
+                      <td colSpan={11}>
                         <div className="mc-detail-content">
+                          <div className="mc-detail-meta-row">
+                            {r.hospital && <span className="mc-detail-chip">🏥 {r.hospital}</span>}
+                            {r.departTime && <span className="mc-detail-chip">🚶 Depart {r.departTime}</span>}
+                            {r.returnTime && <span className="mc-detail-chip">↩ Return {r.returnTime}</span>}
+                            {r.recordedBy && <span className="mc-detail-chip mc-detail-chip-muted">Recorded by {r.recordedBy}</span>}
+                          </div>
                           <strong className="mc-detail-heading">Doctor Advice / Summary</strong>
                           <div className="mc-detail-body">
                             {r.doctorAdvice
                               ? r.doctorAdvice.split('\n').map((line, i) => <p key={i}>{line}</p>)
                               : <em style={{ color: '#94a3b8' }}>No doctor advice recorded.</em>}
                           </div>
-                          {r.recordedBy && <div className="mc-detail-meta">Recorded by: <strong>{r.recordedBy}</strong></div>}
                         </div>
                       </td>
                     </tr>
@@ -1684,6 +1810,7 @@ function MedicalLeaveSection({ records, employees, onUpdate }: {
         <div className="leave-empty-zone">No medical cases match the current filters.</div>
       )}
 
+      {showAnalytics && <MedicalAnalyticsModal records={records} onClose={() => setShowAnalytics(false)} />}
       {editing && <MedicalCaseModal record={editing} employees={employees} onClose={() => setEditing(null)} onSave={save} />}
     </>
   )
