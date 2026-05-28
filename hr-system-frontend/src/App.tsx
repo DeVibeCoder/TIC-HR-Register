@@ -119,11 +119,15 @@ type TrainingRecord = {
 
 type ActivitiesSection = 'requests' | 'visits' | 'incidents'
 
+type RequestPriority = 'Low' | 'Medium' | 'High'
+
 type StaffRequestRecord = {
   id: string
+  employeeId: string
   employeeName: string
   department: string
   requestType: 'Accommodation' | 'Equipment' | 'Transfer' | 'Leave' | 'Documents' | 'Other'
+  priority: RequestPriority
   description: string
   submittedDate: string
   completedDate: string
@@ -136,8 +140,9 @@ type VisitRecord = {
   employeeId: string
   employeeName: string
   department: string
+  nicPassportNo: string
   nationality: string
-  visitType: 'Visa Medical' | 'Photo' | 'Passport Renewal' | 'Embassy Letter Collection'
+  visitType: 'Visa Medical' | 'Photo' | 'Passport Renewal' | 'Embassy Letter Collection' | 'Biometric Update'
   visitDate: string
   status: 'Scheduled' | 'Completed' | 'Cancelled'
   remarks: string
@@ -151,6 +156,7 @@ type IncidentRecord = {
   employeeName: string
   reportedById: string
   reportedByName: string
+  section: string
   department: string
   siteLocation: string
   incidentType: 'Work Injury' | 'Near Miss' | 'Property Damage' | 'Fire' | 'Misconduct' | 'Sleeping on Duty' | 'Other'
@@ -3806,66 +3812,251 @@ function OperationsPage({ employees, completedTerminations }: {
   )
 }
 
-function StaffRequestModal({ record, onClose, onSave }: { record: StaffRequestRecord; onClose: () => void; onSave: (r: StaffRequestRecord) => void }) {
+function StaffRequestModal({ record, employees, onClose, onSave }: {
+  record: StaffRequestRecord
+  employees: Employee[]
+  onClose: () => void
+  onSave: (r: StaffRequestRecord) => void
+}) {
   const isNew = record.id.startsWith('REQ-new')
+  const [employeeId, setEmployeeId] = useState(record.employeeId)
   const [employeeName, setEmployeeName] = useState(record.employeeName)
   const [department, setDepartment] = useState(record.department)
   const [requestType, setRequestType] = useState<StaffRequestRecord['requestType']>(record.requestType)
+  const [priority, setPriority] = useState<RequestPriority>(record.priority)
   const [description, setDescription] = useState(record.description)
   const [submittedDate, setSubmittedDate] = useState(record.submittedDate)
   const [completedDate, setCompletedDate] = useState(record.completedDate)
   const [status, setStatus] = useState<StaffRequestRecord['status']>(record.status)
   const [remarks, setRemarks] = useState(record.remarks)
-  const save = (e: FormEvent) => { e.preventDefault(); onSave({ ...record, id: isNew ? `REQ-${Date.now()}` : record.id, employeeName, department, requestType, description, submittedDate, completedDate, status, remarks }) }
+
+  const empDir = useMemo(() => new Map(employees.map((e) => [e.employeeId.trim().toUpperCase(), e])), [employees])
+
+  const handleEmpIdBlur = (val: string) => {
+    const matched = empDir.get(val.trim().toUpperCase())
+    if (matched) { setEmployeeName(matched.fullName); setDepartment(matched.department) }
+  }
+
+  const save = (e: FormEvent) => {
+    e.preventDefault()
+    onSave({ ...record, id: isNew ? `REQ-${Date.now()}` : record.id, employeeId, employeeName, department, requestType, priority, description, submittedDate, completedDate: isNew ? '' : completedDate, status, remarks })
+  }
+
+  const fieldStyle = { padding: '7px 10px', borderRadius: '7px', border: '1.5px solid rgba(124,58,237,0.2)', fontSize: '0.85rem', background: '#fff', width: '100%' }
+
   return (
     <div className="modal-backdrop" role="presentation">
       <section className="registration-modal" role="dialog" aria-modal="true">
-        <div className="modal-header"><div><p className="eyebrow">Activities</p><h2>{isNew ? 'New Request' : 'Edit Request'}</h2></div><button className="icon-button" onClick={onClose} type="button">×</button></div>
-        <form onSubmit={save}>
-          <div className="form-grid" style={{gridTemplateColumns:'repeat(3,minmax(0,1fr))'}}>
-            <label><span>Employee Name</span><input value={employeeName} onChange={(e) => setEmployeeName(e.target.value)} required /></label>
-            <label><span>Department</span><select value={department} onChange={(e) => setDepartment(e.target.value)}>{departmentsList.map((d) => <option key={d}>{d}</option>)}</select></label>
-            <label><span>Request Type</span><select value={requestType} onChange={(e) => setRequestType(e.target.value as StaffRequestRecord['requestType'])}><option>Accommodation</option><option>Equipment</option><option>Transfer</option><option>Leave</option><option>Documents</option><option>Other</option></select></label>
-            <label><span>Submitted Date</span><input type="date" value={submittedDate} onChange={(e) => setSubmittedDate(e.target.value)} required /></label>
-            <label><span>Completed Date</span><input type="date" value={completedDate} onChange={(e) => setCompletedDate(e.target.value)} /></label>
-            <label><span>Status</span><select value={status} onChange={(e) => setStatus(e.target.value as StaffRequestRecord['status'])}><option>Open</option><option>In Progress</option><option>Resolved</option><option>Rejected</option></select></label>
-            <label className="full-width" style={{gridColumn:'1/-1'}}><span>Description</span><input value={description} onChange={(e) => setDescription(e.target.value)} /></label>
-            <label className="full-width" style={{gridColumn:'1/-1'}}><span>Remarks</span><input value={remarks} onChange={(e) => setRemarks(e.target.value)} /></label>
+        <div className="modal-header">
+          <div>
+            <p className="eyebrow">Activities · Requests</p>
+            <h2>{isNew ? 'New Request' : 'Edit Request'}</h2>
           </div>
-          <div className="modal-actions"><button className="primary-button" type="submit">{isNew ? 'Add Request' : 'Save Changes'}</button></div>
+          <button className="icon-button" onClick={onClose} type="button">×</button>
+        </div>
+        <form onSubmit={save}>
+          {/* Employee card */}
+          <div className="trn-modal-card" style={{ marginBottom: '14px' }}>
+            <div className="trn-modal-detail-row" style={{ gridTemplateColumns: '140px 1fr 1fr' }}>
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                <span className="trn-modal-field-lbl">Emp ID</span>
+                <input value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} onBlur={(e) => handleEmpIdBlur(e.target.value)} placeholder="Optional" style={fieldStyle} />
+              </label>
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                <span className="trn-modal-field-lbl">Employee Name</span>
+                <input value={employeeName} onChange={(e) => setEmployeeName(e.target.value)} required placeholder="Full name" style={fieldStyle} />
+              </label>
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                <span className="trn-modal-field-lbl">Section</span>
+                <select value={department} onChange={(e) => setDepartment(e.target.value)} style={fieldStyle}>
+                  <option value="">— select section —</option>
+                  {departmentsList.map((d) => <option key={d}>{d}</option>)}
+                </select>
+              </label>
+            </div>
+          </div>
+
+          {/* Request details card */}
+          <div className="trn-modal-card" style={{ marginBottom: '14px' }}>
+            <div className="trn-modal-detail-row">
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                <span className="trn-modal-field-lbl">Request Type</span>
+                <select value={requestType} onChange={(e) => setRequestType(e.target.value as StaffRequestRecord['requestType'])} style={fieldStyle}>
+                  <option>Accommodation</option><option>Equipment</option><option>Transfer</option>
+                  <option>Leave</option><option>Documents</option><option>Other</option>
+                </select>
+              </label>
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                <span className="trn-modal-field-lbl">Priority</span>
+                <select value={priority} onChange={(e) => setPriority(e.target.value as RequestPriority)} style={fieldStyle}>
+                  <option value="Low">Low</option>
+                  <option value="Medium">Medium</option>
+                  <option value="High">High</option>
+                </select>
+              </label>
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                <span className="trn-modal-field-lbl">Submitted Date</span>
+                <input type="date" value={submittedDate} onChange={(e) => setSubmittedDate(e.target.value)} required style={fieldStyle} />
+              </label>
+            </div>
+            <div className="trn-modal-detail-row" style={{ gridTemplateColumns: !isNew ? '1fr 1fr' : '1fr', marginTop:'10px' }}>
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                <span className="trn-modal-field-lbl">Status</span>
+                <select value={status} onChange={(e) => setStatus(e.target.value as StaffRequestRecord['status'])} style={fieldStyle}>
+                  <option>Open</option><option>In Progress</option><option>Resolved</option><option>Rejected</option>
+                </select>
+              </label>
+              {!isNew && (
+                <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                  <span className="trn-modal-field-lbl">Completed Date</span>
+                  <input type="date" value={completedDate} onChange={(e) => setCompletedDate(e.target.value)} style={fieldStyle} />
+                </label>
+              )}
+            </div>
+          </div>
+
+          {/* Description + Remarks */}
+          <div className="trn-modal-card">
+            <div className="trn-modal-field-block">
+              <span className="trn-modal-field-lbl">Description</span>
+              <input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Brief description of the request" style={{ ...fieldStyle, marginTop: '4px' }} />
+            </div>
+            <div className="trn-modal-field-block" style={{ marginTop: '10px', marginBottom: 0 }}>
+              <span className="trn-modal-field-lbl">Remarks</span>
+              <input value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="Optional notes or resolution details" style={{ ...fieldStyle, marginTop: '4px' }} />
+            </div>
+          </div>
+
+          <div className="modal-actions">
+            <button className="quiet-button light" onClick={onClose} type="button">Cancel</button>
+            <button className="primary-button" type="submit">{isNew ? 'Add Request' : 'Save Changes'}</button>
+          </div>
         </form>
       </section>
     </div>
   )
 }
 
-function VisitModal({ record, onClose, onSave }: { record: VisitRecord; onClose: () => void; onSave: (r: VisitRecord) => void }) {
+function VisitModal({ record, employees, onClose, onSave }: {
+  record: VisitRecord
+  employees: Employee[]
+  onClose: () => void
+  onSave: (r: VisitRecord) => void
+}) {
   const isNew = record.id.startsWith('VIS-new')
   const [employeeId, setEmployeeId] = useState(record.employeeId)
   const [employeeName, setEmployeeName] = useState(record.employeeName)
   const [department, setDepartment] = useState(record.department)
+  const [nicPassportNo, setNicPassportNo] = useState(record.nicPassportNo)
   const [nationality, setNationality] = useState(record.nationality)
   const [visitType, setVisitType] = useState<VisitRecord['visitType']>(record.visitType)
   const [visitDate, setVisitDate] = useState(record.visitDate)
   const [status, setStatus] = useState<VisitRecord['status']>(record.status)
   const [remarks, setRemarks] = useState(record.remarks)
-  const save = (e: FormEvent) => { e.preventDefault(); onSave({ ...record, id: isNew ? `VIS-${Date.now()}` : record.id, employeeId, employeeName, department, nationality, visitType, visitDate, status, remarks }) }
+
+  const empDir = useMemo(() => new Map(employees.map((e) => [e.employeeId.trim().toUpperCase(), e])), [employees])
+
+  const handleEmpIdBlur = (val: string) => {
+    const matched = empDir.get(val.trim().toUpperCase())
+    if (matched) {
+      setEmployeeName(matched.fullName)
+      setDepartment(matched.department)
+      setNicPassportNo(matched.nicPassportNo)
+      setNationality(matched.nationality)
+    }
+  }
+
+  const save = (e: FormEvent) => {
+    e.preventDefault()
+    onSave({ ...record, id: isNew ? `VIS-${Date.now()}` : record.id, employeeId, employeeName, department, nicPassportNo, nationality, visitType, visitDate, status, remarks })
+  }
+
+  const fieldStyle = { padding: '7px 10px', borderRadius: '7px', border: '1.5px solid rgba(124,58,237,0.2)', fontSize: '0.85rem', background: '#fff', width: '100%' }
+
   return (
     <div className="modal-backdrop" role="presentation">
       <section className="registration-modal" role="dialog" aria-modal="true">
-        <div className="modal-header"><div><p className="eyebrow">Activities</p><h2>{isNew ? 'New Visit' : 'Edit Visit'}</h2></div><button className="icon-button" onClick={onClose} type="button">×</button></div>
-        <form onSubmit={save}>
-          <div className="form-grid" style={{gridTemplateColumns:'repeat(3,minmax(0,1fr))'}}>
-            <label><span>Employee ID</span><input value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} /></label>
-            <label style={{gridColumn:'2/4'}}><span>Employee Name</span><input value={employeeName} onChange={(e) => setEmployeeName(e.target.value)} required /></label>
-            <label><span>Department</span><select value={department} onChange={(e) => setDepartment(e.target.value)}><option value="">Select...</option>{departmentsList.map((d) => <option key={d}>{d}</option>)}</select></label>
-            <label><span>Nationality</span><select value={nationality} onChange={(e) => setNationality(e.target.value)}>{nationalities.map((n) => <option key={n}>{n}</option>)}</select></label>
-            <label><span>Visit Type</span><select value={visitType} onChange={(e) => setVisitType(e.target.value as VisitRecord['visitType'])}><option>Visa Medical</option><option>Photo</option><option>Passport Renewal</option><option>Embassy Letter Collection</option></select></label>
-            <label><span>Visit Date</span><input type="date" value={visitDate} onChange={(e) => setVisitDate(e.target.value)} required /></label>
-            <label><span>Status</span><select value={status} onChange={(e) => setStatus(e.target.value as VisitRecord['status'])}><option>Scheduled</option><option>Completed</option><option>Cancelled</option></select></label>
-            <label style={{gridColumn:'3/4'}}><span>Remarks</span><input value={remarks} onChange={(e) => setRemarks(e.target.value)} /></label>
+        <div className="modal-header">
+          <div>
+            <p className="eyebrow">Activities · Visits</p>
+            <h2>{isNew ? 'New Visit' : 'Edit Visit'}</h2>
           </div>
-          <div className="modal-actions"><button className="primary-button" type="submit">{isNew ? 'Add Visit' : 'Save Changes'}</button></div>
+          <button className="icon-button" onClick={onClose} type="button">×</button>
+        </div>
+        <form onSubmit={save}>
+          {/* Employee identity card */}
+          <div className="trn-modal-card" style={{ marginBottom: '14px' }}>
+            <div className="trn-modal-field-block">
+              <span className="trn-modal-field-lbl">Employee ID</span>
+              <input
+                value={employeeId}
+                onChange={(e) => setEmployeeId(e.target.value)}
+                onBlur={(e) => handleEmpIdBlur(e.target.value)}
+                placeholder="Enter ID — auto-fills details"
+                style={{ ...fieldStyle, marginTop: '4px' }}
+              />
+            </div>
+            <div className="trn-modal-detail-row" style={{ marginTop: '10px' }}>
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                <span className="trn-modal-field-lbl">Full Name</span>
+                <input value={employeeName} onChange={(e) => setEmployeeName(e.target.value)} required placeholder="Name" style={fieldStyle} />
+              </label>
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                <span className="trn-modal-field-lbl">NIC / PP No.</span>
+                <input value={nicPassportNo} onChange={(e) => setNicPassportNo(e.target.value)} placeholder="Passport or NIC number" style={fieldStyle} />
+              </label>
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                <span className="trn-modal-field-lbl">Nationality</span>
+                <select value={nationality} onChange={(e) => setNationality(e.target.value)} style={fieldStyle}>
+                  {nationalities.map((n) => <option key={n}>{n}</option>)}
+                </select>
+              </label>
+            </div>
+            <div className="trn-modal-detail-row" style={{ gridTemplateColumns: '1fr', marginTop: '10px' }}>
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                <span className="trn-modal-field-lbl">Section</span>
+                <select value={department} onChange={(e) => setDepartment(e.target.value)} style={fieldStyle}>
+                  <option value="">— select section —</option>
+                  {departmentsList.map((d) => <option key={d}>{d}</option>)}
+                </select>
+              </label>
+            </div>
+          </div>
+
+          {/* Visit details card */}
+          <div className="trn-modal-card">
+            <div className="trn-modal-detail-row">
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                <span className="trn-modal-field-lbl">Visit Type</span>
+                <select value={visitType} onChange={(e) => setVisitType(e.target.value as VisitRecord['visitType'])} style={fieldStyle}>
+                  <option>Visa Medical</option>
+                  <option>Passport Renewal</option>
+                  <option>Photo</option>
+                  <option>Embassy Letter Collection</option>
+                  <option>Biometric Update</option>
+                </select>
+              </label>
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                <span className="trn-modal-field-lbl">Visit Date</span>
+                <input type="date" value={visitDate} onChange={(e) => setVisitDate(e.target.value)} required style={fieldStyle} />
+              </label>
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                <span className="trn-modal-field-lbl">Status</span>
+                <select value={status} onChange={(e) => setStatus(e.target.value as VisitRecord['status'])} style={fieldStyle}>
+                  <option>Scheduled</option><option>Completed</option><option>Cancelled</option>
+                </select>
+              </label>
+            </div>
+            <div className="trn-modal-field-block" style={{ marginTop: '10px', marginBottom: 0 }}>
+              <span className="trn-modal-field-lbl">Remarks</span>
+              <input value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="Optional notes" style={{ ...fieldStyle, marginTop: '4px' }} />
+            </div>
+          </div>
+
+          <div className="modal-actions">
+            <button className="quiet-button light" onClick={onClose} type="button">Cancel</button>
+            <button className="primary-button" type="submit">{isNew ? 'Add Visit' : 'Save Changes'}</button>
+          </div>
         </form>
       </section>
     </div>
@@ -3880,6 +4071,7 @@ function IncidentModal({ record, employees, onClose, onSave }: { record: Inciden
   const [employeeName, setEmployeeName] = useState(record.employeeName)
   const [reportedById, setReportedById] = useState(record.reportedById)
   const [reportedByName, setReportedByName] = useState(record.reportedByName)
+  const [section, setSection] = useState(record.section)
   const [department, setDepartment] = useState(record.department)
   const [siteLocation, setSiteLocation] = useState(record.siteLocation)
   const [incidentType, setIncidentType] = useState<IncidentRecord['incidentType']>(record.incidentType)
@@ -3896,17 +4088,19 @@ function IncidentModal({ record, employees, onClose, onSave }: { record: Inciden
   const [statementTaken, setStatementTaken] = useState(record.statementTaken)
   const [disciplinaryAction, setDisciplinaryAction] = useState(record.disciplinaryAction)
   const [status, setStatus] = useState<IncidentRecord['status']>(record.status)
+
   const employeeDirectory = useMemo(() => new Map(employees.map((employee) => [employee.employeeId.trim().toUpperCase(), employee])), [employees])
   const matchedEmployee = employeeDirectory.get(employeeId.trim().toUpperCase()) ?? null
   const matchedReporter = employeeDirectory.get(reportedById.trim().toUpperCase()) ?? null
-  const save = (e: FormEvent) => { e.preventDefault(); onSave({ ...record, incidentDate, timeOfIncident, employeeId, employeeName, reportedById, reportedByName, department, siteLocation, incidentType, incidentSummary, exactLocation, immediateCause, witnessName, witnessId, correctiveOwner, followUpDate, description, injuryInvolved, actionTaken, statementTaken, disciplinaryAction, status }) }
+
+  const save = (e: FormEvent) => { e.preventDefault(); onSave({ ...record, incidentDate, timeOfIncident, employeeId, employeeName, reportedById, reportedByName, section, department, siteLocation, incidentType, incidentSummary, exactLocation, immediateCause, witnessName, witnessId, correctiveOwner, followUpDate, description, injuryInvolved, actionTaken, statementTaken, disciplinaryAction, status }) }
 
   const handleEmployeeIdChange = (value: string) => {
     setEmployeeId(value)
     const matched = employeeDirectory.get(value.trim().toUpperCase())
     if (!matched) return
     setEmployeeName(matched.fullName)
-    setDepartment(matched.department)
+    setSection(matched.department)
   }
 
   const handleReportedByIdChange = (value: string) => {
@@ -3919,128 +4113,336 @@ function IncidentModal({ record, employees, onClose, onSave }: { record: Inciden
   return (
     <div className="modal-backdrop" role="presentation">
       <section className="registration-modal wide-modal" role="dialog" aria-modal="true">
-        <div className="modal-header"><div><p className="eyebrow">Activities</p><h2>{isNew ? 'Log Incident' : 'Edit Incident'}</h2><p>Enter IDs to auto-fill from the register. Names can still be edited manually.</p></div><button className="icon-button" onClick={onClose} type="button">×</button></div>
+        <div className="modal-header">
+          <div>
+            <p className="eyebrow">Activities · Incidents</p>
+            <h2>{isNew ? 'Log Incident' : 'Edit Incident'}</h2>
+            <p style={{ margin: 0, fontSize: '0.78rem', color: 'rgba(255,255,255,0.6)' }}>Enter IDs to auto-fill from the register. Fields remain editable.</p>
+          </div>
+          <button className="icon-button" onClick={onClose} type="button">×</button>
+        </div>
         <form onSubmit={save}>
           <div className="incident-modal-stack">
-            <section className="incident-shell-card">
-              <div className="incident-ref-row">
-                <div><span>Incident Ref</span><strong>{isNew ? 'Auto on save' : record.id}</strong></div>
-              </div>
-              <div className="incident-form-grid incident-form-grid-4">
-                <label><span>Incident Date</span><input type="date" value={incidentDate} onChange={(e) => setIncidentDate(e.target.value)} required /></label>
-                <label><span>Time</span><select value={timeOfIncident} onChange={(e) => setTimeOfIncident(e.target.value as IncidentRecord['timeOfIncident'])}><option value="">Select...</option><option>Morning</option><option>Afternoon</option><option>Evening</option><option>Night</option></select></label>
-                <label><span>Incident Type</span><select value={incidentType} onChange={(e) => setIncidentType(e.target.value as IncidentRecord['incidentType'])}><option>Work Injury</option><option>Near Miss</option><option>Property Damage</option><option>Fire</option><option>Misconduct</option><option>Sleeping on Duty</option><option>Other</option></select></label>
-                <label><span>Status</span><select value={status} onChange={(e) => setStatus(e.target.value as IncidentRecord['status'])}><option>Open</option><option>Under Review</option><option>Closed</option></select></label>
-              </div>
-            </section>
 
-            <div className="incident-split-grid">
-              <section className="incident-shell-card">
-                <h3 className="incident-block-title">Involved Staff</h3>
-                <div className="incident-form-grid incident-form-grid-2">
-                  <label>
-                    <span>Employee ID</span>
-                    <input value={employeeId} onChange={(e) => handleEmployeeIdChange(e.target.value)} placeholder="Enter employee ID" />
-                    <small className={`field-note ${matchedEmployee ? 'matched' : ''}`}>{matchedEmployee ? `Matched: ${matchedEmployee.fullName}` : ''}</small>
-                  </label>
-                  <label><span>Employee Name</span><input value={employeeName} onChange={(e) => setEmployeeName(e.target.value)} placeholder="Type or accept auto-fill" /></label>
-                  <label className="full-field"><span>Department</span><select value={department} onChange={(e) => setDepartment(e.target.value)}><option value="">Select...</option>{departmentsList.map((d) => <option key={d}>{d}</option>)}</select></label>
-                </div>
-              </section>
-
-              <section className="incident-shell-card">
-                <h3 className="incident-block-title">Reporter & Follow-up</h3>
-                <div className="incident-form-grid incident-form-grid-2">
-                  <label>
-                    <span>Reported By ID</span>
-                    <input value={reportedById} onChange={(e) => handleReportedByIdChange(e.target.value)} placeholder="Enter reporter ID" />
-                    <small className={`field-note ${matchedReporter ? 'matched' : ''}`}>{matchedReporter ? `Matched: ${matchedReporter.fullName}` : ''}</small>
-                  </label>
-                  <label><span>Reported By Name</span><input value={reportedByName} onChange={(e) => setReportedByName(e.target.value)} placeholder="Type or accept auto-fill" /></label>
-                  <label className="full-field"><span>Site / Location</span><input value={siteLocation} onChange={(e) => setSiteLocation(e.target.value)} placeholder="Workshop, gate, plant, room..." /></label>
-                </div>
-                <div className="incident-check-grid">
-                  <label className="incident-check-card"><input type="checkbox" checked={injuryInvolved} onChange={(e) => setInjuryInvolved(e.target.checked)} /><span>Injury</span></label>
-                  <label className="incident-check-card"><input type="checkbox" checked={statementTaken} onChange={(e) => setStatementTaken(e.target.checked)} /><span>Statement</span></label>
-                  <label className="incident-check-card"><input type="checkbox" checked={disciplinaryAction} onChange={(e) => setDisciplinaryAction(e.target.checked)} /><span>Disciplinary</span></label>
-                </div>
-              </section>
+            {/* Row 1: Core info */}
+            <div className="trn-modal-card" style={{ marginBottom: 0 }}>
+              <div style={{ display:'flex', gap:'8px', alignItems:'center', marginBottom:'12px' }}>
+                <span className="trn-modal-field-lbl" style={{ fontSize:'0.7rem' }}>Ref:</span>
+                <strong style={{ fontSize:'0.85rem', color:'#4c1d95' }}>{isNew ? 'Auto on save' : record.id}</strong>
+              </div>
+              <div className="trn-modal-detail-row">
+                <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                  <span className="trn-modal-field-lbl">Incident Date</span>
+                  <input type="date" value={incidentDate} onChange={(e) => setIncidentDate(e.target.value)} required style={{ padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#fff' }} />
+                </label>
+                <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                  <span className="trn-modal-field-lbl">Time</span>
+                  <select value={timeOfIncident} onChange={(e) => setTimeOfIncident(e.target.value as IncidentRecord['timeOfIncident'])} style={{ padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#fff' }}>
+                    <option value="">Select...</option><option>Morning</option><option>Afternoon</option><option>Evening</option><option>Night</option>
+                  </select>
+                </label>
+                <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                  <span className="trn-modal-field-lbl">Incident Type</span>
+                  <select value={incidentType} onChange={(e) => setIncidentType(e.target.value as IncidentRecord['incidentType'])} style={{ padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#fff' }}>
+                    <option>Work Injury</option><option>Near Miss</option><option>Property Damage</option><option>Fire</option><option>Misconduct</option><option>Sleeping on Duty</option><option>Other</option>
+                  </select>
+                </label>
+                <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                  <span className="trn-modal-field-lbl">Status</span>
+                  <select value={status} onChange={(e) => setStatus(e.target.value as IncidentRecord['status'])} style={{ padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#fff' }}>
+                    <option>Open</option><option>Under Review</option><option>Closed</option>
+                  </select>
+                </label>
+              </div>
             </div>
 
-            <section className="incident-shell-card">
-              <h3 className="incident-block-title">Narrative</h3>
-              <div className="incident-form-grid incident-form-grid-4">
-                <label><span>Incident Summary</span><input value={incidentSummary} onChange={(e) => setIncidentSummary(e.target.value)} placeholder="Short incident headline" /></label>
-                <label><span>Exact Spot</span><input value={exactLocation} onChange={(e) => setExactLocation(e.target.value)} placeholder="Line, zone, unit, room" /></label>
-                <label><span>Immediate Cause</span><input value={immediateCause} onChange={(e) => setImmediateCause(e.target.value)} placeholder="Slip, tool issue, behavior" /></label>
-                <label><span>Follow-up Date</span><input type="date" value={followUpDate} onChange={(e) => setFollowUpDate(e.target.value)} /></label>
-                <label><span>Witness Name</span><input value={witnessName} onChange={(e) => setWitnessName(e.target.value)} placeholder="Optional" /></label>
-                <label><span>Witness ID</span><input value={witnessId} onChange={(e) => setWitnessId(e.target.value)} placeholder="Optional" /></label>
-                <label><span>Corrective Owner</span><input value={correctiveOwner} onChange={(e) => setCorrectiveOwner(e.target.value)} placeholder="Responsible person" /></label>
-                <label className="full-field"><span>Incident Description</span><textarea rows={4} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What happened?" /></label>
-                <label className="full-field"><span>Action Taken</span><textarea rows={3} value={actionTaken} onChange={(e) => setActionTaken(e.target.value)} placeholder="Immediate action and follow-up" /></label>
+            <div className="incident-split-grid">
+              {/* Involved Staff */}
+              <div className="trn-modal-card">
+                <h3 className="incident-block-title">Involved Staff</h3>
+                <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px' }}>
+                    <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                      <span className="trn-modal-field-lbl">Employee ID</span>
+                      <input value={employeeId} onChange={(e) => handleEmployeeIdChange(e.target.value)} placeholder="Enter ID — auto-fills" style={{ padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#fff' }} />
+                      {matchedEmployee && <small style={{ color:'#059669', fontSize:'0.7rem', fontWeight:600 }}>✓ {matchedEmployee.fullName}</small>}
+                    </label>
+                    <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                      <span className="trn-modal-field-lbl">Employee Name</span>
+                      <input value={employeeName} onChange={(e) => setEmployeeName(e.target.value)} placeholder="Type or accept auto-fill" style={{ padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#fff' }} />
+                    </label>
+                  </div>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px' }}>
+                    <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                      <span className="trn-modal-field-lbl">Section</span>
+                      <select value={section} onChange={(e) => setSection(e.target.value)} style={{ padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#fff' }}>
+                        <option value="">Select...</option>{departmentsList.map((d) => <option key={d}>{d}</option>)}
+                      </select>
+                    </label>
+                    <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                      <span className="trn-modal-field-lbl">Department</span>
+                      <input value={department} onChange={(e) => setDepartment(e.target.value)} placeholder="Broader dept / division" style={{ padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#fff' }} />
+                    </label>
+                  </div>
+                </div>
               </div>
-            </section>
+
+              {/* Reporter & flags */}
+              <div className="trn-modal-card">
+                <h3 className="incident-block-title">Reporter & Location</h3>
+                <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px' }}>
+                    <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                      <span className="trn-modal-field-lbl">Reported By ID</span>
+                      <input value={reportedById} onChange={(e) => handleReportedByIdChange(e.target.value)} placeholder="Enter ID" style={{ padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#fff' }} />
+                      {matchedReporter && <small style={{ color:'#059669', fontSize:'0.7rem', fontWeight:600 }}>✓ {matchedReporter.fullName}</small>}
+                    </label>
+                    <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                      <span className="trn-modal-field-lbl">Reported By Name</span>
+                      <input value={reportedByName} onChange={(e) => setReportedByName(e.target.value)} placeholder="Type or auto-fill" style={{ padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#fff' }} />
+                    </label>
+                  </div>
+                  <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                    <span className="trn-modal-field-lbl">Site / Location</span>
+                    <input value={siteLocation} onChange={(e) => setSiteLocation(e.target.value)} placeholder="Workshop, gate, plant, room..." style={{ padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#fff' }} />
+                  </label>
+                  <div className="incident-check-grid">
+                    <label className="incident-check-card"><input type="checkbox" checked={injuryInvolved} onChange={(e) => setInjuryInvolved(e.target.checked)} /><span>Injury</span></label>
+                    <label className="incident-check-card"><input type="checkbox" checked={statementTaken} onChange={(e) => setStatementTaken(e.target.checked)} /><span>Statement</span></label>
+                    <label className="incident-check-card"><input type="checkbox" checked={disciplinaryAction} onChange={(e) => setDisciplinaryAction(e.target.checked)} /><span>Disciplinary</span></label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Narrative */}
+            <div className="trn-modal-card">
+              <h3 className="incident-block-title">Narrative &amp; Follow-up</h3>
+              <div className="trn-modal-detail-row" style={{ marginBottom:'10px' }}>
+                <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                  <span className="trn-modal-field-lbl">Incident Summary</span>
+                  <input value={incidentSummary} onChange={(e) => setIncidentSummary(e.target.value)} placeholder="Short headline" style={{ padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#fff' }} />
+                </label>
+                <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                  <span className="trn-modal-field-lbl">Exact Spot</span>
+                  <input value={exactLocation} onChange={(e) => setExactLocation(e.target.value)} placeholder="Line, zone, unit" style={{ padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#fff' }} />
+                </label>
+                <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                  <span className="trn-modal-field-lbl">Immediate Cause</span>
+                  <input value={immediateCause} onChange={(e) => setImmediateCause(e.target.value)} placeholder="Slip, tool issue, behavior" style={{ padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#fff' }} />
+                </label>
+                <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                  <span className="trn-modal-field-lbl">Follow-up Date</span>
+                  <input type="date" value={followUpDate} onChange={(e) => setFollowUpDate(e.target.value)} style={{ padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#fff' }} />
+                </label>
+              </div>
+              <div className="trn-modal-detail-row" style={{ marginBottom:'10px' }}>
+                <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                  <span className="trn-modal-field-lbl">Witness Name</span>
+                  <input value={witnessName} onChange={(e) => setWitnessName(e.target.value)} placeholder="Optional" style={{ padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#fff' }} />
+                </label>
+                <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                  <span className="trn-modal-field-lbl">Witness ID</span>
+                  <input value={witnessId} onChange={(e) => setWitnessId(e.target.value)} placeholder="Optional" style={{ padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#fff' }} />
+                </label>
+                <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                  <span className="trn-modal-field-lbl">Corrective Owner</span>
+                  <input value={correctiveOwner} onChange={(e) => setCorrectiveOwner(e.target.value)} placeholder="Responsible person" style={{ padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#fff' }} />
+                </label>
+              </div>
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px', marginBottom:'10px' }}>
+                <span className="trn-modal-field-lbl">Incident Description</span>
+                <textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What happened?" style={{ padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#fff', resize:'vertical' }} />
+              </label>
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                <span className="trn-modal-field-lbl">Action Taken</span>
+                <textarea rows={2} value={actionTaken} onChange={(e) => setActionTaken(e.target.value)} placeholder="Immediate action and follow-up" style={{ padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#fff', resize:'vertical' }} />
+              </label>
+            </div>
           </div>
-          <div className="modal-actions"><button className="primary-button" type="submit">{isNew ? 'Log Incident' : 'Save Changes'}</button></div>
+          <div className="modal-actions">
+            <button className="quiet-button light" onClick={onClose} type="button">Cancel</button>
+            <button className="primary-button" type="submit">{isNew ? 'Log Incident' : 'Save Changes'}</button>
+          </div>
         </form>
       </section>
     </div>
   )
 }
 
-function RequestsSection({ records, onUpdate }: { records: StaffRequestRecord[]; onUpdate: (fn: (prev: StaffRequestRecord[]) => StaffRequestRecord[]) => void; onBack?: () => void }) {
+const priorityColors: Record<RequestPriority, string> = {
+  Low: 'req-priority-low',
+  Medium: 'req-priority-medium',
+  High: 'req-priority-high',
+}
+
+function RequestsSection({ records, employees, onUpdate }: {
+  records: StaffRequestRecord[]
+  employees: Employee[]
+  onUpdate: (fn: (prev: StaffRequestRecord[]) => StaffRequestRecord[]) => void
+  onBack?: () => void
+}) {
   const [search, setSearch] = useState('')
+  const [typeFilter, setTypeFilter] = useState('All')
   const [statusFilter, setStatusFilter] = useState('All')
   const [editing, setEditing] = useState<StaffRequestRecord | null>(null)
-  const filtered = records.filter((r) => `${r.employeeName} ${r.department} ${r.requestType} ${r.description}`.toLowerCase().includes(search.toLowerCase()) && (statusFilter === 'All' || r.status === statusFilter))
+
+  const filtered = useMemo(() => records.filter((r) =>
+    `${r.employeeId} ${r.employeeName} ${r.department} ${r.requestType} ${r.description}`.toLowerCase().includes(search.toLowerCase())
+    && (typeFilter === 'All' || r.requestType === typeFilter)
+    && (statusFilter === 'All' || r.status === statusFilter)
+  ), [records, search, typeFilter, statusFilter])
+
   const save = (r: StaffRequestRecord) => { onUpdate((prev) => { const idx = prev.findIndex((x) => x.id === r.id); return idx >= 0 ? prev.map((x) => x.id === r.id ? r : x) : [...prev, r] }); setEditing(null) }
   const del = (id: string) => onUpdate((prev) => prev.filter((x) => x.id !== id))
+
+  const newReq = (): StaffRequestRecord => ({
+    id: 'REQ-new', employeeId: '', employeeName: '', department: '', requestType: 'Accommodation',
+    priority: 'Medium', description: '', submittedDate: new Date().toISOString().slice(0, 10),
+    completedDate: '', status: 'Open', remarks: '',
+  })
+
   return (
     <>
       <section className="employee-workspace">
         <div className="table-toolbar activities-toolbar">
-          <label className="search-field"><span>Search</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Employee, type, description" /></label>
+          <label className="search-field"><span>Search</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Emp ID, name, description" /></label>
+          <label><span>Type</span>
+            <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
+              <option value="All">All Types</option>
+              <option>Accommodation</option><option>Equipment</option><option>Transfer</option>
+              <option>Leave</option><option>Documents</option><option>Other</option>
+            </select>
+          </label>
           <label><span>Status</span><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="All">All Statuses</option><option>Open</option><option>In Progress</option><option>Resolved</option><option>Rejected</option></select></label>
-          <button className="primary-button" type="button" onClick={() => setEditing({ id: 'REQ-new', employeeName: '', department: departmentsList[0], requestType: 'Accommodation', description: '', submittedDate: new Date().toISOString().slice(0, 10), completedDate: '', status: 'Open', remarks: '' })}>+ Add Request</button>
+          <button className="primary-button" type="button" onClick={() => setEditing(newReq())}>+ Add Request</button>
         </div>
-        <div className="employee-table-shell compact-scroll"><table className="data-table"><thead><tr><th>ID</th><th>Employee</th><th>Department</th><th>Type</th><th>Description</th><th>Submitted</th><th>Completed</th><th>Status</th><th>Remarks</th><th>Actions</th></tr></thead>
-          <tbody>{filtered.length === 0 ? <tr><td colSpan={10} className="empty-row">No requests found</td></tr> : filtered.map((r) => (
-            <tr key={r.id}><td>{r.id}</td><td>{r.employeeName}</td><td>{r.department}</td><td>{r.requestType}</td><td>{r.description}</td><td>{formatDateDisplay(r.submittedDate)}</td><td>{r.completedDate ? formatDateDisplay(r.completedDate) : '—'}</td><td><StatusBadge status={r.status} /></td><td>{r.remarks || '-'}</td>
-              <td><div className="row-actions"><button className="action-glyph edit" title="Edit" onClick={() => setEditing(r)} type="button">✎</button><button className="action-glyph delete" title="Delete" onClick={() => del(r.id)} type="button">🗑</button></div></td></tr>
-          ))}</tbody>
-        </table></div>
+        <div className="employee-table-shell compact-scroll">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>ID</th><th>Emp ID</th><th>Employee</th><th>Section</th>
+                <th style={{textAlign:'center'}}>Type</th>
+                <th style={{textAlign:'center'}}>Priority</th>
+                <th>Description</th>
+                <th style={{textAlign:'center'}}>Submitted</th>
+                <th style={{textAlign:'center'}}>Status</th>
+                <th>Remarks</th>
+                <th style={{textAlign:'center'}}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0
+                ? <tr><td colSpan={11} className="empty-row">No requests found</td></tr>
+                : filtered.map((r) => (
+                  <tr key={r.id}>
+                    <td style={{fontSize:'0.75rem', color:'#6b7280'}}>{r.id}</td>
+                    <td>{r.employeeId || '—'}</td>
+                    <td>{r.employeeName}</td>
+                    <td>{r.department}</td>
+                    <td style={{textAlign:'center'}}><span className="req-type-chip">{r.requestType}</span></td>
+                    <td style={{textAlign:'center'}}><span className={`req-priority-badge ${priorityColors[r.priority]}`}>{r.priority}</span></td>
+                    <td>{r.description || '—'}</td>
+                    <td style={{textAlign:'center'}}>{formatDateDisplay(r.submittedDate)}</td>
+                    <td style={{textAlign:'center'}}><StatusBadge status={r.status} /></td>
+                    <td>{r.remarks || '—'}</td>
+                    <td style={{textAlign:'center'}}>
+                      <div className="row-actions">
+                        <button className="action-glyph edit" title="Edit" onClick={() => setEditing(r)} type="button">✎</button>
+                        <button className="action-glyph delete" title="Delete" onClick={() => del(r.id)} type="button">🗑</button>
+                      </div>
+                    </td>
+                  </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
-      {editing && <StaffRequestModal record={editing} onClose={() => setEditing(null)} onSave={save} />}
+      {editing && <StaffRequestModal record={editing} employees={employees} onClose={() => setEditing(null)} onSave={save} />}
     </>
   )
 }
 
-function VisitsSection({ records, onUpdate }: { records: VisitRecord[]; onUpdate: (fn: (prev: VisitRecord[]) => VisitRecord[]) => void; onBack?: () => void }) {
+function VisitsSection({ records, employees, onUpdate }: {
+  records: VisitRecord[]
+  employees: Employee[]
+  onUpdate: (fn: (prev: VisitRecord[]) => VisitRecord[]) => void
+  onBack?: () => void
+}) {
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('All')
   const [statusFilter, setStatusFilter] = useState('All')
   const [editing, setEditing] = useState<VisitRecord | null>(null)
-  const filtered = records.filter((r) => `${r.employeeId} ${r.employeeName} ${r.department} ${r.nationality}`.toLowerCase().includes(search.toLowerCase()) && (typeFilter === 'All' || r.visitType === typeFilter) && (statusFilter === 'All' || r.status === statusFilter))
+
+  const filtered = useMemo(() => records.filter((r) =>
+    `${r.employeeId} ${r.employeeName} ${r.department} ${r.nationality} ${r.nicPassportNo}`.toLowerCase().includes(search.toLowerCase())
+    && (typeFilter === 'All' || r.visitType === typeFilter)
+    && (statusFilter === 'All' || r.status === statusFilter)
+  ), [records, search, typeFilter, statusFilter])
+
   const save = (r: VisitRecord) => { onUpdate((prev) => { const idx = prev.findIndex((x) => x.id === r.id); return idx >= 0 ? prev.map((x) => x.id === r.id ? r : x) : [...prev, r] }); setEditing(null) }
   const del = (id: string) => onUpdate((prev) => prev.filter((x) => x.id !== id))
+
+  const newVisit = (): VisitRecord => ({
+    id: 'VIS-new', employeeId: '', employeeName: '', department: '', nicPassportNo: '',
+    nationality: nationalities[0], visitType: 'Visa Medical',
+    visitDate: new Date().toISOString().slice(0, 10), status: 'Scheduled', remarks: '',
+  })
+
   return (
     <>
       <section className="employee-workspace">
         <div className="table-toolbar activities-toolbar">
-          <label className="search-field"><span>Search</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="ID, name, department" /></label>
-          <label><span>Type</span><select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}><option value="All">All Types</option><option>Visa Medical</option><option>Photo</option><option>Passport Renewal</option><option>Embassy Letter Collection</option></select></label>
+          <label className="search-field"><span>Search</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="ID, name, NIC/PP, department" /></label>
+          <label><span>Type</span>
+            <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
+              <option value="All">All Types</option>
+              <option>Visa Medical</option><option>Passport Renewal</option><option>Photo</option>
+              <option>Embassy Letter Collection</option><option>Biometric Update</option>
+            </select>
+          </label>
           <label><span>Status</span><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="All">All Statuses</option><option>Scheduled</option><option>Completed</option><option>Cancelled</option></select></label>
-          <button className="primary-button" type="button" onClick={() => setEditing({ id: 'VIS-new', employeeId: '', employeeName: '', department: departmentsList[0], nationality: nationalities[0], visitType: 'Visa Medical', visitDate: new Date().toISOString().slice(0, 10), status: 'Scheduled', remarks: '' })}>+ Add Visit</button>
+          <button className="primary-button" type="button" onClick={() => setEditing(newVisit())}>+ Add Visit</button>
         </div>
-        <div className="employee-table-shell compact-scroll"><table className="data-table"><thead><tr><th>#</th><th>Emp ID</th><th>Name</th><th>Department</th><th>Nationality</th><th>Visit Type</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
-          <tbody>{filtered.length === 0 ? <tr><td colSpan={9} className="empty-row">No visits found</td></tr> : filtered.map((r, i) => (
-            <tr key={r.id}><td>{i + 1}</td><td>{r.employeeId || '—'}</td><td>{r.employeeName}</td><td>{r.department}</td><td>{r.nationality}</td><td>{r.visitType}</td><td>{formatDateDisplay(r.visitDate)}</td><td><StatusBadge status={r.status} /></td>
-              <td><div className="row-actions"><button className="action-glyph edit" title="Edit" onClick={() => setEditing(r)} type="button">✎</button><button className="action-glyph delete" title="Delete" onClick={() => del(r.id)} type="button">🗑</button></div></td></tr>
-          ))}</tbody>
-        </table></div>
+        <div className="employee-table-shell compact-scroll">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>#</th><th>Emp ID</th><th>Name</th><th>Section</th>
+                <th>NIC / PP No.</th><th>Nationality</th>
+                <th style={{textAlign:'center'}}>Visit Type</th>
+                <th style={{textAlign:'center'}}>Date</th>
+                <th style={{textAlign:'center'}}>Status</th>
+                <th style={{textAlign:'center'}}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0
+                ? <tr><td colSpan={10} className="empty-row">No visits found</td></tr>
+                : filtered.map((r, i) => (
+                  <tr key={r.id}>
+                    <td style={{textAlign:'center'}}>{i + 1}</td>
+                    <td>{r.employeeId || '—'}</td>
+                    <td>{r.employeeName}</td>
+                    <td>{r.department}</td>
+                    <td>{r.nicPassportNo || '—'}</td>
+                    <td>{r.nationality}</td>
+                    <td style={{textAlign:'center'}}><span className="req-type-chip">{r.visitType}</span></td>
+                    <td style={{textAlign:'center'}}>{formatDateDisplay(r.visitDate)}</td>
+                    <td style={{textAlign:'center'}}><StatusBadge status={r.status} /></td>
+                    <td style={{textAlign:'center'}}>
+                      <div className="row-actions">
+                        <button className="action-glyph edit" title="Edit" onClick={() => setEditing(r)} type="button">✎</button>
+                        <button className="action-glyph delete" title="Delete" onClick={() => del(r.id)} type="button">🗑</button>
+                      </div>
+                    </td>
+                  </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
-      {editing && <VisitModal record={editing} onClose={() => setEditing(null)} onSave={save} />}
+      {editing && <VisitModal record={editing} employees={employees} onClose={() => setEditing(null)} onSave={save} />}
     </>
   )
 }
@@ -4060,7 +4462,7 @@ function IncidentsSection({ records, employees, onUpdate }: { records: IncidentR
     setEditing(null)
   }
   const del = (id: string) => onUpdate((prev) => prev.filter((x) => x.id !== id))
-  const newIncident = (): IncidentRecord => ({ id: 'INC-new', incidentDate: new Date().toISOString().slice(0, 10), timeOfIncident: 'Morning', employeeId: '', employeeName: '', reportedById: '', reportedByName: '', department: departmentsList[0], siteLocation: '', incidentType: 'Work Injury', incidentSummary: '', exactLocation: '', immediateCause: '', witnessName: '', witnessId: '', correctiveOwner: '', followUpDate: '', description: '', injuryInvolved: false, actionTaken: '', statementTaken: false, disciplinaryAction: false, status: 'Open' })
+  const newIncident = (): IncidentRecord => ({ id: 'INC-new', incidentDate: new Date().toISOString().slice(0, 10), timeOfIncident: 'Morning', employeeId: '', employeeName: '', reportedById: '', reportedByName: '', section: departmentsList[0], department: '', siteLocation: '', incidentType: 'Work Injury', incidentSummary: '', exactLocation: '', immediateCause: '', witnessName: '', witnessId: '', correctiveOwner: '', followUpDate: '', description: '', injuryInvolved: false, actionTaken: '', statementTaken: false, disciplinaryAction: false, status: 'Open' })
   return (
     <>
       <section className="employee-workspace">
@@ -4069,14 +4471,15 @@ function IncidentsSection({ records, employees, onUpdate }: { records: IncidentR
           <label><span>Status</span><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="All">All Statuses</option><option>Open</option><option>Under Review</option><option>Closed</option></select></label>
           <button className="primary-button" type="button" onClick={() => setEditing(newIncident())}>+ Log Incident</button>
         </div>
-        <div className="employee-table-shell compact-scroll"><table className="data-table"><thead><tr><th>Ref No.</th><th>Date</th><th>Time</th><th>Employee</th><th>Department</th><th>Site / Location</th><th>Type</th><th>Injury</th><th>Statement</th><th>Disciplinary</th><th>Status</th><th>Actions</th></tr></thead>
-          <tbody>{filtered.length === 0 ? <tr><td colSpan={12} className="empty-row">No incidents found</td></tr> : filtered.map((r) => (
+        <div className="employee-table-shell compact-scroll"><table className="data-table"><thead><tr><th>Ref No.</th><th>Date</th><th>Time</th><th>Employee</th><th>Section</th><th>Department</th><th>Site / Location</th><th>Type</th><th>Injury</th><th>Statement</th><th>Disciplinary</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody>{filtered.length === 0 ? <tr><td colSpan={13} className="empty-row">No incidents found</td></tr> : filtered.map((r) => (
             <tr key={r.id}>
               <td>{r.id}</td>
               <td>{formatDateDisplay(r.incidentDate)}</td>
               <td>{r.timeOfIncident || '—'}</td>
               <td>{r.employeeName || '—'}</td>
-              <td>{r.department}</td>
+              <td>{r.section || '—'}</td>
+              <td>{r.department || '—'}</td>
               <td>{r.siteLocation || '—'}</td>
               <td>{r.incidentType}</td>
               <td style={{textAlign:'center'}}>{r.injuryInvolved ? <span className="doc-yes">✓</span> : <span className="doc-no">—</span>}</td>
@@ -4098,7 +4501,8 @@ function IncidentsSection({ records, employees, onUpdate }: { records: IncidentR
               <div className="induction-detail-row"><span>Time</span><strong>{viewing.timeOfIncident || '—'}</strong></div>
               <div className="induction-detail-row"><span>Employee</span><strong>{viewing.employeeName || '—'} {viewing.employeeId ? `(${viewing.employeeId})` : ''}</strong></div>
               <div className="induction-detail-row"><span>Reported By</span><strong>{viewing.reportedByName || '—'} {viewing.reportedById ? `(${viewing.reportedById})` : ''}</strong></div>
-              <div className="induction-detail-row"><span>Department</span><strong>{viewing.department}</strong></div>
+              <div className="induction-detail-row"><span>Section</span><strong>{viewing.section || '—'}</strong></div>
+              <div className="induction-detail-row"><span>Department</span><strong>{viewing.department || '—'}</strong></div>
               <div className="induction-detail-row"><span>Site / Location</span><strong>{viewing.siteLocation || '—'}</strong></div>
               <div className="induction-detail-row"><span>Summary</span><strong>{viewing.incidentSummary || '—'}</strong></div>
               <div className="induction-detail-row"><span>Exact Spot</span><strong>{viewing.exactLocation || '—'}</strong></div>
@@ -4134,8 +4538,8 @@ function ActivitiesPage({ employees }: { employees: Employee[] }) {
         <button className={activeSection === 'visits' ? 'active' : ''} onClick={() => setActiveSection('visits')} type="button">Visits</button>
         <button className={activeSection === 'incidents' ? 'active' : ''} onClick={() => setActiveSection('incidents')} type="button">Incidents</button>
       </div>
-      {activeSection === 'requests' && <RequestsSection records={staffRequests} onUpdate={setStaffRequests} onBack={() => {}} />}
-      {activeSection === 'visits' && <VisitsSection records={visitRecords} onUpdate={setVisitRecords} onBack={() => {}} />}
+      {activeSection === 'requests' && <RequestsSection records={staffRequests} employees={employees} onUpdate={setStaffRequests} onBack={() => {}} />}
+      {activeSection === 'visits' && <VisitsSection records={visitRecords} employees={employees} onUpdate={setVisitRecords} onBack={() => {}} />}
       {activeSection === 'incidents' && <IncidentsSection records={incidentRecords} employees={employees} onUpdate={setIncidentRecords} onBack={() => {}} />}
     </>
   )
@@ -4433,6 +4837,16 @@ function LoginPage({ onLogin }: { onLogin: () => void }) {
       {/* Background decorative grid */}
       <div className="login-bg-grid" aria-hidden="true" />
 
+      {/* Animated floating HR elements */}
+      <div className="login-floats" aria-hidden="true">
+        <span className="login-float login-float-1">👤</span>
+        <span className="login-float login-float-2">📋</span>
+        <span className="login-float login-float-3">📅</span>
+        <span className="login-float login-float-4">🏢</span>
+        <span className="login-float login-float-5">📊</span>
+        <span className="login-float login-float-6">👥</span>
+      </div>
+
       {/* Top bar */}
       <div className="login-topbar">
         <div className="login-topbar-brand">
@@ -4445,7 +4859,7 @@ function LoginPage({ onLogin }: { onLogin: () => void }) {
       {/* Centre content */}
       <div className="login-center">
         {/* Left: headline */}
-        <div className="login-headline-col">
+        <div className="login-headline-col login-animate-left">
           <p className="login-eyebrow">People Operations Platform</p>
           <h1 className="login-headline">
             TIC&nbsp;HR<br />Register
@@ -4464,7 +4878,7 @@ function LoginPage({ onLogin }: { onLogin: () => void }) {
         <div className="login-divider" aria-hidden="true" />
 
         {/* Right: form */}
-        <div className="login-form-col">
+        <div className="login-form-col login-animate-right">
           <form className="login-form" onSubmit={handleSubmit}>
             <div className="login-form-top">
               <h2 className="login-form-title">Sign in</h2>
@@ -4522,8 +4936,12 @@ function App() {
       return next
     })
   }
+  const [loggingOut, setLoggingOut] = useState(false)
   const login = () => { localStorage.setItem('tic_auth', '1'); setIsLoggedIn(true) }
-  const logout = () => { localStorage.removeItem('tic_auth'); setIsLoggedIn(false) }
+  const logout = () => {
+    setLoggingOut(true)
+    setTimeout(() => { localStorage.removeItem('tic_auth'); setIsLoggedIn(false); setLoggingOut(false) }, 700)
+  }
   const [importResult, setImportResult] = useState<{ added: number; updated: number; skipped: number } | null>(null)
 
   function loadStore<T>(key: string, fallback: T[]): T[] {
@@ -4783,12 +5201,24 @@ function App() {
     setNoticeTerminations((current) => current.filter((record) => record.id !== id))
   }
 
-  // Convert DD-MM-YYYY or DD/MM/YYYY → YYYY-MM-DD for storage; pass through if already ISO
+  // Convert DD-MM-YYYY, DD/MM/YYYY, or DD-Mon-YYYY (e.g. 25-Jun-2026) → YYYY-MM-DD
   const parseImportDate = (raw: string) => {
     if (!raw) return ''
-    const dmY = /^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/.exec(raw.trim())
+    const s = raw.trim()
+    // Numeric: DD-MM-YYYY or DD/MM/YYYY
+    const dmY = /^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/.exec(s)
     if (dmY) return `${dmY[3]}-${dmY[2].padStart(2,'0')}-${dmY[1].padStart(2,'0')}`
-    return raw.trim() // already YYYY-MM-DD or blank
+    // Alpha-month: DD-Mon-YYYY or DD/Mon/YYYY (e.g. 25-Jun-2026)
+    const monthMap: Record<string, string> = {
+      jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',
+      jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12'
+    }
+    const dMonY = /^(\d{1,2})[-/]([A-Za-z]{3,})[-/](\d{4})$/.exec(s)
+    if (dMonY) {
+      const m = monthMap[dMonY[2].toLowerCase().slice(0,3)]
+      if (m) return `${dMonY[3]}-${m}-${dMonY[1].padStart(2,'0')}`
+    }
+    return s // already YYYY-MM-DD or unrecognised
   }
 
   const exportCsv = () => {
@@ -4882,7 +5312,7 @@ function App() {
   }
 
   return (
-    <div className={`app-shell${sidebarCollapsed ? ' sidebar-is-collapsed' : ''}`}>
+    <div className={`app-shell${sidebarCollapsed ? ' sidebar-is-collapsed' : ''}${loggingOut ? ' app-logging-out' : ''}`}>
       <aside className={`sidebar${sidebarCollapsed ? ' sidebar--collapsed' : ''}`}>
         <div className="sidebar-header">
           <div className="sidebar-brand">
