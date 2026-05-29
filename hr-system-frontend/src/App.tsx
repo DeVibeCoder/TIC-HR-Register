@@ -2157,14 +2157,6 @@ function LeavePage({
                                   )
                                 })}
                               </div>
-                              <div className="lr-dates-row">
-                                <div className="lr-date-item"><span className="lr-date-lbl">Departure</span><span className="lr-date-val">{formatDateDisplay(record.departureDate)}</span></div>
-                                <div className="lr-date-item"><span className="lr-date-lbl">Return</span><span className="lr-date-val">{formatDateDisplay(record.returnDate)}</span></div>
-                                <div className="lr-date-item"><span className="lr-date-lbl">Days</span><span className="lr-date-val">{record.days}</span></div>
-                                <div className="lr-date-item"><span className="lr-date-lbl">Leave Type</span><span className="lr-date-val">{leaveTypeOptions.find(l => l.code === record.leaveTypeCode)?.label ?? record.leaveTypeCode}</span></div>
-                                <div className="lr-date-item"><span className="lr-date-lbl">Section</span><span className="lr-date-val">{record.department}</span></div>
-                                {record.remarks && <div className="lr-date-item"><span className="lr-date-lbl">Remarks</span><span className="lr-date-val">{record.remarks}</span></div>}
-                              </div>
                             </td>
                           </tr>
                         )}
@@ -4926,9 +4918,11 @@ function TerminationPage({
                                     const isDone = i < stageIdx
                                     const isCurrent = i === stageIdx
                                     const cls = isDone ? 'lr-done' : isCurrent ? 'lr-current' : 'lr-future'
-                                    const stageDate = r.stageDates?.[stage]
-                                      ?? (stage === 'Letter Submitted' ? r.dateSubmitted : undefined)
-                                      ?? (stage === 'Pending Departure' ? r.departureDate : undefined)
+                                    // Show dates only for Letter Submitted and Pending Departure
+                                    const showStageDate = stage === 'Letter Submitted' || stage === 'Pending Departure'
+                                    const stageDate = showStageDate
+                                      ? (r.stageDates?.[stage] ?? (stage === 'Letter Submitted' ? r.dateSubmitted : r.departureDate))
+                                      : undefined
                                     return (
                                       <Fragment key={stage}>
                                         <button
@@ -4947,14 +4941,6 @@ function TerminationPage({
                                       </Fragment>
                                     )
                                   })}
-                                </div>
-                                <div className="lr-dates-row">
-                                  <div className="lr-date-item"><span className="lr-date-lbl">Date Submitted</span><span className="lr-date-val">{formatDateDisplay(r.dateSubmitted)}</span></div>
-                                  <div className="lr-date-item"><span className="lr-date-lbl">Date of Join</span><span className="lr-date-val">{formatDateDisplay(r.dateOfJoin)}</span></div>
-                                  <div className="lr-date-item"><span className="lr-date-lbl">Duration</span><span className="lr-date-val">{getDuration(r.dateOfJoin)}</span></div>
-                                  <div className="lr-date-item"><span className="lr-date-lbl">Last Working Day</span><span className="lr-date-val">{formatDateDisplay(r.lastWorkingDate)}</span></div>
-                                  <div className="lr-date-item"><span className="lr-date-lbl">Departure</span><span className="lr-date-val">{formatDateDisplay(r.departureDate)}</span></div>
-                                  <div className="lr-date-item"><span className="lr-date-lbl">Type</span><span className="lr-date-val">{r.terminationType}</span></div>
                                 </div>
                               </td>
                             </tr>
