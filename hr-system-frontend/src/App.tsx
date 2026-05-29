@@ -2053,6 +2053,7 @@ function LeavePage({
   const [requestSearch, setRequestSearch] = useState('')
   const [requestTypeFilter, setRequestTypeFilter] = useState<'All' | LeaveTypeCode>('All')
   const [requestDepartmentFilter, setRequestDepartmentFilter] = useState('All Departments')
+  const [expandedReqId, setExpandedReqId] = useState<string | null>(null)
 
   const [activeSearch, setActiveSearch] = useState('')
   const [activeTypeFilter, setActiveTypeFilter] = useState<'All' | LeaveTypeCode>('All')
@@ -2124,36 +2125,87 @@ function LeavePage({
               <button className="primary-button toolbar-add-btn" onClick={onAddRequest} type="button">Add Leave Request</button>
             </div>
             <div className="employee-table-shell compact-scroll">
-              <table className="data-table leave-table"><thead><tr><th>Emp ID</th><th>Name</th><th>Section</th><th>NIC / PP No</th><th className="leave-type-th">Leave Type</th><th className="leave-date-th">Departure</th><th className="leave-date-th">Return</th><th className="leave-days-th">Days</th><th>Remarks</th><th className="leave-status-th">Status</th><th>Action</th></tr></thead><tbody>
-                {requestRows.map((record) => {
-                  return (
-                    <tr key={record.id}>
-                      <td>{record.employeeId}</td>
-                      <td>{record.name}</td>
-                      <td>{record.department}</td>
-                      <td>{getNic(record.employeeId)}</td>
-                      <td className="leave-type-cell"><LeaveTypeBadge code={record.leaveTypeCode} /></td>
-                      <td className="leave-date-cell">{formatDateDisplay(record.departureDate)}</td>
-                      <td className="leave-date-cell">{formatDateDisplay(record.returnDate)}</td>
-                      <td className="leave-days-cell">{record.days}</td>
-                      <td className="leave-remarks-cell">{record.remarks || <span className="muted-dash">—</span>}</td>
-                      <td className="leave-status-cell">
-                        <StageDropdown
-                          steps={requestSteps}
-                          current={record.step}
-                          onSelect={(step) => onSetRequestStep(record.id, step)}
-                        />
-                      </td>
-                      <td>
-                        <div className="row-actions request-inline-actions">
-                          <button className="action-glyph edit" onClick={() => onEditRequest(record)} type="button" title="Edit" aria-label="Edit request">✎</button>
-                          <button className="action-glyph delete" onClick={() => onDeleteRequest(record.id)} type="button" title="Delete" aria-label="Delete request">🗑</button>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody></table>
+              <table className="data-table leave-table">
+                <thead><tr>
+                  <th className="lr-expand-th" />
+                  <th>Emp ID</th><th>Name</th><th>Section</th><th>NIC / PP No</th>
+                  <th className="leave-type-th">Leave Type</th>
+                  <th className="leave-date-th">Departure</th><th className="leave-date-th">Return</th>
+                  <th className="leave-days-th">Days</th><th>Remarks</th>
+                  <th className="leave-status-th">Status</th><th>Action</th>
+                </tr></thead>
+                <tbody>
+                  {requestRows.map((record) => {
+                    const stepIdx = requestSteps.indexOf(record.step)
+                    const isLast = stepIdx === requestSteps.length - 1
+                    const nextStep = isLast ? null : requestSteps[stepIdx + 1]
+                    const isExp = expandedReqId === record.id
+                    return (
+                      <Fragment key={record.id}>
+                        <tr className={`lr-row${isExp ? ' lr-row-open' : ''}`} onClick={() => setExpandedReqId(isExp ? null : record.id)}>
+                          <td className="lr-expand-td"><span className={`mc-arrow${isExp ? ' mc-arrow-open' : ''}`}>›</span></td>
+                          <td>{record.employeeId}</td>
+                          <td>{record.name}</td>
+                          <td>{record.department}</td>
+                          <td>{getNic(record.employeeId)}</td>
+                          <td className="leave-type-cell"><LeaveTypeBadge code={record.leaveTypeCode} /></td>
+                          <td className="leave-date-cell">{formatDateDisplay(record.departureDate)}</td>
+                          <td className="leave-date-cell">{formatDateDisplay(record.returnDate)}</td>
+                          <td className="leave-days-cell">{record.days}</td>
+                          <td className="leave-remarks-cell">{record.remarks || <span className="muted-dash">—</span>}</td>
+                          <td className="leave-status-cell" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              className={`lr-status-pill lr-step-${stepIdx}`}
+                              disabled={isLast}
+                              onClick={(e) => { e.stopPropagation(); if (nextStep) onSetRequestStep(record.id, nextStep) }}
+                              type="button"
+                              title={isLast ? 'Pending Departure — final step' : `Advance to: ${nextStep}`}
+                            >
+                              {record.step}
+                              {!isLast && <svg width="9" height="9" viewBox="0 0 12 12" fill="currentColor" style={{ marginLeft: 4, opacity: 0.7 }}><path d="M4 2l4 4-4 4" stroke="currentColor" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                            </button>
+                          </td>
+                          <td onClick={(e) => e.stopPropagation()}>
+                            <div className="row-actions request-inline-actions">
+                              <button className="action-glyph edit" onClick={() => onEditRequest(record)} type="button" title="Edit">✎</button>
+                              <button className="action-glyph delete" onClick={() => onDeleteRequest(record.id)} type="button" title="Delete">🗑</button>
+                            </div>
+                          </td>
+                        </tr>
+                        {isExp && (
+                          <tr className="lr-pipeline-row">
+                            <td colSpan={12}>
+                              <div className="lr-pipeline">
+                                {requestSteps.map((step, i) => {
+                                  const isDone = i < stepIdx
+                                  const isCurrent = i === stepIdx
+                                  const cls = isDone ? 'lr-done' : isCurrent ? 'lr-current' : 'lr-future'
+                                  return (
+                                    <Fragment key={step}>
+                                      <button
+                                        className={`lr-pip-step ${cls}`}
+                                        onClick={(e) => { e.stopPropagation(); onSetRequestStep(record.id, step) }}
+                                        type="button"
+                                        title={`Set to: ${step}`}
+                                      >
+                                        <div className="lr-pip-circle">{isDone ? '✓' : i + 1}</div>
+                                        <div className="lr-pip-label">{step}</div>
+                                      </button>
+                                      {i < requestSteps.length - 1 && (
+                                        <div className={`lr-pip-line ${isDone ? 'lr-pip-line-done' : 'lr-pip-line-future'}`} />
+                                      )}
+                                    </Fragment>
+                                  )
+                                })}
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
+                    )
+                  })}
+                </tbody>
+              </table>
             </div>
           </>
         )}
