@@ -44,6 +44,7 @@ type LeaveBase = {
 
 type LeaveRequestRecord = LeaveBase & {
   step: LeaveRequestStep
+  stepDates?: Partial<Record<LeaveRequestStep, string>>
 }
 
 type ActiveLeaveRecord = LeaveBase & {
@@ -261,6 +262,7 @@ type EnhancedTerminationRecord = {
   lastWorkingDate: string
   departureDate: string
   currentStage: TerminationStage
+  stageDates?: Partial<Record<TerminationStage, string>>
   reasonForLeaving: string
   satisfactionRating: number
   rehireEligible: boolean
@@ -2133,6 +2135,8 @@ function LeavePage({
                                   const isDone = i < stepIdx
                                   const isCurrent = i === stepIdx
                                   const cls = isDone ? 'lr-done' : isCurrent ? 'lr-current' : 'lr-future'
+                                  const stepDate = record.stepDates?.[step]
+                                    ?? (step === 'Pending Departure' ? record.departureDate : undefined)
                                   return (
                                     <Fragment key={step}>
                                       <button
@@ -2143,6 +2147,7 @@ function LeavePage({
                                       >
                                         <div className="lr-pip-circle">{isDone ? '✓' : i + 1}</div>
                                         <div className="lr-pip-label">{step}</div>
+                                        <div className="lr-pip-date">{stepDate ? formatDateDisplay(stepDate) : '—'}</div>
                                       </button>
                                       {i < requestSteps.length - 1 && (
                                         <div className={`lr-pip-line ${isDone ? 'lr-pip-line-done' : 'lr-pip-line-future'}`} />
@@ -4920,6 +4925,9 @@ function TerminationPage({
                                     const isDone = i < stageIdx
                                     const isCurrent = i === stageIdx
                                     const cls = isDone ? 'lr-done' : isCurrent ? 'lr-current' : 'lr-future'
+                                    const stageDate = r.stageDates?.[stage]
+                                      ?? (stage === 'Letter Submitted' ? r.dateSubmitted : undefined)
+                                      ?? (stage === 'Pending Departure' ? r.departureDate : undefined)
                                     return (
                                       <Fragment key={stage}>
                                         <button
@@ -4930,6 +4938,7 @@ function TerminationPage({
                                         >
                                           <div className="lr-pip-circle">{isDone ? '✓' : i + 1}</div>
                                           <div className="lr-pip-label">{stage}</div>
+                                          <div className="lr-pip-date">{stageDate ? formatDateDisplay(stageDate) : '—'}</div>
                                         </button>
                                         {i < allTerminationStages.length - 1 && (
                                           <div className={`lr-pip-line ${isDone ? 'lr-pip-line-done' : 'lr-pip-line-future'}`} />
@@ -6716,7 +6725,15 @@ function App() {
   }
 
   const setLeaveRequestStep = (id: string, step: LeaveRequestStep) => {
-    setLeaveRequests((current) => current.map((record) => record.id === id ? { ...record, step } : record))
+    const today = new Date().toISOString().slice(0, 10)
+    setLeaveRequests((current) => current.map((record) => {
+      if (record.id !== id) return record
+      return {
+        ...record,
+        step,
+        stepDates: { ...(record.stepDates ?? {}), [step]: record.stepDates?.[step] ?? today },
+      }
+    }))
   }
 
   const updateHistoryConfirmation = (id: string, confirmation: HistoryConfirmation) => {
@@ -6764,7 +6781,19 @@ function App() {
   }
 
   const setTerminationStage = (id: string, stage: TerminationStage) => {
-    setNoticeTerminations((cur) => cur.map((r) => r.id === id ? { ...r, currentStage: stage } : r))
+    const today = new Date().toISOString().slice(0, 10)
+    setNoticeTerminations((cur) => cur.map((r) => {
+      if (r.id !== id) return r
+      // Letter Submitted date comes from dateSubmitted field; don't overwrite if already set
+      const dateForStage = stage === 'Letter Submitted'
+        ? (r.stageDates?.['Letter Submitted'] ?? r.dateSubmitted ?? today)
+        : (r.stageDates?.[stage] ?? today)
+      return {
+        ...r,
+        currentStage: stage,
+        stageDates: { ...(r.stageDates ?? {}), [stage]: dateForStage },
+      }
+    }))
   }
 
   const saveTerminationRecord = (record: EnhancedTerminationRecord) => {

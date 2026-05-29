@@ -6528,38 +6528,50 @@ button.step-pill:hover { filter: brightness(0.98); }
 .lr-pip-step:hover { opacity: 0.78; }
 
 .lr-pip-circle {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.65rem;
+  font-size: 0.58rem;
   font-weight: 800;
   transition: transform 120ms;
   flex-shrink: 0;
 }
-.lr-pip-step:hover .lr-pip-circle { transform: scale(1.10); }
+.lr-pip-step:hover .lr-pip-circle { transform: scale(1.12); }
 
 .lr-done .lr-pip-circle    { background: #22c55e; color: #fff; }
 .lr-current .lr-pip-circle { background: var(--brand, #6366f1); color: #fff; box-shadow: 0 0 0 3px #e0e7ff; }
 .lr-future .lr-pip-circle  { background: #f1f5f9; color: #94a3b8; border: 1.5px solid #e2e8f0; }
 
 .lr-pip-label {
-  font-size: 0.60rem;
+  font-size: 0.58rem;
   font-weight: 700;
   text-align: center;
-  line-height: 1.25;
+  line-height: 1.2;
 }
 .lr-done .lr-pip-label    { color: #166534; }
 .lr-current .lr-pip-label { color: #4338ca; font-weight: 800; }
 .lr-future .lr-pip-label  { color: #94a3b8; }
 
+/* Date below each step */
+.lr-pip-date {
+  font-size: 0.56rem;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.2;
+  margin-top: 1px;
+}
+.lr-done .lr-pip-date    { color: #16a34a; }
+.lr-current .lr-pip-date { color: #4338ca; }
+.lr-future .lr-pip-date  { color: #c4c4c4; }
+
 /* Connector line between steps */
 .lr-pip-line {
   flex: 1;
   height: 2px;
-  margin-top: 11px;
+  margin-top: 9px;
   min-width: 10px;
   border-radius: 1px;
 }
