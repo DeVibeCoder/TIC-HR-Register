@@ -2135,8 +2135,9 @@ function LeavePage({
                                   const isDone = i < stepIdx
                                   const isCurrent = i === stepIdx
                                   const cls = isDone ? 'lr-done' : isCurrent ? 'lr-current' : 'lr-future'
-                                  const stepDate = record.stepDates?.[step]
-                                    ?? (step === 'Pending Departure' ? record.departureDate : undefined)
+                                  // Only show dates for Letter Submitted and Approved — others are already in the table
+                                  const showDate = step === 'Letter Submitted' || step === 'Approved'
+                                  const stepDate = showDate ? (record.stepDates?.[step] ?? undefined) : undefined
                                   return (
                                     <Fragment key={step}>
                                       <button
