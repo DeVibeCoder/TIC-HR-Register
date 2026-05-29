@@ -1973,53 +1973,6 @@ function MedicalLeaveSection({ records, employees, onUpdate }: {
   )
 }
 
-function StageDropdown<T extends string>({ steps, current, onSelect, colorMap }: {
-  steps: T[]
-  current: T
-  onSelect: (step: T) => void
-  colorMap?: Record<string, string>
-}) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-  const currentIdx = steps.indexOf(current)
-
-  useEffect(() => {
-    const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
-    if (open) document.addEventListener('mousedown', h)
-    return () => document.removeEventListener('mousedown', h)
-  }, [open])
-
-  return (
-    <div className="spd-wrap" ref={ref}>
-      <button
-        className={`spd-trigger spd-step-${currentIdx}`}
-        style={colorMap?.[current] ? { background: colorMap[current], color: '#fff', borderColor: colorMap[current] } : undefined}
-        onClick={() => setOpen(o => !o)}
-        type="button"
-      >
-        {current}
-        <svg width="10" height="6" viewBox="0 0 10 6" fill="currentColor" style={{marginLeft:4,opacity:0.7}}><path d="M0 0L5 6L10 0z"/></svg>
-      </button>
-      {open && (
-        <div className="spd-dropdown">
-          {steps.map((step, i) => (
-            <button
-              key={step}
-              className={`spd-item ${i < currentIdx ? 'spd-done' : i === currentIdx ? 'spd-current' : 'spd-future'}`}
-              onClick={() => { onSelect(step); setOpen(false) }}
-              type="button"
-            >
-              <span className="spd-dot" />
-              <span className="spd-label">{step}</span>
-              {i === currentIdx && <span className="spd-here-tag">current</span>}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
-
 function LeavePage({
   employees,
   leaveRequests,
@@ -2197,6 +2150,14 @@ function LeavePage({
                                     </Fragment>
                                   )
                                 })}
+                              </div>
+                              <div className="lr-dates-row">
+                                <div className="lr-date-item"><span className="lr-date-lbl">Departure</span><span className="lr-date-val">{formatDateDisplay(record.departureDate)}</span></div>
+                                <div className="lr-date-item"><span className="lr-date-lbl">Return</span><span className="lr-date-val">{formatDateDisplay(record.returnDate)}</span></div>
+                                <div className="lr-date-item"><span className="lr-date-lbl">Days</span><span className="lr-date-val">{record.days}</span></div>
+                                <div className="lr-date-item"><span className="lr-date-lbl">Leave Type</span><span className="lr-date-val">{leaveTypeOptions.find(l => l.code === record.leaveTypeCode)?.label ?? record.leaveTypeCode}</span></div>
+                                <div className="lr-date-item"><span className="lr-date-lbl">Section</span><span className="lr-date-val">{record.department}</span></div>
+                                {record.remarks && <div className="lr-date-item"><span className="lr-date-lbl">Remarks</span><span className="lr-date-val">{record.remarks}</span></div>}
                               </div>
                             </td>
                           </tr>
@@ -4851,6 +4812,7 @@ function TerminationPage({
   const [noticeDepartmentFilter, setNoticeDepartmentFilter] = useState('All Departments')
   const [completedDepartmentFilter, setCompletedDepartmentFilter] = useState('All Departments')
   const [noticeStageFilter, setNoticeStageFilter] = useState<'All' | TerminationStage>('All')
+  const [expandedTermId, setExpandedTermId] = useState<string | null>(null)
 
   const getDuration = (joinDate: string) => {
     if (!joinDate) return '-'
@@ -4904,32 +4866,90 @@ function TerminationPage({
             </div>
             <div className="employee-table-shell compact-scroll termination-table-shell">
               <table className="data-table termination-table compact">
-                <thead><tr><th>Emp ID</th><th>Name</th><th>Section</th><th>Nationality</th><th>Date of Join</th><th>Duration</th><th>Last Working</th><th>Departure</th><th>Stage</th><th>Actions</th></tr></thead>
+                <thead><tr>
+                  <th className="lr-expand-th" />
+                  <th>Emp ID</th><th>Name</th><th>Section</th><th>Nationality</th>
+                  <th>Date of Join</th><th>Duration</th><th>Last Working</th><th>Departure</th>
+                  <th>Stage</th><th>Actions</th>
+                </tr></thead>
                 <tbody>
                   {noticeRows.length === 0
-                    ? <tr><td colSpan={10} className="empty-row">No notice period records.</td></tr>
+                    ? <tr><td colSpan={11} className="empty-row">No notice period records.</td></tr>
                     : noticeRows.map((r) => {
+                      const stageIdx = allTerminationStages.indexOf(r.currentStage)
+                      const isLast = stageIdx === allTerminationStages.length - 1
+                      const nextStage = isLast ? null : allTerminationStages[stageIdx + 1]
+                      const isExp = expandedTermId === r.id
                       return (
-                        <tr key={r.id} className="termination-row">
-                          <td>{r.employeeId}</td>
-                          <td className="name-cell"><button className="name-link" onClick={() => onViewDetails(r)} type="button">{r.name}</button></td>
-                          <td>{r.department}</td>
-                          <td>{r.nationality}</td>
-                          <td>{formatDateDisplay(r.dateOfJoin)}</td>
-                          <td>{getDuration(r.dateOfJoin)}</td>
-                          <td>{formatDateDisplay(r.lastWorkingDate)}</td>
-                          <td>{formatDateDisplay(r.departureDate)}</td>
-                          <td className="leave-status-cell termination-status-cell">
-                            <StageDropdown steps={allTerminationStages} current={r.currentStage} onSelect={(stage) => onSetStage(r.id, stage)} />
-                          </td>
-                          <td className="termination-actions">
-                            <div className="row-actions">
-                              <button className="action-glyph" onClick={() => onViewDetails(r)} type="button" title="View">👁</button>
-                              <button className="action-glyph edit" onClick={() => onEdit(r)} type="button" title="Edit">✎</button>
-                              <button className="action-glyph delete" onClick={() => onDelete(r.id)} type="button" title="Delete">🗑</button>
-                            </div>
-                          </td>
-                        </tr>
+                        <Fragment key={r.id}>
+                          <tr className={`termination-row lr-row${isExp ? ' lr-row-open' : ''}`} onClick={() => setExpandedTermId(isExp ? null : r.id)}>
+                            <td className="lr-expand-td"><span className={`mc-arrow${isExp ? ' mc-arrow-open' : ''}`}>›</span></td>
+                            <td>{r.employeeId}</td>
+                            <td className="name-cell" onClick={(e) => e.stopPropagation()}><button className="name-link" onClick={() => onViewDetails(r)} type="button">{r.name}</button></td>
+                            <td>{r.department}</td>
+                            <td>{r.nationality}</td>
+                            <td>{formatDateDisplay(r.dateOfJoin)}</td>
+                            <td>{getDuration(r.dateOfJoin)}</td>
+                            <td>{formatDateDisplay(r.lastWorkingDate)}</td>
+                            <td>{formatDateDisplay(r.departureDate)}</td>
+                            <td className="leave-status-cell termination-status-cell" onClick={(e) => e.stopPropagation()}>
+                              <button
+                                className={`lr-status-pill lr-step-${stageIdx}`}
+                                disabled={isLast}
+                                onClick={(e) => { e.stopPropagation(); if (nextStage) onSetStage(r.id, nextStage) }}
+                                type="button"
+                                title={isLast ? 'Pending Departure — final stage' : `Advance to: ${nextStage}`}
+                              >
+                                {r.currentStage}
+                                {!isLast && <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 4, opacity: 0.7 }}><path d="M4 2l4 4-4 4"/></svg>}
+                              </button>
+                            </td>
+                            <td className="termination-actions" onClick={(e) => e.stopPropagation()}>
+                              <div className="row-actions">
+                                <button className="action-glyph" onClick={() => onViewDetails(r)} type="button" title="View">👁</button>
+                                <button className="action-glyph edit" onClick={() => onEdit(r)} type="button" title="Edit">✎</button>
+                                <button className="action-glyph delete" onClick={() => onDelete(r.id)} type="button" title="Delete">🗑</button>
+                              </div>
+                            </td>
+                          </tr>
+                          {isExp && (
+                            <tr className="lr-pipeline-row">
+                              <td colSpan={11}>
+                                <div className="lr-pipeline">
+                                  {allTerminationStages.map((stage, i) => {
+                                    const isDone = i < stageIdx
+                                    const isCurrent = i === stageIdx
+                                    const cls = isDone ? 'lr-done' : isCurrent ? 'lr-current' : 'lr-future'
+                                    return (
+                                      <Fragment key={stage}>
+                                        <button
+                                          className={`lr-pip-step ${cls}`}
+                                          onClick={(e) => { e.stopPropagation(); onSetStage(r.id, stage) }}
+                                          type="button"
+                                          title={`Set to: ${stage}`}
+                                        >
+                                          <div className="lr-pip-circle">{isDone ? '✓' : i + 1}</div>
+                                          <div className="lr-pip-label">{stage}</div>
+                                        </button>
+                                        {i < allTerminationStages.length - 1 && (
+                                          <div className={`lr-pip-line ${isDone ? 'lr-pip-line-done' : 'lr-pip-line-future'}`} />
+                                        )}
+                                      </Fragment>
+                                    )
+                                  })}
+                                </div>
+                                <div className="lr-dates-row">
+                                  <div className="lr-date-item"><span className="lr-date-lbl">Date Submitted</span><span className="lr-date-val">{formatDateDisplay(r.dateSubmitted)}</span></div>
+                                  <div className="lr-date-item"><span className="lr-date-lbl">Date of Join</span><span className="lr-date-val">{formatDateDisplay(r.dateOfJoin)}</span></div>
+                                  <div className="lr-date-item"><span className="lr-date-lbl">Duration</span><span className="lr-date-val">{getDuration(r.dateOfJoin)}</span></div>
+                                  <div className="lr-date-item"><span className="lr-date-lbl">Last Working Day</span><span className="lr-date-val">{formatDateDisplay(r.lastWorkingDate)}</span></div>
+                                  <div className="lr-date-item"><span className="lr-date-lbl">Departure</span><span className="lr-date-val">{formatDateDisplay(r.departureDate)}</span></div>
+                                  <div className="lr-date-item"><span className="lr-date-lbl">Type</span><span className="lr-date-val">{r.terminationType}</span></div>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </Fragment>
                       )
                     })}
                 </tbody>
