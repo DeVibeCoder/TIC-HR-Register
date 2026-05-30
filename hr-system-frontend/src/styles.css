@@ -1118,13 +1118,13 @@ h2 { margin: 0; color: #111; font-size: 0.95rem; line-height: 1.2; }
 .employee-table tbody tr.status-row-on-leave td:nth-child(-n + 3) { background: #e2f8ed; }
 
 .employee-table tbody tr.status-row-off-site td,
-.employee-table tbody tr.status-row-off-site td:nth-child(-n + 3) { background: #ffe9ec; }
+.employee-table tbody tr.status-row-off-site td:nth-child(-n + 3) { background: #eff6ff; }
 
 .employee-table tbody tr.status-row-on-leave:hover td,
 .employee-table tbody tr.status-row-on-leave:hover td:nth-child(-n + 3) { background: #ffdde5; }
 
 .employee-table tbody tr.status-row-off-site:hover td,
-.employee-table tbody tr.status-row-off-site:hover td:nth-child(-n + 3) { background: #ffd9df; }
+.employee-table tbody tr.status-row-off-site:hover td:nth-child(-n + 3) { background: #dbeafe; }
 
 .data-table tbody tr:hover td { background: #ede9fe; }
 .data-table tbody tr:last-child td { border-bottom: 1px solid rgba(148, 163, 184, 0.5); }
@@ -6557,14 +6557,15 @@ button.step-pill:hover { filter: brightness(0.98); }
 
 /* Date below each step */
 .lr-pip-date {
-  font-size: 0.56rem;
+  font-size: 0.58rem;
   font-weight: 600;
   text-align: center;
+  color: #64748b;
   line-height: 1.2;
   margin-top: 1px;
 }
 .lr-done .lr-pip-date    { color: #16a34a; }
-.lr-current .lr-pip-date { color: #4338ca; }
+.lr-current .lr-pip-date { color: #4338ca; font-weight: 700; }
 .lr-future .lr-pip-date  { color: #c4c4c4; }
 
 /* Connector line between steps */
@@ -7250,3 +7251,81 @@ button.step-pill:hover { filter: brightness(0.98); }
   .mc-an-wide { grid-column: auto; }
 }
 .mc-an-bar.mc-an-bar-active { background: linear-gradient(to top, #f59e0b, #fbbf24) !important; }
+
+/* ═══ Off Site Modal ════════════════════════════════════ */
+.os-modal {
+  max-width: 860px !important;
+  width: 96vw !important;
+}
+.os-subtabs {
+  display: flex; gap: 4px; padding: 6px 0;
+  border-bottom: 2px solid #f1f5f9; margin-bottom: 12px;
+}
+.os-subtabs button {
+  padding: 7px 18px; border-radius: 8px; border: none;
+  font-size: 0.80rem; font-weight: 600; cursor: pointer;
+  background: transparent; color: #64748b; transition: all 100ms;
+}
+.os-subtabs button:hover { background: #f1f5f9; color: #374151; }
+.os-subtabs button.active { background: #1d4ed8; color: #fff; }
+.os-add-form {
+  background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;
+  padding: 14px 16px; margin-bottom: 10px;
+}
+.os-add-title {
+  font-size: 0.78rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.05em; color: #374151; margin-bottom: 12px;
+}
+.os-add-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+
+/* ═══ Leave Fast Track Badge ═════════════════════════════ */
+.lr-fasttrack-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 16px; background: #fef9c3; border: 1px solid #fde68a;
+  border-radius: 8px; font-size: 0.82rem; font-weight: 700; color: #92400e;
+  margin: 10px 36px;
+}
+
+/* ═══ Leave Skip Progress toggle ════════════════════════ */
+.lf-skip-toggle-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 14px; background: #f8fafc; border: 1px solid #e2e8f0;
+  border-radius: 8px; margin: 10px 0; gap: 16px;
+}
+.lf-skip-label { font-size: 0.82rem; font-weight: 700; color: #374151; display: block; }
+.lf-skip-desc  { font-size: 0.72rem; color: #64748b; margin-top: 2px; }
+.lf-toggle {
+  width: 44px; height: 24px; border-radius: 12px; border: none; cursor: pointer;
+  background: #e2e8f0; position: relative; flex-shrink: 0; transition: background 200ms;
+}
+.lf-toggle-on { background: #6366f1; }
+.lf-toggle-urgent.lf-toggle-on { background: #ef4444; }
+.lf-toggle-thumb {
+  position: absolute; top: 2px; left: 2px; width: 20px; height: 20px;
+  border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  transition: transform 200ms;
+}
+.lf-toggle-on .lf-toggle-thumb { transform: translateX(20px); }
+
+/* ═══ Medical Detail 2-column layout ════════════════════ */
+.mc-detail-2col {
+  display: grid; grid-template-columns: 1fr 220px; gap: 16px;
+}
+.mc-detail-left { min-width: 0; }
+.mc-detail-right {
+  border-left: 1px solid #e8eaf0; padding-left: 16px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.mc-urgent-badge {
+  display: inline-block; background: #fee2e2; color: #dc2626;
+  padding: 2px 8px; border-radius: 6px; font-weight: 700; font-size: 0.76rem;
+}
+@media (max-width: 680px) {
+  .mc-detail-2col { grid-template-columns: 1fr; }
+  .mc-detail-right { border-left: none; border-top: 1px solid #e8eaf0; padding: 12px 0 0; }
+}
+
+/* ═══ Pending task top row ══════════════════════════════ */
+.pending-task-top { display: flex; justify-content: space-between; align-items: flex-start; width: 100%; }

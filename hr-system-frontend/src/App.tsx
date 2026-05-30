@@ -45,6 +45,7 @@ type LeaveBase = {
 type LeaveRequestRecord = LeaveBase & {
   step: LeaveRequestStep
   stepDates?: Partial<Record<LeaveRequestStep, string>>
+  skipProgress?: boolean
 }
 
 type ActiveLeaveRecord = LeaveBase & {
@@ -53,6 +54,8 @@ type ActiveLeaveRecord = LeaveBase & {
 
 type LeaveHistoryRecord = LeaveBase & {
   confirmation?: HistoryConfirmation
+  stepDates?: Partial<Record<LeaveRequestStep, string>>
+  skipProgress?: boolean
 }
 
 type PassportHandoverRecord = LeaveBase & {
@@ -163,6 +166,21 @@ type MedicalCaseRecord = {
   sickLeaveFrom: string
   sickLeaveTo: string
   sickLeaveDays: number
+  recordedBy: string
+  isUrgent?: boolean
+  isAdmitted?: boolean
+}
+
+type OffSiteRecord = {
+  id: string
+  employeeId: string
+  name: string
+  department: string
+  nationality: string
+  departureDate: string
+  returnDate: string
+  purpose: string
+  status: 'Out' | 'Returned'
   recordedBy: string
 }
 
@@ -404,18 +422,18 @@ const initialExitInterviews: ExitInterviewRecord[] = [
 ]
 
 const initialMedicalCases: MedicalCaseRecord[] = [
-  { id: 'MC-2026-001', caseDate: '2026-04-26', employeeId: '55426', name: 'ABHISHEK CHETRY', department: 'LOSS PREVENTION', reason: 'Fever, Body pain - Follow up', hospital: 'IGMH', departTime: '09:00', returnTime: '14:00', doctorAdvice: '- Fever x 3 DAYS\n- Headache+, body pain+\n- Productive cough+, pleuritic chest pain\n- Sore throat+\n- No vomiting, abdominal pain\n- Poor appetite\n- No altered bowl habits\n- Medication provided for 5 days\n- MC : 26/04/26 to 27/04/26', mcProvided: true, sickLeaveFrom: '2026-04-26', sickLeaveTo: '2026-04-27', sickLeaveDays: 2, recordedBy: 'HR Admin' },
-  { id: 'MC-2026-002', caseDate: '2026-04-26', employeeId: '59361', name: 'DIBIN ROY', department: 'LPG PLANT', reason: 'Fever, Dizziness, Vomiting', hospital: 'IGMH', departTime: '09:00', returnTime: '12:30', doctorAdvice: '- Fever since 25/04/26\n- Day 2 of illness\n- Coryza+, mild productive cough+\n- One episode of vomiting yesterday\n- Body pain+, headache+, dizziness+\n- No abdominal pain, loose motion\n- Bladder habits normal\n- Medication provided for 5 days\n- MC : 26/04/26 to 27/04/26', mcProvided: true, sickLeaveFrom: '2026-04-26', sickLeaveTo: '2026-04-27', sickLeaveDays: 2, recordedBy: 'HR Admin' },
-  { id: 'MC-2026-003', caseDate: '2026-04-26', employeeId: '44160', name: 'ANURA PUSHPA KUMARA K W', department: 'CEMENT PLANT', reason: 'Back pain', hospital: 'IGMH', departTime: '09:00', returnTime: '12:30', doctorAdvice: '- Prescription not RECEIVED\n- MC : 26/04/26 to 27/04/26', mcProvided: false, sickLeaveFrom: '2026-04-26', sickLeaveTo: '2026-04-26', sickLeaveDays: 1, recordedBy: 'HR Admin' },
-  { id: 'MC-2026-004', caseDate: '2026-04-26', employeeId: '59217', name: 'RAJKUMAR GUPTA', department: 'MECHANICAL', reason: 'Cough - Follow Up', hospital: 'IGMH', departTime: '09:00', returnTime: '12:30', doctorAdvice: '- Worsened cough x 1 week, productive cough, yellowish sputum\n- Loss of appetite+\n- No hx of vomiting\n- Initially had fever for 10 days was afebrile for 2 days and complains of fever again today\n- Medication provided for 5 days\n- MC : 26/04/26 to 28/04/26', mcProvided: true, sickLeaveFrom: '2026-04-26', sickLeaveTo: '2026-04-28', sickLeaveDays: 3, recordedBy: 'HR Admin' },
-  { id: 'MC-2026-005', caseDate: '2026-05-05', employeeId: '58034', name: 'SAMEERA MADUSANKA GUNARATHNA', department: 'STORES', reason: 'Headache, Dizziness', hospital: 'IGMH', departTime: '09:30', returnTime: '13:00', doctorAdvice: '- Headache x 2 days, throbbing in nature\n- Dizziness+, mild nausea\n- No vomiting, fever\n- BP slightly elevated at clinic — advised monitoring\n- Medication for 3 days\n- MC : 05/05/26 to 07/05/26', mcProvided: true, sickLeaveFrom: '2026-05-05', sickLeaveTo: '2026-05-07', sickLeaveDays: 3, recordedBy: 'HR Admin' },
-  { id: 'MC-2026-006', caseDate: '2026-05-12', employeeId: '59820', name: 'NARAYANAN KUTTY', department: 'HOUSEKEEPING', reason: 'Abdominal pain, Loose motion', hospital: 'IGMH', departTime: '09:00', returnTime: '14:30', doctorAdvice: '- Abdominal cramps + loose motions x 3 days\n- No blood in stool\n- Mild fever — 37.9°C\n- Dehydration signs, advised oral rehydration\n- Medication provided for 5 days\n- MC : 12/05/26 to 14/05/26', mcProvided: true, sickLeaveFrom: '2026-05-12', sickLeaveTo: '2026-05-14', sickLeaveDays: 3, recordedBy: 'HR Admin' },
-  { id: 'MC-2026-007', caseDate: '2026-05-20', employeeId: '61033', name: 'MD ARIF HOSSAIN', department: 'STORES', reason: 'Eye infection, Redness', hospital: 'IGMH', departTime: '10:00', returnTime: '12:00', doctorAdvice: '- Right eye redness and discharge x 2 days\n- Conjunctivitis diagnosed\n- Eye drops prescribed for 5 days\n- No systemic symptoms\n- MC : 20/05/26 to 21/05/26', mcProvided: true, sickLeaveFrom: '2026-05-20', sickLeaveTo: '2026-05-21', sickLeaveDays: 2, recordedBy: 'HR Admin' },
-  { id: 'MC-2026-008', caseDate: '2026-05-27', employeeId: '60104', name: 'SURESH BAHADUR THAPA', department: 'MAINTENANCE', reason: 'Knee pain, Swelling after work injury', hospital: 'IGMH', departTime: '09:00', returnTime: '15:00', doctorAdvice: '- Right knee pain and swelling post fall at worksite\n- X-ray done — no fracture, soft tissue injury\n- Advised rest and physiotherapy\n- MC : 27/05/26 to 02/06/26', mcProvided: true, sickLeaveFrom: '2026-05-27', sickLeaveTo: '2026-06-02', sickLeaveDays: 7, recordedBy: 'HR Admin' },
-  { id: 'MC-2026-009', caseDate: '2026-05-14', employeeId: '56530', name: 'PUBUDU MADURANGA ALAWATHTHA KANKANAMGE', department: 'ADMINISTRATION', reason: 'Fever, Sore throat', hospital: 'ADK Hospital', departTime: '08:30', returnTime: '11:00', doctorAdvice: '- Fever 38.2°C on presentation\n- Sore throat, difficulty swallowing\n- Tonsillitis diagnosed\n- Antibiotics prescribed for 7 days\n- Rest advised, avoid cold food/drinks\n- MC : 14/05/26 to 16/05/26', mcProvided: true, sickLeaveFrom: '2026-05-14', sickLeaveTo: '2026-05-16', sickLeaveDays: 3, recordedBy: 'HR Admin' },
-  { id: 'MC-2026-010', caseDate: '2026-05-19', employeeId: '43407', name: 'MOHAMMAD DELOWAR HOSSAIN', department: 'STORES', reason: 'Lower back pain', hospital: 'IGMH', departTime: '09:00', returnTime: '13:30', doctorAdvice: '- Chronic lower back pain, worsened after heavy lifting\n- No radiation of pain to legs\n- Paracetamol + muscle relaxant prescribed\n- Advised physiotherapy and ergonomic assessment\n- Light duties recommended for 3 days\n- MC : 19/05/26 to 19/05/26', mcProvided: false, sickLeaveFrom: '2026-05-19', sickLeaveTo: '2026-05-19', sickLeaveDays: 1, recordedBy: 'HR Admin' },
-  { id: 'MC-2026-011', caseDate: '2026-03-10', employeeId: '57637', name: 'MUNI ACHARI GUNTI KOVALA', department: 'CAFE', reason: 'Food poisoning symptoms', hospital: 'IGMH', departTime: '08:00', returnTime: '14:00', doctorAdvice: '- Nausea, vomiting x 4 episodes\n- Diarrhoea x 5 episodes since last night\n- Abdominal cramps+\n- IV fluids administered at IGMH\n- Anti-emetics prescribed\n- Advised clear fluids, BRAT diet\n- MC : 10/03/26 to 12/03/26', mcProvided: true, sickLeaveFrom: '2026-03-10', sickLeaveTo: '2026-03-12', sickLeaveDays: 3, recordedBy: 'HR Admin' },
-  { id: 'MC-2026-012', caseDate: '2026-03-22', employeeId: '53029', name: 'KUMARAN VAITHILINGAM', department: 'STORES', reason: 'Chest pain, Palpitations', hospital: 'ADK Hospital', departTime: '10:30', returnTime: '16:00', doctorAdvice: '- Chest discomfort, palpitations since morning\n- ECG performed — normal sinus rhythm\n- Stress-related symptoms\n- Advised to reduce caffeine, manage stress\n- Medication for 5 days\n- Follow-up in 2 weeks recommended\n- MC : 22/03/26 to 23/03/26', mcProvided: true, sickLeaveFrom: '2026-03-22', sickLeaveTo: '2026-03-23', sickLeaveDays: 2, recordedBy: 'HR Admin' },
+  { id: 'MC-2026-001', caseDate: '2026-04-26', employeeId: '55426', name: 'ABHISHEK CHETRY', department: 'LOSS PREVENTION', reason: 'Fever, Body pain - Follow up', hospital: 'IGMH', departTime: '09:00', returnTime: '14:00', doctorAdvice: '- Fever x 3 DAYS\n- Headache+, body pain+\n- Productive cough+, pleuritic chest pain\n- Sore throat+\n- No vomiting, abdominal pain\n- Poor appetite\n- No altered bowl habits\n- Medication provided for 5 days\n- MC : 26/04/26 to 27/04/26', mcProvided: true, sickLeaveFrom: '2026-04-26', sickLeaveTo: '2026-04-27', sickLeaveDays: 2, recordedBy: 'HR Admin', isUrgent: false, isAdmitted: false },
+  { id: 'MC-2026-002', caseDate: '2026-04-26', employeeId: '59361', name: 'DIBIN ROY', department: 'LPG PLANT', reason: 'Fever, Dizziness, Vomiting', hospital: 'IGMH', departTime: '09:00', returnTime: '12:30', doctorAdvice: '- Fever since 25/04/26\n- Day 2 of illness\n- Coryza+, mild productive cough+\n- One episode of vomiting yesterday\n- Body pain+, headache+, dizziness+\n- No abdominal pain, loose motion\n- Bladder habits normal\n- Medication provided for 5 days\n- MC : 26/04/26 to 27/04/26', mcProvided: true, sickLeaveFrom: '2026-04-26', sickLeaveTo: '2026-04-27', sickLeaveDays: 2, recordedBy: 'HR Admin', isUrgent: false, isAdmitted: false },
+  { id: 'MC-2026-003', caseDate: '2026-04-26', employeeId: '44160', name: 'ANURA PUSHPA KUMARA K W', department: 'CEMENT PLANT', reason: 'Back pain', hospital: 'IGMH', departTime: '09:00', returnTime: '12:30', doctorAdvice: '- Prescription not RECEIVED\n- MC : 26/04/26 to 27/04/26', mcProvided: false, sickLeaveFrom: '2026-04-26', sickLeaveTo: '2026-04-26', sickLeaveDays: 1, recordedBy: 'HR Admin', isUrgent: false, isAdmitted: false },
+  { id: 'MC-2026-004', caseDate: '2026-04-26', employeeId: '59217', name: 'RAJKUMAR GUPTA', department: 'MECHANICAL', reason: 'Cough - Follow Up', hospital: 'IGMH', departTime: '09:00', returnTime: '12:30', doctorAdvice: '- Worsened cough x 1 week, productive cough, yellowish sputum\n- Loss of appetite+\n- No hx of vomiting\n- Initially had fever for 10 days was afebrile for 2 days and complains of fever again today\n- Medication provided for 5 days\n- MC : 26/04/26 to 28/04/26', mcProvided: true, sickLeaveFrom: '2026-04-26', sickLeaveTo: '2026-04-28', sickLeaveDays: 3, recordedBy: 'HR Admin', isUrgent: false, isAdmitted: false },
+  { id: 'MC-2026-005', caseDate: '2026-05-05', employeeId: '58034', name: 'SAMEERA MADUSANKA GUNARATHNA', department: 'STORES', reason: 'Headache, Dizziness', hospital: 'IGMH', departTime: '09:30', returnTime: '13:00', doctorAdvice: '- Headache x 2 days, throbbing in nature\n- Dizziness+, mild nausea\n- No vomiting, fever\n- BP slightly elevated at clinic — advised monitoring\n- Medication for 3 days\n- MC : 05/05/26 to 07/05/26', mcProvided: true, sickLeaveFrom: '2026-05-05', sickLeaveTo: '2026-05-07', sickLeaveDays: 3, recordedBy: 'HR Admin', isUrgent: false, isAdmitted: false },
+  { id: 'MC-2026-006', caseDate: '2026-05-12', employeeId: '59820', name: 'NARAYANAN KUTTY', department: 'HOUSEKEEPING', reason: 'Abdominal pain, Loose motion', hospital: 'IGMH', departTime: '09:00', returnTime: '14:30', doctorAdvice: '- Abdominal cramps + loose motions x 3 days\n- No blood in stool\n- Mild fever — 37.9°C\n- Dehydration signs, advised oral rehydration\n- Medication provided for 5 days\n- MC : 12/05/26 to 14/05/26', mcProvided: true, sickLeaveFrom: '2026-05-12', sickLeaveTo: '2026-05-14', sickLeaveDays: 3, recordedBy: 'HR Admin', isUrgent: false, isAdmitted: false },
+  { id: 'MC-2026-007', caseDate: '2026-05-20', employeeId: '61033', name: 'MD ARIF HOSSAIN', department: 'STORES', reason: 'Eye infection, Redness', hospital: 'IGMH', departTime: '10:00', returnTime: '12:00', doctorAdvice: '- Right eye redness and discharge x 2 days\n- Conjunctivitis diagnosed\n- Eye drops prescribed for 5 days\n- No systemic symptoms\n- MC : 20/05/26 to 21/05/26', mcProvided: true, sickLeaveFrom: '2026-05-20', sickLeaveTo: '2026-05-21', sickLeaveDays: 2, recordedBy: 'HR Admin', isUrgent: false, isAdmitted: false },
+  { id: 'MC-2026-008', caseDate: '2026-05-27', employeeId: '60104', name: 'SURESH BAHADUR THAPA', department: 'MAINTENANCE', reason: 'Knee pain, Swelling after work injury', hospital: 'IGMH', departTime: '09:00', returnTime: '15:00', doctorAdvice: '- Right knee pain and swelling post fall at worksite\n- X-ray done — no fracture, soft tissue injury\n- Advised rest and physiotherapy\n- MC : 27/05/26 to 02/06/26', mcProvided: true, sickLeaveFrom: '2026-05-27', sickLeaveTo: '2026-06-02', sickLeaveDays: 7, recordedBy: 'HR Admin', isUrgent: false, isAdmitted: false },
+  { id: 'MC-2026-009', caseDate: '2026-05-14', employeeId: '56530', name: 'PUBUDU MADURANGA ALAWATHTHA KANKANAMGE', department: 'ADMINISTRATION', reason: 'Fever, Sore throat', hospital: 'ADK Hospital', departTime: '08:30', returnTime: '11:00', doctorAdvice: '- Fever 38.2°C on presentation\n- Sore throat, difficulty swallowing\n- Tonsillitis diagnosed\n- Antibiotics prescribed for 7 days\n- Rest advised, avoid cold food/drinks\n- MC : 14/05/26 to 16/05/26', mcProvided: true, sickLeaveFrom: '2026-05-14', sickLeaveTo: '2026-05-16', sickLeaveDays: 3, recordedBy: 'HR Admin', isUrgent: false, isAdmitted: false },
+  { id: 'MC-2026-010', caseDate: '2026-05-19', employeeId: '43407', name: 'MOHAMMAD DELOWAR HOSSAIN', department: 'STORES', reason: 'Lower back pain', hospital: 'IGMH', departTime: '09:00', returnTime: '13:30', doctorAdvice: '- Chronic lower back pain, worsened after heavy lifting\n- No radiation of pain to legs\n- Paracetamol + muscle relaxant prescribed\n- Advised physiotherapy and ergonomic assessment\n- Light duties recommended for 3 days\n- MC : 19/05/26 to 19/05/26', mcProvided: false, sickLeaveFrom: '2026-05-19', sickLeaveTo: '2026-05-19', sickLeaveDays: 1, recordedBy: 'HR Admin', isUrgent: false, isAdmitted: false },
+  { id: 'MC-2026-011', caseDate: '2026-03-10', employeeId: '57637', name: 'MUNI ACHARI GUNTI KOVALA', department: 'CAFE', reason: 'Food poisoning symptoms', hospital: 'IGMH', departTime: '08:00', returnTime: '14:00', doctorAdvice: '- Nausea, vomiting x 4 episodes\n- Diarrhoea x 5 episodes since last night\n- Abdominal cramps+\n- IV fluids administered at IGMH\n- Anti-emetics prescribed\n- Advised clear fluids, BRAT diet\n- MC : 10/03/26 to 12/03/26', mcProvided: true, sickLeaveFrom: '2026-03-10', sickLeaveTo: '2026-03-12', sickLeaveDays: 3, recordedBy: 'HR Admin', isUrgent: false, isAdmitted: false },
+  { id: 'MC-2026-012', caseDate: '2026-03-22', employeeId: '53029', name: 'KUMARAN VAITHILINGAM', department: 'STORES', reason: 'Chest pain, Palpitations', hospital: 'ADK Hospital', departTime: '10:30', returnTime: '16:00', doctorAdvice: '- Chest discomfort, palpitations since morning\n- ECG performed — normal sinus rhythm\n- Stress-related symptoms\n- Advised to reduce caffeine, manage stress\n- Medication for 5 days\n- Follow-up in 2 weeks recommended\n- MC : 22/03/26 to 23/03/26', mcProvided: true, sickLeaveFrom: '2026-03-22', sickLeaveTo: '2026-03-23', sickLeaveDays: 2, recordedBy: 'HR Admin', isUrgent: false, isAdmitted: false },
 ]
 const allTerminationStages: TerminationStage[] = ['Letter Submitted', 'Exit Interview', 'Ticket', 'Pending Departure']
 const initialPersonalFiles: PersonalFileRecord[] = [
@@ -554,6 +572,8 @@ const initialStaffRequests: StaffRequestRecord[] = [
   { id: 'REQ-2026-005', employeeId: '59217', employeeName: 'RAJKUMAR GUPTA', department: 'MECHANICAL', requestType: 'Leave', priority: 'Low', description: 'Requesting 2 days emergency leave on 5-6 June 2026 to handle urgent banking matters in Male.', submittedDate: '2026-05-25', completedDate: '', status: 'Open', remarks: '' },
   { id: 'REQ-2026-006', employeeId: '61245', employeeName: 'ARUSHULLA RASHID', department: 'HUMAN RESOURCES', requestType: 'Equipment', priority: 'Low', description: 'Requesting ergonomic chair for HR office workstation. Current chair causing back strain during extended working hours.', submittedDate: '2026-05-02', completedDate: '2026-05-14', status: 'Resolved', remarks: 'Ergonomic chair procured and delivered' },
 ]
+
+const initialOffSiteRecords: OffSiteRecord[] = []
 
 const initialInventoryItems: InventoryItem[] = [
   { id: 'INV-001', name: 'A4 Paper (500 sheets)', category: 'Stationery', quantity: 25, unit: 'reams', minQuantity: 5, location: 'HR Storeroom', lastUpdated: '2026-05-20', remarks: '' },
@@ -1001,7 +1021,163 @@ function EmployeeFormModal({ form, mode, onClose, onSave, setForm }: {
 
 type SortKey = 'employeeId' | 'fullName' | 'department' | 'designation' | 'nationality' | 'dateOfJoin' | 'siteStatus'
 
-function EmployeesPage({ employees, onAdd, onEdit, onExport, onImport, onTemplate, onShowTasks, medicalCases, noticeTerminations }: {
+function OffSiteModal({ records, employees, onUpdate, onClose }: {
+  records: OffSiteRecord[]
+  employees: Employee[]
+  onUpdate: (fn: (prev: OffSiteRecord[]) => OffSiteRecord[]) => void
+  onClose: () => void
+}) {
+  const [subTab, setSubTab] = useState<'out' | 'history'>('out')
+  const [showAdd, setShowAdd] = useState(false)
+  const [addEmpSearch, setAddEmpSearch] = useState('')
+  const [addEmpSelected, setAddEmpSelected] = useState<Employee | null>(null)
+  const [showEmpResults, setShowEmpResults] = useState(false)
+  const [addDeparture, setAddDeparture] = useState(new Date().toISOString().slice(0, 10))
+  const [addPurpose, setAddPurpose] = useState('')
+  const [addRecordedBy, setAddRecordedBy] = useState('')
+
+  const empResults = useMemo(() => {
+    const q = addEmpSearch.trim().toLowerCase()
+    if (!q || addEmpSelected) return []
+    return employees.filter(e => e.employeeId.toLowerCase().includes(q) || e.fullName.toLowerCase().includes(q)).slice(0, 8)
+  }, [addEmpSearch, addEmpSelected, employees])
+
+  const currentOut = records.filter(r => r.status === 'Out').sort((a, b) => b.departureDate.localeCompare(a.departureDate))
+  const history = records.filter(r => r.status === 'Returned').sort((a, b) => b.departureDate.localeCompare(a.departureDate))
+
+  const markReturned = (id: string) => {
+    const today = new Date().toISOString().slice(0, 10)
+    onUpdate(prev => prev.map(r => r.id === id ? { ...r, status: 'Returned' as const, returnDate: today } : r))
+  }
+
+  const saveAdd = () => {
+    if (!addEmpSelected || !addPurpose.trim()) return
+    const rec: OffSiteRecord = {
+      id: `OS-${Date.now()}`, employeeId: addEmpSelected.employeeId,
+      name: addEmpSelected.fullName, department: addEmpSelected.department,
+      nationality: addEmpSelected.nationality, departureDate: addDeparture,
+      returnDate: '', purpose: addPurpose, status: 'Out', recordedBy: addRecordedBy,
+    }
+    onUpdate(prev => [rec, ...prev])
+    setShowAdd(false); setAddEmpSearch(''); setAddEmpSelected(null); setAddPurpose(''); setAddRecordedBy('')
+  }
+
+  return (
+    <div className="modal-backdrop" role="presentation">
+      <section className="registration-modal os-modal" role="dialog" aria-modal="true">
+        <div className="modal-header">
+          <div>
+            <p className="eyebrow">Employee Management</p>
+            <h2>Off Site Tracking</h2>
+            <p style={{ fontSize: '0.80rem', color: '#64748b', marginTop: 2 }}>
+              <strong style={{ color: '#1e40af' }}>{currentOut.length}</strong> currently out &nbsp;·&nbsp; {history.length} total history
+            </p>
+          </div>
+          <button className="icon-button" onClick={onClose} type="button">×</button>
+        </div>
+
+        {/* Sub-tabs */}
+        <div className="os-subtabs">
+          <button className={subTab === 'out' ? 'active' : ''} onClick={() => setSubTab('out')} type="button">
+            Currently Out {currentOut.length > 0 && <span className="tab-count" style={{ background: '#3b82f6' }}>{currentOut.length}</span>}
+          </button>
+          <button className={subTab === 'history' ? 'active' : ''} onClick={() => setSubTab('history')} type="button">
+            History {history.length > 0 && <span className="tab-count">{history.length}</span>}
+          </button>
+        </div>
+
+        {/* Add Off Site form */}
+        {showAdd && (
+          <div className="os-add-form">
+            <p className="os-add-title">Add Staff Off Site</p>
+            <div className="os-add-grid">
+              <label style={{ position: 'relative', gridColumn: '1 / -1' }}>
+                <span>Search Employee</span>
+                <input value={addEmpSearch} onChange={e => { setAddEmpSearch(e.target.value); setAddEmpSelected(null); setShowEmpResults(true) }}
+                  onFocus={() => setShowEmpResults(true)} onBlur={() => setTimeout(() => setShowEmpResults(false), 150)}
+                  placeholder="Name or Employee ID…" autoComplete="off" />
+                {showEmpResults && empResults.length > 0 && (
+                  <div className="ei-emp-dropdown">
+                    {empResults.map(emp => (
+                      <div key={emp.employeeId} className="ei-emp-option" onMouseDown={() => { setAddEmpSelected(emp); setAddEmpSearch(`${emp.fullName} (${emp.employeeId})`); setShowEmpResults(false) }}>
+                        <strong>{emp.fullName}</strong>
+                        <span>{emp.employeeId} · {emp.department}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </label>
+              <label><span>Departure Date</span><input type="date" value={addDeparture} onChange={e => setAddDeparture(e.target.value)} /></label>
+              <label><span>Recorded By</span><input value={addRecordedBy} onChange={e => setAddRecordedBy(e.target.value)} placeholder="HR Admin" /></label>
+              <label style={{ gridColumn: '1 / -1' }}><span>Purpose <span style={{ color: '#ef4444' }}>*</span></span><input value={addPurpose} onChange={e => setAddPurpose(e.target.value)} placeholder="Reason for being off site (e.g. Visa Medical, Embassy Visit, Training)…" required /></label>
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 10 }}>
+              <button className="quiet-button light" onClick={() => setShowAdd(false)} type="button">Cancel</button>
+              <button className="primary-button" disabled={!addEmpSelected || !addPurpose.trim()} onClick={saveAdd} type="button">Save</button>
+            </div>
+          </div>
+        )}
+
+        {!showAdd && (
+          <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '8px 0' }}>
+            <button className="primary-button" onClick={() => setShowAdd(true)} type="button">+ Add Off Site</button>
+          </div>
+        )}
+
+        {subTab === 'out' && (
+          <div className="employee-table-shell compact-scroll">
+            <table className="data-table">
+              <thead><tr><th>Emp ID</th><th>Name</th><th>Section</th><th>Nationality</th><th>Departed</th><th>Purpose</th><th>Recorded By</th><th>Action</th></tr></thead>
+              <tbody>
+                {currentOut.length === 0
+                  ? <tr><td colSpan={8} className="empty-row">No staff currently off site.</td></tr>
+                  : currentOut.map(r => (
+                    <tr key={r.id}>
+                      <td>{r.employeeId}</td>
+                      <td><strong>{r.name}</strong></td>
+                      <td>{r.department}</td>
+                      <td>{r.nationality}</td>
+                      <td style={{ whiteSpace: 'nowrap' }}>{formatDateDisplay(r.departureDate)}</td>
+                      <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.purpose}</td>
+                      <td>{r.recordedBy || '—'}</td>
+                      <td>
+                        <button className="primary-button" style={{ padding: '4px 12px', fontSize: '0.74rem' }} onClick={() => markReturned(r.id)} type="button">Mark Returned</button>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {subTab === 'history' && (
+          <div className="employee-table-shell compact-scroll">
+            <table className="data-table">
+              <thead><tr><th>Emp ID</th><th>Name</th><th>Section</th><th>Departed</th><th>Returned</th><th>Purpose</th><th>Recorded By</th></tr></thead>
+              <tbody>
+                {history.length === 0
+                  ? <tr><td colSpan={7} className="empty-row">No history yet.</td></tr>
+                  : history.map(r => (
+                    <tr key={r.id}>
+                      <td>{r.employeeId}</td>
+                      <td><strong>{r.name}</strong></td>
+                      <td>{r.department}</td>
+                      <td style={{ whiteSpace: 'nowrap' }}>{formatDateDisplay(r.departureDate)}</td>
+                      <td style={{ whiteSpace: 'nowrap' }}>{r.returnDate ? formatDateDisplay(r.returnDate) : '—'}</td>
+                      <td>{r.purpose}</td>
+                      <td>{r.recordedBy || '—'}</td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+    </div>
+  )
+}
+
+function EmployeesPage({ employees, onAdd, onEdit, onExport, onImport, onTemplate, onShowTasks, medicalCases, noticeTerminations, offSiteRecords, onUpdateOffSite }: {
   employees: Employee[]
   onAdd: () => void
   onEdit: (employee: Employee) => void
@@ -1011,8 +1187,11 @@ function EmployeesPage({ employees, onAdd, onEdit, onExport, onImport, onTemplat
   onShowTasks: () => void
   medicalCases: MedicalCaseRecord[]
   noticeTerminations: EnhancedTerminationRecord[]
+  offSiteRecords: OffSiteRecord[]
+  onUpdateOffSite: (fn: (prev: OffSiteRecord[]) => OffSiteRecord[]) => void
 }) {
   const [query, setQuery] = useState('')
+  const [showOffSite, setShowOffSite] = useState(false)
   const [department, setDepartment] = useState('All Sections')
   const [status, setStatus] = useState('All Statuses')
   const [nationality, setNationality] = useState('All Nationalities')
@@ -1087,6 +1266,9 @@ function EmployeesPage({ employees, onAdd, onEdit, onExport, onImport, onTemplat
             <button className="primary-button" onClick={onShowTasks} type="button">
               Pending Tasks{pendingCount > 0 && <span className="pending-count-badge" style={{ marginLeft: '6px' }}>{pendingCount}</span>}
             </button>
+            <button className="primary-button" onClick={() => setShowOffSite(true)} type="button">
+              Off Site{offSiteRecords.filter(r => r.status === 'Out').length > 0 && <span className="pending-count-badge" style={{ marginLeft: '6px' }}>{offSiteRecords.filter(r => r.status === 'Out').length}</span>}
+            </button>
             <button className="primary-button" onClick={onExport} type="button">Export</button>
             <button className="primary-button" onClick={onAdd} type="button">Add Employee</button>
           </div>
@@ -1156,6 +1338,7 @@ function EmployeesPage({ employees, onAdd, onEdit, onExport, onImport, onTemplat
           </div>
         )}
       </section>
+      {showOffSite && <OffSiteModal records={offSiteRecords} employees={employees} onUpdate={onUpdateOffSite} onClose={() => setShowOffSite(false)} />}
     </>
   )
 }
@@ -1180,6 +1363,7 @@ function LeaveFormModal({
   const [returnDate, setReturnDate] = useState(initialRecord?.returnDate ?? new Date().toISOString().slice(0, 10))
   const [step, setStep] = useState<LeaveRequestStep>(initialRecord?.step ?? 'Letter Submitted')
   const [remarks, setRemarks] = useState(initialRecord?.remarks ?? '')
+  const [skipProgress, setSkipProgress] = useState(initialRecord?.skipProgress ?? false)
 
   const searchResults = useMemo(() => {
     const q = searchQuery.trim().toLowerCase()
@@ -1294,6 +1478,22 @@ function LeaveFormModal({
           </div>
         )}
 
+        {/* Skip Progress toggle */}
+        <div className="lf-skip-toggle-row">
+          <div>
+            <strong className="lf-skip-label">Skip Progress (Fast Track)</strong>
+            <p className="lf-skip-desc">For staff who go directly on leave without following the normal approval steps (locals, seniors).</p>
+          </div>
+          <button
+            type="button"
+            className={`lf-toggle${skipProgress ? ' lf-toggle-on' : ''}`}
+            onClick={() => setSkipProgress(p => !p)}
+            aria-pressed={skipProgress}
+          >
+            <span className="lf-toggle-thumb" />
+          </button>
+        </div>
+
         <div className="modal-actions">
           <button className="quiet-button light" onClick={onClose} type="button">Cancel</button>
           <button className="primary-button" disabled={!canSave} onClick={() => {
@@ -1308,7 +1508,8 @@ function LeaveFormModal({
               departureDate,
               returnDate,
               days: totalDays,
-              step,
+              step: skipProgress ? 'Pending Departure' : step,
+              skipProgress,
               remarks,
             })
           }} type="button">{initialRecord ? 'Update Request' : 'Save Request'}</button>
@@ -1577,6 +1778,28 @@ function MedicalCaseModal({ record, employees, onClose, onSave }: {
               <span>Return Time</span>
               <input type="time" value={form.returnTime} onChange={(e) => setF({ returnTime: e.target.value })} />
             </label>
+            {/* Urgency toggle */}
+            <div className="lf-skip-toggle-row" style={{ gridColumn: '1 / -1' }}>
+              <div>
+                <strong className="lf-skip-label" style={{ color: '#dc2626' }}>⚠ Urgent / Emergency</strong>
+                <p className="lf-skip-desc">Mark if this is an urgent or emergency case requiring special attention.</p>
+              </div>
+              <button type="button" className={`lf-toggle${(form.isUrgent ?? false) ? ' lf-toggle-on lf-toggle-urgent' : ''}`}
+                onClick={() => setF({ isUrgent: !form.isUrgent })} aria-pressed={form.isUrgent ?? false}>
+                <span className="lf-toggle-thumb" />
+              </button>
+            </div>
+            {form.isUrgent && (
+              <div className="mc-form-grid" style={{ gridColumn: '1 / -1' }}>
+                <label style={{ gridColumn: '1 / -1' }}>
+                  <span>Patient Admitted to Hospital?</span>
+                  <select value={(form.isAdmitted ?? false) ? 'yes' : 'no'} onChange={e => setF({ isAdmitted: e.target.value === 'yes' })}>
+                    <option value="no">No — Outpatient visit</option>
+                    <option value="yes">Yes — Admitted</option>
+                  </select>
+                </label>
+              </div>
+            )}
           </div>
           {/* Doctor Advice */}
           <div className="mc-form-grid mc-form-1col">
@@ -1670,8 +1893,8 @@ function MedicalAnalyticsModal({ records, onClose }: {
       .slice(0, 5)
   }, [filtered])
 
-  const maxMonthDays = Math.max(...monthlyData.map(([, v]) => v.days), 1)
-  const maxSectDays  = Math.max(...sectionData.map(([, v]) => v.days), 1)
+  const maxMonthCases = Math.max(...monthlyData.map(([, v]) => v.cases), 1)
+  const maxSectCases  = Math.max(...sectionData.map(([, v]) => v.cases), 1)
   const maxStaffDays = Math.max(...topStaff.map(([, v]) => v.days), 1)
   const totalDays    = records.reduce((s, r) => s + (r.sickLeaveDays || 1), 0)
   const noMcCount    = records.filter((r) => !r.mcProvided).length
@@ -1708,7 +1931,7 @@ function MedicalAnalyticsModal({ records, onClose }: {
         <div className="mc-analytics-grid">
           {/* Monthly chart — all records */}
           <div className="mc-an-panel">
-            <p className="mc-an-title">Monthly Sick Leave Days (all months)</p>
+            <p className="mc-an-title">Medical Visits per Month</p>
             {monthlyData.length === 0
               ? <p style={{ color: '#94a3b8', fontSize: '0.82rem' }}>No data.</p>
               : (
@@ -1716,9 +1939,9 @@ function MedicalAnalyticsModal({ records, onClose }: {
                   {monthlyData.map(([key, val]) => (
                     <div className="mc-an-bar-col" key={key}>
                       <div className="mc-an-bar-wrap">
-                        <span className={`mc-an-bar${selectedMonth === key ? ' mc-an-bar-active' : ''}`} style={{ height: `${Math.round((val.days / maxMonthDays) * 100)}%` }} title={`${val.days}d · ${val.cases} cases`} />
+                        <span className={`mc-an-bar${selectedMonth === key ? ' mc-an-bar-active' : ''}`} style={{ height: `${Math.round((val.cases / maxMonthCases) * 100)}%` }} title={`${val.cases} visits · ${val.days}d`} />
                       </div>
-                      <div className="mc-an-bar-val">{val.days}d</div>
+                      <div className="mc-an-bar-val">{val.cases}</div>
                       <div className="mc-an-bar-lbl">{formatMonthLabel(key).slice(0, 3)}</div>
                     </div>
                   ))}
@@ -1728,14 +1951,14 @@ function MedicalAnalyticsModal({ records, onClose }: {
 
           {/* Section breakdown — filtered */}
           <div className="mc-an-panel">
-            <p className="mc-an-title">Section Breakdown{selectedMonth !== 'All' ? ` — ${formatMonthLabel(selectedMonth)}` : ''}</p>
+            <p className="mc-an-title">Visits by Department{selectedMonth !== 'All' ? ` — ${formatMonthLabel(selectedMonth)}` : ''}</p>
             {sectionData.length === 0
               ? <p style={{ color: '#94a3b8', fontSize: '0.82rem' }}>No data.</p>
               : sectionData.map(([dept, val]) => (
                 <div className="mc-an-h-row" key={dept}>
                   <div className="mc-an-h-label" title={dept}>{dept}</div>
-                  <div className="mc-an-h-track"><div className="mc-an-h-fill" style={{ width: `${Math.round((val.days / maxSectDays) * 100)}%` }} /></div>
-                  <div className="mc-an-h-meta">{val.days}d · {val.cases}</div>
+                  <div className="mc-an-h-track"><div className="mc-an-h-fill" style={{ width: `${Math.round((val.cases / maxSectCases) * 100)}%` }} /></div>
+                  <div className="mc-an-h-meta">{val.cases} visits</div>
                 </div>
               ))}
           </div>
@@ -1817,7 +2040,7 @@ function MedicalLeaveSection({ records, employees, onUpdate }: {
     id: 'MC-new', caseDate: today, employeeId: '', name: '', department: '',
     reason: '', hospital: '', departTime: '09:00', returnTime: '13:00',
     doctorAdvice: '', mcProvided: false, sickLeaveFrom: today, sickLeaveTo: today,
-    sickLeaveDays: 1, recordedBy: '',
+    sickLeaveDays: 1, recordedBy: '', isUrgent: false, isAdmitted: false,
   })
 
   const save = (r: MedicalCaseRecord) => {
@@ -1925,34 +2148,23 @@ function MedicalLeaveSection({ records, employees, onUpdate }: {
                     <tr className="mc-detail-row">
                       <td colSpan={11}>
                         <div className="mc-detail-content">
-                          <div className="mc-detail-info-grid">
-                            {r.hospital && (
-                              <div className="mc-detail-info-item">
-                                <span className="mc-detail-info-label">Hospital / Clinic</span>
-                                <span className="mc-detail-info-value">{r.hospital}</span>
+                          <div className="mc-detail-2col">
+                            <div className="mc-detail-left">
+                              <strong className="mc-detail-heading">Doctor Advice / Summary</strong>
+                              <div className="mc-detail-body">
+                                {r.doctorAdvice
+                                  ? r.doctorAdvice.split('\n').map((line, i) => <p key={i}>{line}</p>)
+                                  : <em style={{ color: '#94a3b8' }}>No doctor advice recorded.</em>}
                               </div>
-                            )}
-                            <div className="mc-detail-info-item">
-                              <span className="mc-detail-info-label">Depart</span>
-                              <span className="mc-detail-info-value">{r.departTime || '—'}</span>
                             </div>
-                            <div className="mc-detail-info-item">
-                              <span className="mc-detail-info-label">Return</span>
-                              <span className="mc-detail-info-value">{r.returnTime || '—'}</span>
+                            <div className="mc-detail-right">
+                              {r.hospital && <div className="mc-detail-info-item"><span className="mc-detail-info-label">Hospital / Clinic</span><span className="mc-detail-info-value">{r.hospital}</span></div>}
+                              {r.departTime && <div className="mc-detail-info-item"><span className="mc-detail-info-label">Depart</span><span className="mc-detail-info-value">{r.departTime}</span></div>}
+                              {r.returnTime && <div className="mc-detail-info-item"><span className="mc-detail-info-label">Return</span><span className="mc-detail-info-value">{r.returnTime}</span></div>}
+                              {r.isUrgent && <div className="mc-detail-info-item"><span className="mc-detail-info-label">Urgency</span><span className="mc-detail-info-value mc-urgent-badge">Urgent / Emergency</span></div>}
+                              {r.isAdmitted && <div className="mc-detail-info-item"><span className="mc-detail-info-label">Admitted</span><span className="mc-detail-info-value" style={{color:'#dc2626',fontWeight:700}}>Yes — Admitted to Hospital</span></div>}
+                              {r.recordedBy && <div className="mc-detail-info-item" style={{marginTop:'auto'}}><span className="mc-detail-info-label">Recorded By</span><span className="mc-detail-info-value">{r.recordedBy}</span></div>}
                             </div>
-                            {r.recordedBy && (
-                              <div className="mc-detail-info-item">
-                                <span className="mc-detail-info-label">Recorded By</span>
-                                <span className="mc-detail-info-value">{r.recordedBy}</span>
-                              </div>
-                            )}
-                          </div>
-                          <div className="mc-detail-divider" />
-                          <strong className="mc-detail-heading">Doctor Advice / Summary</strong>
-                          <div className="mc-detail-body">
-                            {r.doctorAdvice
-                              ? r.doctorAdvice.split('\n').map((line, i) => <p key={i}>{line}</p>)
-                              : <em style={{ color: '#94a3b8' }}>No doctor advice recorded.</em>}
                           </div>
                         </div>
                       </td>
@@ -1972,6 +2184,49 @@ function MedicalLeaveSection({ records, employees, onUpdate }: {
       {showAnalytics && <MedicalAnalyticsModal records={records} onClose={() => setShowAnalytics(false)} />}
       {editing && <MedicalCaseModal record={editing} employees={employees} onClose={() => setEditing(null)} onSave={save} />}
     </>
+  )
+}
+
+function LeaveProgressModal({ record, onClose }: {
+  record: LeaveHistoryRecord
+  onClose: () => void
+}) {
+  return (
+    <div className="modal-backdrop" role="presentation">
+      <section className="registration-modal" role="dialog" aria-modal="true">
+        <div className="modal-header">
+          <div>
+            <p className="eyebrow">Leave History</p>
+            <h2>Request Progress — {record.name}</h2>
+            <p style={{ fontSize: '0.80rem', color: '#64748b' }}>{record.employeeId} · {record.department} · {formatDateDisplay(record.departureDate)} → {formatDateDisplay(record.returnDate)}</p>
+          </div>
+          <button className="icon-button" onClick={onClose} type="button">×</button>
+        </div>
+        {record.skipProgress
+          ? <div className="lr-fasttrack-badge" style={{ margin: '20px' }}>⚡ Fast Track — Progress steps were skipped for this leave</div>
+          : (
+            <div className="lr-pipeline" style={{ margin: '20px 8px', borderRadius: 8 }}>
+              {requestSteps.map((step, i) => {
+                const hasDone = record.stepDates?.[step]
+                const cls = hasDone ? 'lr-done' : 'lr-future'
+                return (
+                  <Fragment key={step}>
+                    <div className={`lr-pip-step ${cls}`} style={{ cursor: 'default' }}>
+                      <div className="lr-pip-circle">{hasDone ? '✓' : i + 1}</div>
+                      <div className="lr-pip-label">{step}</div>
+                      {record.stepDates?.[step] && <div className="lr-pip-date">{formatDateDisplay(record.stepDates[step]!)}</div>}
+                    </div>
+                    {i < requestSteps.length - 1 && <div className={`lr-pip-line ${hasDone ? 'lr-pip-line-done' : 'lr-pip-line-future'}`} />}
+                  </Fragment>
+                )
+              })}
+            </div>
+          )}
+        <div className="modal-actions">
+          <button className="quiet-button light" onClick={onClose} type="button">Close</button>
+        </div>
+      </section>
+    </div>
   )
 }
 
@@ -2018,6 +2273,7 @@ function LeavePage({
   const [historyStatusFilter, setHistoryStatusFilter] = useState<'All' | HistoryConfirmation>('All')
   const [historyMonthFilter, setHistoryMonthFilter] = useState<'All' | string>('All')
   const [historyDepartmentFilter, setHistoryDepartmentFilter] = useState('All Departments')
+  const [viewingProgress, setViewingProgress] = useState<LeaveHistoryRecord | null>(null)
 
   const historyMonths = useMemo(() => {
     const keys = Array.from(new Set(leaveHistory.map((record) => monthKey(record.returnDate)).filter(Boolean)))
@@ -2130,33 +2386,34 @@ function LeavePage({
                         {isExp && (
                           <tr className="lr-pipeline-row">
                             <td colSpan={12}>
-                              <div className="lr-pipeline">
-                                {requestSteps.map((step, i) => {
-                                  const isDone = i < stepIdx
-                                  const isCurrent = i === stepIdx
-                                  const cls = isDone ? 'lr-done' : isCurrent ? 'lr-current' : 'lr-future'
-                                  // Only show dates for Letter Submitted and Approved — others are already in the table
-                                  const showDate = step === 'Letter Submitted' || step === 'Approved'
-                                  const stepDate = showDate ? (record.stepDates?.[step] ?? undefined) : undefined
-                                  return (
-                                    <Fragment key={step}>
-                                      <button
-                                        className={`lr-pip-step ${cls}`}
-                                        onClick={(e) => { e.stopPropagation(); onSetRequestStep(record.id, step) }}
-                                        type="button"
-                                        title={`Set to: ${step}`}
-                                      >
-                                        <div className="lr-pip-circle">{isDone ? '✓' : i + 1}</div>
-                                        <div className="lr-pip-label">{step}</div>
-                                        <div className="lr-pip-date">{stepDate ? formatDateDisplay(stepDate) : '—'}</div>
-                                      </button>
-                                      {i < requestSteps.length - 1 && (
-                                        <div className={`lr-pip-line ${isDone ? 'lr-pip-line-done' : 'lr-pip-line-future'}`} />
-                                      )}
-                                    </Fragment>
-                                  )
-                                })}
-                              </div>
+                              {record.skipProgress
+                                ? <div className="lr-fasttrack-badge">⚡ Fast Track — Progress steps skipped</div>
+                                : <div className="lr-pipeline">
+                                    {requestSteps.map((step, i) => {
+                                      const isDone = i < stepIdx
+                                      const isCurrent = i === stepIdx
+                                      const cls = isDone ? 'lr-done' : isCurrent ? 'lr-current' : 'lr-future'
+                                      const stepDate = record.stepDates?.[step] ?? undefined
+                                      return (
+                                        <Fragment key={step}>
+                                          <button
+                                            className={`lr-pip-step ${cls}`}
+                                            onClick={(e) => { e.stopPropagation(); onSetRequestStep(record.id, step) }}
+                                            type="button"
+                                            title={`Set to: ${step}`}
+                                          >
+                                            <div className="lr-pip-circle">{isDone ? '✓' : i + 1}</div>
+                                            <div className="lr-pip-label">{step}</div>
+                                            <div className="lr-pip-date">{stepDate ? formatDateDisplay(stepDate) : '—'}</div>
+                                          </button>
+                                          {i < requestSteps.length - 1 && (
+                                            <div className={`lr-pip-line ${isDone ? 'lr-pip-line-done' : 'lr-pip-line-future'}`} />
+                                          )}
+                                        </Fragment>
+                                      )
+                                    })}
+                                  </div>
+                              }
                             </td>
                           </tr>
                         )}
@@ -2193,8 +2450,8 @@ function LeavePage({
               <label><span>Section</span><select value={historyDepartmentFilter} onChange={(event) => setHistoryDepartmentFilter(event.target.value)}><option>All Departments</option>{departmentsList.map((item) => <option key={item}>{item}</option>)}</select></label>
             </div>
             <div className="employee-table-shell compact-scroll">
-              <table className="data-table leave-table"><thead><tr><th>Emp ID</th><th>Name</th><th>Section</th><th>NIC / PP No</th><th className="leave-type-th">Leave Type</th><th className="leave-date-th">Departure</th><th className="leave-date-th">Return</th><th className="leave-days-th">Days</th><th>Remarks</th><th className="leave-status-th">Status</th></tr></thead><tbody>
-                {historyRows.map((record) => <tr className={record.confirmation === 'Not Returned' ? 'not-returned-row' : ''} key={record.id}><td>{record.employeeId}</td><td>{record.name}</td><td>{record.department}</td><td>{getNic(record.employeeId)}</td><td className="leave-type-cell"><LeaveTypeBadge code={record.leaveTypeCode} /></td><td className="leave-date-cell">{formatDateDisplay(record.departureDate)}</td><td className="leave-date-cell">{formatDateDisplay(record.returnDate)}</td><td className="leave-days-cell">{record.days}</td><td className="leave-remarks-cell">{record.remarks || <span className="muted-dash">—</span>}</td><td className="leave-status-cell-sm">{record.confirmation ? <StatusBadge status={record.confirmation} /> : <div className="row-actions history-confirm-actions"><button className="mini-button" onClick={() => onHistoryConfirm(record.id, 'Returned')} type="button">Returned</button><button className="mini-button danger" onClick={() => onHistoryConfirm(record.id, 'Not Returned')} type="button">Not Returned</button></div>}</td></tr>)}
+              <table className="data-table leave-table"><thead><tr><th>Emp ID</th><th>Name</th><th>Section</th><th>NIC / PP No</th><th className="leave-type-th">Leave Type</th><th className="leave-date-th">Departure</th><th className="leave-date-th">Return</th><th className="leave-days-th">Days</th><th>Remarks</th><th className="leave-status-th">Status</th><th></th></tr></thead><tbody>
+                {historyRows.map((record) => <tr className={record.confirmation === 'Not Returned' ? 'not-returned-row' : ''} key={record.id}><td>{record.employeeId}</td><td>{record.name}</td><td>{record.department}</td><td>{getNic(record.employeeId)}</td><td className="leave-type-cell"><LeaveTypeBadge code={record.leaveTypeCode} /></td><td className="leave-date-cell">{formatDateDisplay(record.departureDate)}</td><td className="leave-date-cell">{formatDateDisplay(record.returnDate)}</td><td className="leave-days-cell">{record.days}</td><td className="leave-remarks-cell">{record.remarks || <span className="muted-dash">—</span>}</td><td className="leave-status-cell-sm">{record.confirmation ? <StatusBadge status={record.confirmation} /> : <div className="row-actions history-confirm-actions"><button className="mini-button" onClick={() => onHistoryConfirm(record.id, 'Returned')} type="button">Returned</button><button className="mini-button danger" onClick={() => onHistoryConfirm(record.id, 'Not Returned')} type="button">Not Returned</button></div>}</td><td><button className="action-glyph" onClick={() => setViewingProgress(record)} type="button" title="View Progress" style={{ fontSize: '1rem' }}>👁</button></td></tr>)}
               </tbody></table>
             </div>
           </>
@@ -2203,6 +2460,8 @@ function LeavePage({
         {activeLeaveView === 'medical' && (
           <MedicalLeaveSection records={medicalCases} employees={employees} onUpdate={onUpdateMedical} />
         )}
+
+        {viewingProgress && <LeaveProgressModal record={viewingProgress} onClose={() => setViewingProgress(null)} />}
 
         {activeLeaveView !== 'medical' && (
           <div className="leave-empty-zone">
@@ -2579,12 +2838,12 @@ function InductionParticipantsModal({ record, onClose }: { record: InductionReco
           </colgroup>
           <thead>
             <tr>
-              <th>#</th>
-              <th>Emp ID</th>
-              <th>Full Name</th>
-              <th>NIC / PP No</th>
-              <th>Section</th>
-              <th>Department</th>
+              <th style={{ textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>#</th>
+              <th style={{ textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>Emp ID</th>
+              <th style={{ textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>Full Name</th>
+              <th style={{ textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>NIC / PP No</th>
+              <th style={{ textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>Section</th>
+              <th style={{ textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>Department</th>
             </tr>
           </thead>
           <tbody>
@@ -3066,7 +3325,12 @@ function TrainingParticipantsModal({ record, onClose }: { record: TrainingRecord
             <col style={{ width: '43%' }} />
           </colgroup>
           <thead>
-            <tr><th>#</th><th>Emp ID</th><th>Name</th><th>Section</th></tr>
+            <tr>
+              <th style={{ textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>#</th>
+              <th style={{ textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>Emp ID</th>
+              <th style={{ textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>Name</th>
+              <th style={{ textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>Section</th>
+            </tr>
           </thead>
           <tbody>
             {record.participants.length === 0 ? (
@@ -4087,7 +4351,7 @@ function BankAccountSection({ employees, records, onUpdate }: {
         <div className="table-toolbar bank-toolbar">
           <label className="search-field">
             <span>Search</span>
-            <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Name, ID, section, nationality" />
+            <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Name, Emp ID, section, bank, nationality…" />
           </label>
           <label><span>Bank</span>
             <select value={bankFilter} onChange={(e) => setBankFilter(e.target.value as typeof bankFilter)}>
@@ -6346,15 +6610,15 @@ function PendingTasksModal({ employees, onEdit, onClose }: { employees: Employee
             ? <p style={{ textAlign: 'center', color: 'var(--text-3)', padding: '2rem 1rem' }}>✓ All employee records are complete</p>
             : taskRows.map(({ employee, tasks }) => (
               <div className="pending-task-row" key={`${employee.employeeId}-${employee.fullName}`}>
-                <div className="pending-task-info">
-                  <div className="pending-task-name-row">
+                <div className="pending-task-top">
+                  <div className="pending-task-info">
                     <span className="pending-name-text">{employee.fullName || 'Unnamed Employee'}</span>
-                    <button className="pending-edit-btn" type="button" onClick={() => { onEdit(employee); onClose() }} title="Edit employee record">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                      Edit
-                    </button>
+                    <span className="pending-task-id">{employee.employeeId || 'No ID'} · {employee.department}</span>
                   </div>
-                  <span className="pending-task-id">{employee.employeeId || 'No ID'} · {employee.department}</span>
+                  <button className="pending-edit-btn" type="button" onClick={() => { onEdit(employee); onClose() }} title="Edit employee record">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Edit
+                  </button>
                 </div>
                 <div className="pending-task-fields">
                   {tasks.map((task) => <span className="pending-field-chip" key={task}>{task}</span>)}
@@ -6540,6 +6804,7 @@ function App() {
   const [medicalCases, setMedicalCases] = useState<MedicalCaseRecord[]>(() => loadStore('tic_medical_cases', initialMedicalCases))
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>(() => loadStore('tic_inventory_items', initialInventoryItems))
   const [inventoryUsage, setInventoryUsage] = useState<InventoryUsageRecord[]>(() => loadStore('tic_inventory_usage', initialInventoryUsage))
+  const [offSiteRecords, setOffSiteRecords] = useState<OffSiteRecord[]>(() => loadStore('tic_offsite', initialOffSiteRecords))
   const [showEmployeeForm, setShowEmployeeForm] = useState(false)
   const [employeeMode, setEmployeeMode] = useState<'add' | 'edit'>('add')
   const [employeeForm, setEmployeeForm] = useState<EmployeeForm>(emptyEmployee)
@@ -6578,10 +6843,11 @@ function App() {
   useEffect(() => { localStorage.setItem('tic_medical_cases', JSON.stringify(medicalCases)) }, [medicalCases])
   useEffect(() => { localStorage.setItem('tic_inventory_items', JSON.stringify(inventoryItems)) }, [inventoryItems])
   useEffect(() => { localStorage.setItem('tic_inventory_usage', JSON.stringify(inventoryUsage)) }, [inventoryUsage])
+  useEffect(() => { localStorage.setItem('tic_offsite', JSON.stringify(offSiteRecords)) }, [offSiteRecords])
 
   const resetAllData = () => {
     if (!window.confirm('This will permanently delete ALL data (employees, leave records, etc.). Are you sure?')) return
-    const keys = ['tic_employees','tic_leave_req','tic_leave_active','tic_leave_history','tic_passport','tic_term_notice','tic_term_done','tic_exit_interviews','tic_medical_cases','tic_inventory_items','tic_inventory_usage']
+    const keys = ['tic_employees','tic_leave_req','tic_leave_active','tic_leave_history','tic_passport','tic_term_notice','tic_term_done','tic_exit_interviews','tic_medical_cases','tic_inventory_items','tic_inventory_usage','tic_offsite']
     keys.forEach((k) => localStorage.removeItem(k))
     setEmployees([])
     setLeaveRequests([])
@@ -6594,6 +6860,7 @@ function App() {
     setMedicalCases([])
     setInventoryItems([])
     setInventoryUsage([])
+    setOffSiteRecords([])
   }
 
   const saveEmployee = () => {
@@ -6969,7 +7236,7 @@ function App() {
         </div>
         <main className="workspace-inner" id="top">
           {activePage === 'overview' && <OverviewPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} />}
-          {activePage === 'employees' && <EmployeesPage employees={employees} medicalCases={medicalCases} noticeTerminations={noticeTerminations} onAdd={() => { setEmployeeMode('add'); setEmployeeForm(emptyEmployee); setShowEmployeeForm(true) }} onEdit={openEditEmployee} onExport={exportCsv} onImport={importCsv} onTemplate={downloadTemplate} onShowTasks={() => setShowPendingTasks(true)} />}
+          {activePage === 'employees' && <EmployeesPage employees={employees} medicalCases={medicalCases} noticeTerminations={noticeTerminations} offSiteRecords={offSiteRecords} onUpdateOffSite={(fn) => setOffSiteRecords(fn)} onAdd={() => { setEmployeeMode('add'); setEmployeeForm(emptyEmployee); setShowEmployeeForm(true) }} onEdit={openEditEmployee} onExport={exportCsv} onImport={importCsv} onTemplate={downloadTemplate} onShowTasks={() => setShowPendingTasks(true)} />}
           {activePage === 'leave' && <LeavePage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} medicalCases={medicalCases} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onSetRequestStep={setLeaveRequestStep} onHistoryConfirm={updateHistoryConfirmation} onUpdateMedical={(fn) => setMedicalCases(fn)} />}
           {activePage === 'operations' && <OperationsPage employees={employees} completedTerminations={completedTerminations} />}
           {activePage === 'activities' && <ActivitiesPage employees={employees} passportHandovers={passportHandovers} onUpdatePassport={(fn) => setPassportHandovers(fn)} inventoryItems={inventoryItems} inventoryUsage={inventoryUsage} onUpdateInventoryItems={(fn) => setInventoryItems(fn)} onUpdateInventoryUsage={(fn) => setInventoryUsage(fn)} />}
