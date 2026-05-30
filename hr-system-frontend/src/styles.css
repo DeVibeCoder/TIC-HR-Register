@@ -7370,6 +7370,34 @@ button.step-pill:hover { filter: brightness(0.98); }
 .action-glyph-extend { color: #2563eb; }
 .action-glyph-extend:hover { background: #dbeafe; color: #1e40af; }
 
+/* Active leave extension count badge */
+.al-ext-count-badge {
+  display: inline-block; margin-left: 5px; padding: 1px 6px;
+  border-radius: 6px; background: #dbeafe; color: #1e40af;
+  font-size: 0.66rem; font-weight: 800; vertical-align: middle;
+}
+
+/* Extension panel inside expandable row */
+.al-ext-panel {
+  padding: 10px 14px 12px 44px;
+  border-left: 3px solid #6366f1;
+  margin: 0 8px 6px;
+}
+.al-ext-heading {
+  display: block; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.05em; color: #374151; margin-bottom: 8px;
+}
+.al-ext-list { display: flex; flex-direction: column; gap: 6px; }
+.al-ext-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 10px; background: #f8fafc; border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+.al-ext-num  { font-size: 0.70rem; font-weight: 800; color: #94a3b8; min-width: 20px; }
+.al-ext-days { font-size: 0.80rem; font-weight: 800; color: #2563eb; }
+.al-ext-reason { flex: 1; font-size: 0.80rem; color: #374151; }
+.al-ext-date { font-size: 0.70rem; color: #94a3b8; white-space: nowrap; }
+
 /* ═══ Leave Fast Track Badge ═════════════════════════════ */
 .lr-fasttrack-badge {
   display: inline-flex; align-items: center; gap: 8px;

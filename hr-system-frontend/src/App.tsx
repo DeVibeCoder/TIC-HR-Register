@@ -48,10 +48,21 @@ type LeaveRequestRecord = LeaveBase & {
   skipProgress?: boolean
 }
 
+type LeaveExtension = {
+  id: string
+  leaveTypeCode: LeaveTypeCode
+  additionalDays: number
+  reason: string
+  addedDate: string
+}
+
 type ActiveLeaveRecord = LeaveBase & {
   status: 'Departed'
   stepDates?: Partial<Record<LeaveRequestStep, string>>
   skipProgress?: boolean
+  extensions?: LeaveExtension[]
+  originalReturnDate?: string   // frozen before first extension
+  originalDays?: number         // frozen before first extension
 }
 
 type LeaveHistoryRecord = LeaveBase & {
@@ -2589,31 +2600,58 @@ function ActiveLeaveEditModal({ record, onClose, onSave }: {
   )
 }
 
-function LeaveExtendModal({ record, onClose, onSave }: {
+function LeaveExtendModal({ record, editExtension, onClose, onSave }: {
   record: ActiveLeaveRecord
+  editExtension?: LeaveExtension          // if set → edit mode; else → add mode
   onClose: () => void
   onSave: (updated: ActiveLeaveRecord) => void
 }) {
-  const [additionalDays, setAdditionalDays] = useState(7)
-  const [reason, setReason] = useState('')
-  const [extLeaveType, setExtLeaveType] = useState<LeaveTypeCode>(record.leaveTypeCode)
+  const isEditMode = !!editExtension
+  const [additionalDays, setAdditionalDays] = useState(editExtension?.additionalDays ?? 7)
+  const [reason, setReason] = useState(editExtension?.reason ?? '')
+  const [extLeaveType, setExtLeaveType] = useState<LeaveTypeCode>(editExtension?.leaveTypeCode ?? record.leaveTypeCode)
 
+  // Freeze original values before the very first extension
+  const originalReturn = record.originalReturnDate ?? record.returnDate
+  const originalDays   = record.originalDays ?? record.days
+
+  // Compute new return date from originalReturn + all extension days (including this one)
   const newReturnDate = useMemo(() => {
-    if (!record.returnDate) return record.returnDate
-    const d = new Date(record.returnDate)
-    d.setDate(d.getDate() + additionalDays)
+    if (!originalReturn) return originalReturn
+    const existing = (record.extensions ?? []).filter(e => e.id !== editExtension?.id)
+    const totalExt = existing.reduce((s, e) => s + e.additionalDays, 0) + additionalDays
+    const d = new Date(originalReturn)
+    d.setDate(d.getDate() + totalExt)
     return d.toISOString().slice(0, 10)
-  }, [record.returnDate, additionalDays])
+  }, [originalReturn, record.extensions, editExtension, additionalDays])
+
+  const newTotalDays = useMemo(() => {
+    const existing = (record.extensions ?? []).filter(e => e.id !== editExtension?.id)
+    const totalExt = existing.reduce((s, e) => s + e.additionalDays, 0) + additionalDays
+    return originalDays + totalExt
+  }, [originalDays, record.extensions, editExtension, additionalDays])
 
   const save = () => {
     if (!reason.trim()) return
-    const note = `Extended +${additionalDays}d (${leaveTypeOptions.find(l => l.code === extLeaveType)?.label ?? extLeaveType}) — ${reason}`
+    const ext: LeaveExtension = {
+      id: editExtension?.id ?? `EXT-${Date.now()}`,
+      leaveTypeCode: extLeaveType,
+      additionalDays,
+      reason,
+      addedDate: editExtension?.addedDate ?? new Date().toISOString().slice(0, 10),
+    }
+    const newExtensions = isEditMode
+      ? (record.extensions ?? []).map(e => e.id === ext.id ? ext : e)
+      : [...(record.extensions ?? []), ext]
+
     onSave({
       ...record,
       returnDate: newReturnDate,
-      days: record.days + additionalDays,
-      leaveTypeCode: extLeaveType,
-      remarks: record.remarks ? `${record.remarks} | ${note}` : note,
+      days: newTotalDays,
+      // leaveTypeCode NEVER changes — original leave type is preserved
+      extensions: newExtensions,
+      originalReturnDate: originalReturn,
+      originalDays,
     })
   }
 
@@ -2622,17 +2660,18 @@ function LeaveExtendModal({ record, onClose, onSave }: {
       <section className="registration-modal" role="dialog" aria-modal="true">
         <div className="modal-header">
           <div>
-            <p className="eyebrow">Active Leave</p>
-            <h2>Extend Leave — {record.name}</h2>
+            <p className="eyebrow">Active Leave — {isEditMode ? 'Edit Extension' : 'Add Extension'}</p>
+            <h2>{isEditMode ? 'Edit Extension' : 'Extend Leave'} — {record.name}</h2>
             <p style={{ fontSize: '0.82rem', color: '#64748b' }}>
-              {record.employeeId} · {record.department} · Current return: <strong>{formatDateDisplay(record.returnDate)}</strong>
+              {record.employeeId} · Original: <strong>{leaveTypeOptions.find(l => l.code === record.leaveTypeCode)?.label ?? record.leaveTypeCode}</strong>
+              {' '}· Current return: <strong>{formatDateDisplay(record.returnDate)}</strong>
             </p>
           </div>
           <button className="icon-button" onClick={onClose} type="button">×</button>
         </div>
         <div className="form-grid">
           <label>
-            <span>Leave Type (Extension)</span>
+            <span>Extension Leave Type</span>
             <select value={extLeaveType} onChange={e => setExtLeaveType(e.target.value as LeaveTypeCode)}>
               {leaveTypeOptions.map(l => <option key={l.code} value={l.code}>{l.label} ({l.code})</option>)}
             </select>
@@ -2647,17 +2686,17 @@ function LeaveExtendModal({ record, onClose, onSave }: {
           </label>
           <label>
             <span>New Total Days</span>
-            <input readOnly value={record.days + additionalDays} className="lf-readonly" />
+            <input readOnly value={`${newTotalDays} days (orig. ${originalDays})`} className="lf-readonly" />
           </label>
           <label className="full-field">
-            <span>Reason for Extension <span style={{ color: '#ef4444' }}>*</span></span>
+            <span>Reason <span style={{ color: '#ef4444' }}>*</span></span>
             <input value={reason} onChange={e => setReason(e.target.value)} placeholder="e.g. Medical extension, visa delay, family emergency…" />
           </label>
         </div>
         <div className="modal-actions">
           <button type="button" className="quiet-button light" onClick={onClose}>Cancel</button>
           <button className="primary-button" disabled={!reason.trim()} onClick={save} type="button">
-            Extend Leave
+            {isEditMode ? 'Save Extension' : 'Add Extension'}
           </button>
         </div>
       </section>
@@ -2751,7 +2790,9 @@ function LeavePage({
   const [activeTypeFilter, setActiveTypeFilter] = useState<'All' | LeaveTypeCode>('All')
   const [activeDepartmentFilter, setActiveDepartmentFilter] = useState('All Departments')
   const [extendingLeave, setExtendingLeave] = useState<ActiveLeaveRecord | null>(null)
+  const [editingExtension, setEditingExtension] = useState<{ record: ActiveLeaveRecord; ext: LeaveExtension } | null>(null)
   const [editingActiveLeave, setEditingActiveLeave] = useState<ActiveLeaveRecord | null>(null)
+  const [expandedActiveId, setExpandedActiveId] = useState<string | null>(null)
 
   const [historySearch, setHistorySearch] = useState('')
   const [historyStatusFilter, setHistoryStatusFilter] = useState<'All' | HistoryConfirmation>('All')
@@ -2918,30 +2959,91 @@ function LeavePage({
               <label><span>Leave Type</span><select value={activeTypeFilter} onChange={(event) => setActiveTypeFilter(event.target.value as 'All' | LeaveTypeCode)}><option value="All">All Types</option>{leaveTypeOptions.map((item) => <option key={item.code} value={item.code}>{item.label} ({item.code})</option>)}</select></label>
             </div>
             <div className="employee-table-shell compact-scroll">
-              <table className="data-table leave-table"><thead><tr><th>Emp ID</th><th>Name</th><th>Section</th><th>NIC / PP No</th><th className="leave-type-th">Leave Type</th><th className="leave-date-th">Departure</th><th className="leave-date-th">Return</th><th className="leave-days-th">Days</th><th>Remarks</th><th className="leave-status-th">Status</th><th>Action</th></tr></thead><tbody>
-                {activeRows.map((record) => (
-                  <tr key={record.id}>
-                    <td>{record.employeeId}</td><td>{record.name}</td><td>{record.department}</td><td>{getNic(record.employeeId)}</td>
-                    <td className="leave-type-cell"><LeaveTypeBadge code={record.leaveTypeCode} /></td>
-                    <td className="leave-date-cell">{formatDateDisplay(record.departureDate)}</td>
-                    <td className="leave-date-cell">{formatDateDisplay(record.returnDate)}</td>
-                    <td className="leave-days-cell">{record.days}</td>
-                    <td className="leave-remarks-cell">{record.remarks || <span className="muted-dash">—</span>}</td>
-                    <td className="leave-status-cell-sm"><StatusBadge status="Departed" /></td>
-                    <td>
-                      <button className="action-glyph action-glyph-extend" onClick={() => setExtendingLeave(record)} type="button" title="Extend leave duration">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                          <rect x="2" y="4" width="13" height="16" rx="2"/>
-                          <line x1="7" y1="2" x2="7" y2="6"/><line x1="11" y1="2" x2="11" y2="6"/>
-                          <line x1="2" y1="9" x2="15" y2="9"/>
-                          <line x1="18" y1="12" x2="22" y2="12"/>
-                          <polyline points="20 10 22 12 20 14"/>
-                        </svg>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody></table>
+              <table className="data-table leave-table">
+                <thead><tr>
+                  <th className="lr-expand-th" />
+                  <th>Emp ID</th><th>Name</th><th>Section</th><th>NIC / PP No</th>
+                  <th className="leave-type-th">Leave Type</th>
+                  <th className="leave-date-th">Departure</th><th className="leave-date-th">Return</th>
+                  <th className="leave-days-th">Days</th><th>Remarks</th>
+                  <th className="leave-status-th">Status</th><th>Action</th>
+                </tr></thead>
+                <tbody>
+                  {activeRows.map(record => {
+                    const isExp = expandedActiveId === record.id
+                    const hasExt = (record.extensions?.length ?? 0) > 0
+                    const ExtendIcon = () => (
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="2" y="4" width="13" height="16" rx="2"/>
+                        <line x1="7" y1="2" x2="7" y2="6"/><line x1="11" y1="2" x2="11" y2="6"/>
+                        <line x1="2" y1="9" x2="15" y2="9"/>
+                        <line x1="18" y1="12" x2="22" y2="12"/>
+                        <polyline points="20 10 22 12 20 14"/>
+                      </svg>
+                    )
+                    return (
+                      <Fragment key={record.id}>
+                        <tr className={`mc-row${isExp ? ' mc-row-open' : ''}`} onClick={() => setExpandedActiveId(isExp ? null : record.id)} style={{ cursor: hasExt ? 'pointer' : 'default' }}>
+                          <td className="mc-expand-cell">
+                            {hasExt && <span className={`mc-arrow${isExp ? ' mc-arrow-open' : ''}`}>›</span>}
+                          </td>
+                          <td>{record.employeeId}</td>
+                          <td>{record.name}</td>
+                          <td>{record.department}</td>
+                          <td>{getNic(record.employeeId)}</td>
+                          <td className="leave-type-cell">
+                            <LeaveTypeBadge code={record.leaveTypeCode} />
+                            {hasExt && (
+                              <span className="al-ext-count-badge" title={`${record.extensions!.length} extension(s)`}>
+                                +{record.extensions!.length} ext
+                              </span>
+                            )}
+                          </td>
+                          <td className="leave-date-cell">{formatDateDisplay(record.departureDate)}</td>
+                          <td className="leave-date-cell">{formatDateDisplay(record.returnDate)}</td>
+                          <td className="leave-days-cell">
+                            {record.days}
+                            {hasExt && <span style={{ fontSize: '0.66rem', color: '#64748b', display: 'block' }}>orig. {record.originalDays}</span>}
+                          </td>
+                          <td className="leave-remarks-cell">{record.remarks || <span className="muted-dash">—</span>}</td>
+                          <td className="leave-status-cell-sm"><StatusBadge status="Departed" /></td>
+                          <td onClick={e => e.stopPropagation()}>
+                            <button className="action-glyph action-glyph-extend" onClick={() => setExtendingLeave(record)} type="button" title="Add extension">
+                              <ExtendIcon />
+                            </button>
+                          </td>
+                        </tr>
+                        {isExp && hasExt && (
+                          <tr className="mc-detail-row">
+                            <td colSpan={12}>
+                              <div className="al-ext-panel">
+                                <strong className="al-ext-heading">Extensions</strong>
+                                <div className="al-ext-list">
+                                  {record.extensions!.map((ext, i) => (
+                                    <div className="al-ext-item" key={ext.id}>
+                                      <span className="al-ext-num">#{i + 1}</span>
+                                      <LeaveTypeBadge code={ext.leaveTypeCode} />
+                                      <span className="al-ext-days">+{ext.additionalDays}d</span>
+                                      <span className="al-ext-reason">{ext.reason}</span>
+                                      <span className="al-ext-date">{formatDateDisplay(ext.addedDate)}</span>
+                                      <button
+                                        className="action-glyph edit"
+                                        onClick={e => { e.stopPropagation(); setEditingExtension({ record, ext }) }}
+                                        type="button"
+                                        title="Edit this extension"
+                                      >✎</button>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
+                    )
+                  })}
+                </tbody>
+              </table>
             </div>
           </>
         )}
@@ -2968,6 +3070,7 @@ function LeavePage({
 
         {viewingProgress && <LeaveProgressModal record={viewingProgress} onClose={() => setViewingProgress(null)} />}
         {extendingLeave && <LeaveExtendModal record={extendingLeave} onClose={() => setExtendingLeave(null)} onSave={r => { onExtendLeave(r); setExtendingLeave(null) }} />}
+        {editingExtension && <LeaveExtendModal record={editingExtension.record} editExtension={editingExtension.ext} onClose={() => setEditingExtension(null)} onSave={r => { onExtendLeave(r); setEditingExtension(null) }} />}
         {editingActiveLeave && <ActiveLeaveEditModal record={editingActiveLeave} onClose={() => setEditingActiveLeave(null)} onSave={r => { onEditActiveLeave(r); setEditingActiveLeave(null) }} />}
 
         {activeLeaveView !== 'medical' && (
