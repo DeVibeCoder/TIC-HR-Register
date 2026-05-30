@@ -2929,18 +2929,15 @@ function LeavePage({
                     <td className="leave-remarks-cell">{record.remarks || <span className="muted-dash">—</span>}</td>
                     <td className="leave-status-cell-sm"><StatusBadge status="Departed" /></td>
                     <td>
-                      <div className="row-actions request-inline-actions">
-                        <button className="action-glyph edit" onClick={() => setEditingActiveLeave(record)} type="button" title="Edit active leave">✎</button>
-                        <button className="action-glyph action-glyph-extend" onClick={() => setExtendingLeave(record)} type="button" title="Extend leave duration">
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="2" y="4" width="13" height="16" rx="2"/>
-                            <line x1="7" y1="2" x2="7" y2="6"/><line x1="11" y1="2" x2="11" y2="6"/>
-                            <line x1="2" y1="9" x2="15" y2="9"/>
-                            <line x1="18" y1="12" x2="22" y2="12"/>
-                            <polyline points="20 10 22 12 20 14"/>
-                          </svg>
-                        </button>
-                      </div>
+                      <button className="action-glyph action-glyph-extend" onClick={() => setExtendingLeave(record)} type="button" title="Extend leave duration">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="2" y="4" width="13" height="16" rx="2"/>
+                          <line x1="7" y1="2" x2="7" y2="6"/><line x1="11" y1="2" x2="11" y2="6"/>
+                          <line x1="2" y1="9" x2="15" y2="9"/>
+                          <line x1="18" y1="12" x2="22" y2="12"/>
+                          <polyline points="20 10 22 12 20 14"/>
+                        </svg>
+                      </button>
                     </td>
                   </tr>
                 ))}
