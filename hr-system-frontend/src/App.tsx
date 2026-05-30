@@ -1027,14 +1027,25 @@ function OffSiteModal({ records, employees, onUpdate, onClose }: {
   onUpdate: (fn: (prev: OffSiteRecord[]) => OffSiteRecord[]) => void
   onClose: () => void
 }) {
+  const today = new Date().toISOString().slice(0, 10)
   const [subTab, setSubTab] = useState<'out' | 'history'>('out')
+
+  // ── Add form state ──
   const [showAdd, setShowAdd] = useState(false)
   const [addEmpSearch, setAddEmpSearch] = useState('')
   const [addEmpSelected, setAddEmpSelected] = useState<Employee | null>(null)
   const [showEmpResults, setShowEmpResults] = useState(false)
-  const [addDeparture, setAddDeparture] = useState(new Date().toISOString().slice(0, 10))
+  const [addDeparture, setAddDeparture] = useState(today)
+  const [addReturn, setAddReturn] = useState('')
   const [addPurpose, setAddPurpose] = useState('')
   const [addRecordedBy, setAddRecordedBy] = useState('')
+
+  // ── Edit form state ──
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editDeparture, setEditDeparture] = useState('')
+  const [editReturn, setEditReturn] = useState('')
+  const [editPurpose, setEditPurpose] = useState('')
+  const [editRecordedBy, setEditRecordedBy] = useState('')
 
   const empResults = useMemo(() => {
     const q = addEmpSearch.trim().toLowerCase()
@@ -1043,135 +1054,287 @@ function OffSiteModal({ records, employees, onUpdate, onClose }: {
   }, [addEmpSearch, addEmpSelected, employees])
 
   const currentOut = records.filter(r => r.status === 'Out').sort((a, b) => b.departureDate.localeCompare(a.departureDate))
-  const history = records.filter(r => r.status === 'Returned').sort((a, b) => b.departureDate.localeCompare(a.departureDate))
+  const history    = records.filter(r => r.status === 'Returned').sort((a, b) => b.departureDate.localeCompare(a.departureDate))
 
-  const markReturned = (id: string) => {
-    const today = new Date().toISOString().slice(0, 10)
-    onUpdate(prev => prev.map(r => r.id === id ? { ...r, status: 'Returned' as const, returnDate: today } : r))
+  const daysOut = (departure: string) => {
+    if (!departure) return 0
+    return Math.max(0, Math.round((new Date(today).getTime() - new Date(departure).getTime()) / 86400000))
   }
 
+  // Save new record
   const saveAdd = () => {
     if (!addEmpSelected || !addPurpose.trim()) return
+    const hasReturn = !!addReturn
     const rec: OffSiteRecord = {
       id: `OS-${Date.now()}`, employeeId: addEmpSelected.employeeId,
       name: addEmpSelected.fullName, department: addEmpSelected.department,
       nationality: addEmpSelected.nationality, departureDate: addDeparture,
-      returnDate: '', purpose: addPurpose, status: 'Out', recordedBy: addRecordedBy,
+      returnDate: addReturn, purpose: addPurpose,
+      status: hasReturn ? 'Returned' : 'Out',
+      recordedBy: addRecordedBy,
     }
     onUpdate(prev => [rec, ...prev])
-    setShowAdd(false); setAddEmpSearch(''); setAddEmpSelected(null); setAddPurpose(''); setAddRecordedBy('')
+    setShowAdd(false)
+    setAddEmpSearch(''); setAddEmpSelected(null); setAddDeparture(today)
+    setAddReturn(''); setAddPurpose(''); setAddRecordedBy('')
   }
+
+  // Open edit
+  const openEdit = (r: OffSiteRecord) => {
+    setEditingId(r.id)
+    setEditDeparture(r.departureDate)
+    setEditReturn(r.returnDate)
+    setEditPurpose(r.purpose)
+    setEditRecordedBy(r.recordedBy)
+  }
+
+  // Save edit
+  const saveEdit = (id: string) => {
+    const hasReturn = !!editReturn
+    onUpdate(prev => prev.map(r => r.id !== id ? r : {
+      ...r,
+      departureDate: editDeparture,
+      returnDate: editReturn,
+      purpose: editPurpose,
+      recordedBy: editRecordedBy,
+      status: hasReturn ? 'Returned' : 'Out',
+    }))
+    setEditingId(null)
+  }
+
+  // Mark returned today
+  const markReturned = (id: string) => {
+    onUpdate(prev => prev.map(r => r.id === id ? { ...r, status: 'Returned' as const, returnDate: today } : r))
+  }
+
+  const del = (id: string) => onUpdate(prev => prev.filter(r => r.id !== id))
+
+  const AddEditForm = ({ isEdit, onCancel, onSave }: { isEdit: boolean; onCancel: () => void; onSave: () => void }) => (
+    <div className="os-form-card">
+      <p className="os-form-title">{isEdit ? '✎ Edit Record' : '+ Add Staff Off Site'}</p>
+      {!isEdit && (
+        <div className="os-form-row" style={{ position: 'relative' }}>
+          <label className="os-lbl">Search Employee</label>
+          <input className="os-input os-search-input"
+            value={addEmpSearch}
+            onChange={e => { setAddEmpSearch(e.target.value); setAddEmpSelected(null); setShowEmpResults(true) }}
+            onFocus={() => setShowEmpResults(true)}
+            onBlur={() => setTimeout(() => setShowEmpResults(false), 150)}
+            placeholder="Name or Employee ID…" autoComplete="off" />
+          {showEmpResults && empResults.length > 0 && (
+            <div className="ei-emp-dropdown">
+              {empResults.map(emp => (
+                <div key={emp.employeeId} className="ei-emp-option"
+                  onMouseDown={() => { setAddEmpSelected(emp); setAddEmpSearch(`${emp.fullName} (${emp.employeeId})`); setShowEmpResults(false) }}>
+                  <strong>{emp.fullName}</strong>
+                  <span>{emp.employeeId} · {emp.department}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {addEmpSelected && (
+            <div className="os-emp-pill">
+              <strong>{addEmpSelected.fullName}</strong>
+              <span>{addEmpSelected.employeeId} · {addEmpSelected.department}</span>
+            </div>
+          )}
+        </div>
+      )}
+      <div className="os-form-grid">
+        <div>
+          <label className="os-lbl">Departure Date <span style={{ color: '#ef4444' }}>*</span></label>
+          <input className="os-input" type="date"
+            value={isEdit ? editDeparture : addDeparture}
+            onChange={e => isEdit ? setEditDeparture(e.target.value) : setAddDeparture(e.target.value)} />
+        </div>
+        <div>
+          <label className="os-lbl">Return Date <span style={{ color: '#94a3b8', fontWeight: 400 }}>(optional)</span></label>
+          <input className="os-input" type="date"
+            value={isEdit ? editReturn : addReturn}
+            onChange={e => isEdit ? setEditReturn(e.target.value) : setAddReturn(e.target.value)} />
+          <p className="os-hint">Leave blank if not yet returned</p>
+        </div>
+        <div>
+          <label className="os-lbl">Recorded By</label>
+          <input className="os-input"
+            value={isEdit ? editRecordedBy : addRecordedBy}
+            onChange={e => isEdit ? setEditRecordedBy(e.target.value) : setAddRecordedBy(e.target.value)}
+            placeholder="e.g. HR Admin" />
+        </div>
+        <div style={{ gridColumn: '1 / -1' }}>
+          <label className="os-lbl">Purpose <span style={{ color: '#ef4444' }}>*</span></label>
+          <input className="os-input"
+            value={isEdit ? editPurpose : addPurpose}
+            onChange={e => isEdit ? setEditPurpose(e.target.value) : setAddPurpose(e.target.value)}
+            placeholder="e.g. Visa Medical, Embassy Visit, Off-site Training, Personal…" />
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 12 }}>
+        <button className="quiet-button light" onClick={onCancel} type="button">Cancel</button>
+        <button className="primary-button"
+          disabled={isEdit ? !editPurpose.trim() : (!addEmpSelected || !addPurpose.trim())}
+          onClick={onSave} type="button">
+          {isEdit ? 'Save Changes' : 'Add Record'}
+        </button>
+      </div>
+    </div>
+  )
 
   return (
     <div className="modal-backdrop" role="presentation">
       <section className="registration-modal os-modal" role="dialog" aria-modal="true">
-        <div className="modal-header">
+
+        {/* Header */}
+        <div className="os-modal-hdr">
+          <div className="os-hdr-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
           <div>
-            <p className="eyebrow">Employee Management</p>
-            <h2>Off Site Tracking</h2>
-            <p style={{ fontSize: '0.80rem', color: '#64748b', marginTop: 2 }}>
-              <strong style={{ color: '#1e40af' }}>{currentOut.length}</strong> currently out &nbsp;·&nbsp; {history.length} total history
-            </p>
+            <p className="os-eyebrow">Employee Management</p>
+            <h2 className="os-title">Off Site Tracking</h2>
+          </div>
+          <div className="os-hdr-kpis">
+            <div className="os-kpi os-kpi-out">
+              <span className="os-kpi-num">{currentOut.length}</span>
+              <span className="os-kpi-lbl">Currently Out</span>
+            </div>
+            <div className="os-kpi os-kpi-total">
+              <span className="os-kpi-num">{records.length}</span>
+              <span className="os-kpi-lbl">Total Records</span>
+            </div>
           </div>
           <button className="icon-button" onClick={onClose} type="button">×</button>
         </div>
 
-        {/* Sub-tabs */}
-        <div className="os-subtabs">
-          <button className={subTab === 'out' ? 'active' : ''} onClick={() => setSubTab('out')} type="button">
-            Currently Out {currentOut.length > 0 && <span className="tab-count" style={{ background: '#3b82f6' }}>{currentOut.length}</span>}
-          </button>
-          <button className={subTab === 'history' ? 'active' : ''} onClick={() => setSubTab('history')} type="button">
-            History {history.length > 0 && <span className="tab-count">{history.length}</span>}
-          </button>
-        </div>
+        {/* Body */}
+        <div className="os-body">
 
-        {/* Add Off Site form */}
-        {showAdd && (
-          <div className="os-add-form">
-            <p className="os-add-title">Add Staff Off Site</p>
-            <div className="os-add-grid">
-              <label style={{ position: 'relative', gridColumn: '1 / -1' }}>
-                <span>Search Employee</span>
-                <input value={addEmpSearch} onChange={e => { setAddEmpSearch(e.target.value); setAddEmpSelected(null); setShowEmpResults(true) }}
-                  onFocus={() => setShowEmpResults(true)} onBlur={() => setTimeout(() => setShowEmpResults(false), 150)}
-                  placeholder="Name or Employee ID…" autoComplete="off" />
-                {showEmpResults && empResults.length > 0 && (
-                  <div className="ei-emp-dropdown">
-                    {empResults.map(emp => (
-                      <div key={emp.employeeId} className="ei-emp-option" onMouseDown={() => { setAddEmpSelected(emp); setAddEmpSearch(`${emp.fullName} (${emp.employeeId})`); setShowEmpResults(false) }}>
-                        <strong>{emp.fullName}</strong>
-                        <span>{emp.employeeId} · {emp.department}</span>
-                      </div>
+          {/* Tabs + Add button row */}
+          <div className="os-topbar">
+            <div className="os-subtabs">
+              <button className={subTab === 'out' ? 'active' : ''} onClick={() => setSubTab('out')} type="button">
+                Currently Out {currentOut.length > 0 && <span className="tab-count" style={{ background: '#2563eb' }}>{currentOut.length}</span>}
+              </button>
+              <button className={subTab === 'history' ? 'active' : ''} onClick={() => setSubTab('history')} type="button">
+                History {history.length > 0 && <span className="tab-count">{history.length}</span>}
+              </button>
+            </div>
+            {!showAdd && editingId === null && (
+              <button className="primary-button" onClick={() => setShowAdd(true)} type="button">+ Add Off Site</button>
+            )}
+          </div>
+
+          {/* Add form */}
+          {showAdd && (
+            <AddEditForm isEdit={false} onCancel={() => setShowAdd(false)} onSave={saveAdd} />
+          )}
+
+          {/* Currently Out table */}
+          {subTab === 'out' && !showAdd && (
+            <div className="employee-table-shell compact-scroll os-table-shell">
+              <table className="data-table os-table">
+                <thead>
+                  <tr>
+                    <th>Emp ID</th><th>Name</th><th>Section</th><th>Nationality</th>
+                    <th>Departed</th><th>Expected Return</th><th>Days Out</th>
+                    <th>Purpose</th><th>Recorded By</th><th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentOut.length === 0
+                    ? <tr><td colSpan={10} className="empty-row">No staff currently off site.</td></tr>
+                    : currentOut.map(r => (
+                      <Fragment key={r.id}>
+                        <tr className={editingId === r.id ? 'os-editing-row' : ''}>
+                          <td>{r.employeeId}</td>
+                          <td><strong>{r.name}</strong></td>
+                          <td>{r.department}</td>
+                          <td>{r.nationality}</td>
+                          <td style={{ whiteSpace: 'nowrap' }}>{formatDateDisplay(r.departureDate)}</td>
+                          <td style={{ whiteSpace: 'nowrap' }}>{r.returnDate ? formatDateDisplay(r.returnDate) : <span style={{ color: '#94a3b8' }}>—</span>}</td>
+                          <td><span className="os-days-badge">{daysOut(r.departureDate)}d</span></td>
+                          <td className="os-purpose-cell">{r.purpose}</td>
+                          <td>{r.recordedBy || '—'}</td>
+                          <td>
+                            <div className="row-actions request-inline-actions" style={{ gap: 4 }}>
+                              <button className="os-return-btn" onClick={() => markReturned(r.id)} type="button" title="Mark returned today">↩ Return</button>
+                              <button className="action-glyph edit" onClick={() => editingId === r.id ? setEditingId(null) : openEdit(r)} type="button" title="Edit">✎</button>
+                              <button className="action-glyph delete" onClick={() => del(r.id)} type="button" title="Delete">🗑</button>
+                            </div>
+                          </td>
+                        </tr>
+                        {editingId === r.id && (
+                          <tr>
+                            <td colSpan={10} style={{ padding: 0, background: '#f8fafc' }}>
+                              <div style={{ padding: '0 12px 12px' }}>
+                                <AddEditForm isEdit={true} onCancel={() => setEditingId(null)} onSave={() => saveEdit(r.id)} />
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
                     ))}
-                  </div>
-                )}
-              </label>
-              <label><span>Departure Date</span><input type="date" value={addDeparture} onChange={e => setAddDeparture(e.target.value)} /></label>
-              <label><span>Recorded By</span><input value={addRecordedBy} onChange={e => setAddRecordedBy(e.target.value)} placeholder="HR Admin" /></label>
-              <label style={{ gridColumn: '1 / -1' }}><span>Purpose <span style={{ color: '#ef4444' }}>*</span></span><input value={addPurpose} onChange={e => setAddPurpose(e.target.value)} placeholder="Reason for being off site (e.g. Visa Medical, Embassy Visit, Training)…" required /></label>
+                </tbody>
+              </table>
             </div>
-            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 10 }}>
-              <button className="quiet-button light" onClick={() => setShowAdd(false)} type="button">Cancel</button>
-              <button className="primary-button" disabled={!addEmpSelected || !addPurpose.trim()} onClick={saveAdd} type="button">Save</button>
+          )}
+
+          {/* History table */}
+          {subTab === 'history' && !showAdd && (
+            <div className="employee-table-shell compact-scroll os-table-shell">
+              <table className="data-table os-table">
+                <thead>
+                  <tr>
+                    <th>Emp ID</th><th>Name</th><th>Section</th><th>Nationality</th>
+                    <th>Departed</th><th>Returned</th><th>Days</th>
+                    <th>Purpose</th><th>Recorded By</th><th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {history.length === 0
+                    ? <tr><td colSpan={10} className="empty-row">No history yet.</td></tr>
+                    : history.map(r => {
+                      const days = r.returnDate && r.departureDate
+                        ? Math.max(0, Math.round((new Date(r.returnDate).getTime() - new Date(r.departureDate).getTime()) / 86400000))
+                        : null
+                      return (
+                        <Fragment key={r.id}>
+                          <tr className={editingId === r.id ? 'os-editing-row' : ''}>
+                            <td>{r.employeeId}</td>
+                            <td><strong>{r.name}</strong></td>
+                            <td>{r.department}</td>
+                            <td>{r.nationality}</td>
+                            <td style={{ whiteSpace: 'nowrap' }}>{formatDateDisplay(r.departureDate)}</td>
+                            <td style={{ whiteSpace: 'nowrap' }}>{r.returnDate ? formatDateDisplay(r.returnDate) : '—'}</td>
+                            <td>{days !== null ? <span className="os-days-badge os-days-done">{days}d</span> : '—'}</td>
+                            <td className="os-purpose-cell">{r.purpose}</td>
+                            <td>{r.recordedBy || '—'}</td>
+                            <td>
+                              <div className="row-actions request-inline-actions" style={{ gap: 4 }}>
+                                <button className="action-glyph edit" onClick={() => editingId === r.id ? setEditingId(null) : openEdit(r)} type="button" title="Edit">✎</button>
+                                <button className="action-glyph delete" onClick={() => del(r.id)} type="button" title="Delete">🗑</button>
+                              </div>
+                            </td>
+                          </tr>
+                          {editingId === r.id && (
+                            <tr>
+                              <td colSpan={10} style={{ padding: 0, background: '#f8fafc' }}>
+                                <div style={{ padding: '0 12px 12px' }}>
+                                  <AddEditForm isEdit={true} onCancel={() => setEditingId(null)} onSave={() => saveEdit(r.id)} />
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </Fragment>
+                      )
+                    })}
+                </tbody>
+              </table>
             </div>
-          </div>
-        )}
-
-        {!showAdd && (
-          <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '8px 0' }}>
-            <button className="primary-button" onClick={() => setShowAdd(true)} type="button">+ Add Off Site</button>
-          </div>
-        )}
-
-        {subTab === 'out' && (
-          <div className="employee-table-shell compact-scroll">
-            <table className="data-table">
-              <thead><tr><th>Emp ID</th><th>Name</th><th>Section</th><th>Nationality</th><th>Departed</th><th>Purpose</th><th>Recorded By</th><th>Action</th></tr></thead>
-              <tbody>
-                {currentOut.length === 0
-                  ? <tr><td colSpan={8} className="empty-row">No staff currently off site.</td></tr>
-                  : currentOut.map(r => (
-                    <tr key={r.id}>
-                      <td>{r.employeeId}</td>
-                      <td><strong>{r.name}</strong></td>
-                      <td>{r.department}</td>
-                      <td>{r.nationality}</td>
-                      <td style={{ whiteSpace: 'nowrap' }}>{formatDateDisplay(r.departureDate)}</td>
-                      <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.purpose}</td>
-                      <td>{r.recordedBy || '—'}</td>
-                      <td>
-                        <button className="primary-button" style={{ padding: '4px 12px', fontSize: '0.74rem' }} onClick={() => markReturned(r.id)} type="button">Mark Returned</button>
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {subTab === 'history' && (
-          <div className="employee-table-shell compact-scroll">
-            <table className="data-table">
-              <thead><tr><th>Emp ID</th><th>Name</th><th>Section</th><th>Departed</th><th>Returned</th><th>Purpose</th><th>Recorded By</th></tr></thead>
-              <tbody>
-                {history.length === 0
-                  ? <tr><td colSpan={7} className="empty-row">No history yet.</td></tr>
-                  : history.map(r => (
-                    <tr key={r.id}>
-                      <td>{r.employeeId}</td>
-                      <td><strong>{r.name}</strong></td>
-                      <td>{r.department}</td>
-                      <td style={{ whiteSpace: 'nowrap' }}>{formatDateDisplay(r.departureDate)}</td>
-                      <td style={{ whiteSpace: 'nowrap' }}>{r.returnDate ? formatDateDisplay(r.returnDate) : '—'}</td>
-                      <td>{r.purpose}</td>
-                      <td>{r.recordedBy || '—'}</td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+          )}
+        </div>
       </section>
     </div>
   )
