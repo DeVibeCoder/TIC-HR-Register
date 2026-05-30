@@ -1237,9 +1237,9 @@ h2 { margin: 0; color: #111; font-size: 0.95rem; line-height: 1.2; }
 }
 
 .status-badge.off-site {
-  border-color: rgba(37, 99, 235, 0.50);
-  color: #1e3a8a;
-  background: #bfdbfe;
+  border-color: #1d4ed8 !important;
+  color: #fff !important;
+  background: #2563eb !important;
   font-weight: 900;
 }
 
@@ -1255,7 +1255,6 @@ h2 { margin: 0; color: #111; font-size: 0.95rem; line-height: 1.2; }
 
 .status-badge.in-progress,
 .status-badge.open,
-.status-badge.off-site,
 .status-badge.pending-approval {
   border-color: rgba(201, 134, 34, 0.28);
   color: #1e293b;
