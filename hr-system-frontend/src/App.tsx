@@ -1008,7 +1008,7 @@ function EmployeeFormModal({ form, mode, onClose, onSave, setForm }: {
             <label><span>Designation</span><input value={form.designation} onChange={(e) => update('designation', e.target.value)} placeholder="Job title" /></label>
             <label><span>Date of Join</span><input type="date" value={form.dateOfJoin} onChange={(e) => update('dateOfJoin', e.target.value)} /></label>
             <label><span>Work Permit No</span><input disabled={wpDisabled} placeholder={wpDisabled ? 'N/A — Maldivian' : 'Work permit number'} value={wpDisabled ? '' : form.workPermitNo} onChange={(e) => update('workPermitNo', e.target.value)} /></label>
-            <label><span>Site Status</span><select value={form.siteStatus} onChange={(e) => update('siteStatus', e.target.value as SiteStatus)}><option>On Site</option><option>Off Site</option><option>On Leave</option></select></label>
+            {/* Site Status is auto-managed — Off Site from offsite records, On Leave from active leaves */}
           </div>
         </div>
 
@@ -7187,6 +7187,23 @@ function App() {
   useEffect(() => { localStorage.setItem('tic_inventory_items', JSON.stringify(inventoryItems)) }, [inventoryItems])
   useEffect(() => { localStorage.setItem('tic_inventory_usage', JSON.stringify(inventoryUsage)) }, [inventoryUsage])
   useEffect(() => { localStorage.setItem('tic_offsite', JSON.stringify(offSiteRecords)) }, [offSiteRecords])
+
+  // Auto-sync employee siteStatus: Off Site → from offSiteRecords, On Leave → from activeLeaves
+  useEffect(() => {
+    const offIds    = new Set(offSiteRecords.filter(r => r.status === 'Out').map(r => r.employeeId))
+    const leaveIds  = new Set(activeLeaves.map(r => r.employeeId))
+    setEmployees(prev => {
+      const next = prev.map(emp => {
+        const computed: SiteStatus = offIds.has(emp.employeeId)
+          ? 'Off Site'
+          : leaveIds.has(emp.employeeId)
+          ? 'On Leave'
+          : 'On Site'
+        return emp.siteStatus === computed ? emp : { ...emp, siteStatus: computed }
+      })
+      return next.some((e, i) => e !== prev[i]) ? next : prev
+    })
+  }, [offSiteRecords, activeLeaves])
 
   const resetAllData = () => {
     if (!window.confirm('This will permanently delete ALL data (employees, leave records, etc.). Are you sure?')) return

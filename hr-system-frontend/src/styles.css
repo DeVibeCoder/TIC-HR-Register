@@ -1118,13 +1118,13 @@ h2 { margin: 0; color: #111; font-size: 0.95rem; line-height: 1.2; }
 .employee-table tbody tr.status-row-on-leave td:nth-child(-n + 3) { background: #e2f8ed; }
 
 .employee-table tbody tr.status-row-off-site td,
-.employee-table tbody tr.status-row-off-site td:nth-child(-n + 3) { background: #eff6ff; }
+.employee-table tbody tr.status-row-off-site td:nth-child(-n + 3) { background: #dbeafe; }
 
 .employee-table tbody tr.status-row-on-leave:hover td,
-.employee-table tbody tr.status-row-on-leave:hover td:nth-child(-n + 3) { background: #ffdde5; }
+.employee-table tbody tr.status-row-on-leave:hover td:nth-child(-n + 3) { background: #d1fae5; }
 
 .employee-table tbody tr.status-row-off-site:hover td,
-.employee-table tbody tr.status-row-off-site:hover td:nth-child(-n + 3) { background: #dbeafe; }
+.employee-table tbody tr.status-row-off-site:hover td:nth-child(-n + 3) { background: #bfdbfe; }
 
 .data-table tbody tr:hover td { background: #ede9fe; }
 .data-table tbody tr:last-child td { border-bottom: 1px solid rgba(148, 163, 184, 0.5); }
@@ -1237,9 +1237,9 @@ h2 { margin: 0; color: #111; font-size: 0.95rem; line-height: 1.2; }
 }
 
 .status-badge.off-site {
-  border-color: rgba(190, 72, 92, 0.34);
-  color: #8f2434;
-  background: #ffe6ea;
+  border-color: rgba(37, 99, 235, 0.34);
+  color: #1e40af;
+  background: #dbeafe;
 }
 
 .status-badge.probation,
@@ -7350,6 +7350,12 @@ button.step-pill:hover { filter: brightness(0.98); }
   cursor: pointer; transition: background 120ms;
 }
 .os-return-btn:hover { background: #dbeafe; }
+
+/* Compact off-site table */
+.os-table th { font-size: 0.68rem !important; padding: 7px 8px !important; white-space: nowrap; }
+.os-table td { font-size: 0.76rem !important; padding: 6px 8px !important; }
+.os-table td:last-child { white-space: nowrap; }
+.os-table .row-actions { flex-wrap: nowrap; gap: 3px; }
 
 /* ═══ Leave Fast Track Badge ═════════════════════════════ */
 .lr-fasttrack-badge {
