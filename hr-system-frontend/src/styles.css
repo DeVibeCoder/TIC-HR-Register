@@ -7393,6 +7393,54 @@ button.step-pill:hover { filter: brightness(0.98); }
   display: inline-block; background: #fee2e2; color: #dc2626;
   padding: 2px 8px; border-radius: 6px; font-weight: 700; font-size: 0.76rem;
 }
+
+/* Admitted row highlight */
+.mc-admitted-row { background: #fff1f2 !important; }
+.mc-admitted-row:hover { background: #ffe4e6 !important; }
+.mc-admitted-row .mc-expand-cell { border-left: 3px solid #ef4444; }
+
+/* KPI red chip */
+.mc-kpi-red .mc-kpi-num { color: #dc2626; }
+
+/* 3-column expanded detail */
+.mc-detail-3grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) 200px 170px;
+  gap: 0;
+  align-items: start;
+  padding: 0;
+}
+.mc-d3-advice {
+  padding: 12px 16px 14px 44px;
+  border-left: 3px solid var(--brand, #6366f1);
+  margin-left: 8px;
+  min-width: 0;
+}
+.mc-d3-clinic {
+  padding: 12px 14px;
+  border-left: 1px solid #e8eaf0;
+  flex-shrink: 0;
+}
+.mc-d3-clinic-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 10px;
+  margin-top: 8px;
+}
+.mc-d3-admitted {
+  padding: 12px 14px 14px;
+  border-left: 1px solid #e8eaf0;
+  flex-shrink: 0;
+}
+.mc-d3-admitted-card {
+  margin-top: 6px;
+}
+.mc-d3-admitted-badge {
+  display: inline-block;
+  padding: 3px 10px; border-radius: 8px;
+  background: #fee2e2; color: #dc2626;
+  font-size: 0.76rem; font-weight: 800;
+}
 @media (max-width: 680px) {
   .mc-detail-2col { grid-template-columns: 1fr; }
   .mc-detail-right { border-left: none; border-top: 1px solid #e8eaf0; padding: 12px 0 0; }

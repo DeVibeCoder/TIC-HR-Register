@@ -169,6 +169,8 @@ type MedicalCaseRecord = {
   recordedBy: string
   isUrgent?: boolean
   isAdmitted?: boolean
+  admittedDate?: string
+  dischargedDate?: string
 }
 
 type OffSiteRecord = {
@@ -2079,6 +2081,18 @@ function MedicalCaseModal({ record, employees, onClose, onSave }: {
                   <button type="button" className={`mc-mc-btn${form.isAdmitted ? ' mc-mc-btn-yes' : ''}`} onClick={() => setF({ isAdmitted: true })}>Yes — Admitted</button>
                   <button type="button" className={`mc-mc-btn${!form.isAdmitted ? ' mc-mc-btn-no' : ''}`} onClick={() => setF({ isAdmitted: false })}>No — Outpatient</button>
                 </div>
+                {form.isAdmitted && (
+                  <div className="mc-form-grid" style={{ marginTop: 12 }}>
+                    <div>
+                      <label className="mc-field-label">Admitted Date</label>
+                      <input className="mc-input" type="date" value={form.admittedDate ?? ''} onChange={e => setF({ admittedDate: e.target.value })} />
+                    </div>
+                    <div>
+                      <label className="mc-field-label">Discharged Date <span style={{ color: '#94a3b8', fontWeight: 400 }}>(optional)</span></label>
+                      <input className="mc-input" type="date" value={form.dischargedDate ?? ''} onChange={e => setF({ dischargedDate: e.target.value })} />
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -2331,16 +2345,17 @@ function MedicalLeaveSection({ records, employees, onUpdate }: {
     return matchSearch && matchMc && matchDept && matchMonth
   }).sort((a, b) => b.caseDate.localeCompare(a.caseDate)), [records, search, mcFilter, deptFilter, monthFilter])
 
-  const totalCases   = records.length
-  const todayVisits  = records.filter((r) => r.caseDate === today).length
-  const mcProvided   = records.filter((r) => r.mcProvided).length
-  const onSickToday  = records.filter((r) => r.sickLeaveFrom <= today && r.sickLeaveTo >= today).length
+  const totalCases    = records.length
+  const todayVisits   = records.filter((r) => r.caseDate === today).length
+  const mcProvided    = records.filter((r) => r.mcProvided).length
+  const onSickToday   = records.filter((r) => r.sickLeaveFrom <= today && r.sickLeaveTo >= today).length
+  const admittedCount = records.filter((r) => r.isAdmitted).length
 
   const newCase = (): MedicalCaseRecord => ({
     id: 'MC-new', caseDate: today, employeeId: '', name: '', department: '',
     reason: '', hospital: '', departTime: '09:00', returnTime: '13:00',
     doctorAdvice: '', mcProvided: false, sickLeaveFrom: today, sickLeaveTo: today,
-    sickLeaveDays: 1, recordedBy: '', isUrgent: false, isAdmitted: false,
+    sickLeaveDays: 1, recordedBy: '', isUrgent: false, isAdmitted: false, admittedDate: '', dischargedDate: '',
   })
 
   const save = (r: MedicalCaseRecord) => {
@@ -2372,6 +2387,12 @@ function MedicalLeaveSection({ records, employees, onUpdate }: {
           <span className="mc-kpi-num">{onSickToday}</span>
           <span className="mc-kpi-lbl">On Sick Leave</span>
         </div>
+        {admittedCount > 0 && (
+          <div className="mc-kpi-chip mc-kpi-red">
+            <span className="mc-kpi-num">{admittedCount}</span>
+            <span className="mc-kpi-lbl">Admitted</span>
+          </div>
+        )}
         <button className="mc-analytics-btn" onClick={() => setShowAnalytics(true)} type="button">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
           Analytics
@@ -2424,7 +2445,7 @@ function MedicalLeaveSection({ records, employees, onUpdate }: {
               const isExp = expandedId === r.id
               return (
                 <Fragment key={r.id}>
-                  <tr className={`mc-row${isExp ? ' mc-row-open' : ''}`} onClick={() => setExpandedId(isExp ? null : r.id)}>
+                  <tr className={`mc-row${isExp ? ' mc-row-open' : ''}${r.isAdmitted ? ' mc-admitted-row' : ''}`} onClick={() => setExpandedId(isExp ? null : r.id)}>
                     <td className="mc-expand-cell"><span className={`mc-arrow${isExp ? ' mc-arrow-open' : ''}`}>›</span></td>
                     <td style={{ whiteSpace: 'nowrap' }}>{formatDateDisplay(r.caseDate)}</td>
                     <td>{r.employeeId}</td>
@@ -2447,24 +2468,46 @@ function MedicalLeaveSection({ records, employees, onUpdate }: {
                   {isExp && (
                     <tr className="mc-detail-row">
                       <td colSpan={11}>
-                        <div className="mc-detail-content">
-                          <div className="mc-detail-2col">
-                            <div className="mc-detail-left">
-                              <strong className="mc-detail-heading">Doctor Advice / Summary</strong>
-                              <div className="mc-detail-body">
-                                {r.doctorAdvice
-                                  ? r.doctorAdvice.split('\n').map((line, i) => <p key={i}>{line}</p>)
-                                  : <em style={{ color: '#94a3b8' }}>No doctor advice recorded.</em>}
+                        <div className="mc-detail-content mc-detail-3grid">
+                          {/* Col 1 — Doctor Advice (wider) */}
+                          <div className="mc-d3-advice">
+                            <strong className="mc-detail-heading">Doctor Advice / Summary</strong>
+                            <div className="mc-detail-body">
+                              {r.doctorAdvice
+                                ? r.doctorAdvice.split('\n').map((line, i) => <p key={i}>{line}</p>)
+                                : <em style={{ color: '#94a3b8' }}>No doctor advice recorded.</em>}
+                            </div>
+                          </div>
+                          {/* Col 2 — Clinic info (2×2 fixed grid) */}
+                          <div className="mc-d3-clinic">
+                            <strong className="mc-detail-heading">Clinic Info</strong>
+                            <div className="mc-d3-clinic-grid">
+                              <div className="mc-detail-info-item"><span className="mc-detail-info-label">Hospital</span><span className="mc-detail-info-value">{r.hospital || '—'}</span></div>
+                              <div className="mc-detail-info-item"><span className="mc-detail-info-label">Depart</span><span className="mc-detail-info-value">{r.departTime || '—'}</span></div>
+                              <div className="mc-detail-info-item"><span className="mc-detail-info-label">Recorded By</span><span className="mc-detail-info-value">{r.recordedBy || '—'}</span></div>
+                              <div className="mc-detail-info-item"><span className="mc-detail-info-label">Return</span><span className="mc-detail-info-value">{r.returnTime || '—'}</span></div>
+                            </div>
+                          </div>
+                          {/* Col 3 — Admitted info */}
+                          <div className="mc-d3-admitted">
+                            <strong className="mc-detail-heading">Admission</strong>
+                            {r.isAdmitted ? (
+                              <div className="mc-d3-admitted-card">
+                                <span className="mc-d3-admitted-badge">🏥 Admitted</span>
+                                <div className="mc-detail-info-item" style={{ marginTop: 8 }}>
+                                  <span className="mc-detail-info-label">Admitted Date</span>
+                                  <span className="mc-detail-info-value">{r.admittedDate ? formatDateDisplay(r.admittedDate) : '—'}</span>
+                                </div>
+                                <div className="mc-detail-info-item">
+                                  <span className="mc-detail-info-label">Discharged</span>
+                                  <span className="mc-detail-info-value" style={{ color: r.dischargedDate ? '#166534' : '#dc2626' }}>
+                                    {r.dischargedDate ? formatDateDisplay(r.dischargedDate) : 'Still admitted'}
+                                  </span>
+                                </div>
                               </div>
-                            </div>
-                            <div className="mc-detail-right">
-                              {r.hospital && <div className="mc-detail-info-item"><span className="mc-detail-info-label">Hospital / Clinic</span><span className="mc-detail-info-value">{r.hospital}</span></div>}
-                              {r.departTime && <div className="mc-detail-info-item"><span className="mc-detail-info-label">Depart</span><span className="mc-detail-info-value">{r.departTime}</span></div>}
-                              {r.returnTime && <div className="mc-detail-info-item"><span className="mc-detail-info-label">Return</span><span className="mc-detail-info-value">{r.returnTime}</span></div>}
-                              {r.isUrgent && <div className="mc-detail-info-item"><span className="mc-detail-info-label">Urgency</span><span className="mc-detail-info-value mc-urgent-badge">Urgent / Emergency</span></div>}
-                              {r.isAdmitted && <div className="mc-detail-info-item"><span className="mc-detail-info-label">Admitted</span><span className="mc-detail-info-value" style={{color:'#dc2626',fontWeight:700}}>Yes — Admitted to Hospital</span></div>}
-                              {r.recordedBy && <div className="mc-detail-info-item" style={{marginTop:'auto'}}><span className="mc-detail-info-label">Recorded By</span><span className="mc-detail-info-value">{r.recordedBy}</span></div>}
-                            </div>
+                            ) : (
+                              <p style={{ fontSize: '0.76rem', color: '#94a3b8', marginTop: 6 }}>Not admitted</p>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -2514,7 +2557,7 @@ function LeaveProgressModal({ record, onClose }: {
                     <div className={`lr-pip-step ${cls}`} style={{ cursor: 'default' }}>
                       <div className="lr-pip-circle">{hasDone ? '✓' : i + 1}</div>
                       <div className="lr-pip-label">{step}</div>
-                      {record.stepDates?.[step] && <div className="lr-pip-date">{formatDateDisplay(record.stepDates[step]!)}</div>}
+                      <div className="lr-pip-date">{record.stepDates?.[step] ? formatDateDisplay(record.stepDates[step]!) : hasDone ? '—' : ''}</div>
                     </div>
                     {i < requestSteps.length - 1 && <div className={`lr-pip-line ${hasDone ? 'lr-pip-line-done' : 'lr-pip-line-future'}`} />}
                   </Fragment>
