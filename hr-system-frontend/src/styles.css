@@ -1237,9 +1237,10 @@ h2 { margin: 0; color: #111; font-size: 0.95rem; line-height: 1.2; }
 }
 
 .status-badge.off-site {
-  border-color: rgba(37, 99, 235, 0.34);
-  color: #1e40af;
-  background: #dbeafe;
+  border-color: rgba(37, 99, 235, 0.50);
+  color: #1e3a8a;
+  background: #bfdbfe;
+  font-weight: 900;
 }
 
 .status-badge.probation,
@@ -5734,10 +5735,12 @@ button.step-pill:hover { filter: brightness(0.98); }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* Lighter header for participants modal table */
+/* Solid header for participants modal table */
 .ind-pv-table thead th {
-  background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%) !important;
+  background: #4f46e5 !important;
   color: #fff !important;
+  font-size: 0.72rem !important;
+  padding: 8px 10px !important;
 }
 /* Department column: allow wrapping so long names don't overflow */
 .ind-pv-table th:last-child,
@@ -5747,10 +5750,14 @@ button.step-pill:hover { filter: brightness(0.98); }
   text-overflow: clip !important;
   word-break: break-word;
 }
-/* Participant table header in preview */
+/* Participant table header in preview — same solid color as training modal */
 .ind-prev-ptbl thead th {
-  background: #6366f1 !important;
+  background: #4f46e5 !important;
   color: #fff !important;
+  font-size: 0.72rem !important;
+  padding: 8px 10px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
 }
 .ind-prev-ptbl tbody tr:nth-child(even) td { background: #f8f6ff; }
 /* Signature blocks in preview */
@@ -7167,13 +7174,16 @@ button.step-pill:hover { filter: brightness(0.98); }
   padding: 2px 6px; border-radius: 6px; margin-left: 4px;
 }
 
-/* ═══ Employee row highlights ══════════════════════════════ */
-.emp-in-notice { background: #fff1f2 !important; }
-.emp-in-notice:hover { background: #ffe4e6 !important; }
-.emp-in-notice td:first-child { border-left: 3px solid #ef4444; }
-.emp-on-medical { background: #fffbeb !important; }
-.emp-on-medical:hover { background: #fef3c7 !important; }
-.emp-on-medical td:first-child { border-left: 3px solid #f59e0b; }
+/* ═══ Employee row highlights — same pattern as off-site/on-leave ════ */
+.employee-table tbody tr.emp-in-notice td,
+.employee-table tbody tr.emp-in-notice td:nth-child(-n + 3) { background: #fee2e2 !important; }
+.employee-table tbody tr.emp-in-notice:hover td,
+.employee-table tbody tr.emp-in-notice:hover td:nth-child(-n + 3) { background: #fecaca !important; }
+
+.employee-table tbody tr.emp-on-medical td,
+.employee-table tbody tr.emp-on-medical td:nth-child(-n + 3) { background: #fef9c3 !important; }
+.employee-table tbody tr.emp-on-medical:hover td,
+.employee-table tbody tr.emp-on-medical:hover td:nth-child(-n + 3) { background: #fef08a !important; }
 
 /* ═══ Inventory section ════════════════════════════════════ */
 .inv-kpi-row {

@@ -1316,7 +1316,7 @@ function OffSiteModal({ records, employees, onUpdate, onClose }: {
                 <thead>
                   <tr>
                     <th>Emp ID</th><th>Name</th><th>Section</th><th>Nationality</th>
-                    <th>Departed</th><th>Expected Return</th><th>Days Out</th>
+                    <th>Departed</th><th>Return</th><th>Days Out</th>
                     <th>Purpose</th><th>Recorded By</th><th>Actions</th>
                   </tr>
                 </thead>
@@ -2583,6 +2583,7 @@ function LeavePage({
   onEditRequest,
   onDeleteRequest,
   onSetRequestStep,
+  onCompleteRequest,
   onHistoryConfirm,
   onUpdateMedical,
 }: {
@@ -2595,6 +2596,7 @@ function LeavePage({
   onEditRequest: (record: LeaveRequestRecord) => void
   onDeleteRequest: (id: string) => void
   onSetRequestStep: (id: string, step: LeaveRequestStep) => void
+  onCompleteRequest: (record: LeaveRequestRecord) => void
   onHistoryConfirm: (id: string, confirmation: HistoryConfirmation) => void
   onUpdateMedical: (fn: (prev: MedicalCaseRecord[]) => MedicalCaseRecord[]) => void
 }) {
@@ -2721,6 +2723,9 @@ function LeavePage({
                           </td>
                           <td onClick={(e) => e.stopPropagation()}>
                             <div className="row-actions request-inline-actions">
+                              {record.step === 'Pending Departure' && !record.skipProgress && (
+                                <button className="action-glyph" style={{ color: '#16a34a' }} onClick={() => onCompleteRequest(record)} type="button" title="Move to Leave History (preserves step dates)">✓</button>
+                              )}
                               <button className="action-glyph edit" onClick={() => onEditRequest(record)} type="button" title="Edit">✎</button>
                               <button className="action-glyph delete" onClick={() => onDeleteRequest(record.id)} type="button" title="Delete">🗑</button>
                             </div>
@@ -7338,6 +7343,25 @@ function App() {
     setLeaveRequests((current) => current.filter((record) => record.id !== id))
   }
 
+  const completeLeaveRequest = (record: LeaveRequestRecord) => {
+    const histEntry: LeaveHistoryRecord = {
+      id: `LVH-${Date.now()}`,
+      employeeId: record.employeeId,
+      name: record.name,
+      department: record.department,
+      nationality: record.nationality,
+      leaveTypeCode: record.leaveTypeCode,
+      departureDate: record.departureDate,
+      returnDate: record.returnDate,
+      days: record.days,
+      remarks: record.remarks,
+      stepDates: record.stepDates,
+      skipProgress: record.skipProgress,
+    }
+    setLeaveHistory((prev) => [histEntry, ...prev])
+    setLeaveRequests((prev) => prev.filter((r) => r.id !== record.id))
+  }
+
   const setLeaveRequestStep = (id: string, step: LeaveRequestStep) => {
     const today = new Date().toISOString().slice(0, 10)
     setLeaveRequests((current) => current.map((record) => {
@@ -7597,7 +7621,7 @@ function App() {
         <main className="workspace-inner" id="top">
           {activePage === 'overview' && <OverviewPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} />}
           {activePage === 'employees' && <EmployeesPage employees={employees} medicalCases={medicalCases} noticeTerminations={noticeTerminations} offSiteRecords={offSiteRecords} onUpdateOffSite={(fn) => setOffSiteRecords(fn)} onAdd={() => { setEmployeeMode('add'); setEmployeeForm(emptyEmployee); setShowEmployeeForm(true) }} onEdit={openEditEmployee} onExport={exportCsv} onImport={importCsv} onTemplate={downloadTemplate} onShowTasks={() => setShowPendingTasks(true)} />}
-          {activePage === 'leave' && <LeavePage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} medicalCases={medicalCases} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onSetRequestStep={setLeaveRequestStep} onHistoryConfirm={updateHistoryConfirmation} onUpdateMedical={(fn) => setMedicalCases(fn)} />}
+          {activePage === 'leave' && <LeavePage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} medicalCases={medicalCases} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onSetRequestStep={setLeaveRequestStep} onCompleteRequest={completeLeaveRequest} onHistoryConfirm={updateHistoryConfirmation} onUpdateMedical={(fn) => setMedicalCases(fn)} />}
           {activePage === 'operations' && <OperationsPage employees={employees} completedTerminations={completedTerminations} />}
           {activePage === 'activities' && <ActivitiesPage employees={employees} passportHandovers={passportHandovers} onUpdatePassport={(fn) => setPassportHandovers(fn)} inventoryItems={inventoryItems} inventoryUsage={inventoryUsage} onUpdateInventoryItems={(fn) => setInventoryItems(fn)} onUpdateInventoryUsage={(fn) => setInventoryUsage(fn)} />}
           {activePage === 'termination' && <TerminationPage noticeTerminations={noticeTerminations} completedTerminations={completedTerminations} exitInterviews={exitInterviews} onAdd={openAddTermination} onEdit={openEditTermination} onSetStage={setTerminationStage} onDelete={deleteTermination} onViewDetails={(record) => setTerminationDetails(record)} onUpdateExitInterviews={(fn) => setExitInterviews(fn)} />}
