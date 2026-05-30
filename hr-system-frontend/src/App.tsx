@@ -1021,6 +1021,157 @@ function EmployeeFormModal({ form, mode, onClose, onSave, setForm }: {
 
 type SortKey = 'employeeId' | 'fullName' | 'department' | 'designation' | 'nationality' | 'dateOfJoin' | 'siteStatus'
 
+// ── Standalone form — must be OUTSIDE OffSiteModal to prevent remount-on-rerender ──
+function OffSiteAddForm({ employees, departure, returnDate, purpose, recordedBy,
+  onDepartureChange, onReturnChange, onPurposeChange, onRecordedByChange,
+  onCancel, onSave,
+}: {
+  employees: Employee[]
+  departure: string; returnDate: string; purpose: string; recordedBy: string
+  onDepartureChange: (v: string) => void
+  onReturnChange: (v: string) => void
+  onPurposeChange: (v: string) => void
+  onRecordedByChange: (v: string) => void
+  onCancel: () => void
+  onSave: (emp: Employee) => void
+}) {
+  const [search, setSearch] = useState('')
+  const [selected, setSelected] = useState<Employee | null>(null)
+  const [showDrop, setShowDrop] = useState(false)
+
+  const results = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    if (!q || selected) return []
+    return employees.filter(e =>
+      e.employeeId.toLowerCase().includes(q) || e.fullName.toLowerCase().includes(q)
+    ).slice(0, 8)
+  }, [search, selected, employees])
+
+  const pick = (emp: Employee) => {
+    setSelected(emp)
+    setSearch(`${emp.fullName} (${emp.employeeId})`)
+    setShowDrop(false)
+  }
+
+  const clear = () => { setSelected(null); setSearch('') }
+
+  return (
+    <div className="os-form-card">
+      <p className="os-form-title">+ Add Staff Off Site</p>
+
+      {/* Employee search */}
+      <div className="os-form-row" style={{ position: 'relative' }}>
+        <label className="os-lbl">Search Employee <span style={{ color: '#ef4444' }}>*</span></label>
+        <div style={{ position: 'relative' }}>
+          <svg style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }}
+            width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            className="os-input" style={{ paddingLeft: 34 }}
+            value={search}
+            onChange={e => { setSearch(e.target.value); setSelected(null); setShowDrop(true) }}
+            onFocus={() => setShowDrop(true)}
+            onBlur={() => setTimeout(() => setShowDrop(false), 150)}
+            placeholder="Type name or employee ID…"
+            autoComplete="off"
+          />
+        </div>
+        {showDrop && results.length > 0 && (
+          <div className="ei-emp-dropdown">
+            {results.map(emp => (
+              <div key={emp.employeeId} className="ei-emp-option" onMouseDown={() => pick(emp)}>
+                <strong>{emp.fullName}</strong>
+                <span>{emp.employeeId} · {emp.department}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        {selected && (
+          <div className="os-emp-pill">
+            <div>
+              <strong>{selected.fullName}</strong>
+              <span style={{ display: 'block', fontSize: '0.74rem', color: '#3b82f6' }}>{selected.employeeId} · {selected.department}</span>
+            </div>
+            <button type="button" onClick={clear} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '1rem', lineHeight: 1 }}>×</button>
+          </div>
+        )}
+      </div>
+
+      {/* Date + Purpose grid */}
+      <div className="os-form-grid">
+        <div>
+          <label className="os-lbl">Departure Date <span style={{ color: '#ef4444' }}>*</span></label>
+          <input className="os-input" type="date" value={departure} onChange={e => onDepartureChange(e.target.value)} />
+        </div>
+        <div>
+          <label className="os-lbl">Return Date <span style={{ color: '#94a3b8', fontWeight: 400 }}>(optional)</span></label>
+          <input className="os-input" type="date" value={returnDate} onChange={e => onReturnChange(e.target.value)} />
+          <p className="os-hint">Leave blank if still out</p>
+        </div>
+        <div>
+          <label className="os-lbl">Recorded By</label>
+          <input className="os-input" value={recordedBy} onChange={e => onRecordedByChange(e.target.value)} placeholder="e.g. HR Admin" />
+        </div>
+        <div style={{ gridColumn: '1 / -1' }}>
+          <label className="os-lbl">Purpose <span style={{ color: '#ef4444' }}>*</span></label>
+          <input className="os-input" value={purpose} onChange={e => onPurposeChange(e.target.value)}
+            placeholder="e.g. Visa Medical, Embassy Visit, Off-site Training, Personal…" />
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 12 }}>
+        <button className="quiet-button light" onClick={onCancel} type="button">Cancel</button>
+        <button className="primary-button" disabled={!selected || !purpose.trim()} onClick={() => selected && onSave(selected)} type="button">
+          Add Record
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function OffSiteEditForm({ departure, returnDate, purpose, recordedBy,
+  onDepartureChange, onReturnChange, onPurposeChange, onRecordedByChange,
+  onCancel, onSave,
+}: {
+  departure: string; returnDate: string; purpose: string; recordedBy: string
+  onDepartureChange: (v: string) => void
+  onReturnChange: (v: string) => void
+  onPurposeChange: (v: string) => void
+  onRecordedByChange: (v: string) => void
+  onCancel: () => void
+  onSave: () => void
+}) {
+  return (
+    <div className="os-form-card" style={{ margin: '0 0 8px', borderColor: '#fed7aa' }}>
+      <p className="os-form-title" style={{ color: '#92400e' }}>✎ Edit Record</p>
+      <div className="os-form-grid">
+        <div>
+          <label className="os-lbl">Departure Date</label>
+          <input className="os-input" type="date" value={departure} onChange={e => onDepartureChange(e.target.value)} />
+        </div>
+        <div>
+          <label className="os-lbl">Return Date <span style={{ color: '#94a3b8', fontWeight: 400 }}>(optional)</span></label>
+          <input className="os-input" type="date" value={returnDate} onChange={e => onReturnChange(e.target.value)} />
+          <p className="os-hint">Fill to mark as returned</p>
+        </div>
+        <div>
+          <label className="os-lbl">Recorded By</label>
+          <input className="os-input" value={recordedBy} onChange={e => onRecordedByChange(e.target.value)} placeholder="e.g. HR Admin" />
+        </div>
+        <div style={{ gridColumn: '1 / -1' }}>
+          <label className="os-lbl">Purpose</label>
+          <input className="os-input" value={purpose} onChange={e => onPurposeChange(e.target.value)}
+            placeholder="Reason for being off site…" />
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 12 }}>
+        <button className="quiet-button light" onClick={onCancel} type="button">Cancel</button>
+        <button className="primary-button" disabled={!purpose.trim()} onClick={onSave} type="button">Save Changes</button>
+      </div>
+    </div>
+  )
+}
+
 function OffSiteModal({ records, employees, onUpdate, onClose }: {
   records: OffSiteRecord[]
   employees: Employee[]
@@ -1032,9 +1183,6 @@ function OffSiteModal({ records, employees, onUpdate, onClose }: {
 
   // ── Add form state ──
   const [showAdd, setShowAdd] = useState(false)
-  const [addEmpSearch, setAddEmpSearch] = useState('')
-  const [addEmpSelected, setAddEmpSelected] = useState<Employee | null>(null)
-  const [showEmpResults, setShowEmpResults] = useState(false)
   const [addDeparture, setAddDeparture] = useState(today)
   const [addReturn, setAddReturn] = useState('')
   const [addPurpose, setAddPurpose] = useState('')
@@ -1047,12 +1195,6 @@ function OffSiteModal({ records, employees, onUpdate, onClose }: {
   const [editPurpose, setEditPurpose] = useState('')
   const [editRecordedBy, setEditRecordedBy] = useState('')
 
-  const empResults = useMemo(() => {
-    const q = addEmpSearch.trim().toLowerCase()
-    if (!q || addEmpSelected) return []
-    return employees.filter(e => e.employeeId.toLowerCase().includes(q) || e.fullName.toLowerCase().includes(q)).slice(0, 8)
-  }, [addEmpSearch, addEmpSelected, employees])
-
   const currentOut = records.filter(r => r.status === 'Out').sort((a, b) => b.departureDate.localeCompare(a.departureDate))
   const history    = records.filter(r => r.status === 'Returned').sort((a, b) => b.departureDate.localeCompare(a.departureDate))
 
@@ -1061,22 +1203,20 @@ function OffSiteModal({ records, employees, onUpdate, onClose }: {
     return Math.max(0, Math.round((new Date(today).getTime() - new Date(departure).getTime()) / 86400000))
   }
 
-  // Save new record
-  const saveAdd = () => {
-    if (!addEmpSelected || !addPurpose.trim()) return
-    const hasReturn = !!addReturn
+  // Save new record — emp comes from OffSiteAddForm
+  const saveAdd = (emp: Employee) => {
+    if (!addPurpose.trim()) return
     const rec: OffSiteRecord = {
-      id: `OS-${Date.now()}`, employeeId: addEmpSelected.employeeId,
-      name: addEmpSelected.fullName, department: addEmpSelected.department,
-      nationality: addEmpSelected.nationality, departureDate: addDeparture,
+      id: `OS-${Date.now()}`, employeeId: emp.employeeId,
+      name: emp.fullName, department: emp.department,
+      nationality: emp.nationality, departureDate: addDeparture,
       returnDate: addReturn, purpose: addPurpose,
-      status: hasReturn ? 'Returned' : 'Out',
+      status: addReturn ? 'Returned' : 'Out',
       recordedBy: addRecordedBy,
     }
     onUpdate(prev => [rec, ...prev])
     setShowAdd(false)
-    setAddEmpSearch(''); setAddEmpSelected(null); setAddDeparture(today)
-    setAddReturn(''); setAddPurpose(''); setAddRecordedBy('')
+    setAddDeparture(today); setAddReturn(''); setAddPurpose(''); setAddRecordedBy('')
   }
 
   // Open edit
@@ -1108,77 +1248,6 @@ function OffSiteModal({ records, employees, onUpdate, onClose }: {
   }
 
   const del = (id: string) => onUpdate(prev => prev.filter(r => r.id !== id))
-
-  const AddEditForm = ({ isEdit, onCancel, onSave }: { isEdit: boolean; onCancel: () => void; onSave: () => void }) => (
-    <div className="os-form-card">
-      <p className="os-form-title">{isEdit ? '✎ Edit Record' : '+ Add Staff Off Site'}</p>
-      {!isEdit && (
-        <div className="os-form-row" style={{ position: 'relative' }}>
-          <label className="os-lbl">Search Employee</label>
-          <input className="os-input os-search-input"
-            value={addEmpSearch}
-            onChange={e => { setAddEmpSearch(e.target.value); setAddEmpSelected(null); setShowEmpResults(true) }}
-            onFocus={() => setShowEmpResults(true)}
-            onBlur={() => setTimeout(() => setShowEmpResults(false), 150)}
-            placeholder="Name or Employee ID…" autoComplete="off" />
-          {showEmpResults && empResults.length > 0 && (
-            <div className="ei-emp-dropdown">
-              {empResults.map(emp => (
-                <div key={emp.employeeId} className="ei-emp-option"
-                  onMouseDown={() => { setAddEmpSelected(emp); setAddEmpSearch(`${emp.fullName} (${emp.employeeId})`); setShowEmpResults(false) }}>
-                  <strong>{emp.fullName}</strong>
-                  <span>{emp.employeeId} · {emp.department}</span>
-                </div>
-              ))}
-            </div>
-          )}
-          {addEmpSelected && (
-            <div className="os-emp-pill">
-              <strong>{addEmpSelected.fullName}</strong>
-              <span>{addEmpSelected.employeeId} · {addEmpSelected.department}</span>
-            </div>
-          )}
-        </div>
-      )}
-      <div className="os-form-grid">
-        <div>
-          <label className="os-lbl">Departure Date <span style={{ color: '#ef4444' }}>*</span></label>
-          <input className="os-input" type="date"
-            value={isEdit ? editDeparture : addDeparture}
-            onChange={e => isEdit ? setEditDeparture(e.target.value) : setAddDeparture(e.target.value)} />
-        </div>
-        <div>
-          <label className="os-lbl">Return Date <span style={{ color: '#94a3b8', fontWeight: 400 }}>(optional)</span></label>
-          <input className="os-input" type="date"
-            value={isEdit ? editReturn : addReturn}
-            onChange={e => isEdit ? setEditReturn(e.target.value) : setAddReturn(e.target.value)} />
-          <p className="os-hint">Leave blank if not yet returned</p>
-        </div>
-        <div>
-          <label className="os-lbl">Recorded By</label>
-          <input className="os-input"
-            value={isEdit ? editRecordedBy : addRecordedBy}
-            onChange={e => isEdit ? setEditRecordedBy(e.target.value) : setAddRecordedBy(e.target.value)}
-            placeholder="e.g. HR Admin" />
-        </div>
-        <div style={{ gridColumn: '1 / -1' }}>
-          <label className="os-lbl">Purpose <span style={{ color: '#ef4444' }}>*</span></label>
-          <input className="os-input"
-            value={isEdit ? editPurpose : addPurpose}
-            onChange={e => isEdit ? setEditPurpose(e.target.value) : setAddPurpose(e.target.value)}
-            placeholder="e.g. Visa Medical, Embassy Visit, Off-site Training, Personal…" />
-        </div>
-      </div>
-      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 12 }}>
-        <button className="quiet-button light" onClick={onCancel} type="button">Cancel</button>
-        <button className="primary-button"
-          disabled={isEdit ? !editPurpose.trim() : (!addEmpSelected || !addPurpose.trim())}
-          onClick={onSave} type="button">
-          {isEdit ? 'Save Changes' : 'Add Record'}
-        </button>
-      </div>
-    </div>
-  )
 
   return (
     <div className="modal-backdrop" role="presentation">
@@ -1228,7 +1297,14 @@ function OffSiteModal({ records, employees, onUpdate, onClose }: {
 
           {/* Add form */}
           {showAdd && (
-            <AddEditForm isEdit={false} onCancel={() => setShowAdd(false)} onSave={saveAdd} />
+            <OffSiteAddForm
+              employees={employees}
+              departure={addDeparture} returnDate={addReturn} purpose={addPurpose} recordedBy={addRecordedBy}
+              onDepartureChange={setAddDeparture} onReturnChange={setAddReturn}
+              onPurposeChange={setAddPurpose} onRecordedByChange={setAddRecordedBy}
+              onCancel={() => setShowAdd(false)}
+              onSave={saveAdd}
+            />
           )}
 
           {/* Currently Out table */}
@@ -1269,7 +1345,12 @@ function OffSiteModal({ records, employees, onUpdate, onClose }: {
                           <tr>
                             <td colSpan={10} style={{ padding: 0, background: '#f8fafc' }}>
                               <div style={{ padding: '0 12px 12px' }}>
-                                <AddEditForm isEdit={true} onCancel={() => setEditingId(null)} onSave={() => saveEdit(r.id)} />
+                                <OffSiteEditForm
+                                    departure={editDeparture} returnDate={editReturn} purpose={editPurpose} recordedBy={editRecordedBy}
+                                    onDepartureChange={setEditDeparture} onReturnChange={setEditReturn}
+                                    onPurposeChange={setEditPurpose} onRecordedByChange={setEditRecordedBy}
+                                    onCancel={() => setEditingId(null)} onSave={() => saveEdit(r.id)}
+                                  />
                               </div>
                             </td>
                           </tr>
@@ -1322,7 +1403,12 @@ function OffSiteModal({ records, employees, onUpdate, onClose }: {
                             <tr>
                               <td colSpan={10} style={{ padding: 0, background: '#f8fafc' }}>
                                 <div style={{ padding: '0 12px 12px' }}>
-                                  <AddEditForm isEdit={true} onCancel={() => setEditingId(null)} onSave={() => saveEdit(r.id)} />
+                                  <OffSiteEditForm
+                                    departure={editDeparture} returnDate={editReturn} purpose={editPurpose} recordedBy={editRecordedBy}
+                                    onDepartureChange={setEditDeparture} onReturnChange={setEditReturn}
+                                    onPurposeChange={setEditPurpose} onRecordedByChange={setEditRecordedBy}
+                                    onCancel={() => setEditingId(null)} onSave={() => saveEdit(r.id)}
+                                  />
                                 </div>
                               </td>
                             </tr>
