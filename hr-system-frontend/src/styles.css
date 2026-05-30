@@ -7366,6 +7366,55 @@ button.step-pill:hover { filter: brightness(0.98); }
 .os-table td:last-child { white-space: nowrap; }
 .os-table .row-actions { flex-wrap: nowrap; gap: 3px; }
 
+/* ═══ Incident modal — wider ════════════════════════════════ */
+.incident-modal {
+  max-width: 960px !important;
+  width: 97vw !important;
+}
+
+/* ═══ Inventory — category layout (table + dept sidebar) ═══ */
+.inv-cat-layout {
+  display: grid;
+  grid-template-columns: 1fr 220px;
+  gap: 14px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .inv-cat-layout { grid-template-columns: 1fr; }
+}
+.inv-cat-main { min-width: 0; }
+
+.inv-dept-panel {
+  background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;
+  padding: 12px 14px;
+}
+.inv-dept-title {
+  font-size: 0.72rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.05em; color: #374151; margin-bottom: 12px;
+}
+.inv-dept-row {
+  display: grid; grid-template-columns: 1fr 80px 52px;
+  align-items: center; gap: 6px; margin-bottom: 8px;
+}
+.inv-dept-name {
+  font-size: 0.74rem; font-weight: 600; color: #374151;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.inv-dept-track {
+  height: 8px; border-radius: 4px; background: #e2e8f0; overflow: hidden;
+}
+.inv-dept-fill {
+  height: 100%; border-radius: 4px;
+  background: linear-gradient(90deg, #6366f1, #a5b4fc); transition: width 0.4s;
+}
+.inv-dept-meta {
+  font-size: 0.70rem; font-weight: 700; color: #374151; text-align: right; white-space: nowrap;
+}
+
+/* Inventory table — aligned */
+.inv-table th, .inv-table td { vertical-align: middle; }
+
+/* ═══ Extend icon button — calendar with forward arrow ══════ */
 /* Extend icon button — calendar with forward arrow */
 .action-glyph-extend { color: #2563eb; }
 .action-glyph-extend:hover { background: #dbeafe; color: #1e40af; }

@@ -136,7 +136,7 @@ type TrainingRecord = {
 
 type ActivitiesSection = 'requests' | 'visits' | 'incidents' | 'passport' | 'inventory'
 
-type InventoryCategory = 'Stationery' | 'Tools' | 'Safety Equipment' | 'Electronics' | 'Cleaning Supplies' | 'Kitchen' | 'Medical' | 'Other'
+type InventoryCategory = 'Stationery' | 'Medical'
 
 type InventoryItem = {
   id: string
@@ -591,25 +591,28 @@ const initialStaffRequests: StaffRequestRecord[] = [
 const initialOffSiteRecords: OffSiteRecord[] = []
 
 const initialInventoryItems: InventoryItem[] = [
+  // Stationery
   { id: 'INV-001', name: 'A4 Paper (500 sheets)', category: 'Stationery', quantity: 25, unit: 'reams', minQuantity: 5, location: 'HR Storeroom', lastUpdated: '2026-05-20', remarks: '' },
-  { id: 'INV-002', name: 'Safety Helmet', category: 'Safety Equipment', quantity: 48, unit: 'pcs', minQuantity: 20, location: 'Safety Store', lastUpdated: '2026-05-15', remarks: 'Hard hats — various sizes' },
-  { id: 'INV-003', name: 'Safety Boots (Size 42)', category: 'Safety Equipment', quantity: 12, unit: 'pairs', minQuantity: 5, location: 'Safety Store', lastUpdated: '2026-04-10', remarks: '' },
-  { id: 'INV-004', name: 'High-Vis Vest', category: 'Safety Equipment', quantity: 35, unit: 'pcs', minQuantity: 15, location: 'Safety Store', lastUpdated: '2026-05-01', remarks: '' },
-  { id: 'INV-005', name: 'First Aid Kit (Standard)', category: 'Medical', quantity: 8, unit: 'kits', minQuantity: 3, location: 'Various Departments', lastUpdated: '2026-05-10', remarks: 'Check expiry dates monthly' },
-  { id: 'INV-006', name: 'Printer Cartridge (HP Black)', category: 'Electronics', quantity: 4, unit: 'pcs', minQuantity: 2, location: 'HR Office', lastUpdated: '2026-05-18', remarks: '' },
+  { id: 'INV-006', name: 'Printer Cartridge (HP Black)', category: 'Stationery', quantity: 4, unit: 'pcs', minQuantity: 2, location: 'HR Office', lastUpdated: '2026-05-18', remarks: '' },
   { id: 'INV-007', name: 'Ball Pen (Blue)', category: 'Stationery', quantity: 120, unit: 'pcs', minQuantity: 30, location: 'HR Storeroom', lastUpdated: '2026-04-25', remarks: '' },
-  { id: 'INV-008', name: 'Multipurpose Gloves', category: 'Safety Equipment', quantity: 3, unit: 'pairs', minQuantity: 20, location: 'Safety Store', lastUpdated: '2026-05-22', remarks: 'LOW STOCK — reorder required' },
-  { id: 'INV-009', name: 'Cleaning Detergent (5L)', category: 'Cleaning Supplies', quantity: 15, unit: 'bottles', minQuantity: 5, location: 'Housekeeping Store', lastUpdated: '2026-05-12', remarks: '' },
   { id: 'INV-010', name: 'Stapler', category: 'Stationery', quantity: 7, unit: 'pcs', minQuantity: 2, location: 'HR Office', lastUpdated: '2026-03-15', remarks: '' },
-  { id: 'INV-011', name: 'Safety Goggles', category: 'Safety Equipment', quantity: 22, unit: 'pcs', minQuantity: 10, location: 'Safety Store', lastUpdated: '2026-04-20', remarks: '' },
-  { id: 'INV-012', name: 'Mop & Bucket Set', category: 'Cleaning Supplies', quantity: 6, unit: 'sets', minQuantity: 3, location: 'Housekeeping Store', lastUpdated: '2026-03-28', remarks: '' },
+  { id: 'INV-013', name: 'Stamp Pad & Ink', category: 'Stationery', quantity: 3, unit: 'pcs', minQuantity: 1, location: 'HR Office', lastUpdated: '2026-04-01', remarks: '' },
+  // Medical
+  { id: 'INV-005', name: 'First Aid Kit (Standard)', category: 'Medical', quantity: 8, unit: 'kits', minQuantity: 3, location: 'Various Departments', lastUpdated: '2026-05-10', remarks: 'Check expiry dates monthly' },
+  { id: 'INV-008', name: 'Disposable Gloves (Box 100)', category: 'Medical', quantity: 3, unit: 'boxes', minQuantity: 5, location: 'Safety Store', lastUpdated: '2026-05-22', remarks: 'LOW STOCK — reorder required' },
+  { id: 'INV-014', name: 'Bandages (Assorted)', category: 'Medical', quantity: 20, unit: 'rolls', minQuantity: 10, location: 'Loss Prevention Office', lastUpdated: '2026-05-01', remarks: 'For first aid boxes' },
+  { id: 'INV-015', name: 'Antiseptic Solution (500ml)', category: 'Medical', quantity: 6, unit: 'bottles', minQuantity: 3, location: 'Loss Prevention Office', lastUpdated: '2026-04-15', remarks: 'Dettol' },
+  { id: 'INV-016', name: 'Paracetamol Tablets (Strip)', category: 'Medical', quantity: 30, unit: 'strips', minQuantity: 10, location: 'HR Office', lastUpdated: '2026-05-05', remarks: 'For basic first aid only' },
 ]
 const initialInventoryUsage: InventoryUsageRecord[] = [
-  { id: 'USG-001', itemId: 'INV-002', itemName: 'Safety Helmet', quantityUsed: 2, unit: 'pcs', usedBy: 'SURESH BAHADUR THAPA', employeeId: '60104', department: 'MAINTENANCE', usedDate: '2026-05-20', purpose: 'New site allocation', remarks: '' },
+  { id: 'USG-001', itemId: 'INV-008', itemName: 'Disposable Gloves (Box 100)', quantityUsed: 2, unit: 'boxes', usedBy: 'ABHISHEK CHETRY', employeeId: '55426', department: 'LOSS PREVENTION', usedDate: '2026-05-20', purpose: 'First aid box restock — Loss Prevention', remarks: '' },
   { id: 'USG-002', itemId: 'INV-001', itemName: 'A4 Paper (500 sheets)', quantityUsed: 3, unit: 'reams', usedBy: 'SHANTUMON PATHIYIL CHACKO', employeeId: '58692', department: 'HUMAN RESOURCES', usedDate: '2026-05-18', purpose: 'HR documentation printing', remarks: '' },
-  { id: 'USG-003', itemId: 'INV-008', itemName: 'Multipurpose Gloves', quantityUsed: 5, unit: 'pairs', usedBy: 'CHAMINDA WIJESINGHE', employeeId: '60512', department: 'PAINTING PROJECT', usedDate: '2026-05-15', purpose: 'Painting project site work', remarks: 'Stock now critically low' },
-  { id: 'USG-004', itemId: 'INV-005', itemName: 'First Aid Kit (Standard)', quantityUsed: 1, unit: 'kits', usedBy: 'SHANTUMON PATHIYIL CHACKO', employeeId: '58692', department: 'MAINTENANCE', usedDate: '2026-05-27', purpose: 'Worksite injury response', remarks: '' },
+  { id: 'USG-003', itemId: 'INV-005', itemName: 'First Aid Kit (Standard)', quantityUsed: 1, unit: 'kits', usedBy: 'ABHISHEK CHETRY', employeeId: '55426', department: 'LOSS PREVENTION', usedDate: '2026-05-27', purpose: 'Worksite injury response — replaced used kit', remarks: '' },
+  { id: 'USG-004', itemId: 'INV-016', itemName: 'Paracetamol Tablets (Strip)', quantityUsed: 5, unit: 'strips', usedBy: 'ARUSHULLA RASHID', employeeId: '61245', department: 'LOSS PREVENTION', usedDate: '2026-05-10', purpose: 'Distributed to security first aid boxes', remarks: '' },
   { id: 'USG-005', itemId: 'INV-006', itemName: 'Printer Cartridge (HP Black)', quantityUsed: 1, unit: 'pcs', usedBy: 'ARUSHULLA RASHID', employeeId: '61245', department: 'HUMAN RESOURCES', usedDate: '2026-05-10', purpose: 'HR printer replacement', remarks: '' },
+  { id: 'USG-006', itemId: 'INV-014', itemName: 'Bandages (Assorted)', quantityUsed: 4, unit: 'rolls', usedBy: 'SURESH BAHADUR THAPA', employeeId: '60104', department: 'LOSS PREVENTION', usedDate: '2026-05-27', purpose: 'Knee injury dressing — worksite injury', remarks: '' },
+  { id: 'USG-007', itemId: 'INV-015', itemName: 'Antiseptic Solution (500ml)', quantityUsed: 1, unit: 'bottles', usedBy: 'ABHISHEK CHETRY', employeeId: '55426', department: 'LOSS PREVENTION', usedDate: '2026-04-30', purpose: 'First aid box refill', remarks: '' },
+  { id: 'USG-008', itemId: 'INV-007', itemName: 'Ball Pen (Blue)', quantityUsed: 20, unit: 'pcs', usedBy: 'SHANTUMON PATHIYIL CHACKO', employeeId: '58692', department: 'HUMAN RESOURCES', usedDate: '2026-04-25', purpose: 'Office stationery distribution', remarks: '' },
 ]
 
 const initialVisitRecords: VisitRecord[] = [
@@ -4598,14 +4601,21 @@ function TrainingSection({ records, onUpdate, employees }: {
         </div>
         <div className="employee-table-shell compact-scroll">
           <table className="data-table training-table">
-            <thead><tr><th className="trn-title-th">Training Title</th><th>Date</th><th>Conducted By</th><th style={{ textAlign: 'center' }}>Type</th><th style={{ textAlign: 'center' }}>Participants</th><th style={{ textAlign: 'center' }}>Action</th></tr></thead>
+            <thead><tr>
+              <th className="trn-title-th">Training Title</th>
+              <th style={{ textAlign: 'center' }}>Date</th>
+              <th>Conducted By</th>
+              <th style={{ textAlign: 'center' }}>Type</th>
+              <th style={{ textAlign: 'center' }}>Participants</th>
+              <th style={{ textAlign: 'center' }}>Action</th>
+            </tr></thead>
             <tbody>
               {rows.length === 0 ? (
                 <tr><td colSpan={6} className="empty-row">No training records found.</td></tr>
               ) : rows.map((record) => (
                 <tr key={record.id}>
                   <td className="trn-title-cell">{record.trainingTitle}</td>
-                  <td>{record.date ? formatDateDisplay(record.date) : '—'}</td>
+                  <td style={{ textAlign: 'center' }}>{record.date ? formatDateDisplay(record.date) : '—'}</td>
                   <td>{record.conductedBy || '—'}</td>
                   <td style={{ textAlign: 'center' }}><span className={`training-type-badge ${record.trainingType.toLowerCase()}`}>{record.trainingType}</span></td>
                   <td style={{ textAlign: 'center' }}>
@@ -6260,7 +6270,7 @@ function IncidentModal({ record, employees, onClose, onSave }: { record: Inciden
 
   return (
     <div className="modal-backdrop" role="presentation">
-      <section className="registration-modal wide-modal" role="dialog" aria-modal="true">
+      <section className="registration-modal incident-modal" role="dialog" aria-modal="true">
         <div className="modal-header">
           <div>
             <p className="eyebrow">Activities · Incidents</p>
@@ -6642,7 +6652,7 @@ function IncidentsSection({ records, employees, onUpdate }: { records: IncidentR
       {editing && <IncidentModal record={editing} employees={employees} onClose={() => setEditing(null)} onSave={save} />}
       {viewing && (
         <div className="modal-backdrop" role="presentation">
-          <section className="registration-modal wide-modal" role="dialog" aria-modal="true">
+          <section className="registration-modal incident-modal" role="dialog" aria-modal="true">
             <div className="modal-header"><div><p className="eyebrow">Incident Reference {viewing.id}</p><h2>{viewing.incidentType}</h2></div><button className="icon-button" onClick={() => setViewing(null)} type="button">×</button></div>
             <div className="induction-view-grid">
               <div className="induction-detail-row"><span>Date</span><strong>{formatDateDisplay(viewing.incidentDate)}</strong></div>
@@ -6694,7 +6704,7 @@ function InventoryItemModal({ item, onClose, onSave }: {
             <label className="full-field"><span>Item Name</span><input value={form.name} onChange={e => set({ name: e.target.value })} required placeholder="e.g. Safety Helmet" /></label>
             <label><span>Category</span>
               <select value={form.category} onChange={e => set({ category: e.target.value as InventoryCategory })}>
-                {(['Stationery','Tools','Safety Equipment','Electronics','Cleaning Supplies','Kitchen','Medical','Other'] as InventoryCategory[]).map(c => <option key={c}>{c}</option>)}
+                {(['Stationery','Medical'] as InventoryCategory[]).map(c => <option key={c}>{c}</option>)}
               </select>
             </label>
             <label><span>Location</span><input value={form.location} onChange={e => set({ location: e.target.value })} placeholder="e.g. HR Storeroom" /></label>
@@ -6777,37 +6787,42 @@ function InventoryUseModal({ item, employees, onClose, onSave }: {
   )
 }
 
-function InventorySection({ items, usage, onUpdateItems, onUpdateUsage, employees }: {
+function InventoryCategoryTab({ cat, items, usage, onUpdateItems, onUpdateUsage, employees }: {
+  cat: InventoryCategory
   items: InventoryItem[]
   usage: InventoryUsageRecord[]
   onUpdateItems: (fn: (prev: InventoryItem[]) => InventoryItem[]) => void
   onUpdateUsage: (fn: (prev: InventoryUsageRecord[]) => InventoryUsageRecord[]) => void
   employees: Employee[]
 }) {
-  const [subTab, setSubTab] = useState<'stock' | 'history'>('stock')
   const [search, setSearch] = useState('')
-  const [catFilter, setCatFilter] = useState<'All' | InventoryCategory>('All')
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null)
   const [usingItem, setUsingItem] = useState<InventoryItem | null>(null)
-  const [histSearch, setHistSearch] = useState('')
 
-  const lowStockCount = items.filter(i => i.quantity <= i.minQuantity).length
+  const catItems = useMemo(() => items.filter(i => i.category === cat), [items, cat])
+  const catItemIds = useMemo(() => new Set(catItems.map(i => i.id)), [catItems])
 
-  const filtered = useMemo(() => items.filter(i => {
+  const filtered = useMemo(() => catItems.filter(i => {
     const t = search.trim().toLowerCase()
-    const matchSearch = !t || `${i.name} ${i.category} ${i.location}`.toLowerCase().includes(t)
-    const matchCat = catFilter === 'All' || i.category === catFilter
-    return matchSearch && matchCat
-  }).sort((a, b) => a.name.localeCompare(b.name)), [items, search, catFilter])
+    return !t || `${i.name} ${i.location}`.toLowerCase().includes(t)
+  }).sort((a, b) => a.name.localeCompare(b.name)), [catItems, search])
 
-  const filteredHistory = useMemo(() => usage.filter(u => {
-    const t = histSearch.trim().toLowerCase()
-    return !t || `${u.itemName} ${u.usedBy} ${u.department} ${u.purpose}`.toLowerCase().includes(t)
-  }).sort((a, b) => b.usedDate.localeCompare(a.usedDate)), [usage, histSearch])
+  // Department issuance breakdown for this category
+  const deptBreakdown = useMemo(() => {
+    const map = new Map<string, { qty: number; times: number }>()
+    usage.filter(u => catItemIds.has(u.itemId)).forEach(u => {
+      const cur = map.get(u.department) ?? { qty: 0, times: 0 }
+      map.set(u.department, { qty: cur.qty + u.quantityUsed, times: cur.times + 1 })
+    })
+    return Array.from(map.entries()).sort((a, b) => b[1].qty - a[1].qty)
+  }, [usage, catItemIds])
+
+  const maxDept = Math.max(...deptBreakdown.map(([, v]) => v.qty), 1)
+  const lowStockCount = catItems.filter(i => i.quantity <= i.minQuantity).length
 
   const newItem = (): InventoryItem => ({
-    id: 'INV-new', name: '', category: 'Stationery', quantity: 0, unit: 'pcs',
-    minQuantity: 0, location: '', lastUpdated: new Date().toISOString().slice(0,10), remarks: ''
+    id: 'INV-new', name: '', category: cat, quantity: 0, unit: 'pcs',
+    minQuantity: 0, location: '', lastUpdated: new Date().toISOString().slice(0, 10), remarks: '',
   })
 
   const saveItem = (item: InventoryItem) => {
@@ -6818,7 +6833,6 @@ function InventorySection({ items, usage, onUpdateItems, onUpdateUsage, employee
     setEditingItem(null)
   }
   const delItem = (id: string) => onUpdateItems(prev => prev.filter(i => i.id !== id))
-
   const saveUsage = (usageRecord: InventoryUsageRecord, updatedItem: InventoryItem) => {
     onUpdateUsage(prev => [usageRecord, ...prev])
     onUpdateItems(prev => prev.map(i => i.id === updatedItem.id ? updatedItem : i))
@@ -6826,91 +6840,173 @@ function InventorySection({ items, usage, onUpdateItems, onUpdateUsage, employee
   }
 
   return (
-    <section className="employee-workspace">
-      {/* KPI row */}
-      <div className="inv-kpi-row">
-        <div className="inv-kpi inv-kpi-blue"><span className="inv-kpi-num">{items.length}</span><span className="inv-kpi-lbl">Total Items</span></div>
-        <div className="inv-kpi inv-kpi-red"><span className="inv-kpi-num">{lowStockCount}</span><span className="inv-kpi-lbl">Low Stock</span></div>
-        <div className="inv-kpi inv-kpi-green"><span className="inv-kpi-num">{usage.length}</span><span className="inv-kpi-lbl">Usage Records</span></div>
-        <div className="inv-kpi inv-kpi-amber"><span className="inv-kpi-num">{items.reduce((s,i) => s + (i.quantity <= i.minQuantity ? 1 : 0), 0)}</span><span className="inv-kpi-lbl">Need Reorder</span></div>
+    <>
+      {/* KPI strip */}
+      <div className="inv-kpi-row" style={{ paddingBottom: 0 }}>
+        <div className="inv-kpi inv-kpi-blue"><span className="inv-kpi-num">{catItems.length}</span><span className="inv-kpi-lbl">Items</span></div>
+        {lowStockCount > 0 && <div className="inv-kpi inv-kpi-red"><span className="inv-kpi-num">{lowStockCount}</span><span className="inv-kpi-lbl">Low Stock</span></div>}
+        <div className="inv-kpi inv-kpi-green"><span className="inv-kpi-num">{usage.filter(u => catItemIds.has(u.itemId)).length}</span><span className="inv-kpi-lbl">Issues Recorded</span></div>
       </div>
 
-      {/* Sub-tabs */}
-      <div className="inv-subtabs">
-        <button className={subTab === 'stock' ? 'active' : ''} onClick={() => setSubTab('stock')} type="button">
-          Stock{lowStockCount > 0 && <span className="tab-count" style={{background:'#ef4444'}}>{lowStockCount}</span>}
-        </button>
-        <button className={subTab === 'history' ? 'active' : ''} onClick={() => setSubTab('history')} type="button">
-          Usage History
-        </button>
-      </div>
-
-      {subTab === 'stock' && (
-        <>
-          <div className="table-toolbar leave-toolbar-has-btn" style={{display:'flex',gap:10,padding:'10px 0',flexWrap:'wrap',alignItems:'flex-end'}}>
-            <label className="search-field"><span>Search</span><input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Item name, category, location…" /></label>
-            <label><span>Category</span>
-              <select value={catFilter} onChange={e => setCatFilter(e.target.value as 'All' | InventoryCategory)}>
-                <option value="All">All Categories</option>
-                {(['Stationery','Tools','Safety Equipment','Electronics','Cleaning Supplies','Kitchen','Medical','Other'] as InventoryCategory[]).map(c => <option key={c}>{c}</option>)}
-              </select>
-            </label>
+      <div className="inv-cat-layout">
+        {/* Stock table */}
+        <div className="inv-cat-main">
+          <div className="table-toolbar leave-toolbar-has-btn" style={{ display: 'flex', gap: 10, padding: '10px 0', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+            <label className="search-field"><span>Search</span><input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder={`Search ${cat} items…`} /></label>
             <button className="primary-button toolbar-add-btn" onClick={() => setEditingItem(newItem())} type="button">+ Add Item</button>
           </div>
           <div className="employee-table-shell compact-scroll">
-            <table className="data-table">
-              <thead><tr><th>Item Name</th><th>Category</th><th>Quantity</th><th>Unit</th><th>Min Qty</th><th>Location</th><th>Last Updated</th><th>Remarks</th><th>Action</th></tr></thead>
+            <table className="data-table inv-table">
+              <thead><tr>
+                <th>Item Name</th>
+                <th style={{ textAlign: 'center' }}>Qty</th>
+                <th style={{ textAlign: 'center' }}>Unit</th>
+                <th style={{ textAlign: 'center' }}>Min</th>
+                <th>Location</th>
+                <th style={{ textAlign: 'center' }}>Updated</th>
+                <th>Remarks</th>
+                <th style={{ textAlign: 'center' }}>Action</th>
+              </tr></thead>
               <tbody>
-                {filtered.map(item => {
-                  const isLow = item.quantity <= item.minQuantity
-                  return (
-                    <tr key={item.id} className={isLow ? 'inv-low-stock-row' : ''}>
-                      <td><strong>{item.name}</strong>{isLow && <span className="inv-low-badge">Low</span>}</td>
-                      <td><span className="inv-cat-badge">{item.category}</span></td>
-                      <td><strong style={{color: isLow ? '#ef4444' : '#111827'}}>{item.quantity}</strong></td>
-                      <td>{item.unit}</td>
-                      <td>{item.minQuantity}</td>
-                      <td>{item.location}</td>
-                      <td>{formatDateDisplay(item.lastUpdated)}</td>
-                      <td style={{maxWidth:180,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.remarks || '—'}</td>
-                      <td>
-                        <div className="row-actions request-inline-actions">
-                          <button className="action-glyph" onClick={() => setUsingItem(item)} type="button" title="Record usage" style={{color:'#059669'}}>↓</button>
-                          <button className="action-glyph edit" onClick={() => setEditingItem(item)} type="button" title="Edit">✎</button>
-                          <button className="action-glyph delete" onClick={() => delItem(item.id)} type="button" title="Delete">🗑</button>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
+                {filtered.length === 0
+                  ? <tr><td colSpan={8} className="empty-row">No {cat} items. Click "+ Add Item".</td></tr>
+                  : filtered.map(item => {
+                    const isLow = item.quantity <= item.minQuantity
+                    return (
+                      <tr key={item.id} className={isLow ? 'inv-low-stock-row' : ''}>
+                        <td><strong>{item.name}</strong>{isLow && <span className="inv-low-badge">Low</span>}</td>
+                        <td style={{ textAlign: 'center' }}><strong style={{ color: isLow ? '#ef4444' : '#111827' }}>{item.quantity}</strong></td>
+                        <td style={{ textAlign: 'center' }}>{item.unit}</td>
+                        <td style={{ textAlign: 'center' }}>{item.minQuantity}</td>
+                        <td>{item.location}</td>
+                        <td style={{ textAlign: 'center' }}>{formatDateDisplay(item.lastUpdated)}</td>
+                        <td style={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.remarks || '—'}</td>
+                        <td style={{ textAlign: 'center' }}>
+                          <div className="row-actions request-inline-actions" style={{ justifyContent: 'center' }}>
+                            <button className="action-glyph" onClick={() => setUsingItem(item)} type="button" title="Issue / Record usage" style={{ color: '#059669' }}>↓</button>
+                            <button className="action-glyph edit" onClick={() => setEditingItem(item)} type="button" title="Edit">✎</button>
+                            <button className="action-glyph delete" onClick={() => delItem(item.id)} type="button" title="Delete">🗑</button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
               </tbody>
             </table>
           </div>
-          {filtered.length === 0 && <div className="leave-empty-zone">No items match the filters.</div>}
-        </>
+        </div>
+
+        {/* Dept issuance sidebar */}
+        {deptBreakdown.length > 0 && (
+          <div className="inv-dept-panel">
+            <p className="inv-dept-title">Issued to Departments</p>
+            {deptBreakdown.map(([dept, val]) => (
+              <div className="inv-dept-row" key={dept}>
+                <div className="inv-dept-name" title={dept}>{dept}</div>
+                <div className="inv-dept-track">
+                  <div className="inv-dept-fill" style={{ width: `${Math.round((val.qty / maxDept) * 100)}%` }} />
+                </div>
+                <div className="inv-dept-meta">{val.qty} · {val.times}×</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {editingItem && <InventoryItemModal item={editingItem} onClose={() => setEditingItem(null)} onSave={saveItem} />}
+      {usingItem && <InventoryUseModal item={usingItem} employees={employees} onClose={() => setUsingItem(null)} onSave={saveUsage} />}
+    </>
+  )
+}
+
+function InventorySection({ items, usage, onUpdateItems, onUpdateUsage, employees }: {
+  items: InventoryItem[]
+  usage: InventoryUsageRecord[]
+  onUpdateItems: (fn: (prev: InventoryItem[]) => InventoryItem[]) => void
+  onUpdateUsage: (fn: (prev: InventoryUsageRecord[]) => InventoryUsageRecord[]) => void
+  employees: Employee[]
+}) {
+  const [subTab, setSubTab] = useState<'stationery' | 'medical' | 'history'>('stationery')
+  const [histSearch, setHistSearch] = useState('')
+  const [histDeptFilter, setHistDeptFilter] = useState('All')
+
+  const filteredHistory = useMemo(() => {
+    const t = histSearch.trim().toLowerCase()
+    return usage.filter(u =>
+      (!t || `${u.itemName} ${u.usedBy} ${u.department} ${u.purpose}`.toLowerCase().includes(t)) &&
+      (histDeptFilter === 'All' || u.department === histDeptFilter)
+    ).sort((a, b) => b.usedDate.localeCompare(a.usedDate))
+  }, [usage, histSearch, histDeptFilter])
+
+  const histDepts = useMemo(() => ['All', ...Array.from(new Set(usage.map(u => u.department))).sort()], [usage])
+
+  const lowStock = items.filter(i => i.quantity <= i.minQuantity).length
+
+  return (
+    <section className="employee-workspace">
+      {/* Sub-tabs */}
+      <div className="inv-subtabs">
+        <button className={subTab === 'stationery' ? 'active' : ''} onClick={() => setSubTab('stationery')} type="button">
+          📋 Stationery
+        </button>
+        <button className={subTab === 'medical' ? 'active' : ''} onClick={() => setSubTab('medical')} type="button">
+          🏥 Medical{lowStock > 0 && items.some(i => i.category === 'Medical' && i.quantity <= i.minQuantity) && <span className="tab-count" style={{ background: '#ef4444' }}>{items.filter(i => i.category === 'Medical' && i.quantity <= i.minQuantity).length}</span>}
+        </button>
+        <button className={subTab === 'history' ? 'active' : ''} onClick={() => setSubTab('history')} type="button">
+          📋 Usage History
+        </button>
+      </div>
+
+      {subTab === 'stationery' && (
+        <InventoryCategoryTab cat="Stationery" items={items} usage={usage} onUpdateItems={onUpdateItems} onUpdateUsage={onUpdateUsage} employees={employees} />
+      )}
+
+      {subTab === 'medical' && (
+        <InventoryCategoryTab cat="Medical" items={items} usage={usage} onUpdateItems={onUpdateItems} onUpdateUsage={onUpdateUsage} employees={employees} />
       )}
 
       {subTab === 'history' && (
         <>
-          <div style={{display:'flex',gap:10,padding:'10px 0',alignItems:'flex-end'}}>
-            <label className="search-field"><span>Search</span><input type="search" value={histSearch} onChange={e => setHistSearch(e.target.value)} placeholder="Item, employee, purpose…" /></label>
+          <div className="table-toolbar" style={{ display: 'flex', gap: 10, padding: '10px 0', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+            <label className="search-field"><span>Search</span><input type="search" value={histSearch} onChange={e => setHistSearch(e.target.value)} placeholder="Item, employee, department, purpose…" /></label>
+            <label><span>Department</span>
+              <select value={histDeptFilter} onChange={e => setHistDeptFilter(e.target.value)}>
+                {histDepts.map(d => <option key={d}>{d}</option>)}
+              </select>
+            </label>
           </div>
           <div className="employee-table-shell compact-scroll">
-            <table className="data-table">
-              <thead><tr><th>Date</th><th>Item</th><th>Qty</th><th>Unit</th><th>Used By</th><th>Section</th><th>Purpose</th><th>Remarks</th></tr></thead>
+            <table className="data-table inv-table">
+              <thead><tr>
+                <th style={{ textAlign: 'center' }}>Date</th>
+                <th>Item</th>
+                <th style={{ textAlign: 'center' }}>Category</th>
+                <th style={{ textAlign: 'center' }}>Qty</th>
+                <th style={{ textAlign: 'center' }}>Unit</th>
+                <th>Issued To (Dept)</th>
+                <th>Issued By</th>
+                <th>Purpose</th>
+                <th>Remarks</th>
+              </tr></thead>
               <tbody>
-                {filteredHistory.map(u => (
-                  <tr key={u.id}>
-                    <td style={{whiteSpace:'nowrap'}}>{formatDateDisplay(u.usedDate)}</td>
-                    <td><strong>{u.itemName}</strong></td>
-                    <td>{u.quantityUsed}</td>
-                    <td>{u.unit}</td>
-                    <td>{u.usedBy}</td>
-                    <td>{u.department}</td>
-                    <td>{u.purpose}</td>
-                    <td>{u.remarks || '—'}</td>
-                  </tr>
-                ))}
+                {filteredHistory.length === 0
+                  ? <tr><td colSpan={9} className="empty-row">No usage records found.</td></tr>
+                  : filteredHistory.map(u => {
+                    const itemCat = items.find(i => i.id === u.itemId)?.category ?? '—'
+                    return (
+                      <tr key={u.id}>
+                        <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>{formatDateDisplay(u.usedDate)}</td>
+                        <td><strong>{u.itemName}</strong></td>
+                        <td style={{ textAlign: 'center' }}><span className="inv-cat-badge">{itemCat}</span></td>
+                        <td style={{ textAlign: 'center' }}><strong>{u.quantityUsed}</strong></td>
+                        <td style={{ textAlign: 'center' }}>{u.unit}</td>
+                        <td><strong>{u.department}</strong></td>
+                        <td>{u.usedBy}</td>
+                        <td>{u.purpose}</td>
+                        <td>{u.remarks || '—'}</td>
+                      </tr>
+                    )
+                  })}
               </tbody>
             </table>
           </div>
@@ -6918,8 +7014,6 @@ function InventorySection({ items, usage, onUpdateItems, onUpdateUsage, employee
         </>
       )}
 
-      {editingItem && <InventoryItemModal item={editingItem} onClose={() => setEditingItem(null)} onSave={saveItem} />}
-      {usingItem && <InventoryUseModal item={usingItem} employees={employees} onClose={() => setUsingItem(null)} onSave={saveUsage} />}
     </section>
   )
 }
