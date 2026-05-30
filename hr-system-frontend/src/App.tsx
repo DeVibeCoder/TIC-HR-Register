@@ -50,6 +50,8 @@ type LeaveRequestRecord = LeaveBase & {
 
 type ActiveLeaveRecord = LeaveBase & {
   status: 'Departed'
+  stepDates?: Partial<Record<LeaveRequestStep, string>>
+  skipProgress?: boolean
 }
 
 type LeaveHistoryRecord = LeaveBase & {
@@ -2530,6 +2532,82 @@ function MedicalLeaveSection({ records, employees, onUpdate }: {
   )
 }
 
+function LeaveExtendModal({ record, onClose, onSave }: {
+  record: ActiveLeaveRecord
+  onClose: () => void
+  onSave: (updated: ActiveLeaveRecord) => void
+}) {
+  const [additionalDays, setAdditionalDays] = useState(7)
+  const [reason, setReason] = useState('')
+  const [extLeaveType, setExtLeaveType] = useState<LeaveTypeCode>(record.leaveTypeCode)
+
+  const newReturnDate = useMemo(() => {
+    if (!record.returnDate) return record.returnDate
+    const d = new Date(record.returnDate)
+    d.setDate(d.getDate() + additionalDays)
+    return d.toISOString().slice(0, 10)
+  }, [record.returnDate, additionalDays])
+
+  const save = () => {
+    if (!reason.trim()) return
+    const note = `Extended +${additionalDays}d (${leaveTypeOptions.find(l => l.code === extLeaveType)?.label ?? extLeaveType}) — ${reason}`
+    onSave({
+      ...record,
+      returnDate: newReturnDate,
+      days: record.days + additionalDays,
+      leaveTypeCode: extLeaveType,
+      remarks: record.remarks ? `${record.remarks} | ${note}` : note,
+    })
+  }
+
+  return (
+    <div className="modal-backdrop" role="presentation">
+      <section className="registration-modal" role="dialog" aria-modal="true">
+        <div className="modal-header">
+          <div>
+            <p className="eyebrow">Active Leave</p>
+            <h2>Extend Leave — {record.name}</h2>
+            <p style={{ fontSize: '0.82rem', color: '#64748b' }}>
+              {record.employeeId} · {record.department} · Current return: <strong>{formatDateDisplay(record.returnDate)}</strong>
+            </p>
+          </div>
+          <button className="icon-button" onClick={onClose} type="button">×</button>
+        </div>
+        <div className="form-grid">
+          <label>
+            <span>Leave Type (Extension)</span>
+            <select value={extLeaveType} onChange={e => setExtLeaveType(e.target.value as LeaveTypeCode)}>
+              {leaveTypeOptions.map(l => <option key={l.code} value={l.code}>{l.label} ({l.code})</option>)}
+            </select>
+          </label>
+          <label>
+            <span>Additional Days</span>
+            <input type="number" value={additionalDays} min={1} onChange={e => setAdditionalDays(parseInt(e.target.value) || 1)} />
+          </label>
+          <label>
+            <span>New Return Date</span>
+            <input readOnly value={newReturnDate ? formatDateDisplay(newReturnDate) : '—'} className="lf-readonly" />
+          </label>
+          <label>
+            <span>New Total Days</span>
+            <input readOnly value={record.days + additionalDays} className="lf-readonly" />
+          </label>
+          <label className="full-field">
+            <span>Reason for Extension <span style={{ color: '#ef4444' }}>*</span></span>
+            <input value={reason} onChange={e => setReason(e.target.value)} placeholder="e.g. Medical extension, visa delay, family emergency…" />
+          </label>
+        </div>
+        <div className="modal-actions">
+          <button type="button" className="quiet-button light" onClick={onClose}>Cancel</button>
+          <button className="primary-button" disabled={!reason.trim()} onClick={save} type="button">
+            Extend Leave
+          </button>
+        </div>
+      </section>
+    </div>
+  )
+}
+
 function LeaveProgressModal({ record, onClose }: {
   record: LeaveHistoryRecord
   onClose: () => void
@@ -2583,7 +2661,7 @@ function LeavePage({
   onEditRequest,
   onDeleteRequest,
   onSetRequestStep,
-  onCompleteRequest,
+  onExtendLeave,
   onHistoryConfirm,
   onUpdateMedical,
 }: {
@@ -2596,7 +2674,7 @@ function LeavePage({
   onEditRequest: (record: LeaveRequestRecord) => void
   onDeleteRequest: (id: string) => void
   onSetRequestStep: (id: string, step: LeaveRequestStep) => void
-  onCompleteRequest: (record: LeaveRequestRecord) => void
+  onExtendLeave: (updated: ActiveLeaveRecord) => void
   onHistoryConfirm: (id: string, confirmation: HistoryConfirmation) => void
   onUpdateMedical: (fn: (prev: MedicalCaseRecord[]) => MedicalCaseRecord[]) => void
 }) {
@@ -2613,6 +2691,7 @@ function LeavePage({
   const [activeSearch, setActiveSearch] = useState('')
   const [activeTypeFilter, setActiveTypeFilter] = useState<'All' | LeaveTypeCode>('All')
   const [activeDepartmentFilter, setActiveDepartmentFilter] = useState('All Departments')
+  const [extendingLeave, setExtendingLeave] = useState<ActiveLeaveRecord | null>(null)
 
   const [historySearch, setHistorySearch] = useState('')
   const [historyStatusFilter, setHistoryStatusFilter] = useState<'All' | HistoryConfirmation>('All')
@@ -2723,9 +2802,6 @@ function LeavePage({
                           </td>
                           <td onClick={(e) => e.stopPropagation()}>
                             <div className="row-actions request-inline-actions">
-                              {record.step === 'Pending Departure' && !record.skipProgress && (
-                                <button className="action-glyph" style={{ color: '#16a34a' }} onClick={() => onCompleteRequest(record)} type="button" title="Move to Leave History (preserves step dates)">✓</button>
-                              )}
                               <button className="action-glyph edit" onClick={() => onEditRequest(record)} type="button" title="Edit">✎</button>
                               <button className="action-glyph delete" onClick={() => onDeleteRequest(record.id)} type="button" title="Delete">🗑</button>
                             </div>
@@ -2782,8 +2858,23 @@ function LeavePage({
               <label><span>Leave Type</span><select value={activeTypeFilter} onChange={(event) => setActiveTypeFilter(event.target.value as 'All' | LeaveTypeCode)}><option value="All">All Types</option>{leaveTypeOptions.map((item) => <option key={item.code} value={item.code}>{item.label} ({item.code})</option>)}</select></label>
             </div>
             <div className="employee-table-shell compact-scroll">
-              <table className="data-table leave-table"><thead><tr><th>Emp ID</th><th>Name</th><th>Section</th><th>NIC / PP No</th><th className="leave-type-th">Leave Type</th><th className="leave-date-th">Departure</th><th className="leave-date-th">Return</th><th className="leave-days-th">Days</th><th>Remarks</th><th className="leave-status-th">Status</th></tr></thead><tbody>
-                {activeRows.map((record) => <tr key={record.id}><td>{record.employeeId}</td><td>{record.name}</td><td>{record.department}</td><td>{getNic(record.employeeId)}</td><td className="leave-type-cell"><LeaveTypeBadge code={record.leaveTypeCode} /></td><td className="leave-date-cell">{formatDateDisplay(record.departureDate)}</td><td className="leave-date-cell">{formatDateDisplay(record.returnDate)}</td><td className="leave-days-cell">{record.days}</td><td className="leave-remarks-cell">{record.remarks || <span className="muted-dash">—</span>}</td><td className="leave-status-cell-sm"><StatusBadge status="Departed" /></td></tr>)}
+              <table className="data-table leave-table"><thead><tr><th>Emp ID</th><th>Name</th><th>Section</th><th>NIC / PP No</th><th className="leave-type-th">Leave Type</th><th className="leave-date-th">Departure</th><th className="leave-date-th">Return</th><th className="leave-days-th">Days</th><th>Remarks</th><th className="leave-status-th">Status</th><th>Action</th></tr></thead><tbody>
+                {activeRows.map((record) => (
+                  <tr key={record.id}>
+                    <td>{record.employeeId}</td><td>{record.name}</td><td>{record.department}</td><td>{getNic(record.employeeId)}</td>
+                    <td className="leave-type-cell"><LeaveTypeBadge code={record.leaveTypeCode} /></td>
+                    <td className="leave-date-cell">{formatDateDisplay(record.departureDate)}</td>
+                    <td className="leave-date-cell">{formatDateDisplay(record.returnDate)}</td>
+                    <td className="leave-days-cell">{record.days}</td>
+                    <td className="leave-remarks-cell">{record.remarks || <span className="muted-dash">—</span>}</td>
+                    <td className="leave-status-cell-sm"><StatusBadge status="Departed" /></td>
+                    <td>
+                      <button className="mini-button" onClick={() => setExtendingLeave(record)} type="button" title="Extend leave">
+                        + Extend
+                      </button>
+                    </td>
+                  </tr>
+                ))}
               </tbody></table>
             </div>
           </>
@@ -2810,6 +2901,7 @@ function LeavePage({
         )}
 
         {viewingProgress && <LeaveProgressModal record={viewingProgress} onClose={() => setViewingProgress(null)} />}
+        {extendingLeave && <LeaveExtendModal record={extendingLeave} onClose={() => setExtendingLeave(null)} onSave={r => { onExtendLeave(r); setExtendingLeave(null) }} />}
 
         {activeLeaveView !== 'medical' && (
           <div className="leave-empty-zone">
@@ -7343,23 +7435,48 @@ function App() {
     setLeaveRequests((current) => current.filter((record) => record.id !== id))
   }
 
-  const completeLeaveRequest = (record: LeaveRequestRecord) => {
-    const histEntry: LeaveHistoryRecord = {
-      id: `LVH-${Date.now()}`,
-      employeeId: record.employeeId,
-      name: record.name,
-      department: record.department,
-      nationality: record.nationality,
-      leaveTypeCode: record.leaveTypeCode,
-      departureDate: record.departureDate,
-      returnDate: record.returnDate,
-      days: record.days,
-      remarks: record.remarks,
-      stepDates: record.stepDates,
-      skipProgress: record.skipProgress,
-    }
-    setLeaveHistory((prev) => [histEntry, ...prev])
-    setLeaveRequests((prev) => prev.filter((r) => r.id !== record.id))
+  // Auto-advance: Pending Departure → Active Leaves → Leave History based on dates
+  useEffect(() => {
+    const today = new Date().toISOString().slice(0, 10)
+    // Move Pending Departure requests whose departure date has arrived → Active Leaves
+    setLeaveRequests(currentRequests => {
+      const toActivate = currentRequests.filter(
+        r => r.step === 'Pending Departure' && r.departureDate <= today
+      )
+      if (toActivate.length === 0) return currentRequests
+      setActiveLeaves(prev => [
+        ...toActivate.map(r => ({
+          id: `LVA-${Date.now()}-${r.id.slice(-4)}`,
+          employeeId: r.employeeId, name: r.name, department: r.department,
+          nationality: r.nationality, leaveTypeCode: r.leaveTypeCode,
+          departureDate: r.departureDate, returnDate: r.returnDate, days: r.days,
+          remarks: r.remarks, status: 'Departed' as const,
+          stepDates: r.stepDates, skipProgress: r.skipProgress,
+        })),
+        ...prev,
+      ])
+      return currentRequests.filter(r => !toActivate.find(t => t.id === r.id))
+    })
+    // Move Active Leaves whose return date has passed → Leave History
+    setActiveLeaves(current => {
+      const toHistory = current.filter(r => r.returnDate < today)
+      if (toHistory.length === 0) return current
+      setLeaveHistory(prev => [
+        ...toHistory.map(r => ({
+          id: `LVH-${Date.now()}-${r.id.slice(-4)}`,
+          employeeId: r.employeeId, name: r.name, department: r.department,
+          nationality: r.nationality, leaveTypeCode: r.leaveTypeCode,
+          departureDate: r.departureDate, returnDate: r.returnDate, days: r.days,
+          remarks: r.remarks, stepDates: r.stepDates, skipProgress: r.skipProgress,
+        })),
+        ...prev,
+      ])
+      return current.filter(r => !toHistory.find(t => t.id === r.id))
+    })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const extendActiveLeave = (updated: ActiveLeaveRecord) => {
+    setActiveLeaves(prev => prev.map(r => r.id === updated.id ? updated : r))
   }
 
   const setLeaveRequestStep = (id: string, step: LeaveRequestStep) => {
@@ -7621,7 +7738,7 @@ function App() {
         <main className="workspace-inner" id="top">
           {activePage === 'overview' && <OverviewPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} />}
           {activePage === 'employees' && <EmployeesPage employees={employees} medicalCases={medicalCases} noticeTerminations={noticeTerminations} offSiteRecords={offSiteRecords} onUpdateOffSite={(fn) => setOffSiteRecords(fn)} onAdd={() => { setEmployeeMode('add'); setEmployeeForm(emptyEmployee); setShowEmployeeForm(true) }} onEdit={openEditEmployee} onExport={exportCsv} onImport={importCsv} onTemplate={downloadTemplate} onShowTasks={() => setShowPendingTasks(true)} />}
-          {activePage === 'leave' && <LeavePage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} medicalCases={medicalCases} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onSetRequestStep={setLeaveRequestStep} onCompleteRequest={completeLeaveRequest} onHistoryConfirm={updateHistoryConfirmation} onUpdateMedical={(fn) => setMedicalCases(fn)} />}
+          {activePage === 'leave' && <LeavePage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} medicalCases={medicalCases} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onSetRequestStep={setLeaveRequestStep} onExtendLeave={extendActiveLeave} onHistoryConfirm={updateHistoryConfirmation} onUpdateMedical={(fn) => setMedicalCases(fn)} />}
           {activePage === 'operations' && <OperationsPage employees={employees} completedTerminations={completedTerminations} />}
           {activePage === 'activities' && <ActivitiesPage employees={employees} passportHandovers={passportHandovers} onUpdatePassport={(fn) => setPassportHandovers(fn)} inventoryItems={inventoryItems} inventoryUsage={inventoryUsage} onUpdateInventoryItems={(fn) => setInventoryItems(fn)} onUpdateInventoryUsage={(fn) => setInventoryUsage(fn)} />}
           {activePage === 'termination' && <TerminationPage noticeTerminations={noticeTerminations} completedTerminations={completedTerminations} exitInterviews={exitInterviews} onAdd={openAddTermination} onEdit={openEditTermination} onSetStage={setTerminationStage} onDelete={deleteTermination} onViewDetails={(record) => setTerminationDetails(record)} onUpdateExitInterviews={(fn) => setExitInterviews(fn)} />}
