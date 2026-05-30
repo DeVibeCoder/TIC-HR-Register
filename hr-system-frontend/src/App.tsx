@@ -1697,143 +1697,194 @@ function MedicalCaseModal({ record, employees, onClose, onSave }: {
 
   return (
     <div className="modal-backdrop" role="presentation">
-      <section className="registration-modal mc-wide-modal" role="dialog" aria-modal="true">
-        <div className="modal-header">
-          <div><p className="eyebrow">Medical Leave</p><h2>{isNew ? 'Add Medical Case' : `Edit — ${form.name}`}</h2></div>
-          <button className="icon-button" onClick={onClose} type="button">×</button>
+      <section className="registration-modal mc-wide-modal mc-modal-redesign" role="dialog" aria-modal="true">
+
+        {/* ── Gradient header ── */}
+        <div className="mc-modal-top">
+          <div className="mc-modal-top-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+            </svg>
+          </div>
+          <div className="mc-modal-top-text">
+            <p className="mc-modal-eyebrow">Medical Leave</p>
+            <h2 className="mc-modal-title">{isNew ? 'Add Medical Case' : `Edit Case — ${form.name}`}</h2>
+          </div>
+          <button className="mc-modal-close" onClick={onClose} type="button">×</button>
         </div>
-        <form onSubmit={save}>
-          <div className="mc-form-section-hdr mc-section-patient">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            Patient Details
-          </div>
-          {/* Row 1: Visit Date | Employee Search | Section | Reason */}
-          <div className="mc-form-grid">
-            <label>
-              <span>Visit Date</span>
-              <input type="date" value={form.caseDate} onChange={(e) => setF({ caseDate: e.target.value })} required />
-            </label>
-            <label style={{ position: 'relative' }}>
-              <span>Search Employee</span>
-              <input
-                value={empSearch}
-                onChange={(e) => { setEmpSearch(e.target.value); setShowEmpList(true) }}
-                onFocus={() => setShowEmpList(true)}
-                onBlur={() => setTimeout(() => setShowEmpList(false), 150)}
-                placeholder="Name or Employee ID…"
-                autoComplete="off"
-              />
-              {showEmpList && empMatches.length > 0 && (
-                <div className="ei-emp-dropdown">
-                  {empMatches.map((emp) => (
-                    <div key={emp.employeeId} className="ei-emp-option" onMouseDown={() => pickEmp(emp)}>
-                      <strong>{emp.fullName}</strong>
-                      <span>{emp.employeeId} · {emp.department}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </label>
-            <label>
-              <span>Emp ID</span>
-              <input value={form.employeeId} onChange={(e) => setF({ employeeId: e.target.value })} placeholder="Auto-filled on select" />
-            </label>
-            <label>
-              <span>Section</span>
-              <select value={form.department} onChange={(e) => setF({ department: e.target.value })}>
-                <option value="">— Select —</option>
-                {departmentsList.map((d) => <option key={d}>{d}</option>)}
-              </select>
-            </label>
-          </div>
-          {/* Row 2: Reason full-width */}
-          <div className="mc-form-grid mc-form-1col">
-            <label>
-              <span>Reason for Visit</span>
-              <input value={form.reason} onChange={(e) => setF({ reason: e.target.value })} required placeholder="e.g. Fever, Body pain, Cough - Follow up" />
-            </label>
-          </div>
-          {/* Row 3: Hospital | MC Provided | Depart | Return */}
-          <div className="mc-form-section-hdr mc-section-clinic">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-            Clinic Details
-          </div>
-          <div className="mc-form-grid">
-            <label>
-              <span>Hospital / Clinic</span>
-              <input value={form.hospital} onChange={(e) => setF({ hospital: e.target.value })} placeholder="e.g. IGMH, ADK" />
-            </label>
-            <label>
-              <span>MC Provided</span>
-              <select value={form.mcProvided ? 'yes' : 'no'} onChange={(e) => setF({ mcProvided: e.target.value === 'yes' })}>
-                <option value="yes">Yes — MC issued</option>
-                <option value="no">No — 1 day without document</option>
-              </select>
-            </label>
-            <label>
-              <span>Depart Time</span>
-              <input type="time" value={form.departTime} onChange={(e) => setF({ departTime: e.target.value })} />
-            </label>
-            <label>
-              <span>Return Time</span>
-              <input type="time" value={form.returnTime} onChange={(e) => setF({ returnTime: e.target.value })} />
-            </label>
-            {/* Urgency toggle */}
-            <div className="lf-skip-toggle-row" style={{ gridColumn: '1 / -1' }}>
+
+        <form onSubmit={save} className="mc-modal-form">
+
+          {/* ═══ SECTION 1 — PATIENT ═══ */}
+          <div className="mc-card mc-card-patient">
+            <div className="mc-card-label">
+              <span className="mc-card-dot mc-dot-blue" />
+              Patient Details
+            </div>
+
+            <div className="mc-two-col">
               <div>
-                <strong className="lf-skip-label" style={{ color: '#dc2626' }}>⚠ Urgent / Emergency</strong>
-                <p className="lf-skip-desc">Mark if this is an urgent or emergency case requiring special attention.</p>
+                <label className="mc-field-label">Visit Date <span className="mc-req">*</span></label>
+                <input className="mc-input" type="date" value={form.caseDate} onChange={e => setF({ caseDate: e.target.value })} required />
               </div>
-              <button type="button" className={`lf-toggle${(form.isUrgent ?? false) ? ' lf-toggle-on lf-toggle-urgent' : ''}`}
-                onClick={() => setF({ isUrgent: !form.isUrgent })} aria-pressed={form.isUrgent ?? false}>
+              <div style={{ position: 'relative' }}>
+                <label className="mc-field-label">Search Employee</label>
+                <div className="mc-emp-search-wrap">
+                  <svg className="mc-search-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  <input
+                    className="mc-input mc-search-inp"
+                    value={empSearch}
+                    onChange={e => { setEmpSearch(e.target.value); setShowEmpList(true) }}
+                    onFocus={() => setShowEmpList(true)}
+                    onBlur={() => setTimeout(() => setShowEmpList(false), 150)}
+                    placeholder="Type name or Emp ID…"
+                    autoComplete="off"
+                  />
+                </div>
+                {showEmpList && empMatches.length > 0 && (
+                  <div className="ei-emp-dropdown">
+                    {empMatches.map(emp => (
+                      <div key={emp.employeeId} className="ei-emp-option" onMouseDown={() => pickEmp(emp)}>
+                        <strong>{emp.fullName}</strong>
+                        <span>{emp.employeeId} · {emp.department}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Employee card on selection */}
+            {form.name && (
+              <div className="mc-emp-card">
+                <div className="mc-emp-avatar">{form.name.charAt(0)}</div>
+                <div className="mc-emp-card-info">
+                  <strong>{form.name}</strong>
+                  <span>{form.employeeId}{form.department && ` · ${form.department}`}</span>
+                </div>
+                <span className="mc-emp-card-check">✓</span>
+              </div>
+            )}
+
+            <div style={{ marginTop: 12 }}>
+              <label className="mc-field-label">Reason for Visit <span className="mc-req">*</span></label>
+              <input className="mc-input" value={form.reason} onChange={e => setF({ reason: e.target.value })} required placeholder="e.g. Fever, Body pain, Cough – Follow up" />
+            </div>
+          </div>
+
+          {/* ═══ SECTION 2 — CLINIC ═══ */}
+          <div className="mc-card mc-card-clinic">
+            <div className="mc-card-label">
+              <span className="mc-card-dot mc-dot-green" />
+              Clinic Details
+            </div>
+
+            <div className="mc-three-col">
+              <div style={{ gridColumn: '1 / 2' }}>
+                <label className="mc-field-label">Hospital / Clinic</label>
+                <input className="mc-input" value={form.hospital} onChange={e => setF({ hospital: e.target.value })} placeholder="e.g. IGMH, ADK" />
+              </div>
+              <div>
+                <label className="mc-field-label">Depart</label>
+                <input className="mc-input" type="time" value={form.departTime} onChange={e => setF({ departTime: e.target.value })} />
+              </div>
+              <div>
+                <label className="mc-field-label">Return</label>
+                <input className="mc-input" type="time" value={form.returnTime} onChange={e => setF({ returnTime: e.target.value })} />
+              </div>
+            </div>
+
+            {/* MC Provided — button toggle */}
+            <div style={{ marginTop: 14 }}>
+              <label className="mc-field-label">Medical Certificate (MC)</label>
+              <div className="mc-mc-toggle">
+                <button type="button" className={`mc-mc-btn${form.mcProvided ? ' mc-mc-btn-yes' : ''}`} onClick={() => setF({ mcProvided: true })}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  Yes — MC Issued
+                </button>
+                <button type="button" className={`mc-mc-btn${!form.mcProvided ? ' mc-mc-btn-no' : ''}`} onClick={() => setF({ mcProvided: false })}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  No — Without Document
+                </button>
+              </div>
+            </div>
+
+            {/* Urgency toggle */}
+            <div className={`mc-urgency${form.isUrgent ? ' mc-urgency-on' : ''}`}>
+              <div className="mc-urgency-left">
+                <span className="mc-urgency-ico">⚠</span>
+                <div>
+                  <strong>Urgent / Emergency</strong>
+                  <p>Flag for immediate HR attention</p>
+                </div>
+              </div>
+              <button type="button" className={`lf-toggle${form.isUrgent ? ' lf-toggle-on lf-toggle-urgent' : ''}`} onClick={() => setF({ isUrgent: !form.isUrgent })}>
                 <span className="lf-toggle-thumb" />
               </button>
             </div>
+
             {form.isUrgent && (
-              <div className="mc-form-grid" style={{ gridColumn: '1 / -1' }}>
-                <label style={{ gridColumn: '1 / -1' }}>
-                  <span>Patient Admitted to Hospital?</span>
-                  <select value={(form.isAdmitted ?? false) ? 'yes' : 'no'} onChange={e => setF({ isAdmitted: e.target.value === 'yes' })}>
-                    <option value="no">No — Outpatient visit</option>
-                    <option value="yes">Yes — Admitted</option>
-                  </select>
-                </label>
+              <div className="mc-admitted">
+                <label className="mc-field-label">Admitted to Hospital?</label>
+                <div className="mc-mc-toggle" style={{ marginTop: 6 }}>
+                  <button type="button" className={`mc-mc-btn${form.isAdmitted ? ' mc-mc-btn-yes' : ''}`} onClick={() => setF({ isAdmitted: true })}>Yes — Admitted</button>
+                  <button type="button" className={`mc-mc-btn${!form.isAdmitted ? ' mc-mc-btn-no' : ''}`} onClick={() => setF({ isAdmitted: false })}>No — Outpatient</button>
+                </div>
               </div>
             )}
+
+            {/* Doctor Advice */}
+            <div style={{ marginTop: 14 }}>
+              <label className="mc-field-label">Doctor Advice / Summary</label>
+              <textarea
+                className="mc-textarea"
+                value={form.doctorAdvice}
+                onChange={e => setF({ doctorAdvice: e.target.value })}
+                rows={4}
+                placeholder="Symptoms noted, diagnosis, medication prescribed, MC dates, follow-up instructions…"
+              />
+            </div>
           </div>
-          {/* Doctor Advice */}
-          <div className="mc-form-grid mc-form-1col">
-            <label>
-              <span>Doctor Advice / Summary</span>
-              <textarea value={form.doctorAdvice} onChange={(e) => setF({ doctorAdvice: e.target.value })} rows={5} placeholder="Symptoms, diagnosis, medication, MC dates, follow-up notes…" style={{ resize: 'vertical' }} />
-            </label>
+
+          {/* ═══ SECTION 3 — SICK LEAVE ═══ */}
+          <div className="mc-card mc-card-leave">
+            <div className="mc-card-label">
+              <span className="mc-card-dot mc-dot-amber" />
+              Sick Leave Period
+            </div>
+
+            <div className="mc-sl-row">
+              <div>
+                <label className="mc-field-label">From</label>
+                <input className="mc-input" type="date" value={form.sickLeaveFrom} onChange={e => setF({ sickLeaveFrom: e.target.value })} />
+              </div>
+              <div>
+                <label className="mc-field-label">To</label>
+                <input className="mc-input" type="date" value={form.sickLeaveTo} onChange={e => setF({ sickLeaveTo: e.target.value })} />
+              </div>
+              <div>
+                <label className="mc-field-label">Days</label>
+                <div className="mc-days-pill">
+                  <span className="mc-days-num">{form.sickLeaveDays || 0}</span>
+                  <span className="mc-days-unit">day{form.sickLeaveDays !== 1 ? 's' : ''}</span>
+                </div>
+              </div>
+              <div>
+                <label className="mc-field-label">Recorded By</label>
+                <input className="mc-input" value={form.recordedBy} onChange={e => setF({ recordedBy: e.target.value })} placeholder="HR Admin" />
+              </div>
+            </div>
           </div>
-          {/* Row 4: Sick Leave dates */}
-          <div className="mc-form-section-hdr mc-section-leave">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            Sick Leave
-          </div>
-          <div className="mc-form-grid">
-            <label>
-              <span>From</span>
-              <input type="date" value={form.sickLeaveFrom} onChange={(e) => setF({ sickLeaveFrom: e.target.value })} />
-            </label>
-            <label>
-              <span>To</span>
-              <input type="date" value={form.sickLeaveTo} onChange={(e) => setF({ sickLeaveTo: e.target.value })} />
-            </label>
-            <label>
-              <span>Days (auto-calc)</span>
-              <input type="number" value={form.sickLeaveDays} min={0} onChange={(e) => setF({ sickLeaveDays: parseInt(e.target.value) || 0 })} />
-            </label>
-            <label>
-              <span>Recorded By</span>
-              <input value={form.recordedBy} onChange={(e) => setF({ recordedBy: e.target.value })} placeholder="e.g. HR Admin" />
-            </label>
-          </div>
-          <div className="modal-actions">
+
+          {/* Footer */}
+          <div className="mc-modal-footer">
             <button type="button" className="quiet-button light" onClick={onClose}>Cancel</button>
-            <button className="primary-button" type="submit">{isNew ? 'Add Case' : 'Save Changes'}</button>
+            <button className="mc-submit-btn" type="submit">
+              {isNew
+                ? <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Medical Case</>
+                : <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>Save Changes</>
+              }
+            </button>
           </div>
         </form>
       </section>
