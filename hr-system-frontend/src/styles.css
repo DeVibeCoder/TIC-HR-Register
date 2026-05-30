@@ -7366,6 +7366,10 @@ button.step-pill:hover { filter: brightness(0.98); }
 .os-table td:last-child { white-space: nowrap; }
 .os-table .row-actions { flex-wrap: nowrap; gap: 3px; }
 
+/* Extend icon button — calendar with forward arrow */
+.action-glyph-extend { color: #2563eb; }
+.action-glyph-extend:hover { background: #dbeafe; color: #1e40af; }
+
 /* ═══ Leave Fast Track Badge ═════════════════════════════ */
 .lr-fasttrack-badge {
   display: inline-flex; align-items: center; gap: 8px;
