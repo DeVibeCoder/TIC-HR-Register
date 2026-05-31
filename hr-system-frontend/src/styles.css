@@ -2380,8 +2380,26 @@ button.step-pill:hover { filter: brightness(0.98); }
 .termination-table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed;
+  table-layout: auto;   /* browser sizes each col to its content */
 }
+
+/* Shrink short columns to their content — prevent over-expansion */
+.termination-table td { white-space: nowrap; }
+
+/* Name column: allow wrap, give generous min-width */
+.termination-table td.name-cell {
+  white-space: normal !important;
+  word-break: break-word;
+  min-width: 180px;
+  max-width: 260px;
+}
+.termination-table td.name-cell .name-link {
+  white-space: normal !important;
+  word-break: break-word;
+}
+
+/* Fixed consistent row height (min-height for rows in tables) */
+.termination-table tbody tr { height: 52px; }
 
 .termination-table thead {
   position: sticky;
