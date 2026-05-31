@@ -405,6 +405,7 @@ const initialActiveLeaves: ActiveLeaveRecord[] = [
 ]
 
 const initialLeaveHistory: LeaveHistoryRecord[] = [
+  // ── Normal leaves (no extension) ──
   { id: 'LVH-2026-001', employeeId: '44386', name: 'MAJIB', department: 'STORES', nationality: 'MALDIVES', leaveTypeCode: 'AL', departureDate: '2026-02-01', returnDate: '2026-03-02', days: 30, remarks: 'Annual leave', confirmation: 'Returned' },
   { id: 'LVH-2026-002', employeeId: '57637', name: 'MUNI ACHARI GUNTI KOVALA', department: 'CAFE', nationality: 'INDIA', leaveTypeCode: 'AL', departureDate: '2025-11-01', returnDate: '2025-12-01', days: 30, remarks: 'Annual India leave', confirmation: 'Returned' },
   { id: 'LVH-2026-003', employeeId: '50223', name: 'AYESHAN KUMARA WIJEYATHUNGA MUDALIGE', department: 'STORES', nationality: 'SRI LANKAN', leaveTypeCode: 'AL', departureDate: '2026-01-05', returnDate: '2026-02-04', days: 30, remarks: '', confirmation: 'Returned' },
@@ -412,6 +413,43 @@ const initialLeaveHistory: LeaveHistoryRecord[] = [
   { id: 'LVH-2025-001', employeeId: '37916', name: 'JAGO', department: 'STORES', nationality: 'INDIA', leaveTypeCode: 'AL', departureDate: '2025-09-01', returnDate: '2025-10-01', days: 30, remarks: 'Annual leave — did not return on time', confirmation: 'Not Returned' },
   { id: 'LVH-2025-002', employeeId: '55427', name: 'SARAVANAN RAJENDRAN', department: 'STORES', nationality: 'INDIA', leaveTypeCode: 'AL', departureDate: '2025-07-10', returnDate: '2025-08-09', days: 30, remarks: '', confirmation: 'Returned' },
   { id: 'LVH-2025-003', employeeId: '59361', name: 'DIBIN ROY', department: 'LPG PLANT', nationality: 'INDIA', leaveTypeCode: 'AL', departureDate: '2025-12-05', returnDate: '2026-01-04', days: 30, remarks: 'Year-end home leave', confirmation: 'Returned' },
+  // ── Extended leaves — AL originally, extended under NP ──
+  {
+    id: 'LVH-2026-005',
+    employeeId: '53029', name: 'KUMARAN VAITHILINGAM', department: 'STORES', nationality: 'INDIA',
+    leaveTypeCode: 'AL', departureDate: '2025-08-10', returnDate: '2025-09-19', days: 40,
+    remarks: 'Extended: father hospitalised — required extra time | Extended +10d (No Pay) — father hospitalised, could not return',
+    confirmation: 'Returned',
+    originalReturnDate: '2025-09-09', originalDays: 30,
+    extensions: [{ id: 'EXT-KV-001', leaveTypeCode: 'NP', additionalDays: 10, reason: 'Father hospitalised — could not return as planned', addedDate: '2025-09-07' }],
+  },
+  {
+    id: 'LVH-2026-006',
+    employeeId: '50427', name: 'MD SAIFUR RAHMAN', department: 'STORES', nationality: 'BANGLADESH',
+    leaveTypeCode: 'AL', departureDate: '2025-05-01', returnDate: '2025-06-15', days: 45,
+    remarks: 'Visa delay at Bangladesh — extended under NP',
+    confirmation: 'Returned',
+    originalReturnDate: '2025-05-31', originalDays: 30,
+    extensions: [{ id: 'EXT-SR-001', leaveTypeCode: 'NP', additionalDays: 15, reason: 'Bangladesh visa processing delay — passport held at embassy', addedDate: '2025-05-29' }],
+  },
+  {
+    id: 'LVH-2025-004',
+    employeeId: '56141', name: 'RAJU PERKA', department: 'CAFE', nationality: 'INDIA',
+    leaveTypeCode: 'FRL', departureDate: '2025-04-10', returnDate: '2025-04-31', days: 21,
+    remarks: 'Emergency family leave extended',
+    confirmation: 'Returned',
+    originalReturnDate: '2025-04-24', originalDays: 14,
+    extensions: [{ id: 'EXT-RP-001', leaveTypeCode: 'NP', additionalDays: 7, reason: 'Mother in ICU — required additional time at home', addedDate: '2025-04-22' }],
+  },
+  {
+    id: 'LVH-2025-005',
+    employeeId: '58034', name: 'SAMEERA MADUSANKA GUNARATHNA', department: 'STORES', nationality: 'SRI LANKAN',
+    leaveTypeCode: 'AL', departureDate: '2024-12-20', returnDate: '2025-02-03', days: 45,
+    remarks: 'Annual leave with Circumcision extension',
+    confirmation: 'Returned',
+    originalReturnDate: '2025-01-19', originalDays: 30,
+    extensions: [{ id: 'EXT-SM-001', leaveTypeCode: 'CC', additionalDays: 15, reason: 'Son circumcision ceremony + family event in Sri Lanka', addedDate: '2025-01-17' }],
+  },
 ]
 
 const initialPassportHandovers: PassportHandoverRecord[] = [
