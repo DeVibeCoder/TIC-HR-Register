@@ -5612,25 +5612,29 @@ function printExitInterview(record: ExitInterviewRecord) {
     </div>`
   }).join('')
 
-  // Villa Hakatha logo — exact structure:
-  // One large inverted triangle split into 3 vertical slices converging to ONE shared apex.
-  // Left-blue | Purple-center | Right-blue — all sharing apex at (250,215).
-  // Bottom: one blue triangle same width as the purple center slice.
-  const logoSvg = `<svg viewBox="0 0 500 445" xmlns="http://www.w3.org/2000/svg" style="width:72pt;height:64pt;flex-shrink:0;">
-    <rect width="500" height="445" fill="white"/>
-    <!-- Left blue slice: (4,4)→(145,4)→(250,215) -->
-    <polygon points="4,4 145,4 250,215" fill="#009FDA"/>
-    <!-- Purple center slice: (145,4)→(355,4)→(250,215) -->
-    <polygon points="145,4 355,4 250,215" fill="#2B2082"/>
-    <!-- Right blue slice: (355,4)→(496,4)→(250,215) -->
-    <polygon points="355,4 496,4 250,215" fill="#009FDA"/>
-    <!-- White separator lines between slices (creates the clean white gaps) -->
-    <line x1="145" y1="4" x2="250" y2="215" stroke="white" stroke-width="6"/>
-    <line x1="355" y1="4" x2="250" y2="215" stroke="white" stroke-width="6"/>
-    <!-- White horizontal gap separating top from bottom -->
-    <rect x="0" y="215" width="500" height="16" fill="white"/>
-    <!-- Bottom blue triangle — same base width as the purple center slice -->
-    <polygon points="145,232 355,232 250,442" fill="#009FDA"/>
+  // Villa Hakatha logo — mathematically correct structure:
+  // 4 equilateral triangles derived from tessellation of a large inverted equilateral (side 2a).
+  // Each triangle shrunken toward its centroid by gap/2 = 6px to create uniform 12px white gaps.
+  //
+  // Large inverted triangle: (0,0)→(500,0)→(250,433)  [side≈500, h≈433]
+  // Sub-triangles (side≈250, h≈216.5), shrunk by scale 0.917 toward centroid:
+  //
+  //   TL (↓ blue): centroid (125,72)  → (10,6), (240,6), (125,204)
+  //   TR (↓ blue): centroid (375,72)  → (260,6), (490,6), (375,204)
+  //   Center (↑ purple): centroid (250,144) → (135,210), (365,210), (250,12)
+  //   Bottom (↓ blue): centroid (250,289) → (135,222), (365,222), (250,421)
+  //
+  // The center purple points UPWARD — its apex is at the TOP between TL and TR.
+  const logoSvg = `<svg viewBox="0 0 500 430" xmlns="http://www.w3.org/2000/svg" style="width:74pt;height:64pt;flex-shrink:0;">
+    <rect width="500" height="430" fill="white"/>
+    <!-- Top-left: equilateral, pointing DOWN, cyan -->
+    <polygon points="10,6 240,6 125,204" fill="#1796E6"/>
+    <!-- Top-right: equilateral, pointing DOWN, cyan -->
+    <polygon points="260,6 490,6 375,204" fill="#1796E6"/>
+    <!-- Center: equilateral, pointing UP, deep purple — fills gap between 3 blue triangles -->
+    <polygon points="135,210 365,210 250,12" fill="#2E1A78"/>
+    <!-- Bottom: equilateral, pointing DOWN, cyan -->
+    <polygon points="135,222 365,222 250,421" fill="#1796E6"/>
   </svg>`
 
   // Page header — exact PDF layout: logo left, company name right, EXIT INTERVIEW centered below
