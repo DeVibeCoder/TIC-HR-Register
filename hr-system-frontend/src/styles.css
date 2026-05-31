@@ -7063,7 +7063,7 @@ button.step-pill:hover { filter: brightness(0.98); }
   display: flex;
   align-items: flex-end;
   gap: 10px;
-  height: 120px;
+  height: 200px;
 }
 .mc-an-bar-col {
   display: flex;
@@ -7419,11 +7419,46 @@ button.step-pill:hover { filter: brightness(0.98); }
 .action-glyph-extend { color: #2563eb; }
 .action-glyph-extend:hover { background: #dbeafe; color: #1e40af; }
 
-/* Active leave extension count badge */
+/* Active leave extension count badge (kept for compat) */
 .al-ext-count-badge {
   display: inline-block; margin-left: 5px; padding: 1px 6px;
   border-radius: 6px; background: #dbeafe; color: #1e40af;
   font-size: 0.66rem; font-weight: 800; vertical-align: middle;
+}
+
+/* Stacked leave type display */
+.al-type-stack { display: flex; flex-direction: column; gap: 3px; }
+.al-type-row { display: flex; align-items: center; gap: 5px; }
+.al-type-ext { opacity: 0.9; }
+.al-orig-tag {
+  font-size: 0.60rem; font-weight: 700; color: #94a3b8;
+  text-transform: uppercase; letter-spacing: 0.03em;
+}
+.al-ext-tag {
+  font-size: 0.62rem; font-weight: 800; color: #2563eb; white-space: nowrap;
+}
+
+/* Extend icon color when extension already exists */
+.action-glyph-edit-ext { color: #f59e0b; }
+.action-glyph-edit-ext:hover { background: #fef3c7; color: #d97706; }
+
+/* Extension detail in expanded row */
+.al-ext-detail {
+  display: flex; align-items: flex-start; gap: 16px;
+  padding: 12px 16px 14px 44px;
+  border-left: 3px solid #6366f1; margin: 0 8px 6px;
+  flex-wrap: wrap;
+}
+.al-ext-detail-section { flex: 1; min-width: 180px; }
+.al-ext-detail-lbl {
+  display: block; font-size: 0.68rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 6px;
+}
+.al-ext-detail-row {
+  display: flex; align-items: center; gap: 8px; font-size: 0.80rem; color: #374151;
+}
+.al-ext-detail-arrow {
+  font-size: 1.3rem; color: #cbd5e1; padding-top: 20px; flex-shrink: 0;
 }
 
 /* Extension panel inside expandable row */
