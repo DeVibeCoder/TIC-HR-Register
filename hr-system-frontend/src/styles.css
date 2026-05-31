@@ -7063,7 +7063,15 @@ button.step-pill:hover { filter: brightness(0.98); }
   display: flex;
   align-items: flex-end;
   gap: 10px;
-  height: 200px;
+  height: 280px;
+}
+
+/* Scrollable staff table */
+.mc-an-staff-scroll {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #f1f5f9;
+  border-radius: 6px;
 }
 .mc-an-bar-col {
   display: flex;
@@ -7427,8 +7435,10 @@ button.step-pill:hover { filter: brightness(0.98); }
 }
 
 /* Stacked leave type display */
-.al-type-stack { display: flex; flex-direction: column; gap: 3px; }
-.al-type-row { display: flex; align-items: center; gap: 5px; }
+.al-type-stack { display: flex; flex-direction: column; gap: 4px; }
+.al-type-row { display: flex; align-items: center; gap: 5px; flex-wrap: nowrap; }
+/* Ensure leave-type-cell accommodates stacked content */
+.leave-table td.leave-type-cell { vertical-align: middle; min-width: 90px; }
 .al-type-ext { opacity: 0.9; }
 .al-orig-tag {
   font-size: 0.60rem; font-weight: 700; color: #94a3b8;

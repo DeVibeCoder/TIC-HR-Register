@@ -2254,14 +2254,13 @@ function MedicalAnalyticsModal({ records, onClose }: {
   }, [filtered])
 
   const topStaff = useMemo(() => {
-    const map = new Map<string, { name: string; days: number; cases: number }>()
+    const map = new Map<string, { name: string; department: string; days: number; cases: number }>()
     filtered.forEach((r) => {
-      const cur = map.get(r.employeeId) ?? { name: r.name, days: 0, cases: 0 }
-      map.set(r.employeeId, { name: r.name, days: cur.days + (r.sickLeaveDays || 1), cases: cur.cases + 1 })
+      const cur = map.get(r.employeeId) ?? { name: r.name, department: r.department, days: 0, cases: 0 }
+      map.set(r.employeeId, { name: r.name, department: r.department, days: cur.days + (r.sickLeaveDays || 1), cases: cur.cases + 1 })
     })
-    return Array.from(map.entries())
-      .sort((a, b) => b[1].days - a[1].days)
-      .slice(0, 5)
+    return Array.from(map.entries()).sort((a, b) => b[1].days - a[1].days)
+    // No .slice() — show everyone
   }, [filtered])
 
   const maxMonthCases = Math.max(...monthlyData.map(([, v]) => v.cases), 1)
@@ -2334,33 +2333,49 @@ function MedicalAnalyticsModal({ records, onClose }: {
               ))}
           </div>
 
-          {/* Top 5 staff — filtered */}
+          {/* All staff — filtered, scrollable */}
           <div className="mc-an-panel mc-an-wide">
-            <p className="mc-an-title">Top 5 Staff by Sick Leave Days{selectedMonth !== 'All' ? ` — ${formatMonthLabel(selectedMonth)}` : ''}</p>
+            <p className="mc-an-title">
+              Staff Medical Summary{selectedMonth !== 'All' ? ` — ${formatMonthLabel(selectedMonth)}` : ''}
+              {topStaff.length > 0 && <span style={{ fontWeight: 400, color: '#64748b', marginLeft: 6 }}>({topStaff.length} staff)</span>}
+            </p>
             {topStaff.length === 0
               ? <p style={{ color: '#94a3b8', fontSize: '0.82rem' }}>No data.</p>
               : (
-                <table style={{width:'100%',borderCollapse:'collapse'}}>
-                  <thead><tr style={{borderBottom:'1px solid #e8eaf0'}}><th style={{textAlign:'left',padding:'4px 8px',fontSize:'0.72rem',color:'#64748b',fontWeight:700,textTransform:'uppercase'}}>Staff</th><th style={{textAlign:'right',padding:'4px 8px',fontSize:'0.72rem',color:'#64748b',fontWeight:700,textTransform:'uppercase'}}>Cases</th><th style={{textAlign:'right',padding:'4px 8px',fontSize:'0.72rem',color:'#64748b',fontWeight:700,textTransform:'uppercase'}}>Days</th><th style={{padding:'4px 8px',width:120}}></th></tr></thead>
-                  <tbody>
-                    {topStaff.map(([empId, v], rank) => (
-                      <tr key={empId} style={{borderBottom:'1px solid #f8fafc'}}>
-                        <td style={{padding:'6px 8px',fontSize:'0.82rem'}}>
-                          <span style={{display:'inline-flex',alignItems:'center',justifyContent:'center',width:20,height:20,borderRadius:'50%',background:rank === 0 ? '#fbbf24' : rank === 1 ? '#94a3b8' : rank === 2 ? '#d97706' : '#e2e8f0',color: rank <= 2 ? '#fff' : '#374151',fontSize:'0.68rem',fontWeight:800,marginRight:8,flexShrink:0}}>{rank+1}</span>
-                          <strong style={{color:'#111827'}}>{v.name}</strong>
-                          <span style={{color:'#94a3b8',fontSize:'0.74rem',marginLeft:6}}>{empId}</span>
-                        </td>
-                        <td style={{padding:'6px 8px',textAlign:'right',fontSize:'0.82rem',color:'#374151'}}>{v.cases}</td>
-                        <td style={{padding:'6px 8px',textAlign:'right',fontWeight:700,color:'#1e40af'}}>{v.days}d</td>
-                        <td style={{padding:'6px 8px'}}>
-                          <div style={{height:8,borderRadius:4,background:'#e2e8f0',overflow:'hidden'}}>
-                            <div style={{width:`${Math.round((v.days/maxStaffDays)*100)}%`,height:'100%',borderRadius:4,background:'linear-gradient(90deg,#6366f1,#a5b4fc)'}} />
-                          </div>
-                        </td>
+                <div className="mc-an-staff-scroll">
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead style={{ position: 'sticky', top: 0, background: '#f8fafc', zIndex: 1 }}>
+                      <tr style={{ borderBottom: '2px solid #e8eaf0' }}>
+                        <th style={{ textAlign: 'center', padding: '6px 8px', fontSize: '0.68rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', width: 32 }}>#</th>
+                        <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: '0.68rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Emp ID</th>
+                        <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: '0.68rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Name</th>
+                        <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: '0.68rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Section</th>
+                        <th style={{ textAlign: 'center', padding: '6px 8px', fontSize: '0.68rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Cases</th>
+                        <th style={{ textAlign: 'center', padding: '6px 8px', fontSize: '0.68rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Days</th>
+                        <th style={{ padding: '6px 8px', width: 100 }} />
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {topStaff.map(([empId, v], rank) => (
+                        <tr key={empId} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                          <td style={{ padding: '5px 8px', textAlign: 'center' }}>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20, borderRadius: '50%', background: rank === 0 ? '#fbbf24' : rank === 1 ? '#94a3b8' : rank === 2 ? '#d97706' : '#e2e8f0', color: rank <= 2 ? '#fff' : '#374151', fontSize: '0.65rem', fontWeight: 800 }}>{rank + 1}</span>
+                          </td>
+                          <td style={{ padding: '5px 8px', fontSize: '0.76rem', color: '#64748b', fontWeight: 600 }}>{empId}</td>
+                          <td style={{ padding: '5px 8px', fontSize: '0.82rem' }}><strong style={{ color: '#111827' }}>{v.name}</strong></td>
+                          <td style={{ padding: '5px 8px', fontSize: '0.76rem', color: '#374151' }}>{v.department}</td>
+                          <td style={{ padding: '5px 8px', textAlign: 'center', fontSize: '0.82rem', color: '#374151', fontWeight: 600 }}>{v.cases}</td>
+                          <td style={{ padding: '5px 8px', textAlign: 'center', fontWeight: 800, color: '#1e40af' }}>{v.days}d</td>
+                          <td style={{ padding: '5px 8px' }}>
+                            <div style={{ height: 6, borderRadius: 3, background: '#e2e8f0', overflow: 'hidden' }}>
+                              <div style={{ width: `${Math.round((v.days / maxStaffDays) * 100)}%`, height: '100%', borderRadius: 3, background: 'linear-gradient(90deg,#6366f1,#a5b4fc)' }} />
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
           </div>
         </div>
@@ -2444,12 +2459,10 @@ function MedicalLeaveSection({ records, employees, onUpdate }: {
           <span className="mc-kpi-num">{onSickToday}</span>
           <span className="mc-kpi-lbl">On Sick Leave</span>
         </div>
-        {admittedCount > 0 && (
-          <div className="mc-kpi-chip mc-kpi-red">
-            <span className="mc-kpi-num">{admittedCount}</span>
-            <span className="mc-kpi-lbl">Admitted</span>
-          </div>
-        )}
+        <div className="mc-kpi-chip mc-kpi-red">
+          <span className="mc-kpi-num">{admittedCount}</span>
+          <span className="mc-kpi-lbl">Admitted Cases</span>
+        </div>
         <button className="mc-analytics-btn" onClick={() => setShowAnalytics(true)} type="button">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
           Analytics
@@ -2509,14 +2522,14 @@ function MedicalLeaveSection({ records, employees, onUpdate }: {
                     <td className="mc-name-cell">{r.name}</td>
                     <td>{r.department}</td>
                     <td className="mc-reason-cell">{r.reason}</td>
-                    <td onClick={(e) => e.stopPropagation()}>
+                    <td style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
                       <span className={`mc-bool-badge${r.mcProvided ? ' mc-yes' : ' mc-no'}`}>{r.mcProvided ? 'Yes' : 'No'}</span>
                     </td>
                     <td style={{ whiteSpace: 'nowrap' }}>{r.sickLeaveFrom ? formatDateDisplay(r.sickLeaveFrom) : '—'}</td>
                     <td style={{ whiteSpace: 'nowrap' }}>{r.sickLeaveTo ? formatDateDisplay(r.sickLeaveTo) : '—'}</td>
-                    <td><strong>{r.sickLeaveDays || '—'}</strong></td>
-                    <td onClick={(e) => e.stopPropagation()}>
-                      <div className="row-actions request-inline-actions">
+                    <td style={{ textAlign: 'center' }}><strong>{r.sickLeaveDays || '—'}</strong></td>
+                    <td style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+                      <div className="row-actions request-inline-actions" style={{ justifyContent: 'center' }}>
                         <button className="action-glyph edit" onClick={() => setEditing(r)} type="button" title="Edit">✎</button>
                         <button className="action-glyph delete" onClick={() => del(r.id)} type="button" title="Delete">🗑</button>
                       </div>
