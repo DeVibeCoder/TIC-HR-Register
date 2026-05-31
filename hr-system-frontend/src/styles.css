@@ -7510,10 +7510,14 @@ button.step-pill:hover { filter: brightness(0.98); }
 }
 
 /* Stacked leave type display */
-.al-type-stack { display: flex; flex-direction: column; gap: 4px; }
-.al-type-row { display: flex; align-items: center; gap: 5px; flex-wrap: nowrap; }
-/* Ensure leave-type-cell accommodates stacked content */
-.leave-table td.leave-type-cell { vertical-align: middle; min-width: 90px; }
+.al-type-stack { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+.al-type-row { display: flex; align-items: center; justify-content: center; gap: 5px; flex-wrap: nowrap; }
+/* Ensure leave-type-cell center-aligns all content including stacked badges */
+.leave-table td.leave-type-cell {
+  vertical-align: middle;
+  min-width: 90px;
+  text-align: center;
+}
 .al-type-ext { opacity: 0.9; }
 .al-orig-tag {
   font-size: 0.60rem; font-weight: 700; color: #94a3b8;
