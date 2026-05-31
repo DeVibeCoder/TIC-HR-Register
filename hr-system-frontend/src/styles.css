@@ -2042,15 +2042,9 @@ h2 { margin: 0; color: #111; font-size: 0.95rem; line-height: 1.2; }
 .induction-table td:nth-child(6),
 .induction-table th:last-child,
 .induction-table td:last-child,
-/* Training table: columns 2=Date, 4=Type, 5=Participants, 6=Action centered */
+/* Training table: vertical alignment */
 .training-table th, .training-table td { vertical-align: middle; }
-.training-table th:nth-child(2), .training-table td:nth-child(2),
-.training-table th:nth-child(4), .training-table td:nth-child(4),
-.training-table th:nth-child(5), .training-table td:nth-child(5),
-.training-table th:nth-child(6), .training-table td:nth-child(6) {
-  text-align: center;
-}
-/* Center the action buttons row inside the centered cell */
+/* Center the action buttons row */
 .training-table td:last-child .row-actions,
 .training-table td:last-child .ind-actions { justify-content: center; }
 .leave-workspace .status-badge { min-height: 24px; font-size: 0.66rem; padding: 0 10px; }
@@ -4900,14 +4894,24 @@ button.step-pill:hover { filter: brightness(0.98); }
    HR OPERATIONS — header & cell alignment (no color change)
    ════════════════════════════════════════════════════════════ */
 
-/* All ops-table headers: vertically centered */
+/* All ops-table headers: vertically centered (text-align controlled per-table) */
 .personal-files-table thead th,
 .induction-table thead th,
 .training-table thead th,
 .bank-table thead th {
   vertical-align: middle !important;
-  text-align: left !important;
 }
+
+/* Training table specific: Date + Type + Participants + Action centered */
+.training-table th:nth-child(2),
+.training-table th:nth-child(4),
+.training-table th:nth-child(5),
+.training-table th:nth-child(6) { text-align: center !important; }
+
+.training-table td:nth-child(2),
+.training-table td:nth-child(4),
+.training-table td:nth-child(5),
+.training-table td:nth-child(6) { text-align: center !important; }
 
 /* All ops-table body cells: vertically centered */
 .personal-files-table td,
