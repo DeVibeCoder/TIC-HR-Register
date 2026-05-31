@@ -5563,195 +5563,223 @@ function blankQuestionnaire(): EIQuestionnaire {
   return { duties: '', training: '', advancement: '', salary: '', benefits: '', workConditions: '', workHours: '', coworkers: '', supervision: '', overall: '' }
 }
 
-/* ─── printExitInterview ─────────────────────────────────── */
+/* ─── printExitInterview — exact match to Villa Hakatha PDF ── */
 function printExitInterview(record: ExitInterviewRecord) {
   const esc = (s: string) => (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
   const fmt = (d: string) => {
     if (!d) return ''
     const [y, m, dd] = d.split('-')
     const months = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-    return `${dd} ${months[parseInt(m, 10)]} ${y}`
+    return `${dd}-${months[parseInt(m,10)]}-${y}`
   }
-  const chk = (checked: boolean) => checked
-    ? '<span style="display:inline-block;width:11px;height:11px;border:1px solid #111;text-align:center;line-height:11px;font-size:9pt;">&#10003;</span>'
-    : '<span style="display:inline-block;width:11px;height:11px;border:1px solid #111;"></span>'
+  // Checkbox exactly like PDF: square box, ✓ or empty
+  const box = (checked: boolean) =>
+    `<span style="display:inline-block;width:10pt;height:10pt;border:1pt solid #333;text-align:center;line-height:10pt;font-size:8pt;margin-right:5pt;vertical-align:middle;">${checked?'&#10003;':''}</span>`
 
   const inv = record.involuntaryReasons ?? []
   const vol = record.voluntaryReasons ?? []
 
   const invRows = invReasonsList.map(r =>
-    `<div style="display:flex;align-items:center;gap:5px;margin:2px 0;font-size:9pt;">${chk(inv.includes(r))}&nbsp;${esc(r)}</div>`
+    `<div style="display:flex;align-items:center;margin-bottom:5pt;font-size:9pt;">${box(inv.includes(r))}${esc(r)}</div>`
   ).join('')
   const volRows = volReasonsList.map(r =>
-    `<div style="display:flex;align-items:center;gap:5px;margin:2px 0;font-size:9pt;">${chk(vol.includes(r))}&nbsp;${esc(r)}</div>`
+    `<div style="display:flex;align-items:center;margin-bottom:5pt;font-size:9pt;">${box(vol.includes(r))}${esc(r)}</div>`
   ).join('')
 
   const q = record.questionnaire ?? {}
-  const qRow = (key: keyof EIQuestionnaire, label: string) => {
-    const v = q[key] ?? ''
+  const questRows = eiQuestionnaireCategories.map(({ key, label }) => {
+    const v = q[key as keyof EIQuestionnaire] ?? ''
     return `<tr>
-      <td style="padding:5pt 6pt;border:0.75pt solid #ccc;font-size:9pt;">${label}</td>
-      <td style="text-align:center;border:0.75pt solid #ccc;font-size:11pt;">${v==='Very Satisfied'?'&#10003;':''}</td>
-      <td style="text-align:center;border:0.75pt solid #ccc;font-size:11pt;">${v==='Satisfied'?'&#10003;':''}</td>
-      <td style="text-align:center;border:0.75pt solid #ccc;font-size:11pt;">${v==='Dissatisfied'?'&#10003;':''}</td>
+      <td style="padding:6pt 4pt;border:none;font-size:9pt;">${label}</td>
+      <td style="text-align:center;border:none;padding:6pt 0;">${box(v==='Very Satisfied')}</td>
+      <td style="text-align:center;border:none;padding:6pt 0;">${box(v==='Satisfied')}</td>
+      <td style="text-align:center;border:none;padding:6pt 0;">${box(v==='Dissatisfied')}</td>
     </tr>`
-  }
-  const questRows = eiQuestionnaireCategories.map(({ key, label }) => qRow(key as keyof EIQuestionnaire, label)).join('')
+  }).join('')
 
-  // Questions with just the answer (one answer box, no 3 blank lines)
-  const qBlock = (from: number, to: number) => eiShortQuestions.slice(from - 1, to).map((q, i) => {
+  // Each question: question text + 2 answer underlines (matching PDF pages 2-4)
+  const qBlock = (from: number, to: number) => eiShortQuestions.slice(from - 1, to).map((qText, i) => {
     const qi = `q${from + i}` as keyof ExitInterviewRecord
     const ans = esc(record[qi] as string || '')
-    return `<div style="margin-bottom:10pt;">
-      <div style="font-size:9pt;font-weight:600;margin-bottom:3pt;">${from + i}.&nbsp; ${q}</div>
-      <div style="border:0.75pt solid #ccc;min-height:22pt;padding:3pt 5pt;font-size:9pt;">${ans || '&nbsp;'}</div>
+    const lines = ans
+      ? `<div style="border-bottom:1pt solid #111;min-height:14pt;padding:1pt 0 2pt;font-size:9pt;margin-top:6pt;">${ans}</div>
+         <div style="border-bottom:1pt solid #111;min-height:14pt;margin-top:4pt;"></div>`
+      : `<div style="border-bottom:1pt solid #111;min-height:14pt;margin-top:6pt;"></div>
+         <div style="border-bottom:1pt solid #111;min-height:14pt;margin-top:4pt;"></div>`
+    return `<div style="margin-bottom:14pt;">
+      <div style="font-size:9pt;margin-bottom:2pt;">${from+i}.&nbsp;&nbsp;${esc(qText)}</div>
+      ${lines}
     </div>`
   }).join('')
 
+  // Page header — matches PDF exactly: logo left, HR & Admin + VILLA HAKATHA right, EXIT INTERVIEW centered below
   const pageHdr = `
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2pt solid #000;padding-bottom:6pt;margin-bottom:12pt;">
-      <div>
-        <div style="font-size:10pt;font-weight:700;">Human Resource &amp; Administration</div>
-        <div style="font-size:12pt;font-weight:900;letter-spacing:1px;">VILLA HAKATHA PVT LTD</div>
+    <div style="display:flex;align-items:center;gap:14pt;margin-bottom:6pt;">
+      <!-- Triangle logo approximation -->
+      <div style="width:60pt;height:60pt;flex-shrink:0;position:relative;">
+        <div style="width:0;height:0;border-left:30pt solid transparent;border-right:30pt solid transparent;border-bottom:52pt solid #2563eb;position:absolute;top:0;left:0;"></div>
+        <div style="width:0;height:0;border-left:18pt solid transparent;border-right:18pt solid transparent;border-bottom:32pt solid #6d28d9;position:absolute;top:10pt;left:12pt;"></div>
       </div>
-      <div style="font-size:10pt;font-weight:700;border:1pt solid #111;padding:4pt 14pt;align-self:center;">EXIT INTERVIEW</div>
-    </div>`
+      <div>
+        <div style="font-size:11pt;color:#111;">Human Resource &amp; Administration</div>
+        <div style="font-size:14pt;font-weight:900;letter-spacing:0.5px;color:#111;">VILLA HAKATHA PVT LTD</div>
+      </div>
+    </div>
+    <div style="text-align:center;font-size:13pt;font-weight:800;letter-spacing:1px;margin:12pt 0 16pt;">EXIT INTERVIEW</div>`
 
-  const fieldLine = (label: string, val: string, w = '120pt') =>
-    `<div style="display:flex;align-items:baseline;gap:8pt;margin-bottom:7pt;">
-      <span style="font-size:9pt;white-space:nowrap;min-width:${w};">${label}</span>
-      <span style="flex:1;border-bottom:1pt solid #111;min-width:100pt;font-size:9pt;padding-bottom:1pt;">${esc(val)}</span>
-    </div>`
+  const fieldRow = (l1: string, v1: string, l2: string, v2: string) =>
+    `<tr>
+      <td style="font-size:9pt;padding:5pt 0;white-space:nowrap;">${l1}</td>
+      <td style="border-bottom:1pt solid #111;padding:5pt 6pt 2pt;font-size:9pt;min-width:130pt;">${esc(v1)}</td>
+      <td style="width:16pt;"></td>
+      <td style="font-size:9pt;padding:5pt 0;white-space:nowrap;">${l2}</td>
+      <td style="border-bottom:1pt solid #111;padding:5pt 6pt 2pt;font-size:9pt;min-width:130pt;">${esc(v2)}</td>
+    </tr>`
 
   const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/>
 <title>Exit Interview — ${esc(record.name)}</title>
 <style>
-  @page { size: A4 portrait; margin: 14mm 14mm 14mm 14mm; }
+  @page { size: A4 portrait; margin: 18mm 18mm 18mm 18mm; }
   *, *::before, *::after { box-sizing: border-box; }
-  body { font-family: Arial, Helvetica, sans-serif; font-size: 9pt; color: #111; background: #f0f0f0; margin: 0; padding: 0; }
-  .screen-bar { display:flex; align-items:center; gap:12px; padding:10px 20px; background:#4f46e5; position:sticky; top:0; z-index:10; font-family:system-ui,sans-serif; font-size:13px; }
-  .screen-bar button { padding:7px 18px; background:#fff; color:#4f46e5; border:none; border-radius:6px; font-size:13px; font-weight:700; cursor:pointer; }
-  .screen-bar span { color:#c7d2fe; font-size:12px; }
-  .a4-wrap { max-width:210mm; margin:20px auto; display:flex; flex-direction:column; gap:16px; padding-bottom:40px; }
-  .a4-page { background:#fff; box-shadow:0 4px 20px rgba(0,0,0,0.14); padding:14mm; }
-  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:0 24pt; }
-  .col-hdr { font-size:9pt; font-weight:800; text-decoration:underline; text-align:center; margin-bottom:6pt; text-transform:uppercase; letter-spacing:.5px; }
-  .emp-comments-box, .int-comments-box { border:1pt solid #111; min-height:52pt; padding:4pt 6pt; font-size:9pt; }
-  .quest-tbl { width:100%; border-collapse:collapse; margin:8pt 0; }
-  .quest-tbl th { padding:5pt 8pt; border:0.75pt solid #ccc; font-size:8.5pt; text-align:center; background:#f8fafc; }
-  .quest-tbl th:first-child { text-align:left; }
+  body { font-family: Arial, Helvetica, sans-serif; font-size: 9pt; color: #111; background: #e8e8e8; margin:0; padding:0; }
+  .print-bar { display:flex; align-items:center; gap:14px; padding:10px 20px; background:#1e1b4b; position:sticky; top:0; z-index:10; font-family:system-ui,sans-serif; font-size:13px; }
+  .print-bar button { padding:7px 18px; background:#6d28d9; color:#fff; border:none; border-radius:6px; font-size:13px; font-weight:700; cursor:pointer; }
+  .print-bar span { color:rgba(221,214,254,0.7); font-size:12px; }
+  .a4-wrap { max-width:210mm; margin:20px auto; display:flex; flex-direction:column; gap:18px; padding-bottom:40px; }
+  .a4-page { background:#fff; box-shadow:0 4px 24px rgba(0,0,0,0.16); padding:18mm; }
+  .quest-table { width:100%; border-collapse:collapse; }
+  .quest-table tr td:first-child { width:55%; }
+  .quest-table thead th { text-align:center; font-size:9pt; font-weight:700; padding:0 0 8pt; border-bottom:1pt solid #ccc; }
+  .quest-table thead th:first-child { text-align:left; }
+  .page-num { text-align:center; font-size:8pt; color:#666; margin-top:20pt; }
   @media print {
-    body { background:white; }
-    .screen-bar { display:none !important; }
+    body { background:#fff; }
+    .print-bar { display:none !important; }
     .a4-wrap { max-width:none; margin:0; padding:0; gap:0; }
     .a4-page { box-shadow:none; padding:0; }
     .page-break { page-break-before:always; }
+    .page-num { display:none; }
   }
 </style></head><body>
-<div class="screen-bar">
+<div class="print-bar">
   <button onclick="window.print()">🖨&nbsp; Print / Save as PDF</button>
   <span>Exit Interview — ${esc(record.name)} &nbsp;·&nbsp; ${esc(record.employeeId)}</span>
 </div>
-
 <div class="a4-wrap">
 
-<!-- ══ PAGE 1 ══ -->
+<!-- ══ PAGE 1: Employee details + Reasons + Comments ══ -->
 <div class="a4-page">
   ${pageHdr}
 
-  <!-- Employee details — underline fields like the PDF -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 20pt;margin-bottom:10pt;">
-    <div>${fieldLine('Employee Name', record.name)}</div>
-    <div>${fieldLine('Termination Date', fmt(record.departureDate))}</div>
-    <div>${fieldLine('Employee ID #', record.employeeId)}</div>
+  <table style="width:100%;border-collapse:collapse;margin-bottom:8pt;">
+    <tbody>
+      ${fieldRow('Employee Name', record.name, 'Termination Date', fmt(record.departureDate))}
+      <tr>
+        <td style="font-size:9pt;padding:5pt 0;white-space:nowrap;">Employee ID #</td>
+        <td style="border-bottom:1pt solid #111;padding:5pt 6pt 2pt;font-size:9pt;">${esc(record.employeeId)}</td>
+        <td style="width:16pt;"></td>
+        <td style="font-size:9pt;padding:5pt 0;white-space:nowrap;">Eligible to Re-employee</td>
+        <td style="padding:5pt 0 2pt;font-size:9pt;">
+          &nbsp;${box(record.rehireEligible)} Yes&nbsp;&nbsp;${box(!record.rehireEligible)} No
+        </td>
+      </tr>
+      ${fieldRow('Job Title', record.designation, 'Section / Department', record.department)}
+      <tr>
+        <td style="font-size:9pt;padding:5pt 0;white-space:nowrap;">Period of Service:</td>
+        <td colspan="4" style="border-bottom:1pt solid #111;padding:5pt 6pt 2pt;font-size:9pt;">${esc(record.periodOfService||'')}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div style="text-align:center;font-size:11pt;font-weight:800;margin:14pt 0 4pt;">Reason for Resignation / Termination</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 30pt;margin-bottom:10pt;">
     <div>
-      <div style="display:flex;align-items:baseline;gap:8pt;margin-bottom:7pt;">
-        <span style="font-size:9pt;min-width:120pt;">Eligible to Re-employ</span>
-        <span style="font-size:9pt;">${chk(record.rehireEligible)} Yes &nbsp;&nbsp; ${chk(!record.rehireEligible)} No</span>
+      <div style="font-size:9pt;font-weight:800;text-decoration:underline;text-align:center;margin-bottom:8pt;">Involuntary</div>
+      ${invRows}
+      <div style="display:flex;align-items:center;margin-bottom:5pt;font-size:9pt;">
+        ${box(!!record.invOther)}Other &nbsp;<span style="border-bottom:1pt solid #111;flex:1;display:inline-block;padding-bottom:1pt;">${esc(record.invOther||'')}</span>
       </div>
     </div>
-    <div>${fieldLine('Job Title', record.designation)}</div>
-    <div>${fieldLine('Section / Department', record.department)}</div>
-  </div>
-  ${fieldLine('Period of Service:', record.periodOfService || '', '140pt')}
-
-  <!-- Reasons -->
-  <div style="text-align:center;font-size:10.5pt;font-weight:800;margin:12pt 0 8pt;">Reason for Resignation / Termination</div>
-  <div class="two-col">
     <div>
-      <div class="col-hdr">Involuntary</div>
-      ${invRows}
-      <div style="display:flex;align-items:center;gap:6pt;margin-top:4pt;font-size:9pt;">${chk(!!record.invOther)}&nbsp;Other&nbsp;<span style="border-bottom:1pt solid #111;flex:1;min-width:60pt;">${esc(record.invOther||'')}</span></div>
-    </div>
-    <div>
-      <div class="col-hdr">Voluntary</div>
+      <div style="font-size:9pt;font-weight:800;text-decoration:underline;text-align:center;margin-bottom:8pt;">Voluntary</div>
       ${volRows}
-      <div style="display:flex;align-items:center;gap:6pt;margin-top:4pt;font-size:9pt;">${chk(!!record.volOther)}&nbsp;Other&nbsp;<span style="border-bottom:1pt solid #111;flex:1;min-width:60pt;">${esc(record.volOther||'')}</span></div>
+      <div style="display:flex;align-items:center;margin-bottom:5pt;font-size:9pt;">
+        ${box(!!record.volOther)}Other &nbsp;<span style="border-bottom:1pt solid #111;flex:1;display:inline-block;padding-bottom:1pt;">${esc(record.volOther||'')}</span>
+      </div>
     </div>
   </div>
 
-  <!-- Employee Comments -->
-  <div style="border:1pt solid #111;margin-top:10pt;">
-    <div style="font-size:9pt;font-weight:700;padding:3pt 6pt;border-bottom:1pt solid #111;">Employee Comments:</div>
-    <div style="min-height:60pt;padding:5pt 6pt;font-size:9pt;">${esc(record.employeeComments||'')}</div>
-  </div>
+  <table style="width:100%;border-collapse:collapse;border:1pt solid #111;margin-top:8pt;">
+    <tr><td style="font-size:9pt;font-weight:700;padding:4pt 8pt;border-bottom:1pt solid #111;"><strong>Employee Comments:</strong></td></tr>
+    ${['','','',''].map((_, i) => {
+      const lines = (record.employeeComments || '').split('\n')
+      return `<tr><td style="padding:4pt 8pt;border-bottom:0.5pt solid #ccc;min-height:18pt;font-size:9pt;">${esc(lines[i]||'')}&nbsp;</td></tr>`
+    }).join('')}
+  </table>
+  <div class="page-num">1</div>
 </div>
 
-<!-- ══ PAGE 2 ══ -->
+<!-- ══ PAGE 2: Questionnaire ══ -->
 <div class="a4-page page-break">
-  ${pageHdr}
-  <div style="font-size:9pt;font-weight:700;margin-bottom:8pt;">Check which best describes your feelings about the following aspects of your employment.</div>
-  <table class="quest-tbl">
+  <div style="text-align:center;font-size:13pt;font-weight:800;margin-bottom:16pt;">Questionnaire</div>
+  <div style="font-size:9pt;font-weight:700;margin-bottom:12pt;">Check which best describes your feelings about the following aspects of your employment.</div>
+  <table class="quest-table">
     <thead><tr>
-      <th style="text-align:left;width:52%;">&nbsp;</th>
-      <th>Very Satisfied</th><th>Satisfied</th><th>Dissatisfied</th>
+      <th style="text-align:left;"></th>
+      <th>Very Satisfied</th>
+      <th>Satisfied</th>
+      <th>Dissatisfied</th>
     </tr></thead>
     <tbody>${questRows}</tbody>
   </table>
-  <div style="font-size:9pt;margin-bottom:8pt;"><strong>Areas to be improved:&nbsp;</strong><span style="border-bottom:1pt solid #111;display:inline-block;min-width:300pt;">${esc(record.areasToImprove||'')}</span></div>
-  <div style="font-size:9pt;font-weight:700;margin:10pt 0 6pt;">Please answer the following questions in short</div>
+  <div style="font-size:9pt;margin:10pt 0 16pt;">
+    Areas to be improved: <span style="border-bottom:1pt solid #111;display:inline-block;min-width:320pt;padding-bottom:1pt;vertical-align:bottom;">${esc(record.areasToImprove||'')}</span>
+    <div style="border-bottom:1pt solid #111;margin-top:4pt;height:14pt;"></div>
+  </div>
+  <div style="font-size:9pt;font-weight:700;margin-bottom:10pt;">Please answer the following questions in short</div>
   ${qBlock(1, 3)}
+  <div class="page-num">2</div>
 </div>
 
-<!-- ══ PAGE 3 ══ -->
+<!-- ══ PAGE 3: Questions 4–13 ══ -->
 <div class="a4-page page-break">
-  ${pageHdr}
   ${qBlock(4, 13)}
+  <div class="page-num">3</div>
 </div>
 
-<!-- ══ PAGE 4 ══ -->
+<!-- ══ PAGE 4: Q14 + Interviewer + Signatures ══ -->
 <div class="a4-page page-break">
-  ${pageHdr}
   ${qBlock(14, 14)}
 
-  <!-- Interviewer Comments box -->
-  <div style="border:1pt solid #111;margin:14pt 0 0;">
-    <div style="font-size:9pt;font-weight:700;padding:3pt 6pt;border-bottom:1pt solid #111;">Interviewer Comments:</div>
-    <div style="min-height:60pt;padding:5pt 6pt;font-size:9pt;">${esc(record.interviewerComments||'')}</div>
-  </div>
+  <table style="width:100%;border-collapse:collapse;border:1pt solid #111;margin:16pt 0;">
+    <tr><td style="font-size:9pt;font-weight:700;padding:4pt 8pt;border-bottom:1pt solid #111;"><strong>Interviewer Comments:</strong></td></tr>
+    ${['','','',''].map((_, i) => {
+      const lines = (record.interviewerComments || '').split('\n')
+      return `<tr><td style="padding:4pt 8pt;border-bottom:0.5pt solid #ccc;min-height:18pt;font-size:9pt;">${esc(lines[i]||'')}&nbsp;</td></tr>`
+    }).join('')}
+  </table>
 
-  <!-- Signatures -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:40pt;margin-top:32pt;">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 80pt;margin-top:40pt;">
     <div>
       <div style="border-top:1pt solid #111;padding-top:4pt;">
         <div style="font-size:9pt;font-weight:700;">Employee's Signature</div>
-        <div style="font-size:9pt;margin-top:4pt;">${esc(record.name)}</div>
       </div>
     </div>
     <div>
       <div style="border-top:1pt solid #111;padding-top:4pt;">
         <div style="font-size:9pt;font-weight:700;">Interviewer's Signature</div>
-        <div style="font-size:9pt;margin-top:4pt;">${esc(record.interviewerName||'')}</div>
       </div>
     </div>
   </div>
-  <div style="margin-top:18pt;font-size:9pt;"><strong>Date</strong>&nbsp;&nbsp;<span style="border-bottom:1pt solid #111;display:inline-block;min-width:80pt;">${fmt(record.interviewDate)}</span></div>
+  <div style="margin-top:20pt;font-size:9pt;">
+    Date &nbsp;<span style="border-bottom:1pt solid #111;display:inline-block;min-width:90pt;padding-bottom:1pt;vertical-align:bottom;">${fmt(record.interviewDate)}</span>
+  </div>
+  <div class="page-num">4</div>
 </div>
 
-</div>
-</body></html>`
+</div></body></html>`
 
-  const w = window.open('', '_blank', 'width=900,height=700')
+  const w = window.open('', '_blank', 'width=920,height=720')
   if (w) { w.document.write(html); w.document.close() }
 }
 
