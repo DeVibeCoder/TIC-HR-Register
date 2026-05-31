@@ -1984,21 +1984,23 @@ h2 { margin: 0; color: #111; font-size: 0.95rem; line-height: 1.2; }
 .leave-table td:nth-child(8),
 .leave-table th:last-child,
 .leave-table td:last-child,
-.termination-table th:nth-child(1),
-.termination-table td:nth-child(1),
-.termination-table th:nth-child(5),
-.termination-table td:nth-child(5),
-.termination-table th:nth-child(6),
-.termination-table td:nth-child(6),
-.termination-table th:nth-child(7),
-.termination-table td:nth-child(7),
-.termination-table th:nth-child(8),
-.termination-table td:nth-child(8),
-.termination-table th:nth-child(9),
-.termination-table td:nth-child(9),
-.termination-table th:last-child,
-.termination-table td:last-child {
-  text-align: center;
+/* Termination table: vertical center all cells + center specific columns */
+.termination-table th,
+.termination-table td { vertical-align: middle !important; }
+
+/* Notice period (cols: 1=expand, 2=EmpID, 3=Name, 4=Section, 5=Nationality,
+   6=DateJoin, 7=Duration, 8=LastWorking, 9=Departure, 10=Stage, 11=Actions) */
+/* History (cols: 1=EmpID, 2=Name, 3=Section, 4=Nationality,
+   5=DateJoin, 6=Duration, 7=LastWorking, 8=Departure, 9=Type, 10=Action) */
+.termination-table th:nth-child(1), .termination-table td:nth-child(1),
+.termination-table th:nth-child(5), .termination-table td:nth-child(5),
+.termination-table th:nth-child(6), .termination-table td:nth-child(6),
+.termination-table th:nth-child(7), .termination-table td:nth-child(7),
+.termination-table th:nth-child(8), .termination-table td:nth-child(8),
+.termination-table th:nth-child(9), .termination-table td:nth-child(9),
+.termination-table th:nth-child(10), .termination-table td:nth-child(10),
+.termination-table th:last-child, .termination-table td:last-child {
+  text-align: center !important;
 }
 
 .employee-table th:nth-child(1),
@@ -7667,6 +7669,12 @@ button.step-pill:hover { filter: brightness(0.98); }
 @media (max-width: 680px) {
   .mc-detail-2col { grid-template-columns: 1fr; }
   .mc-detail-right { border-left: none; border-top: 1px solid #e8eaf0; padding: 12px 0 0; }
+}
+
+/* ═══ Exit Interview analytics modal ════════════════════ */
+.ei-analytics-modal {
+  max-width: 900px !important;
+  width: 96vw !important;
 }
 
 /* ═══ Pending task top row ══════════════════════════════ */

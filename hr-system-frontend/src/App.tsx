@@ -5525,6 +5525,85 @@ function ExitInterviewModal({ record, completedTerminations, onClose, onSave }: 
   )
 }
 
+function ExitInterviewAnalyticsModal({ records, onClose }: { records: ExitInterviewRecord[]; onClose: () => void }) {
+  const total = records.length
+  const avg = (key: keyof ExitInterviewRecord) => total ? records.reduce((s, r) => s + (r[key] as number), 0) / total : 0
+  const avgOverall   = avg('overall')
+  const recommendPct = total ? Math.round(records.filter(r => r.wouldRecommend).length / total * 100) : 0
+  const reasonCounts = useMemo(() => {
+    const m: Record<string, number> = {}
+    records.forEach(r => { m[r.terminationType] = (m[r.terminationType] ?? 0) + 1 })
+    return Object.entries(m).sort((a, b) => b[1] - a[1])
+  }, [records])
+  const topReason = reasonCounts[0]?.[0] ?? '—'
+
+  const ScoreBar = ({ label, value }: { label: string; value: number }) => (
+    <div className="ei-score-row">
+      <span className="ei-score-label">{label}</span>
+      <div className="ei-score-track"><div className="ei-score-fill" style={{ width: `${(value/5)*100}%`, background: ratingColor(value) }} /></div>
+      <span className="ei-score-num" style={{ color: ratingColor(value) }}>{value ? value.toFixed(1) : '—'}</span>
+      {value > 0 && <span className="ei-score-desc" style={{ color: ratingColor(value), background: ratingBg(value) }}>{ratingLabel(value)}</span>}
+    </div>
+  )
+
+  return (
+    <div className="modal-backdrop" role="presentation">
+      <section className="registration-modal ei-analytics-modal" role="dialog" aria-modal="true">
+        <div className="modal-header">
+          <div><p className="eyebrow">Exit Interviews</p><h2>Analytics</h2>
+            <p style={{ fontSize: '0.82rem', color: '#64748b', marginTop: 2 }}>{total} interview{total !== 1 ? 's' : ''} recorded</p>
+          </div>
+          <button className="icon-button" onClick={onClose} type="button">×</button>
+        </div>
+
+        {total === 0
+          ? <p style={{ padding: '24px', color: '#94a3b8', textAlign: 'center' }}>No exit interview data to analyse.</p>
+          : (
+            <>
+              {/* KPI row */}
+              <div className="ei-stat-row" style={{ margin: '0 0 16px' }}>
+                <div className="ei-stat ei-stat-purple"><strong>{total}</strong><span>Total Interviews</span></div>
+                <div className="ei-stat ei-stat-blue"><strong>{avgOverall ? avgOverall.toFixed(1) : '—'}<small>/5</small></strong><span>Avg Satisfaction</span></div>
+                <div className="ei-stat ei-stat-green"><strong>{recommendPct}<small>%</small></strong><span>Would Recommend</span></div>
+                <div className="ei-stat ei-stat-amber"><strong>{topReason}</strong><span>Top Exit Reason</span></div>
+              </div>
+
+              {/* Dashboard grid */}
+              <div className="ei-dashboard-grid">
+                <div className="ei-panel">
+                  <h3 className="ei-panel-title">Satisfaction by Area</h3>
+                  {eiCategories.map(({ key, label }) => (
+                    <ScoreBar key={key} label={label} value={avg(key)} />
+                  ))}
+                </div>
+                <div className="ei-panel">
+                  <h3 className="ei-panel-title">Exit Reasons</h3>
+                  {reasonCounts.map(([reason, count]) => (
+                    <div key={reason} className="ei-reason-row">
+                      <span className="ei-reason-name">{reason}</span>
+                      <div className="ei-reason-track"><div className="ei-reason-fill" style={{ width: `${(count/total)*100}%` }} /></div>
+                      <span className="ei-reason-count">{count} <small>({Math.round(count/total*100)}%)</small></span>
+                    </div>
+                  ))}
+                  <div className="ei-recommend-ring" style={{ marginTop: '24px' }}>
+                    <div className="ei-ring-label">
+                      <strong style={{ fontSize: '2rem', color: recommendPct >= 60 ? '#16a34a' : '#dc2626' }}>{recommendPct}%</strong>
+                      <span>would recommend TIC as an employer</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+        <div className="modal-actions">
+          <button className="quiet-button light" onClick={onClose} type="button">Close</button>
+        </div>
+      </section>
+    </div>
+  )
+}
+
 function ExitInterviewSection({ records, completedTerminations, onUpdate }: {
   records: ExitInterviewRecord[]
   completedTerminations: CompletedTerminationRecord[]
@@ -5534,6 +5613,7 @@ function ExitInterviewSection({ records, completedTerminations, onUpdate }: {
   const [deptFilter, setDeptFilter] = useState('All Sections')
   const [editing, setEditing] = useState<ExitInterviewRecord | null>(null)
   const [viewing, setViewing] = useState<ExitInterviewRecord | null>(null)
+  const [showAnalytics, setShowAnalytics] = useState(false)
 
   const months = useMemo(() => {
     const keys = Array.from(new Set(records.map((r) => r.departureDate.slice(0, 7)))).sort().reverse()
@@ -5545,24 +5625,6 @@ function ExitInterviewSection({ records, completedTerminations, onUpdate }: {
     const dOk = deptFilter === 'All Sections' || r.department === deptFilter
     return mOk && dOk
   }), [records, monthFilter, deptFilter])
-
-  const total = filtered.length
-
-  const avg = (key: keyof ExitInterviewRecord) => {
-    if (!total) return 0
-    return filtered.reduce((s, r) => s + (r[key] as number), 0) / total
-  }
-
-  const avgOverall    = avg('overall')
-  const recommendPct  = total ? Math.round(filtered.filter((r) => r.wouldRecommend).length / total * 100) : 0
-
-  const reasonCounts = useMemo(() => {
-    const m: Record<string, number> = {}
-    filtered.forEach((r) => { m[r.terminationType] = (m[r.terminationType] ?? 0) + 1 })
-    return Object.entries(m).sort((a, b) => b[1] - a[1])
-  }, [filtered])
-
-  const topReason = reasonCounts[0]?.[0] ?? '—'
 
   const save = (r: ExitInterviewRecord) => {
     onUpdate((prev) => {
@@ -5588,17 +5650,6 @@ function ExitInterviewSection({ records, completedTerminations, onUpdate }: {
     wouldRecommend: false, reasonForLeaving: '', comments: '',
   })
 
-  const ScoreBar = ({ label, value }: { label: string; value: number }) => (
-    <div className="ei-score-row">
-      <span className="ei-score-label">{label}</span>
-      <div className="ei-score-track">
-        <div className="ei-score-fill" style={{ width: `${(value / 5) * 100}%`, background: ratingColor(value) }} />
-      </div>
-      <span className="ei-score-num" style={{ color: ratingColor(value) }}>{value ? value.toFixed(1) : '—'}</span>
-      {value > 0 && <span className="ei-score-desc" style={{ color: ratingColor(value), background: ratingBg(value) }}>{ratingLabel(value)}</span>}
-    </div>
-  )
-
   return (
     <>
       {/* Toolbar */}
@@ -5614,76 +5665,16 @@ function ExitInterviewSection({ records, completedTerminations, onUpdate }: {
             {departmentsList.map((d) => <option key={d}>{d}</option>)}
           </select>
         </label>
-        <button className="quiet-button light" type="button" onClick={exportReport} style={{ marginLeft:'auto' }}>⬇ Export Report</button>
+        <button className="mc-analytics-btn" type="button" onClick={() => setShowAnalytics(true)} style={{ marginLeft: 'auto' }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Analytics
+        </button>
+        <button className="quiet-button light" type="button" onClick={exportReport}>⬇ Export</button>
         <button className="primary-button" type="button" onClick={() => setEditing(newEI())}>+ Add Interview</button>
       </div>
 
-      {/* KPI stat cards */}
-      <div className="ei-stat-row">
-        <div className="ei-stat ei-stat-purple">
-          <strong>{total}</strong>
-          <span>Total Interviews</span>
-        </div>
-        <div className="ei-stat ei-stat-blue">
-          <strong>{avgOverall ? avgOverall.toFixed(1) : '—'}<small>/5</small></strong>
-          <span>Avg Satisfaction</span>
-        </div>
-        <div className="ei-stat ei-stat-green">
-          <strong>{recommendPct}<small>%</small></strong>
-          <span>Would Recommend</span>
-        </div>
-        <div className="ei-stat ei-stat-amber">
-          <strong>{topReason}</strong>
-          <span>Top Exit Reason</span>
-        </div>
-      </div>
-
-      {/* Satisfaction breakdown */}
-      {total > 0 && (
-        <div className="ei-dashboard-grid">
-          <div className="ei-panel">
-            <h3 className="ei-panel-title">Satisfaction by Area</h3>
-            <div className="ei-scores">
-              {eiCategories.map(({ key, label }) => (
-                <ScoreBar key={key} label={label} value={avg(key)} />
-              ))}
-            </div>
-          </div>
-
-          <div className="ei-panel">
-            <h3 className="ei-panel-title">Exit Reasons</h3>
-            <div className="ei-reasons">
-              {reasonCounts.map(([reason, count]) => (
-                <div key={reason} className="ei-reason-row">
-                  <span className="ei-reason-name">{reason}</span>
-                  <div className="ei-reason-track">
-                    <div className="ei-reason-fill" style={{ width: `${(count / total) * 100}%` }} />
-                  </div>
-                  <span className="ei-reason-count">{count} <small>({Math.round(count / total * 100)}%)</small></span>
-                </div>
-              ))}
-            </div>
-            <div className="ei-recommend-ring" style={{ marginTop:'24px' }}>
-              <div className="ei-ring-label">
-                <strong style={{ fontSize:'2rem', color: recommendPct >= 60 ? '#16a34a' : '#dc2626' }}>{recommendPct}%</strong>
-                <span>would recommend TIC as an employer</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {total === 0 && (
-        <div className="ei-empty">
-          <svg viewBox="0 0 48 48" fill="none" stroke="#c4b5fd" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="56" height="56"><circle cx="24" cy="24" r="20"/><path d="M24 14v10l6 4"/></svg>
-          <p>No exit interview records match the current filters.</p>
-          <p style={{ fontSize:'0.8rem', color:'#9ca3af' }}>Add interviews using the button above.</p>
-        </div>
-      )}
-
-      {/* Interview table */}
-      {total > 0 && (
-        <div className="employee-table-shell compact-scroll" style={{ marginTop:'16px' }}>
+      {/* Table — at top, always visible */}
+      <div className="employee-table-shell compact-scroll">
           <table className="data-table">
             <thead>
               <tr>
@@ -5696,37 +5687,38 @@ function ExitInterviewSection({ records, completedTerminations, onUpdate }: {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((r) => (
-                <tr key={r.id}>
-                  <td>{r.employeeId}</td>
-                  <td className="name-cell"><button className="name-link" type="button" onClick={() => setViewing(r)}>{r.name}</button></td>
-                  <td>{r.department}</td>
-                  <td style={{textAlign:'center'}}>{formatDateDisplay(r.departureDate)}</td>
-                  <td><span className="req-type-chip">{r.terminationType}</span></td>
-                  <td style={{textAlign:'center'}}>
-                    <span className="ei-overall-badge" style={{ color: ratingColor(r.overall), background: ratingBg(r.overall) }}>
-                      {r.overall}/5
-                    </span>
-                  </td>
-                  <td style={{textAlign:'center'}}>
-                    {r.wouldRecommend
-                      ? <span className="doc-yes" style={{fontSize:'0.75rem', fontWeight:700}}>✓ Yes</span>
-                      : <span className="doc-no" style={{fontSize:'0.75rem'}}>No</span>}
-                  </td>
-                  <td style={{maxWidth:'180px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{r.reasonForLeaving || '—'}</td>
-                  <td style={{textAlign:'center'}}>
-                    <div className="row-actions">
-                      <button className="action-glyph" title="View" onClick={() => setViewing(r)} type="button">👁</button>
-                      <button className="action-glyph edit" title="Edit" onClick={() => setEditing(r)} type="button">✎</button>
-                      <button className="action-glyph delete" title="Delete" onClick={() => del(r.id)} type="button">🗑</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {filtered.length === 0
+                ? <tr><td colSpan={9} className="empty-row">No exit interview records. Add one using "+ Add Interview" above.</td></tr>
+                : filtered.map((r) => (
+                  <tr key={r.id}>
+                    <td>{r.employeeId}</td>
+                    <td className="name-cell"><button className="name-link" type="button" onClick={() => setViewing(r)}>{r.name}</button></td>
+                    <td>{r.department}</td>
+                    <td style={{textAlign:'center'}}>{formatDateDisplay(r.departureDate)}</td>
+                    <td style={{textAlign:'center'}}><span className="req-type-chip">{r.terminationType}</span></td>
+                    <td style={{textAlign:'center'}}>
+                      <span className="ei-overall-badge" style={{ color: ratingColor(r.overall), background: ratingBg(r.overall) }}>{r.overall}/5</span>
+                    </td>
+                    <td style={{textAlign:'center'}}>
+                      {r.wouldRecommend
+                        ? <span className="doc-yes" style={{fontSize:'0.75rem', fontWeight:700}}>✓ Yes</span>
+                        : <span className="doc-no" style={{fontSize:'0.75rem'}}>No</span>}
+                    </td>
+                    <td style={{maxWidth:'180px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{r.reasonForLeaving || '—'}</td>
+                    <td style={{textAlign:'center'}}>
+                      <div className="row-actions">
+                        <button className="action-glyph" title="View" onClick={() => setViewing(r)} type="button">👁</button>
+                        <button className="action-glyph edit" title="Edit" onClick={() => setEditing(r)} type="button">✎</button>
+                        <button className="action-glyph delete" title="Delete" onClick={() => del(r.id)} type="button">🗑</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>
-      )}
+
+      {showAnalytics && <ExitInterviewAnalyticsModal records={filtered} onClose={() => setShowAnalytics(false)} />}
 
       {/* View modal */}
       {viewing && (
@@ -5752,9 +5744,17 @@ function ExitInterviewSection({ records, completedTerminations, onUpdate }: {
               </div>
               <div className="ei-panel">
                 <h3 className="ei-panel-title">Ratings</h3>
-                {eiCategories.map(({ key, label }) => (
-                  <ScoreBar key={key} label={label} value={viewing[key] as number} />
-                ))}
+                {eiCategories.map(({ key, label }) => {
+                  const v = viewing[key] as number
+                  return (
+                    <div className="ei-score-row" key={key}>
+                      <span className="ei-score-label">{label}</span>
+                      <div className="ei-score-track"><div className="ei-score-fill" style={{ width: `${(v/5)*100}%`, background: ratingColor(v) }} /></div>
+                      <span className="ei-score-num" style={{ color: ratingColor(v) }}>{v ? v.toFixed(1) : '—'}</span>
+                      {v > 0 && <span className="ei-score-desc" style={{ color: ratingColor(v), background: ratingBg(v) }}>{ratingLabel(v)}</span>}
+                    </div>
+                  )
+                })}
               </div>
               <div className="ei-panel">
                 <h3 className="ei-panel-title">Feedback</h3>
