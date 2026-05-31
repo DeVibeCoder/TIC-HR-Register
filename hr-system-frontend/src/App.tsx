@@ -5678,7 +5678,7 @@ function ExitInterviewSection({ records, completedTerminations, onUpdate }: {
           <table className="data-table">
             <thead>
               <tr>
-                <th>Emp ID</th><th>Name</th><th>Section</th><th>Departure</th>
+                <th className="term-empid">Emp ID</th><th>Name</th><th>Section</th><th>Departure</th>
                 <th>Type</th>
                 <th style={{textAlign:'center'}}>Overall</th>
                 <th style={{textAlign:'center'}}>Recommend</th>
@@ -5864,7 +5864,7 @@ function TerminationPage({
               <table className="data-table termination-table compact">
                 <thead><tr>
                   <th className="lr-expand-th" />
-                  <th>Emp ID</th><th>Name</th><th>Section</th><th>Nationality</th>
+                  <th className="term-empid">Emp ID</th><th>Name</th><th>Section</th><th>Nationality</th>
                   <th>Date of Join</th><th>Duration</th><th>Last Working</th><th>Departure</th>
                   <th>Stage</th><th>Actions</th>
                 </tr></thead>
@@ -5960,7 +5960,7 @@ function TerminationPage({
             </div>
             <div className="employee-table-shell compact-scroll termination-table-shell">
               <table className="data-table termination-table compact">
-                <thead><tr><th>Emp ID</th><th>Name</th><th>Section</th><th>Nationality</th><th>Date of Join</th><th>Duration</th><th>Last Working</th><th>Departure</th><th>Type</th><th>Action</th></tr></thead>
+                <thead><tr><th className="term-empid">Emp ID</th><th>Name</th><th>Section</th><th>Nationality</th><th>Date of Join</th><th>Duration</th><th>Last Working</th><th>Departure</th><th>Type</th><th>Action</th></tr></thead>
                 <tbody>
                   {completedRows.length === 0
                     ? <tr><td colSpan={10} className="empty-row">No completed departures.</td></tr>
