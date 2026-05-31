@@ -2430,7 +2430,22 @@ button.step-pill:hover { filter: brightness(0.98); }
 
 .termination-table tr:hover { background-color: rgba(148, 163, 184, 0.2); }
 
-.termination-row .name-cell { font-weight: 600; color: #3d3d3d; }
+/* Allow full name to wrap in termination tables — all 3 tabs */
+.termination-row .name-cell,
+.termination-table td.name-cell {
+  font-weight: 600; color: #3d3d3d;
+  white-space: normal !important;
+  word-break: break-word;
+  min-width: 160px;
+  max-width: 220px;
+}
+
+/* Exit interview name cells also wrap */
+.data-table .name-cell {
+  white-space: normal !important;
+  word-break: break-word;
+  min-width: 140px;
+}
 
 .name-link {
   border: 0;
@@ -2444,6 +2459,8 @@ button.step-pill:hover { filter: brightness(0.98); }
 }
 
 .name-link:hover { color: #111111; }
+/* Allow name-link text to wrap inside name cells */
+.name-cell .name-link { white-space: normal !important; word-break: break-word; text-align: left; }
 
 .termination-actions {
   white-space: nowrap;
