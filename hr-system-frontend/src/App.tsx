@@ -5709,17 +5709,33 @@ function ExitInterviewFormModal({ record, onClose, onSave }: {
   onClose: () => void
   onSave: (r: ExitInterviewRecord) => void
 }) {
-  const [form, setForm] = useState<ExitInterviewRecord>(record)
+  const blankQ: EIQuestionnaire = { duties: '', training: '', advancement: '', salary: '', benefits: '', workConditions: '', workHours: '', coworkers: '', supervision: '', overall: '' }
+  const [form, setForm] = useState<ExitInterviewRecord>(() => ({
+    ...record,
+    involuntaryReasons: record.involuntaryReasons ?? [],
+    voluntaryReasons: record.voluntaryReasons ?? [],
+    invOther: record.invOther ?? '', volOther: record.volOther ?? '',
+    employeeComments: record.employeeComments ?? '',
+    areasToImprove: record.areasToImprove ?? '',
+    q1: record.q1 ?? '', q2: record.q2 ?? '', q3: record.q3 ?? '',
+    q4: record.q4 ?? '', q5: record.q5 ?? '', q6: record.q6 ?? '',
+    q7: record.q7 ?? '', q8: record.q8 ?? '', q9: record.q9 ?? '',
+    q10: record.q10 ?? '', q11: record.q11 ?? '', q12: record.q12 ?? '',
+    q13: record.q13 ?? '', q14: record.q14 ?? '',
+    interviewerComments: record.interviewerComments ?? '',
+    interviewerName: record.interviewerName ?? '',
+    questionnaire: record.questionnaire ?? blankQ,
+  }))
 
   const toggleInv = (reason: string) => setForm(p => ({
-    ...p, involuntaryReasons: p.involuntaryReasons.includes(reason)
-      ? p.involuntaryReasons.filter(x => x !== reason)
-      : [...p.involuntaryReasons, reason],
+    ...p, involuntaryReasons: (p.involuntaryReasons ?? []).includes(reason)
+      ? (p.involuntaryReasons ?? []).filter(x => x !== reason)
+      : [...(p.involuntaryReasons ?? []), reason],
   }))
   const toggleVol = (reason: string) => setForm(p => ({
-    ...p, voluntaryReasons: p.voluntaryReasons.includes(reason)
-      ? p.voluntaryReasons.filter(x => x !== reason)
-      : [...p.voluntaryReasons, reason],
+    ...p, voluntaryReasons: (p.voluntaryReasons ?? []).includes(reason)
+      ? (p.voluntaryReasons ?? []).filter(x => x !== reason)
+      : [...(p.voluntaryReasons ?? []), reason],
   }))
   const setQuestionnaire = (key: keyof EIQuestionnaire, val: EISatisfactionLevel) =>
     setForm(p => ({ ...p, questionnaire: { ...p.questionnaire, [key]: val } }))
@@ -5951,9 +5967,9 @@ function ExitInterviewAnalyticsModal({ records, onClose }: { records: ExitInterv
   // Questionnaire stacked bars
   const questStats = useMemo(() =>
     eiQuestionnaireCategories.map(({ key, label }) => {
-      const vsCount = records.filter(r => r.questionnaire[key] === 'Very Satisfied').length
-      const sCount  = records.filter(r => r.questionnaire[key] === 'Satisfied').length
-      const dCount  = records.filter(r => r.questionnaire[key] === 'Dissatisfied').length
+      const vsCount = records.filter(r => r.questionnaire?.[key] === 'Very Satisfied').length
+      const sCount  = records.filter(r => r.questionnaire?.[key] === 'Satisfied').length
+      const dCount  = records.filter(r => r.questionnaire?.[key] === 'Dissatisfied').length
       const filled  = vsCount + sCount + dCount
       return { key, label, vsPct: filled ? vsCount / filled * 100 : 0, sPct: filled ? sCount / filled * 100 : 0, dPct: filled ? dCount / filled * 100 : 0, filled }
     }),
@@ -6109,7 +6125,7 @@ function ExitInterviewSection({ records, onUpdate }: {
   }), [records, monthFilter, deptFilter])
 
   const eiStatus = (r: ExitInterviewRecord) =>
-    Object.values(r.questionnaire).some(v => v !== '') ? 'Completed' : 'Draft'
+    r.questionnaire && Object.values(r.questionnaire).some(v => v !== '') ? 'Completed' : 'Draft'
 
   const save = (r: ExitInterviewRecord) => {
     onUpdate((prev) => {
@@ -6357,37 +6373,41 @@ function TerminationPage({
                           {isExp && (
                             <tr className="lr-pipeline-row">
                               <td colSpan={11}>
-                                <div className="trn-detail-dates">
-                                  <div className="trn-dd-item">
-                                    <span className="trn-dd-lbl">Date Submitted</span>
-                                    <span className="trn-dd-val">{formatDateDisplay(r.dateSubmitted)}</span>
-                                  </div>
-                                  {allTerminationStages.map((stage) => {
-                                    const isDone = allTerminationStages.indexOf(stage) < stageIdx
-                                    const isCurrent = stage === r.currentStage
+                                {/* Visual pipeline with dates for all stages */}
+                                <div className="lr-pipeline" style={{ margin: '8px 8px 4px', borderRadius: 8 }}>
+                                  {allTerminationStages.map((stage, i) => {
+                                    const isDone = i < stageIdx
+                                    const isCurrent = i === stageIdx
+                                    const cls = isDone ? 'lr-done' : isCurrent ? 'lr-current' : 'lr-future'
                                     const stageDate = r.stageDates?.[stage]
                                       ?? (stage === 'Letter Submitted' ? r.dateSubmitted
                                         : stage === 'Pending Departure' ? r.departureDate
                                         : undefined)
                                     return (
-                                      <div className="trn-dd-item" key={stage} style={{ opacity: isDone || isCurrent ? 1 : 0.45 }}>
-                                        <span className="trn-dd-lbl">{stage}</span>
-                                        <span className="trn-dd-val">{stageDate ? formatDateDisplay(stageDate) : (isDone || isCurrent ? '—' : '')}</span>
-                                      </div>
+                                      <Fragment key={stage}>
+                                        <button
+                                          className={`lr-pip-step ${cls}`}
+                                          onClick={(e) => { e.stopPropagation(); onSetStage(r.id, stage) }}
+                                          type="button"
+                                          title={`Set to: ${stage}`}
+                                        >
+                                          <div className="lr-pip-circle">{isDone ? '✓' : i + 1}</div>
+                                          <div className="lr-pip-label">{stage}</div>
+                                          <div className="lr-pip-date">{stageDate ? formatDateDisplay(stageDate) : (isDone || isCurrent ? '—' : '')}</div>
+                                        </button>
+                                        {i < allTerminationStages.length - 1 && (
+                                          <div className={`lr-pip-line ${isDone ? 'lr-pip-line-done' : 'lr-pip-line-future'}`} />
+                                        )}
+                                      </Fragment>
                                     )
                                   })}
-                                  <div className="trn-dd-item">
-                                    <span className="trn-dd-lbl">Last Working</span>
-                                    <span className="trn-dd-val">{formatDateDisplay(r.lastWorkingDate)}</span>
-                                  </div>
-                                  <div className="trn-dd-item">
-                                    <span className="trn-dd-lbl">Departure</span>
-                                    <span className="trn-dd-val">{formatDateDisplay(r.departureDate)}</span>
-                                  </div>
-                                  <div className="trn-dd-item">
-                                    <span className="trn-dd-lbl">Type</span>
-                                    <span className="trn-dd-val">{r.terminationType}</span>
-                                  </div>
+                                </div>
+                                {/* Key dates row below pipeline */}
+                                <div className="trn-detail-dates">
+                                  <div className="trn-dd-item"><span className="trn-dd-lbl">Date Submitted</span><span className="trn-dd-val">{formatDateDisplay(r.dateSubmitted)}</span></div>
+                                  <div className="trn-dd-item"><span className="trn-dd-lbl">Last Working</span><span className="trn-dd-val">{formatDateDisplay(r.lastWorkingDate)}</span></div>
+                                  <div className="trn-dd-item"><span className="trn-dd-lbl">Departure</span><span className="trn-dd-val">{formatDateDisplay(r.departureDate)}</span></div>
+                                  <div className="trn-dd-item"><span className="trn-dd-lbl">Type</span><span className="trn-dd-val">{r.terminationType}</span></div>
                                 </div>
                               </td>
                             </tr>
@@ -8079,7 +8099,7 @@ function App() {
   const [passportHandovers, setPassportHandovers] = useState<PassportHandoverRecord[]>(() => loadStore('tic_passport', initialPassportHandovers))
   const [noticeTerminations, setNoticeTerminations] = useState<EnhancedTerminationRecord[]>(() => loadStore('tic_term_notice', initialNoticeTerminations))
   const [completedTerminations, setCompletedTerminations] = useState<CompletedTerminationRecord[]>(() => loadStore('tic_term_done', initialCompletedTerminations))
-  const [exitInterviews, setExitInterviews] = useState<ExitInterviewRecord[]>(() => loadStore('tic_exit_interviews', initialExitInterviews))
+  const [exitInterviews, setExitInterviews] = useState<ExitInterviewRecord[]>(() => loadStore('tic_exit_interviews_v2', initialExitInterviews))
   const [medicalCases, setMedicalCases] = useState<MedicalCaseRecord[]>(() => loadStore('tic_medical_cases', initialMedicalCases))
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>(() => loadStore('tic_inventory_items', initialInventoryItems))
   const [inventoryUsage, setInventoryUsage] = useState<InventoryUsageRecord[]>(() => loadStore('tic_inventory_usage', initialInventoryUsage))
@@ -8118,7 +8138,7 @@ function App() {
   useEffect(() => { localStorage.setItem('tic_passport', JSON.stringify(passportHandovers)) }, [passportHandovers])
   useEffect(() => { localStorage.setItem('tic_term_notice', JSON.stringify(noticeTerminations)) }, [noticeTerminations])
   useEffect(() => { localStorage.setItem('tic_term_done', JSON.stringify(completedTerminations)) }, [completedTerminations])
-  useEffect(() => { localStorage.setItem('tic_exit_interviews', JSON.stringify(exitInterviews)) }, [exitInterviews])
+  useEffect(() => { localStorage.setItem('tic_exit_interviews_v2', JSON.stringify(exitInterviews)) }, [exitInterviews])
   useEffect(() => { localStorage.setItem('tic_medical_cases', JSON.stringify(medicalCases)) }, [medicalCases])
   useEffect(() => { localStorage.setItem('tic_inventory_items', JSON.stringify(inventoryItems)) }, [inventoryItems])
   useEffect(() => { localStorage.setItem('tic_inventory_usage', JSON.stringify(inventoryUsage)) }, [inventoryUsage])
@@ -8143,7 +8163,7 @@ function App() {
 
   const resetAllData = () => {
     if (!window.confirm('This will permanently delete ALL data (employees, leave records, etc.). Are you sure?')) return
-    const keys = ['tic_employees','tic_leave_req','tic_leave_active','tic_leave_history_v2','tic_passport','tic_term_notice','tic_term_done','tic_exit_interviews','tic_medical_cases','tic_inventory_items','tic_inventory_usage','tic_offsite']
+    const keys = ['tic_employees','tic_leave_req','tic_leave_active','tic_leave_history_v2','tic_passport','tic_term_notice','tic_term_done','tic_exit_interviews_v2','tic_medical_cases','tic_inventory_items','tic_inventory_usage','tic_offsite']
     keys.forEach((k) => localStorage.removeItem(k))
     setEmployees([])
     setLeaveRequests([])
