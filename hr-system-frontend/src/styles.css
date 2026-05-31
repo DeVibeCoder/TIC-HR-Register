@@ -2457,16 +2457,16 @@ button.step-pill:hover { filter: brightness(0.98); }
   color: #64748b !important;
 }
 
-/* Name column: widest column, takes all available space */
+/* Name column: fixed comfortable width — not greedy, not cramped */
 .termination-table td.name-cell,
 .termination-row .name-cell {
   font-weight: 600;
   color: #3d3d3d;
   white-space: normal !important;
   word-break: break-word !important;
-  min-width: 220px !important;
-  max-width: none !important;    /* no cap — take as much as the table gives */
-  width: 100%;                   /* greedily absorbs remaining space */
+  width: 200px !important;
+  min-width: 160px !important;
+  max-width: 200px !important;
   overflow: visible !important;
   text-overflow: clip !important;
 }
