@@ -5572,43 +5572,41 @@ function printExitInterview(record: ExitInterviewRecord) {
     const months = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
     return `${dd}-${months[parseInt(m,10)]}-${y}`
   }
-  // Checkbox exactly like PDF: square box, ✓ or empty
+  // Checkbox: large, bold tick mark — prominent and clearly visible on print
   const box = (checked: boolean) =>
-    `<span style="display:inline-block;width:10pt;height:10pt;border:1pt solid #333;text-align:center;line-height:10pt;font-size:8pt;margin-right:5pt;vertical-align:middle;">${checked?'&#10003;':''}</span>`
+    `<span style="display:inline-block;width:14pt;height:14pt;border:1.2pt solid #222;text-align:center;line-height:14pt;font-size:12pt;font-weight:900;margin-right:6pt;vertical-align:middle;flex-shrink:0;">${checked?'&#10003;':''}</span>`
 
   const inv = record.involuntaryReasons ?? []
   const vol = record.voluntaryReasons ?? []
 
   const invRows = invReasonsList.map(r =>
-    `<div style="display:flex;align-items:center;margin-bottom:5pt;font-size:9pt;">${box(inv.includes(r))}${esc(r)}</div>`
+    `<div style="display:flex;align-items:center;margin-bottom:6pt;font-size:9pt;">${box(inv.includes(r))}${esc(r)}</div>`
   ).join('')
   const volRows = volReasonsList.map(r =>
-    `<div style="display:flex;align-items:center;margin-bottom:5pt;font-size:9pt;">${box(vol.includes(r))}${esc(r)}</div>`
+    `<div style="display:flex;align-items:center;margin-bottom:6pt;font-size:9pt;">${box(vol.includes(r))}${esc(r)}</div>`
   ).join('')
 
   const q = record.questionnaire ?? {}
   const questRows = eiQuestionnaireCategories.map(({ key, label }) => {
     const v = q[key as keyof EIQuestionnaire] ?? ''
     return `<tr>
-      <td style="padding:6pt 4pt;border:none;font-size:9pt;">${label}</td>
-      <td style="text-align:center;border:none;padding:6pt 0;">${box(v==='Very Satisfied')}</td>
-      <td style="text-align:center;border:none;padding:6pt 0;">${box(v==='Satisfied')}</td>
-      <td style="text-align:center;border:none;padding:6pt 0;">${box(v==='Dissatisfied')}</td>
+      <td style="padding:7pt 4pt;border:none;font-size:9pt;">${label}</td>
+      <td style="text-align:center;border:none;padding:7pt 0;">${box(v==='Very Satisfied')}</td>
+      <td style="text-align:center;border:none;padding:7pt 0;">${box(v==='Satisfied')}</td>
+      <td style="text-align:center;border:none;padding:7pt 0;">${box(v==='Dissatisfied')}</td>
     </tr>`
   }).join('')
 
-  // Each question: question text + 2 answer underlines (matching PDF pages 2-4)
+  // Each question: question text + bordered rectangular answer box (not underlines)
+  const ansBox = (ans: string) =>
+    `<div style="border:1pt solid #444;min-height:38pt;padding:5pt 7pt;font-size:9pt;margin-top:5pt;width:100%;box-sizing:border-box;">${ans}</div>`
+
   const qBlock = (from: number, to: number) => eiShortQuestions.slice(from - 1, to).map((qText, i) => {
     const qi = `q${from + i}` as keyof ExitInterviewRecord
     const ans = esc(record[qi] as string || '')
-    const lines = ans
-      ? `<div style="border-bottom:1pt solid #111;min-height:14pt;padding:1pt 0 2pt;font-size:9pt;margin-top:6pt;">${ans}</div>
-         <div style="border-bottom:1pt solid #111;min-height:14pt;margin-top:4pt;"></div>`
-      : `<div style="border-bottom:1pt solid #111;min-height:14pt;margin-top:6pt;"></div>
-         <div style="border-bottom:1pt solid #111;min-height:14pt;margin-top:4pt;"></div>`
-    return `<div style="margin-bottom:14pt;">
-      <div style="font-size:9pt;margin-bottom:2pt;">${from+i}.&nbsp;&nbsp;${esc(qText)}</div>
-      ${lines}
+    return `<div style="margin-bottom:13pt;">
+      <div style="font-size:9pt;margin-bottom:3pt;">${from+i}.&nbsp;&nbsp;${esc(qText)}</div>
+      ${ansBox(ans)}
     </div>`
   }).join('')
 
@@ -5717,15 +5715,15 @@ function printExitInterview(record: ExitInterviewRecord) {
     <div>
       <div style="font-size:9pt;font-weight:800;text-decoration:underline;text-align:center;margin-bottom:8pt;">Involuntary</div>
       ${invRows}
-      <div style="display:flex;align-items:center;margin-bottom:5pt;font-size:9pt;">
-        ${box(!!record.invOther)}Other &nbsp;<span style="border-bottom:1pt solid #111;flex:1;display:inline-block;padding-bottom:1pt;">${esc(record.invOther||'')}</span>
+      <div style="display:flex;align-items:center;margin-bottom:6pt;font-size:9pt;">
+        ${box(!!record.invOther)}Other &nbsp;<span style="border:1pt solid #444;flex:1;display:inline-block;padding:2pt 5pt;min-height:15pt;">${esc(record.invOther||'')}</span>
       </div>
     </div>
     <div>
       <div style="font-size:9pt;font-weight:800;text-decoration:underline;text-align:center;margin-bottom:8pt;">Voluntary</div>
       ${volRows}
-      <div style="display:flex;align-items:center;margin-bottom:5pt;font-size:9pt;">
-        ${box(!!record.volOther)}Other &nbsp;<span style="border-bottom:1pt solid #111;flex:1;display:inline-block;padding-bottom:1pt;">${esc(record.volOther||'')}</span>
+      <div style="display:flex;align-items:center;margin-bottom:6pt;font-size:9pt;">
+        ${box(!!record.volOther)}Other &nbsp;<span style="border:1pt solid #444;flex:1;display:inline-block;padding:2pt 5pt;min-height:15pt;">${esc(record.volOther||'')}</span>
       </div>
     </div>
   </div>
@@ -5753,9 +5751,9 @@ function printExitInterview(record: ExitInterviewRecord) {
     </tr></thead>
     <tbody>${questRows}</tbody>
   </table>
-  <div style="font-size:9pt;margin:10pt 0 16pt;">
-    Areas to be improved: <span style="border-bottom:1pt solid #111;display:inline-block;min-width:320pt;padding-bottom:1pt;vertical-align:bottom;">${esc(record.areasToImprove||'')}</span>
-    <div style="border-bottom:1pt solid #111;margin-top:4pt;height:14pt;"></div>
+  <div style="font-size:9pt;margin:10pt 0 14pt;">
+    <div style="font-size:9pt;margin-bottom:3pt;font-weight:600;">Areas to be improved:</div>
+    <div style="border:1pt solid #444;min-height:32pt;padding:5pt 7pt;font-size:9pt;">${esc(record.areasToImprove||'')}</div>
   </div>
   <div style="font-size:9pt;font-weight:700;margin-bottom:10pt;">Please answer the following questions in short</div>
   ${qBlock(1, 3)}
@@ -5792,8 +5790,8 @@ function printExitInterview(record: ExitInterviewRecord) {
       </div>
     </div>
   </div>
-  <div style="margin-top:20pt;font-size:9pt;">
-    Date &nbsp;<span style="border-bottom:1pt solid #111;display:inline-block;min-width:90pt;padding-bottom:1pt;vertical-align:bottom;">${fmt(record.interviewDate)}</span>
+  <div style="margin-top:20pt;font-size:9pt;display:flex;align-items:center;gap:6pt;">
+    Date &nbsp;<span style="border:1pt solid #444;display:inline-block;min-width:90pt;padding:3pt 7pt;">${fmt(record.interviewDate)}</span>
   </div>
   <div class="page-num">4</div>
 </div>
