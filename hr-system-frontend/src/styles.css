@@ -2448,6 +2448,15 @@ button.step-pill:hover { filter: brightness(0.98); }
 
 .termination-table tr:hover { background-color: rgba(148, 163, 184, 0.2); }
 
+/* Emp ID column: pinned narrow — only as wide as the content needs */
+.term-empid {
+  width: 1px;       /* shrinks to content */
+  white-space: nowrap;
+  padding-right: 12px !important;
+  font-size: 0.78rem !important;
+  color: #64748b !important;
+}
+
 /* Allow full name to wrap in termination tables — all 3 tabs */
 .termination-row .name-cell,
 .termination-table td.name-cell {

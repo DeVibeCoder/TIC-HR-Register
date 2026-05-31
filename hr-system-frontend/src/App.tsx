@@ -5691,7 +5691,7 @@ function ExitInterviewSection({ records, completedTerminations, onUpdate }: {
                 ? <tr><td colSpan={9} className="empty-row">No exit interview records. Add one using "+ Add Interview" above.</td></tr>
                 : filtered.map((r) => (
                   <tr key={r.id}>
-                    <td>{r.employeeId}</td>
+                    <td className="term-empid">{r.employeeId}</td>
                     <td className="name-cell"><button className="name-link" type="button" onClick={() => setViewing(r)}>{r.name}</button></td>
                     <td>{r.department}</td>
                     <td style={{textAlign:'center'}}>{formatDateDisplay(r.departureDate)}</td>
@@ -5880,7 +5880,7 @@ function TerminationPage({
                         <Fragment key={r.id}>
                           <tr className={`termination-row lr-row${isExp ? ' lr-row-open' : ''}`} onClick={() => setExpandedTermId(isExp ? null : r.id)}>
                             <td className="lr-expand-td"><span className={`mc-arrow${isExp ? ' mc-arrow-open' : ''}`}>›</span></td>
-                            <td>{r.employeeId}</td>
+                            <td className="term-empid">{r.employeeId}</td>
                             <td className="name-cell" onClick={(e) => e.stopPropagation()}><button className="name-link" onClick={() => onViewDetails(r)} type="button">{r.name}</button></td>
                             <td>{r.department}</td>
                             <td>{r.nationality}</td>
@@ -5966,7 +5966,7 @@ function TerminationPage({
                     ? <tr><td colSpan={10} className="empty-row">No completed departures.</td></tr>
                     : completedRows.map((r) => (
                       <tr key={r.id} className="termination-row">
-                        <td>{r.employeeId}</td>
+                        <td className="term-empid">{r.employeeId}</td>
                         <td className="name-cell"><button className="name-link" onClick={() => onViewDetails(r)} type="button">{r.name}</button></td>
                         <td>{r.department}</td>
                         <td>{r.nationality}</td>
