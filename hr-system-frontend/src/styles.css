@@ -2457,21 +2457,28 @@ button.step-pill:hover { filter: brightness(0.98); }
   color: #64748b !important;
 }
 
-/* Allow full name to wrap in termination tables — all 3 tabs */
-.termination-row .name-cell,
-.termination-table td.name-cell {
-  font-weight: 600; color: #3d3d3d;
+/* Name column: widest column, takes all available space */
+.termination-table td.name-cell,
+.termination-row .name-cell {
+  font-weight: 600;
+  color: #3d3d3d;
   white-space: normal !important;
-  word-break: break-word;
-  min-width: 160px;
-  max-width: 220px;
+  word-break: break-word !important;
+  min-width: 220px !important;
+  max-width: none !important;    /* no cap — take as much as the table gives */
+  width: 100%;                   /* greedily absorbs remaining space */
+  overflow: visible !important;
+  text-overflow: clip !important;
 }
 
-/* Exit interview name cells also wrap */
+/* Exit interview name cells — same treatment */
 .data-table .name-cell {
   white-space: normal !important;
-  word-break: break-word;
-  min-width: 140px;
+  word-break: break-word !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  min-width: 160px !important;
+  max-width: none !important;
 }
 
 .name-link {
@@ -2486,8 +2493,15 @@ button.step-pill:hover { filter: brightness(0.98); }
 }
 
 .name-link:hover { color: #111111; }
-/* Allow name-link text to wrap inside name cells */
-.name-cell .name-link { white-space: normal !important; word-break: break-word; text-align: left; }
+/* name-link button: full width, wraps freely */
+.name-cell .name-link {
+  white-space: normal !important;
+  word-break: break-word !important;
+  text-align: left;
+  width: 100%;
+  display: block;
+  overflow: visible !important;
+}
 
 .termination-actions {
   white-space: nowrap;
