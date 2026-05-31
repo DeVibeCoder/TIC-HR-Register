@@ -5612,26 +5612,25 @@ function printExitInterview(record: ExitInterviewRecord) {
     </div>`
   }).join('')
 
-  // SVG logo — exact Villa Hakatha logo reconstruction
-  // Top section: left-blue + right-blue flanking, dark-purple center (purple drawn last = on top)
-  // White gaps come from the color boundaries
-  // Bottom: narrower blue triangle separated by white space
+  // Villa Hakatha logo — exact structure:
+  // One large inverted triangle split into 3 vertical slices converging to ONE shared apex.
+  // Left-blue | Purple-center | Right-blue — all sharing apex at (250,215).
+  // Bottom: one blue triangle same width as the purple center slice.
   const logoSvg = `<svg viewBox="0 0 500 445" xmlns="http://www.w3.org/2000/svg" style="width:72pt;height:64pt;flex-shrink:0;">
     <rect width="500" height="445" fill="white"/>
-    <!-- Left blue (large, left half) -->
-    <polygon points="4,4 268,4 136,212" fill="#009FDA"/>
-    <!-- Right blue (large, right half) -->
-    <polygon points="232,4 496,4 364,212" fill="#009FDA"/>
-    <!-- Purple center triangle ON TOP — covers inner halves of both blues
-         White gap effect comes from purple's edges cutting through the blue -->
-    <polygon points="136,4 364,4 250,210" fill="#2B2082"/>
-    <!-- White separator lines along the purple/blue junctions -->
-    <line x1="136" y1="4" x2="250" y2="210" stroke="white" stroke-width="6"/>
-    <line x1="364" y1="4" x2="250" y2="210" stroke="white" stroke-width="6"/>
-    <!-- White horizontal gap between top and bottom sections -->
-    <rect x="0" y="212" width="500" height="16" fill="white"/>
-    <!-- Bottom blue triangle (narrower, centered) -->
-    <polygon points="136,228 364,228 250,438" fill="#009FDA"/>
+    <!-- Left blue slice: (4,4)→(145,4)→(250,215) -->
+    <polygon points="4,4 145,4 250,215" fill="#009FDA"/>
+    <!-- Purple center slice: (145,4)→(355,4)→(250,215) -->
+    <polygon points="145,4 355,4 250,215" fill="#2B2082"/>
+    <!-- Right blue slice: (355,4)→(496,4)→(250,215) -->
+    <polygon points="355,4 496,4 250,215" fill="#009FDA"/>
+    <!-- White separator lines between slices (creates the clean white gaps) -->
+    <line x1="145" y1="4" x2="250" y2="215" stroke="white" stroke-width="6"/>
+    <line x1="355" y1="4" x2="250" y2="215" stroke="white" stroke-width="6"/>
+    <!-- White horizontal gap separating top from bottom -->
+    <rect x="0" y="215" width="500" height="16" fill="white"/>
+    <!-- Bottom blue triangle — same base width as the purple center slice -->
+    <polygon points="145,232 355,232 250,442" fill="#009FDA"/>
   </svg>`
 
   // Page header — exact PDF layout: logo left, company name right, EXIT INTERVIEW centered below
