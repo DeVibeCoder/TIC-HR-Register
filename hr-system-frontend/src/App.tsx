@@ -7597,7 +7597,7 @@ function App() {
   const [employees, setEmployees] = useState<Employee[]>(() => loadStore('tic_employees', initialEmployees))
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequestRecord[]>(() => loadStore('tic_leave_req', initialLeaveRequests))
   const [activeLeaves, setActiveLeaves] = useState<ActiveLeaveRecord[]>(() => loadStore('tic_leave_active', initialActiveLeaves))
-  const [leaveHistory, setLeaveHistory] = useState<LeaveHistoryRecord[]>(() => loadStore('tic_leave_history', initialLeaveHistory))
+  const [leaveHistory, setLeaveHistory] = useState<LeaveHistoryRecord[]>(() => loadStore('tic_leave_history_v2', initialLeaveHistory))
   const [passportHandovers, setPassportHandovers] = useState<PassportHandoverRecord[]>(() => loadStore('tic_passport', initialPassportHandovers))
   const [noticeTerminations, setNoticeTerminations] = useState<EnhancedTerminationRecord[]>(() => loadStore('tic_term_notice', initialNoticeTerminations))
   const [completedTerminations, setCompletedTerminations] = useState<CompletedTerminationRecord[]>(() => loadStore('tic_term_done', initialCompletedTerminations))
@@ -7636,7 +7636,7 @@ function App() {
   useEffect(() => { localStorage.setItem('tic_employees', JSON.stringify(employees)) }, [employees])
   useEffect(() => { localStorage.setItem('tic_leave_req', JSON.stringify(leaveRequests)) }, [leaveRequests])
   useEffect(() => { localStorage.setItem('tic_leave_active', JSON.stringify(activeLeaves)) }, [activeLeaves])
-  useEffect(() => { localStorage.setItem('tic_leave_history', JSON.stringify(leaveHistory)) }, [leaveHistory])
+  useEffect(() => { localStorage.setItem('tic_leave_history_v2', JSON.stringify(leaveHistory)) }, [leaveHistory])
   useEffect(() => { localStorage.setItem('tic_passport', JSON.stringify(passportHandovers)) }, [passportHandovers])
   useEffect(() => { localStorage.setItem('tic_term_notice', JSON.stringify(noticeTerminations)) }, [noticeTerminations])
   useEffect(() => { localStorage.setItem('tic_term_done', JSON.stringify(completedTerminations)) }, [completedTerminations])
@@ -7665,7 +7665,7 @@ function App() {
 
   const resetAllData = () => {
     if (!window.confirm('This will permanently delete ALL data (employees, leave records, etc.). Are you sure?')) return
-    const keys = ['tic_employees','tic_leave_req','tic_leave_active','tic_leave_history','tic_passport','tic_term_notice','tic_term_done','tic_exit_interviews','tic_medical_cases','tic_inventory_items','tic_inventory_usage','tic_offsite']
+    const keys = ['tic_employees','tic_leave_req','tic_leave_active','tic_leave_history_v2','tic_passport','tic_term_notice','tic_term_done','tic_exit_interviews','tic_medical_cases','tic_inventory_items','tic_inventory_usage','tic_offsite']
     keys.forEach((k) => localStorage.removeItem(k))
     setEmployees([])
     setLeaveRequests([])
