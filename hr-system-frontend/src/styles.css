@@ -7729,6 +7729,30 @@ button.step-pill:hover { filter: brightness(0.98); }
   .mc-detail-right { border-left: none; border-top: 1px solid #e8eaf0; padding: 12px 0 0; }
 }
 
+/* ═══ Exit Interview table alignment ════════════════════ */
+.ei-table th,
+.ei-table td { vertical-align: middle !important; }
+
+/* Centered columns: Departure(4), Type(5), Overall(6), Recommend(7), Actions(9) */
+.ei-table th:nth-child(4), .ei-table td:nth-child(4),
+.ei-table th:nth-child(5), .ei-table td:nth-child(5),
+.ei-table th:nth-child(6), .ei-table td:nth-child(6),
+.ei-table th:nth-child(7), .ei-table td:nth-child(7),
+.ei-table th:last-child,  .ei-table td:last-child {
+  text-align: center !important;
+}
+
+/* Reason column: truncate with ellipsis */
+.ei-table .ei-reason-td {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Center the row-actions in the last column */
+.ei-table td:last-child .row-actions { justify-content: center; }
+
 /* ═══ Exit Interview analytics modal ════════════════════ */
 .ei-analytics-modal {
   max-width: 900px !important;

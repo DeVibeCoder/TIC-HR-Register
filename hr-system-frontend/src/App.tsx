@@ -5675,15 +5675,18 @@ function ExitInterviewSection({ records, completedTerminations, onUpdate }: {
 
       {/* Table — at top, always visible */}
       <div className="employee-table-shell compact-scroll">
-          <table className="data-table">
+          <table className="data-table ei-table">
             <thead>
               <tr>
-                <th className="term-empid">Emp ID</th><th>Name</th><th>Section</th><th>Departure</th>
+                <th className="term-empid">Emp ID</th>
+                <th>Name</th>
+                <th>Section</th>
+                <th>Departure</th>
                 <th>Type</th>
-                <th style={{textAlign:'center'}}>Overall</th>
-                <th style={{textAlign:'center'}}>Recommend</th>
+                <th>Overall</th>
+                <th>Recommend</th>
                 <th>Reason</th>
-                <th style={{textAlign:'center'}}>Actions</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -5694,18 +5697,18 @@ function ExitInterviewSection({ records, completedTerminations, onUpdate }: {
                     <td className="term-empid">{r.employeeId}</td>
                     <td className="name-cell"><button className="name-link" type="button" onClick={() => setViewing(r)}>{r.name}</button></td>
                     <td>{r.department}</td>
-                    <td style={{textAlign:'center'}}>{formatDateDisplay(r.departureDate)}</td>
-                    <td style={{textAlign:'center'}}><span className="req-type-chip">{r.terminationType}</span></td>
-                    <td style={{textAlign:'center'}}>
+                    <td>{formatDateDisplay(r.departureDate)}</td>
+                    <td><span className="req-type-chip">{r.terminationType}</span></td>
+                    <td>
                       <span className="ei-overall-badge" style={{ color: ratingColor(r.overall), background: ratingBg(r.overall) }}>{r.overall}/5</span>
                     </td>
-                    <td style={{textAlign:'center'}}>
+                    <td>
                       {r.wouldRecommend
                         ? <span className="doc-yes" style={{fontSize:'0.75rem', fontWeight:700}}>✓ Yes</span>
                         : <span className="doc-no" style={{fontSize:'0.75rem'}}>No</span>}
                     </td>
-                    <td style={{maxWidth:'180px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{r.reasonForLeaving || '—'}</td>
-                    <td style={{textAlign:'center'}}>
+                    <td className="ei-reason-td">{r.reasonForLeaving || '—'}</td>
+                    <td>
                       <div className="row-actions">
                         <button className="action-glyph" title="View" onClick={() => setViewing(r)} type="button">👁</button>
                         <button className="action-glyph edit" title="Edit" onClick={() => setEditing(r)} type="button">✎</button>
