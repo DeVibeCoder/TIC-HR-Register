@@ -5612,12 +5612,26 @@ function printExitInterview(record: ExitInterviewRecord) {
     </div>`
   }).join('')
 
-  // SVG logo matching the actual Villa Hakatha logo (4 downward triangles: 2 blue + 1 purple top, 1 blue bottom)
-  const logoSvg = `<svg viewBox="0 0 500 440" xmlns="http://www.w3.org/2000/svg" style="width:68pt;height:60pt;flex-shrink:0;">
-    <polygon points="3,3 248,3 128,212" fill="#009FDA"/>
-    <polygon points="252,3 497,3 372,212" fill="#009FDA"/>
-    <polygon points="128,3 372,3 250,209" fill="#2B2082"/>
-    <polygon points="128,226 372,226 250,437" fill="#009FDA"/>
+  // SVG logo — exact Villa Hakatha logo reconstruction
+  // Top section: left-blue + right-blue flanking, dark-purple center (purple drawn last = on top)
+  // White gaps come from the color boundaries
+  // Bottom: narrower blue triangle separated by white space
+  const logoSvg = `<svg viewBox="0 0 500 445" xmlns="http://www.w3.org/2000/svg" style="width:72pt;height:64pt;flex-shrink:0;">
+    <rect width="500" height="445" fill="white"/>
+    <!-- Left blue (large, left half) -->
+    <polygon points="4,4 268,4 136,212" fill="#009FDA"/>
+    <!-- Right blue (large, right half) -->
+    <polygon points="232,4 496,4 364,212" fill="#009FDA"/>
+    <!-- Purple center triangle ON TOP — covers inner halves of both blues
+         White gap effect comes from purple's edges cutting through the blue -->
+    <polygon points="136,4 364,4 250,210" fill="#2B2082"/>
+    <!-- White separator lines along the purple/blue junctions -->
+    <line x1="136" y1="4" x2="250" y2="210" stroke="white" stroke-width="6"/>
+    <line x1="364" y1="4" x2="250" y2="210" stroke="white" stroke-width="6"/>
+    <!-- White horizontal gap between top and bottom sections -->
+    <rect x="0" y="212" width="500" height="16" fill="white"/>
+    <!-- Bottom blue triangle (narrower, centered) -->
+    <polygon points="136,228 364,228 250,438" fill="#009FDA"/>
   </svg>`
 
   // Page header — exact PDF layout: logo left, company name right, EXIT INTERVIEW centered below
