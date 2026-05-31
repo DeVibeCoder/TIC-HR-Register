@@ -7058,12 +7058,13 @@ button.step-pill:hover { filter: brightness(0.98); }
   margin-bottom: 14px;
 }
 
-/* Analytics vertical bar chart */
+/* Analytics vertical bar chart — height constrained by mc-top-row */
 .mc-an-bar-chart {
   display: flex;
   align-items: flex-end;
   gap: 10px;
-  height: 360px;
+  flex: 1;          /* fills available space in the panel */
+  min-height: 180px;
 }
 
 /* Scrollable staff table */
@@ -7252,39 +7253,84 @@ button.step-pill:hover { filter: brightness(0.98); }
 .mc-detail-info-value { font-size: 0.84rem; font-weight: 600; color: #111827; }
 .mc-detail-divider { height: 1px; background: #f1f5f9; margin: 4px 0 12px; }
 
-/* ═══ Analytics modal — fixed height, scrollable body ══════ */
+/* ═══ Analytics modal — fixed height, NO outer scroll ══════ */
 .mc-analytics-modal {
   max-width: 1000px !important;
   width: 97vw !important;
-  height: 86vh !important;
-  max-height: 86vh !important;
+  height: 88vh !important;
+  max-height: 88vh !important;
   display: flex !important;
   flex-direction: column !important;
   overflow: hidden !important;
   padding: 0 !important;
 }
-.mc-analytics-modal .modal-header { flex-shrink: 0; padding: 20px 24px 16px; border-bottom: 1px solid #f1f5f9; }
-.mc-analytics-modal .modal-actions { flex-shrink: 0; border-top: 1px solid #f1f5f9; padding: 10px 24px; }
+.mc-analytics-modal .modal-header {
+  flex-shrink: 0; padding: 16px 24px 14px; border-bottom: 1px solid #f1f5f9;
+}
+.mc-analytics-modal .modal-actions {
+  flex-shrink: 0; border-top: 1px solid #f1f5f9; padding: 8px 24px;
+}
 
-/* Scrollable body inside analytics modal */
+/* Body: flex column, NO scrollbar — all content fits */
 .mc-analytics-body {
   flex: 1;
-  overflow-y: auto;
-  padding: 16px 24px 4px;
+  overflow: hidden;
+  padding: 12px 20px 8px;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.mc-analytics-grid {
+/* KPI row */
+.mc-an-kpi-row {
+  flex-shrink: 0;
+  padding-bottom: 10px !important;
+  border-bottom: 1px solid #f1f5f9;
+  margin-bottom: 0 !important;
+}
+
+/* Top 2-column row (monthly + dept) — fixed height, no scroll */
+.mc-top-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 12px;
+  flex-shrink: 0;
+  height: 300px;
 }
-.mc-an-wide { grid-column: 1 / -1; }
-@media (max-width: 700px) {
-  .mc-analytics-grid { grid-template-columns: 1fr; }
-  .mc-an-wide { grid-column: auto; }
+.mc-top-row .mc-an-panel {
+  overflow: hidden;   /* clip dept bars if too many */
+  display: flex;
+  flex-direction: column;
 }
+
+/* Staff summary panel — takes remaining space, ONLY this scrolls */
+.mc-an-staff-panel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: #f8fafc;
+  border: 1px solid #e8eaf0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  overflow: hidden;
+}
+
+/* Staff scroll: the ONLY scrolling element */
+.mc-an-staff-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  border: 1px solid #f1f5f9;
+  border-radius: 6px;
+}
+
 .mc-an-bar.mc-an-bar-active { background: linear-gradient(to top, #f59e0b, #fbbf24) !important; }
+
+@media (max-width: 700px) {
+  .mc-top-row { grid-template-columns: 1fr; height: auto; }
+}
 
 /* ═══ Off Site Modal ════════════════════════════════════ */
 .os-modal {

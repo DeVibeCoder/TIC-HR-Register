@@ -2290,53 +2290,54 @@ function MedicalAnalyticsModal({ records, onClose }: {
           </div>
         </div>
 
+        {/* ── fixed-height body: no outer scroll ── */}
         <div className="mc-analytics-body">
 
-        {/* KPI chips for filtered period */}
-        <div className="mc-kpi-bar" style={{paddingBottom:16,borderBottom:'1px solid #f1f5f9',marginBottom:16}}>
-          <div className="mc-kpi-chip mc-kpi-blue"><span className="mc-kpi-num">{totalCases}</span><span className="mc-kpi-lbl">Total Cases</span></div>
-          <div className="mc-kpi-chip mc-kpi-purple"><span className="mc-kpi-num">{todayCases}</span><span className="mc-kpi-lbl">Today's Cases</span></div>
-          <div className="mc-kpi-chip mc-kpi-green"><span className="mc-kpi-num">{mcProvided}</span><span className="mc-kpi-lbl">MC Provided</span></div>
-          <div className="mc-kpi-chip mc-kpi-amber"><span className="mc-kpi-num">{onSickToday}</span><span className="mc-kpi-lbl">On Sick Leave</span></div>
-        </div>
+          {/* KPI chips */}
+          <div className="mc-kpi-bar mc-an-kpi-row">
+            <div className="mc-kpi-chip mc-kpi-blue"><span className="mc-kpi-num">{totalCases}</span><span className="mc-kpi-lbl">Total Cases</span></div>
+            <div className="mc-kpi-chip mc-kpi-purple"><span className="mc-kpi-num">{todayCases}</span><span className="mc-kpi-lbl">Today's Cases</span></div>
+            <div className="mc-kpi-chip mc-kpi-green"><span className="mc-kpi-num">{mcProvided}</span><span className="mc-kpi-lbl">MC Provided</span></div>
+            <div className="mc-kpi-chip mc-kpi-amber"><span className="mc-kpi-num">{onSickToday}</span><span className="mc-kpi-lbl">On Sick Leave</span></div>
+          </div>
 
-        <div className="mc-analytics-grid">
-          {/* Monthly chart — all records */}
-          <div className="mc-an-panel">
-            <p className="mc-an-title">Medical Visits per Month</p>
-            {monthlyData.length === 0
-              ? <p style={{ color: '#94a3b8', fontSize: '0.82rem' }}>No data.</p>
-              : (
-                <div className="mc-an-bar-chart">
-                  {monthlyData.map(([key, val]) => (
-                    <div className="mc-an-bar-col" key={key}>
-                      <div className="mc-an-bar-wrap">
-                        <span className={`mc-an-bar${selectedMonth === key ? ' mc-an-bar-active' : ''}`} style={{ height: `${Math.round((val.cases / maxMonthCases) * 100)}%` }} title={`${val.cases} visits · ${val.days}d`} />
+          {/* Top row: monthly chart + dept breakdown — fixed height */}
+          <div className="mc-top-row">
+            <div className="mc-an-panel">
+              <p className="mc-an-title">Medical Visits per Month</p>
+              {monthlyData.length === 0
+                ? <p style={{ color: '#94a3b8', fontSize: '0.82rem' }}>No data.</p>
+                : (
+                  <div className="mc-an-bar-chart">
+                    {monthlyData.map(([key, val]) => (
+                      <div className="mc-an-bar-col" key={key}>
+                        <div className="mc-an-bar-wrap">
+                          <span className={`mc-an-bar${selectedMonth === key ? ' mc-an-bar-active' : ''}`} style={{ height: `${Math.round((val.cases / maxMonthCases) * 100)}%` }} title={`${val.cases} visits · ${val.days}d`} />
+                        </div>
+                        <div className="mc-an-bar-val">{val.cases}</div>
+                        <div className="mc-an-bar-lbl">{formatMonthLabel(key).slice(0, 3)}</div>
                       </div>
-                      <div className="mc-an-bar-val">{val.cases}</div>
-                      <div className="mc-an-bar-lbl">{formatMonthLabel(key).slice(0, 3)}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
+            </div>
+
+            <div className="mc-an-panel">
+              <p className="mc-an-title">Visits by Department{selectedMonth !== 'All' ? ` — ${formatMonthLabel(selectedMonth)}` : ''}</p>
+              {sectionData.length === 0
+                ? <p style={{ color: '#94a3b8', fontSize: '0.82rem' }}>No data.</p>
+                : sectionData.map(([dept, val]) => (
+                  <div className="mc-an-h-row" key={dept}>
+                    <div className="mc-an-h-label" title={dept}>{dept}</div>
+                    <div className="mc-an-h-track"><div className="mc-an-h-fill" style={{ width: `${Math.round((val.cases / maxSectCases) * 100)}%` }} /></div>
+                    <div className="mc-an-h-meta">{val.cases} visits</div>
+                  </div>
+                ))}
+            </div>
           </div>
 
-          {/* Section breakdown — filtered */}
-          <div className="mc-an-panel">
-            <p className="mc-an-title">Visits by Department{selectedMonth !== 'All' ? ` — ${formatMonthLabel(selectedMonth)}` : ''}</p>
-            {sectionData.length === 0
-              ? <p style={{ color: '#94a3b8', fontSize: '0.82rem' }}>No data.</p>
-              : sectionData.map(([dept, val]) => (
-                <div className="mc-an-h-row" key={dept}>
-                  <div className="mc-an-h-label" title={dept}>{dept}</div>
-                  <div className="mc-an-h-track"><div className="mc-an-h-fill" style={{ width: `${Math.round((val.cases / maxSectCases) * 100)}%` }} /></div>
-                  <div className="mc-an-h-meta">{val.cases} visits</div>
-                </div>
-              ))}
-          </div>
-
-          {/* All staff — filtered, scrollable */}
-          <div className="mc-an-panel mc-an-wide">
+          {/* Staff summary — flex: 1, ONLY this scrolls */}
+          <div className="mc-an-panel mc-an-staff-panel">
             <p className="mc-an-title">
               Staff Medical Summary{selectedMonth !== 'All' ? ` — ${formatMonthLabel(selectedMonth)}` : ''}
               {topStaff.length > 0 && <span style={{ fontWeight: 400, color: '#64748b', marginLeft: 6 }}>({topStaff.length} staff)</span>}
@@ -2380,7 +2381,6 @@ function MedicalAnalyticsModal({ records, onClose }: {
                 </div>
               )}
           </div>
-        </div>
 
         </div>{/* mc-analytics-body */}
 
