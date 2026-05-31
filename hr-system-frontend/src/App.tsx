@@ -2290,6 +2290,8 @@ function MedicalAnalyticsModal({ records, onClose }: {
           </div>
         </div>
 
+        <div className="mc-analytics-body">
+
         {/* KPI chips for filtered period */}
         <div className="mc-kpi-bar" style={{paddingBottom:16,borderBottom:'1px solid #f1f5f9',marginBottom:16}}>
           <div className="mc-kpi-chip mc-kpi-blue"><span className="mc-kpi-num">{totalCases}</span><span className="mc-kpi-lbl">Total Cases</span></div>
@@ -2379,6 +2381,8 @@ function MedicalAnalyticsModal({ records, onClose }: {
               )}
           </div>
         </div>
+
+        </div>{/* mc-analytics-body */}
 
         <div className="modal-actions" style={{ paddingTop: 8 }}>
           <button className="quiet-button light" onClick={onClose} type="button">Close</button>

@@ -7063,7 +7063,7 @@ button.step-pill:hover { filter: brightness(0.98); }
   display: flex;
   align-items: flex-end;
   gap: 10px;
-  height: 280px;
+  height: 360px;
 }
 
 /* Scrollable staff table */
@@ -7090,7 +7090,7 @@ button.step-pill:hover { filter: brightness(0.98); }
 .mc-an-bar {
   display: block;
   width: 65%;
-  min-height: 4px;
+  min-height: 20px;
   border-radius: 4px 4px 0 0;
   background: linear-gradient(to top, #3b82f6, #93c5fd);
 }
@@ -7252,11 +7252,28 @@ button.step-pill:hover { filter: brightness(0.98); }
 .mc-detail-info-value { font-size: 0.84rem; font-weight: 600; color: #111827; }
 .mc-detail-divider { height: 1px; background: #f1f5f9; margin: 4px 0 12px; }
 
-/* ═══ Analytics modal: wider + 3-column grid ══════════════ */
+/* ═══ Analytics modal — fixed height, scrollable body ══════ */
 .mc-analytics-modal {
   max-width: 1000px !important;
   width: 97vw !important;
+  height: 86vh !important;
+  max-height: 86vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  padding: 0 !important;
 }
+.mc-analytics-modal .modal-header { flex-shrink: 0; padding: 20px 24px 16px; border-bottom: 1px solid #f1f5f9; }
+.mc-analytics-modal .modal-actions { flex-shrink: 0; border-top: 1px solid #f1f5f9; padding: 10px 24px; }
+
+/* Scrollable body inside analytics modal */
+.mc-analytics-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 24px 4px;
+  min-height: 0;
+}
+
 .mc-analytics-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -7421,6 +7438,18 @@ button.step-pill:hover { filter: brightness(0.98); }
 
 /* Inventory table — aligned */
 .inv-table th, .inv-table td { vertical-align: middle; }
+
+/* ═══ Leave table — vertical center all cells ══════════════ */
+.leave-table th,
+.leave-table td { vertical-align: middle !important; }
+
+/* ═══ Medical leave table — MC / Days / Action centered ════ */
+/* Column positions: 1=arrow, 2=Date, 3=EmpID, 4=Name, 5=Section,
+                     6=Reason, 7=MC, 8=SL From, 9=SL To, 10=Days, 11=Action */
+.mc-table th:nth-child(7), .mc-table td:nth-child(7) { text-align: center !important; }
+.mc-table th:nth-child(10), .mc-table td:nth-child(10) { text-align: center !important; }
+.mc-table th:nth-child(11), .mc-table td:nth-child(11) { text-align: center !important; }
+.mc-table td:nth-child(11) .row-actions { justify-content: center; }
 
 /* ═══ Extend icon button — calendar with forward arrow ══════ */
 /* Extend icon button — calendar with forward arrow */
