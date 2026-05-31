@@ -261,27 +261,49 @@ type IncidentRecord = {
 type TerminationStage = 'Letter Submitted' | 'Exit Interview' | 'Ticket' | 'Pending Departure'
 type TerminationTab = 'notice' | 'history' | 'exit-interview'
 type TerminationType = 'Resignation' | 'Dismissal' | 'Probation End' | 'Contract Expiry' | 'Absconded' | 'Other'
-type SatisfactionRating = 1 | 2 | 3 | 4 | 5
+
+type EISatisfactionLevel = 'Very Satisfied' | 'Satisfied' | 'Dissatisfied' | ''
+
+type EIQuestionnaire = {
+  duties: EISatisfactionLevel
+  training: EISatisfactionLevel
+  advancement: EISatisfactionLevel
+  salary: EISatisfactionLevel
+  benefits: EISatisfactionLevel
+  workConditions: EISatisfactionLevel
+  workHours: EISatisfactionLevel
+  coworkers: EISatisfactionLevel
+  supervision: EISatisfactionLevel
+  overall: EISatisfactionLevel
+}
 
 type ExitInterviewRecord = {
   id: string
   employeeId: string
   name: string
   department: string
+  designation: string
   nationality: string
   terminationType: TerminationType
   departureDate: string
+  periodOfService: string
+  rehireEligible: boolean
   interviewDate: string
-  management: SatisfactionRating
-  workEnvironment: SatisfactionRating
-  compensation: SatisfactionRating
-  workLifeBalance: SatisfactionRating
-  careerGrowth: SatisfactionRating
-  communication: SatisfactionRating
-  overall: SatisfactionRating
-  wouldRecommend: boolean
-  reasonForLeaving: string
-  comments: string
+  // Reasons
+  involuntaryReasons: string[]
+  voluntaryReasons: string[]
+  invOther: string
+  volOther: string
+  employeeComments: string
+  // Questionnaire
+  questionnaire: EIQuestionnaire
+  areasToImprove: string
+  // 14 short questions
+  q1: string; q2: string; q3: string; q4: string; q5: string
+  q6: string; q7: string; q8: string; q9: string; q10: string
+  q11: string; q12: string; q13: string; q14: string
+  interviewerComments: string
+  interviewerName: string
 }
 
 type EnhancedTerminationRecord = {
@@ -472,9 +494,60 @@ const initialCompletedTerminations: CompletedTerminationRecord[] = [
 ]
 
 const initialExitInterviews: ExitInterviewRecord[] = [
-  { id: 'EI-2024-001', employeeId: '33856', name: 'KRISHNA PRASAD RIMAL', department: 'MECHANICAL', nationality: 'NEPAL', terminationType: 'Resignation', departureDate: '2024-01-20', interviewDate: '2024-01-12', management: 4, workEnvironment: 4, compensation: 3, workLifeBalance: 3, careerGrowth: 3, communication: 4, overall: 4, wouldRecommend: true, reasonForLeaving: 'Personal / Family', comments: 'Enjoyed working at TIC. The team is supportive. Would have stayed longer if family situation allowed. Salary could be improved.' },
-  { id: 'EI-2023-001', employeeId: '31672', name: 'MD RAFIQUL ISLAM', department: 'ADMINISTRATION', nationality: 'BANGLADESH', terminationType: 'Contract Expiry', departureDate: '2023-07-05', interviewDate: '2023-06-25', management: 2, workEnvironment: 3, compensation: 2, workLifeBalance: 2, careerGrowth: 2, communication: 2, overall: 2, wouldRecommend: false, reasonForLeaving: 'Compensation', comments: 'Salary not competitive. Management communication could be better. No clear career progression path provided.' },
-  { id: 'EI-2023-002', employeeId: '25431', name: 'THILINA LAKSHAN PERERA', department: 'STORES', nationality: 'SRI LANKAN', terminationType: 'Resignation', departureDate: '2023-01-05', interviewDate: '2022-12-22', management: 5, workEnvironment: 4, compensation: 4, workLifeBalance: 4, careerGrowth: 4, communication: 5, overall: 5, wouldRecommend: true, reasonForLeaving: 'Personal / Family', comments: 'Great company to work for. Leaving purely for personal reasons — relocating with family. Would recommend TIC to friends.' },
+  {
+    id: 'EI-2024-001', employeeId: '33856', name: 'KRISHNA PRASAD RIMAL', department: 'MECHANICAL',
+    designation: 'MECHANIC', nationality: 'NEPAL', terminationType: 'Resignation',
+    departureDate: '2024-01-20', periodOfService: '11y 8m', rehireEligible: true, interviewDate: '2024-01-12',
+    involuntaryReasons: [], voluntaryReasons: ['Personal Frictions', 'Lack of Promotional Possibility'],
+    invOther: '', volOther: '',
+    employeeComments: 'Enjoyed working at TIC. The team is very supportive. Would have stayed longer if personal situation allowed. Salary could be improved for senior staff.',
+    questionnaire: { duties: 'Satisfied', training: 'Satisfied', advancement: 'Dissatisfied', salary: 'Satisfied', benefits: 'Satisfied', workConditions: 'Very Satisfied', workHours: 'Satisfied', coworkers: 'Very Satisfied', supervision: 'Very Satisfied', overall: 'Satisfied' },
+    areasToImprove: 'Career advancement pathways and salary increments for long-serving staff.',
+    q1: 'Personal reasons and desire to return to family in Nepal.', q2: 'The friendly work environment and supportive colleagues.',
+    q3: 'Limited opportunities for career advancement.', q4: 'No major policy obstacles.', q5: 'Yes, if better opportunity is offered.',
+    q6: 'Yes, TIC is a good company to work for.', q7: 'A promotion or salary increment might have helped.',
+    q8: 'Yes, job duties were as expected.', q9: 'Yes, adequate training was provided.',
+    q10: 'Generally yes, received feedback during appraisals.', q11: 'Partially — limited advancement options.',
+    q12: 'Mostly satisfied with pay and benefits.', q13: 'Accommodation is clean and well-maintained. Food quality is good.',
+    q14: 'No suitable internal transfer was available.',
+    interviewerComments: 'Employee served with dedication for nearly 12 years. Departure is purely personal. Recommended for rehire.', interviewerName: 'SHANTUMON PATHIYIL CHACKO',
+  },
+  {
+    id: 'EI-2023-001', employeeId: '31672', name: 'MD RAFIQUL ISLAM', department: 'ADMINISTRATION',
+    designation: 'ADMIN ASSISTANT', nationality: 'BANGLADESH', terminationType: 'Contract Expiry',
+    departureDate: '2023-07-05', periodOfService: '8y 3m', rehireEligible: false, interviewDate: '2023-06-25',
+    involuntaryReasons: ['Unsatisfactory work, Poor Performance'], voluntaryReasons: ['Wages', 'Lack of Promotional Possibility'],
+    invOther: '', volOther: '',
+    employeeComments: 'Salary was not competitive compared to the market. Management communication could be improved. No clear career progression path was provided during my tenure.',
+    questionnaire: { duties: 'Satisfied', training: 'Dissatisfied', advancement: 'Dissatisfied', salary: 'Dissatisfied', benefits: 'Dissatisfied', workConditions: 'Satisfied', workHours: 'Satisfied', coworkers: 'Satisfied', supervision: 'Dissatisfied', overall: 'Dissatisfied' },
+    areasToImprove: 'Training programs, salary structure, and clearer career progression for admin staff.',
+    q1: 'Contract not renewed and dissatisfaction with salary.', q2: 'Working with a diverse team.',
+    q3: 'Low salary and lack of recognition.', q4: 'Some administrative procedures were slow and bureaucratic.',
+    q5: 'Unlikely given current compensation levels.', q6: 'Not at the current salary rates.',
+    q7: 'A salary review and clearer performance feedback would have helped.', q8: 'Mostly yes.',
+    q9: 'No, training opportunities were very limited.', q10: 'Performance feedback was inconsistent.',
+    q11: 'No, career goals were not supported.', q12: 'No, pay was below expectations.',
+    q13: 'Accommodation is acceptable. Mess food variety could be improved.', q14: 'Yes, but no suitable position was available.',
+    interviewerComments: 'Contract ended. Employee had performance issues in last year. Not recommended for rehire.', interviewerName: 'SHANTUMON PATHIYIL CHACKO',
+  },
+  {
+    id: 'EI-2023-002', employeeId: '25431', name: 'THILINA LAKSHAN PERERA', department: 'STORES',
+    designation: 'STOREKEEPER', nationality: 'SRI LANKAN', terminationType: 'Resignation',
+    departureDate: '2023-01-05', periodOfService: '12y 5m', rehireEligible: true, interviewDate: '2022-12-22',
+    involuntaryReasons: [], voluntaryReasons: ['Marriage', 'Further Studies'],
+    invOther: '', volOther: '',
+    employeeComments: 'Great company to work for. Leaving purely for personal reasons — relocating with family to Australia. Would highly recommend TIC to friends and colleagues.',
+    questionnaire: { duties: 'Very Satisfied', training: 'Very Satisfied', advancement: 'Satisfied', salary: 'Satisfied', benefits: 'Very Satisfied', workConditions: 'Very Satisfied', workHours: 'Satisfied', coworkers: 'Very Satisfied', supervision: 'Very Satisfied', overall: 'Very Satisfied' },
+    areasToImprove: 'Internet connectivity on-site could be faster.',
+    q1: 'Personal decision to relocate with family to Australia.', q2: 'The team spirit and sense of community on-site.',
+    q3: 'Being away from family for long periods.', q4: 'No obstacles.', q5: 'Yes, absolutely would consider returning.',
+    q6: 'Definitely yes.', q7: 'Nothing — this is a purely personal decision.',
+    q8: 'Yes, fully as expected.', q9: 'Yes, excellent training support.',
+    q10: 'Yes, always received clear performance feedback.', q11: 'Yes, career growth was fully supported.',
+    q12: 'Yes, fully satisfied with pay and benefits.', q13: 'Excellent accommodation and food. Very comfortable living conditions.',
+    q14: 'Did not need to — decision was to leave the country.',
+    interviewerComments: 'Outstanding employee over 12 years. Leaving due to relocation. Highly recommended for rehire if circumstances change.', interviewerName: 'SHANTUMON PATHIYIL CHACKO',
+  },
 ]
 
 const initialMedicalCases: MedicalCaseRecord[] = [
@@ -5194,7 +5267,11 @@ function TerminationFormModal({
   onSave: (record: EnhancedTerminationRecord) => void
 }) {
   const [form, setForm] = useState(record)
-  const [employeeSearch, setEmployeeSearch] = useState('')
+  const [searchQuery, setSearchQuery] = useState(() => {
+    if (mode === 'edit' && record.employeeId) return `${record.employeeId} – ${record.name}`
+    return ''
+  })
+  const [showResults, setShowResults] = useState(false)
 
   const statusOptions = useMemo(() => {
     if (mode === 'add') return allTerminationStages
@@ -5202,29 +5279,34 @@ function TerminationFormModal({
     return allTerminationStages.slice(Math.max(0, currentIndex))
   }, [mode, record.currentStage])
 
-  const employeeMatches = useMemo(() => {
-    const term = employeeSearch.trim().toLowerCase()
-    if (!term) return employees.slice(0, 25)
+  const searchResults = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase()
+    if (!q || form.employeeId) return []
     return employees
-      .filter((employee) => `${employee.employeeId} ${employee.fullName}`.toLowerCase().includes(term))
-      .slice(0, 25)
-  }, [employeeSearch, employees])
+      .filter((e) => e.employeeId.toLowerCase().includes(q) || e.fullName.toLowerCase().includes(q))
+      .slice(0, 8)
+  }, [searchQuery, form.employeeId, employees])
 
-  const handleEmployeeSelect = (employeeId: string) => {
-    const employee = employees.find((item) => item.employeeId === employeeId)
-    if (!employee) return
-    setForm((current) => ({
-      ...current,
-      employeeId: employee.employeeId,
-      name: employee.fullName,
-      department: employee.department,
-      designation: employee.designation,
-      nationality: employee.nationality,
-      passportNo: employee.nicPassportNo,
-      wpNo: employee.workPermitNo,
-      dateOfJoin: employee.dateOfJoin,
+  const handleSearchChange = (val: string) => {
+    setSearchQuery(val)
+    setForm((cur) => ({ ...cur, employeeId: '', name: '', department: '', designation: '', nationality: '', passportNo: '', wpNo: '', dateOfJoin: '' }))
+    setShowResults(true)
+  }
+
+  const selectEmployee = (emp: Employee) => {
+    setForm((cur) => ({
+      ...cur,
+      employeeId: emp.employeeId,
+      name: emp.fullName,
+      department: emp.department,
+      designation: emp.designation,
+      nationality: emp.nationality,
+      passportNo: emp.nicPassportNo,
+      wpNo: emp.workPermitNo,
+      dateOfJoin: emp.dateOfJoin,
     }))
-    setEmployeeSearch(`${employee.employeeId} - ${employee.fullName}`)
+    setSearchQuery(`${emp.employeeId} – ${emp.fullName}`)
+    setShowResults(false)
   }
 
   const save = (event: FormEvent) => {
@@ -5234,52 +5316,97 @@ function TerminationFormModal({
 
   return (
     <div className="modal-backdrop" role="presentation">
-      <section className="registration-modal wide-modal termination-form-modal" role="dialog" aria-modal="true" aria-labelledby="termination-form-title">
+      <section className="registration-modal mc-wide-modal termination-form-modal" role="dialog" aria-modal="true" aria-labelledby="termination-form-title">
         <div className="modal-header">
           <div>
             <p className="eyebrow">Termination Workflow</p>
-            <h2 id="termination-form-title">{mode === 'add' ? 'Add' : 'Edit Termination'}</h2>
+            <h2 id="termination-form-title">{mode === 'add' ? 'Add Termination' : 'Edit Termination'}</h2>
           </div>
-          <button className="icon-button" onClick={onClose} type="button">x</button>
+          <button className="icon-button" onClick={onClose} type="button">×</button>
         </div>
 
-        <form onSubmit={save}>
-          <div className="termination-form-grid">
-            {mode === 'add' && (
-              <>
-                <label className="full-width">
-                  <span>Search Staff (ID or Name)</span>
-                  <input
-                    placeholder="Search by employee ID or name"
-                    type="search"
-                    value={employeeSearch}
-                    onChange={(event) => setEmployeeSearch(event.target.value)}
-                  />
-                </label>
-                <label className="full-width">
-                  <span>Select Staff</span>
-                  <select value={form.employeeId} onChange={(event) => handleEmployeeSelect(event.target.value)} required>
-                    <option value="">Choose from search results</option>
-                    {employeeMatches.map((employee) => (
-                      <option key={employee.employeeId} value={employee.employeeId}>{employee.employeeId} - {employee.fullName}</option>
-                    ))}
+        <form onSubmit={save} style={{ overflowY: 'auto', maxHeight: 'calc(90vh - 110px)', padding: '0 2px' }}>
+          {/* Card 1 — Employee Details */}
+          <div className="trn-modal-card" style={{ background: '#eff6ff', border: '1.5px solid #bfdbfe', marginBottom: '14px' }}>
+            <div className="mc-form-divider" style={{ marginBottom: '10px', color: '#1d4ed8' }}>Employee Details</div>
+            <div style={{ position: 'relative', marginBottom: '10px' }}>
+              <label>
+                <span>Search Staff (ID or Name)</span>
+                <input
+                  className="lf-search-input"
+                  placeholder="Search by employee ID or name…"
+                  type="search"
+                  value={searchQuery}
+                  autoComplete="off"
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  onFocus={() => !form.employeeId && setShowResults(true)}
+                />
+              </label>
+              {showResults && searchResults.length > 0 && (
+                <ul className="lf-search-results" style={{ top: '100%', zIndex: 100 }}>
+                  {searchResults.map((emp) => (
+                    <li key={emp.employeeId} onMouseDown={() => selectEmployee(emp)}>
+                      <span className="lf-res-id">{emp.employeeId}</span>
+                      <span className="lf-res-name">{emp.fullName}</span>
+                      <span className="lf-res-dept">{emp.department}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div className="mc-form-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr' }}>
+              <label><span>Designation</span><input readOnly value={form.designation} placeholder="—" className="lf-readonly" /></label>
+              <label><span>Section</span><input readOnly value={form.department} placeholder="—" className="lf-readonly" /></label>
+              <label><span>Nationality</span><input readOnly value={form.nationality} placeholder="—" className="lf-readonly" /></label>
+              <label><span>Date of Join</span><input readOnly value={form.dateOfJoin} placeholder="—" className="lf-readonly" /></label>
+            </div>
+          </div>
+
+          {/* Card 2 — Termination Details */}
+          <div className="trn-modal-card" style={{ background: '#fefce8', border: '1.5px solid #fde68a', marginBottom: '14px' }}>
+            <div className="mc-form-divider" style={{ marginBottom: '10px', color: '#92400e' }}>Termination Details</div>
+            <div className="mc-form-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr' }}>
+              <label><span>Termination Type</span>
+                <select value={form.terminationType} onChange={(e) => setForm((cur) => ({ ...cur, terminationType: e.target.value as TerminationType }))}>
+                  <option>Resignation</option><option>Dismissal</option><option>Probation End</option>
+                  <option>Contract Expiry</option><option>Absconded</option><option>Other</option>
+                </select>
+              </label>
+              <label><span>Date Submitted</span><input type="date" value={form.dateSubmitted ?? ''} onChange={(e) => setForm((cur) => ({ ...cur, dateSubmitted: e.target.value }))} /></label>
+              <label><span>Last Working Date</span><input type="date" value={form.lastWorkingDate} onChange={(e) => setForm((cur) => ({ ...cur, lastWorkingDate: e.target.value }))} required /></label>
+              <label><span>Departure Date</span><input type="date" value={form.departureDate} onChange={(e) => setForm((cur) => ({ ...cur, departureDate: e.target.value }))} required /></label>
+            </div>
+            {mode === 'edit' && (
+              <div className="mc-form-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr', marginTop: 6 }}>
+                <label><span>Stage</span>
+                  <select value={form.currentStage} onChange={(e) => setForm((cur) => ({ ...cur, currentStage: e.target.value as TerminationStage }))} required>
+                    {statusOptions.map((s) => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </label>
-              </>
+              </div>
             )}
-            <label><span>Employee ID</span><input disabled value={form.employeeId} /></label>
-            <label><span>Name</span><input disabled value={form.name} /></label>
-            <label><span>Department</span><input disabled value={form.department} /></label>
-            <label><span>Designation</span><input disabled value={form.designation} /></label>
-            <label><span>PP No</span><input disabled value={form.passportNo} /></label>
-            <label><span>Nationality</span><input disabled value={form.nationality} /></label>
-            <label><span>Date of Join</span><input disabled value={form.dateOfJoin} /></label>
-            <label><span>Type</span><select value={form.terminationType} onChange={(event) => setForm((current) => ({ ...current, terminationType: event.target.value as TerminationType }))}><option>Resignation</option><option>Dismissal</option><option>Probation End</option><option>Contract Expiry</option><option>Absconded</option><option>Other</option></select></label>
-            <label><span>Last Working Date</span><input type="date" value={form.lastWorkingDate} onChange={(event) => setForm((current) => ({ ...current, lastWorkingDate: event.target.value }))} required /></label>
-            <label><span>Departure Date</span><input type="date" value={form.departureDate} onChange={(event) => setForm((current) => ({ ...current, departureDate: event.target.value }))} required /></label>
-            <label className="full-width"><span>Reason</span><input placeholder="Reason for termination" value={form.reasonForLeaving} onChange={(event) => setForm((current) => ({ ...current, reasonForLeaving: event.target.value }))} required /></label>
-            {mode === 'edit' && <label><span>Status</span><select value={form.currentStage} onChange={(event) => setForm((current) => ({ ...current, currentStage: event.target.value as TerminationStage }))} required>{statusOptions.map((status) => <option key={status} value={status}>{status}</option>)}</select></label>}
           </div>
+
+          {/* Card 3 — Additional Info */}
+          <div className="trn-modal-card" style={{ background: '#f0fdf4', border: '1.5px solid #bbf7d0', marginBottom: '14px' }}>
+            <div className="mc-form-divider" style={{ marginBottom: '10px', color: '#166534' }}>Additional Info</div>
+            <div className="mc-form-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
+              <label style={{ gridColumn: 'span 2' }}><span>Reason for Leaving</span>
+                <textarea rows={2} placeholder="Reason for termination" value={form.reasonForLeaving} onChange={(e) => setForm((cur) => ({ ...cur, reasonForLeaving: e.target.value }))} style={{ resize: 'vertical', fontFamily: 'inherit', fontSize: '0.82rem', padding: '7px 10px', borderRadius: 8, border: '1.5px solid #e2e8f0', width: '100%' }} />
+              </label>
+              <div>
+                <span style={{ display: 'block', fontSize: '0.72rem', fontWeight: 700, color: '#64748b', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rehire Eligible</span>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button type="button" className={form.rehireEligible ? 'primary-button' : 'quiet-button light'} style={{ padding: '5px 18px', fontSize: '0.78rem' }} onClick={() => setForm((cur) => ({ ...cur, rehireEligible: true }))}>Yes</button>
+                  <button type="button" className={!form.rehireEligible ? 'primary-button' : 'quiet-button light'} style={{ padding: '5px 18px', fontSize: '0.78rem' }} onClick={() => setForm((cur) => ({ ...cur, rehireEligible: false }))}>No</button>
+                </div>
+              </div>
+              <label><span>Comments (optional)</span>
+                <textarea rows={2} placeholder="Any additional notes…" value={form.comments ?? ''} onChange={(e) => setForm((cur) => ({ ...cur, comments: e.target.value }))} style={{ resize: 'vertical', fontFamily: 'inherit', fontSize: '0.82rem', padding: '7px 10px', borderRadius: 8, border: '1.5px solid #e2e8f0', width: '100%' }} />
+              </label>
+            </div>
+          </div>
+
           <div className="modal-actions">
             <button className="quiet-button light" onClick={onClose} type="button">Cancel</button>
             <button className="primary-button" disabled={!form.employeeId} type="submit">{mode === 'add' ? 'Add' : 'Save Changes'}</button>
@@ -5374,150 +5501,426 @@ function TerminationDetailsModal({
 }
 
 /* ─── Exit Interview helpers ─────────────────────────────── */
-const eiCategories: { key: keyof ExitInterviewRecord; label: string }[] = [
-  { key: 'management',     label: 'Management' },
-  { key: 'workEnvironment',label: 'Work Environment' },
-  { key: 'compensation',   label: 'Compensation' },
-  { key: 'workLifeBalance',label: 'Work-Life Balance' },
-  { key: 'careerGrowth',   label: 'Career Growth' },
-  { key: 'communication',  label: 'Communication' },
-  { key: 'overall',        label: 'Overall Experience' },
+const eiQuestionnaireCategories: { key: keyof EIQuestionnaire; label: string }[] = [
+  { key: 'duties',       label: 'Duties of the job' },
+  { key: 'training',     label: 'Training & Development programs' },
+  { key: 'advancement',  label: 'Opportunities for advancement' },
+  { key: 'salary',       label: 'Salary treatment' },
+  { key: 'benefits',     label: 'Benefit programs' },
+  { key: 'workConditions',label: 'Working conditions' },
+  { key: 'workHours',    label: 'Working hours' },
+  { key: 'coworkers',    label: 'Co-workers' },
+  { key: 'supervision',  label: 'Supervision' },
+  { key: 'overall',      label: 'Overall, as a place to work' },
 ]
-const ratingLabel = (r: number) => ['', 'Very Dissatisfied', 'Dissatisfied', 'Neutral', 'Satisfied', 'Very Satisfied'][Math.round(r)] ?? '—'
-const ratingColor = (r: number) => r >= 4 ? '#16a34a' : r >= 3 ? '#d97706' : '#dc2626'
-const ratingBg    = (r: number) => r >= 4 ? '#dcfce7' : r >= 3 ? '#fef3c7' : '#fee2e2'
 
-function ExitInterviewModal({ record, completedTerminations, onClose, onSave }: {
+const invReasonsList = [
+  'Insubordination',
+  'Thieving, Cheating, Fraud',
+  'Violation of Maldivian Law',
+  'Unsatisfactory work, Poor Performance',
+  'Redundancy',
+  'Violation of Rules',
+  'Poor Attendance',
+  'Willful damage to company property',
+  'Falsifying work records / employment application',
+  'Abusive or threatening language to superiors',
+  'Possession of narcotics or alcohol',
+]
+
+const volReasonsList = [
+  'Working Hours',
+  'Illness',
+  'Further Studies',
+  'Marriage',
+  'Working Conditions',
+  'Wages',
+  'Other Benefits',
+  'Personal Frictions',
+  'Lack of Promotional Possibility',
+  'End of Work Permit',
+  'Inter work site transfer',
+]
+
+const eiShortQuestions: string[] = [
+  'What are your primary reasons for leaving?',
+  'What did you find most satisfying about your job?',
+  'What did you find most frustrating about your job?',
+  'Did any company policies or procedures (or any other obstacles) make your job more difficult?',
+  'Would you consider returning to this company in the future?',
+  'Would you recommend working for this company to your family or friends?',
+  'Is there anything the company could have done to prevent you from leaving?',
+  'Did your job duties turn out to be as you expected?',
+  'Did you receive enough training to do your job effectively?',
+  'Did you receive sufficient feedback about your performance?',
+  'Did this company help you to fulfill your career goals?',
+  'Were you happy with your pay, benefits and other incentives?',
+  'What are your comments on accommodation, food and other areas (if any)?',
+  'Before deciding to leave, did you investigate a transfer within the company?',
+]
+
+function blankQuestionnaire(): EIQuestionnaire {
+  return { duties: '', training: '', advancement: '', salary: '', benefits: '', workConditions: '', workHours: '', coworkers: '', supervision: '', overall: '' }
+}
+
+/* ─── printExitInterview ─────────────────────────────────── */
+function printExitInterview(record: ExitInterviewRecord) {
+  const fmt = (d: string) => {
+    if (!d) return '—'
+    const [y, m, dd] = d.split('-')
+    const months = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+    return `${dd} ${months[parseInt(m, 10)]} ${y}`
+  }
+  const chk = (val: boolean) => val ? '&#10003;' : '&#9633;'
+  const invChecks = invReasonsList.map(r =>
+    `<label style="display:flex;align-items:center;gap:6px;font-size:9pt;padding:2px 0;">${chk(record.involuntaryReasons.includes(r))} ${r}</label>`
+  ).join('')
+  const volChecks = volReasonsList.map(r =>
+    `<label style="display:flex;align-items:center;gap:6px;font-size:9pt;padding:2px 0;">${chk(record.voluntaryReasons.includes(r))} ${r}</label>`
+  ).join('')
+  const questRows = eiQuestionnaireCategories.map(({ key, label }) => {
+    const v = record.questionnaire[key]
+    const vs = v === 'Very Satisfied' ? '&#10003;' : '&nbsp;'
+    const s  = v === 'Satisfied'      ? '&#10003;' : '&nbsp;'
+    const d  = v === 'Dissatisfied'   ? '&#10003;' : '&nbsp;'
+    return `<tr><td style="padding:4px 6px;border:1px solid #ccc;font-size:9pt;">${label}</td>
+      <td style="text-align:center;border:1px solid #ccc;font-size:10pt;">${vs}</td>
+      <td style="text-align:center;border:1px solid #ccc;font-size:10pt;">${s}</td>
+      <td style="text-align:center;border:1px solid #ccc;font-size:10pt;">${d}</td></tr>`
+  }).join('')
+  const qBlock = (from: number, to: number) => eiShortQuestions.slice(from - 1, to).map((q, i) => {
+    const qi = `q${from + i}` as keyof ExitInterviewRecord
+    const ans = record[qi] as string || ''
+    return `<div style="margin-bottom:10px;">
+      <div style="font-size:8.5pt;font-weight:600;color:#374151;">${from + i}. ${q}</div>
+      <div style="margin-top:3px;border:1px solid #ccc;min-height:32px;padding:4px 6px;font-size:9pt;">${ans || '&nbsp;'}</div>
+    </div>`
+  }).join('')
+
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"/><title>Exit Interview — ${record.name}</title>
+<style>
+  @page { size: A4; margin: 14mm 14mm 14mm 14mm; }
+  body { font-family: Arial, sans-serif; font-size: 9pt; color: #111; background: #fff; }
+  .print-btn { position:fixed; top:10px; right:10px; padding:8px 18px; background:#7c3aed; color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:11pt; z-index:9999; }
+  @media print { .print-btn { display:none; } .page-break { page-break-before: always; } }
+  .header { display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #111; padding-bottom:6px; margin-bottom:10px; }
+  .header-left { font-size:9pt; font-weight:700; }
+  .header-right { font-size:9pt; text-align:right; }
+  h2 { font-size:10pt; font-weight:800; margin:0 0 2px; }
+  table.info { width:100%; border-collapse:collapse; margin-bottom:10px; }
+  table.info td { padding:3px 6px; border:1px solid #ccc; font-size:9pt; }
+  table.info td:first-child { font-weight:600; width:160px; background:#f8fafc; }
+  .section-title { font-size:9pt; font-weight:800; text-transform:uppercase; letter-spacing:.05em; background:#f1f5f9; padding:4px 6px; border-left:3px solid #7c3aed; margin:12px 0 6px; }
+  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:4px 20px; }
+  .col-title { font-size:8pt; font-weight:800; text-decoration:underline; margin-bottom:4px; text-transform:uppercase; }
+  .quest-table { width:100%; border-collapse:collapse; margin-bottom:10px; }
+  .quest-table th { padding:5px 8px; background:#f1f5f9; border:1px solid #ccc; font-size:8.5pt; }
+  .quest-table th:first-child { text-align:left; }
+  .sig-row { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:20px; }
+  .sig-line { border-top:1px solid #111; padding-top:4px; font-size:8pt; color:#374151; }
+</style></head><body>
+<button class="print-btn" onclick="window.print()">Print</button>
+
+<!-- PAGE 1: Employee details + Reasons + Employee Comments -->
+<div class="header">
+  <div class="header-left"><h2>VHPL | VILLA HAKATHA PVT LTD</h2></div>
+  <div class="header-right">Human Resource &amp; Administration<br/><strong>EXIT INTERVIEW</strong></div>
+</div>
+<table class="info">
+  <tr><td>Employee Name</td><td>${record.name}</td><td>Termination Date</td><td>${fmt(record.departureDate)}</td></tr>
+  <tr><td>Employee ID</td><td>${record.employeeId}</td><td>Eligible to Re-employ</td><td>${record.rehireEligible ? 'Yes' : 'No'}</td></tr>
+  <tr><td>Job Title / Designation</td><td>${record.designation}</td><td>Section / Department</td><td>${record.department}</td></tr>
+  <tr><td>Period of Service</td><td>${record.periodOfService || '—'}</td><td>Nationality</td><td>${record.nationality}</td></tr>
+  <tr><td>Termination Type</td><td>${record.terminationType}</td><td>Interview Date</td><td>${fmt(record.interviewDate)}</td></tr>
+</table>
+
+<div class="section-title">Reasons for Resignation / Termination</div>
+<div class="two-col">
+  <div><div class="col-title">Involuntary</div>${invChecks}
+    <div style="margin-top:4px;font-size:9pt;"><strong>Other:</strong> ${record.invOther || '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'}</div>
+  </div>
+  <div><div class="col-title">Voluntary</div>${volChecks}
+    <div style="margin-top:4px;font-size:9pt;"><strong>Other:</strong> ${record.volOther || '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'}</div>
+  </div>
+</div>
+
+<div class="section-title">Employee Comments</div>
+<div style="border:1px solid #ccc;min-height:50px;padding:6px;font-size:9pt;">${record.employeeComments || '&nbsp;'}</div>
+
+<!-- PAGE 2: Questionnaire + Areas to Improve + Q1-Q3 -->
+<div class="page-break"></div>
+<div class="header">
+  <div class="header-left"><h2>VHPL | VILLA HAKATHA PVT LTD</h2></div>
+  <div class="header-right">Human Resource &amp; Administration<br/><strong>EXIT INTERVIEW</strong></div>
+</div>
+<div class="section-title">Satisfaction Questionnaire</div>
+<table class="quest-table">
+  <thead><tr>
+    <th style="text-align:left;width:55%;">Category</th>
+    <th style="width:15%;">Very Satisfied</th>
+    <th style="width:15%;">Satisfied</th>
+    <th style="width:15%;">Dissatisfied</th>
+  </tr></thead>
+  <tbody>${questRows}</tbody>
+</table>
+<div style="margin-bottom:12px;">
+  <div class="section-title">Areas to be Improved</div>
+  <div style="border:1px solid #ccc;min-height:28px;padding:5px 6px;font-size:9pt;">${record.areasToImprove || '&nbsp;'}</div>
+</div>
+${qBlock(1, 3)}
+
+<!-- PAGE 3: Q4-Q13 -->
+<div class="page-break"></div>
+<div class="header">
+  <div class="header-left"><h2>VHPL | VILLA HAKATHA PVT LTD</h2></div>
+  <div class="header-right">Human Resource &amp; Administration<br/><strong>EXIT INTERVIEW</strong></div>
+</div>
+${qBlock(4, 13)}
+
+<!-- PAGE 4: Q14 + Interviewer -->
+<div class="page-break"></div>
+<div class="header">
+  <div class="header-left"><h2>VHPL | VILLA HAKATHA PVT LTD</h2></div>
+  <div class="header-right">Human Resource &amp; Administration<br/><strong>EXIT INTERVIEW</strong></div>
+</div>
+${qBlock(14, 14)}
+<div class="section-title">Interviewer Comments</div>
+<div style="border:1px solid #ccc;min-height:60px;padding:6px;font-size:9pt;">${record.interviewerComments || '&nbsp;'}</div>
+<div class="sig-row" style="margin-top:24px;">
+  <div>
+    <div style="border-top:1px solid #111;padding-top:4px;font-size:8pt;">Employee Signature</div>
+    <div style="font-size:9pt;margin-top:6px;">${record.name}</div>
+  </div>
+  <div>
+    <div style="border-top:1px solid #111;padding-top:4px;font-size:8pt;">Interviewer Signature</div>
+    <div style="font-size:9pt;margin-top:6px;">${record.interviewerName || '&nbsp;'}</div>
+  </div>
+</div>
+<div style="margin-top:16px;font-size:8.5pt;"><strong>Date:</strong> ${fmt(record.interviewDate)}</div>
+</body></html>`
+
+  const w = window.open('', '_blank', 'width=900,height=700')
+  if (w) { w.document.write(html); w.document.close() }
+}
+
+/* ─── ExitInterviewFormModal ─────────────────────────────── */
+function ExitInterviewFormModal({ record, onClose, onSave }: {
   record: ExitInterviewRecord
-  completedTerminations: CompletedTerminationRecord[]
   onClose: () => void
   onSave: (r: ExitInterviewRecord) => void
 }) {
-  const isNew = record.id.startsWith('EI-new')
-  const [empSearch, setEmpSearch] = useState(record.employeeId ? `${record.employeeId} – ${record.name}` : '')
-  const [form, setForm] = useState(record)
+  const [form, setForm] = useState<ExitInterviewRecord>(record)
 
-  const empMatches = useMemo(() => {
-    const q = empSearch.trim().toLowerCase()
-    if (!q) return completedTerminations.slice(0, 20)
-    return completedTerminations.filter((r) => `${r.employeeId} ${r.name}`.toLowerCase().includes(q)).slice(0, 20)
-  }, [empSearch, completedTerminations])
+  const toggleInv = (reason: string) => setForm(p => ({
+    ...p, involuntaryReasons: p.involuntaryReasons.includes(reason)
+      ? p.involuntaryReasons.filter(x => x !== reason)
+      : [...p.involuntaryReasons, reason],
+  }))
+  const toggleVol = (reason: string) => setForm(p => ({
+    ...p, voluntaryReasons: p.voluntaryReasons.includes(reason)
+      ? p.voluntaryReasons.filter(x => x !== reason)
+      : [...p.voluntaryReasons, reason],
+  }))
+  const setQuestionnaire = (key: keyof EIQuestionnaire, val: EISatisfactionLevel) =>
+    setForm(p => ({ ...p, questionnaire: { ...p.questionnaire, [key]: val } }))
 
-  const handleEmpSelect = (id: string) => {
-    const r = completedTerminations.find((x) => x.employeeId === id)
-    if (!r) return
-    setEmpSearch(`${r.employeeId} – ${r.name}`)
-    setForm((prev) => ({ ...prev, employeeId: r.employeeId, name: r.name, department: r.department, nationality: r.nationality, terminationType: r.terminationType, departureDate: r.departureDate, reasonForLeaving: r.reasonForLeaving }))
-  }
+  const fStyle: React.CSSProperties = { padding: '7px 10px', borderRadius: '7px', border: '1.5px solid #e2e8f0', fontSize: '0.85rem', background: '#fff', width: '100%', boxSizing: 'border-box', fontFamily: 'inherit' }
+  const taStyle: React.CSSProperties = { ...fStyle, resize: 'vertical', minHeight: '52px' }
 
-  const setRating = (key: keyof ExitInterviewRecord, val: SatisfactionRating) =>
-    setForm((prev) => ({ ...prev, [key]: val }))
-
-  const save = (e: FormEvent) => {
-    e.preventDefault()
-    onSave({ ...form, id: isNew ? `EI-${Date.now()}` : form.id })
-  }
-
-  const RatingRow = ({ catKey, label }: { catKey: keyof ExitInterviewRecord; label: string }) => {
-    const current = form[catKey] as SatisfactionRating
-    return (
-      <div className="ei-rating-row">
-        <span className="ei-rating-label">{label}</span>
-        <div className="ei-stars">
-          {([1,2,3,4,5] as SatisfactionRating[]).map((n) => (
-            <button key={n} type="button"
-              className={`ei-star-btn${current === n ? ' active' : ''}`}
-              onClick={() => setRating(catKey, n)}
-              title={ratingLabel(n)}
-            >{n}</button>
-          ))}
-        </div>
-        <span className="ei-rating-desc" style={{ color: ratingColor(current), background: ratingBg(current) }}>{ratingLabel(current)}</span>
-      </div>
-    )
-  }
-
-  const fStyle = { padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#fff', width:'100%' }
+  const save = (e: FormEvent) => { e.preventDefault(); onSave(form) }
 
   return (
     <div className="modal-backdrop" role="presentation">
-      <section className="registration-modal wide-modal" role="dialog" aria-modal="true">
-        <div className="modal-header">
+      <section className="registration-modal ei-form-modal" role="dialog" aria-modal="true">
+        {/* Header */}
+        <div className="modal-header" style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4338ca 100%)', flexShrink: 0 }}>
           <div>
             <p className="eyebrow">Exit Interview</p>
-            <h2>{isNew ? 'Record Exit Interview' : `Edit — ${record.name}`}</h2>
+            <h2>{record.name || 'New Exit Interview'}</h2>
+            {record.department && <p style={{ margin: 0, fontSize: '0.78rem', color: 'rgba(255,255,255,0.7)' }}>{record.department} · {record.designation}</p>}
           </div>
           <button className="icon-button" onClick={onClose} type="button">×</button>
         </div>
-        <form onSubmit={save}>
-          {/* Employee */}
-          <div className="trn-modal-card" style={{ marginBottom:'14px' }}>
-            {isNew && (
-              <div style={{ marginBottom:'10px' }}>
-                <span className="trn-modal-field-lbl">Select from Completed Departures</span>
-                <input value={empSearch} onChange={(e) => setEmpSearch(e.target.value)} placeholder="Search name or ID…" style={{ ...fStyle, marginTop:'4px' }} />
-                {empSearch && !form.employeeId && (
-                  <div className="ei-emp-dropdown">
-                    {empMatches.map((r) => (
-                      <button key={r.employeeId} type="button" className="ei-emp-option" onClick={() => handleEmpSelect(r.employeeId)}>
-                        <strong>{r.employeeId}</strong> {r.name} <span>{r.department}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-            <div className="trn-modal-detail-row">
-              <div><span className="trn-modal-field-lbl">Employee</span><p style={{ margin:0, fontWeight:700, fontSize:'0.9rem', color:'#1e1b4b' }}>{form.name || '—'}</p></div>
-              <div><span className="trn-modal-field-lbl">Section</span><p style={{ margin:0, fontSize:'0.85rem', color:'#374151' }}>{form.department || '—'}</p></div>
-              <div><span className="trn-modal-field-lbl">Departure</span><p style={{ margin:0, fontSize:'0.85rem', color:'#374151' }}>{form.departureDate ? formatDateDisplay(form.departureDate) : '—'}</p></div>
-            </div>
-          </div>
 
-          {/* Interview date + basics */}
-          <div className="trn-modal-card" style={{ marginBottom:'14px' }}>
-            <div className="trn-modal-detail-row" style={{ gridTemplateColumns:'1fr 1fr 1fr', marginBottom:'10px' }}>
-              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
-                <span className="trn-modal-field-lbl">Interview Date</span>
-                <input type="date" value={form.interviewDate} onChange={(e) => setForm((p) => ({ ...p, interviewDate: e.target.value }))} required style={fStyle} />
-              </label>
-              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
-                <span className="trn-modal-field-lbl">Termination Type</span>
-                <select value={form.terminationType} onChange={(e) => setForm((p) => ({ ...p, terminationType: e.target.value as TerminationType }))} style={fStyle}>
-                  <option>Resignation</option><option>Dismissal</option><option>Probation End</option><option>Contract Expiry</option><option>Absconded</option><option>Other</option>
-                </select>
-              </label>
-              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
-                <span className="trn-modal-field-lbl" style={{ display:'block', marginBottom:'6px' }}>Would Recommend TIC?</span>
-                <label style={{ display:'flex', alignItems:'center', gap:'8px', marginTop:'6px' }}>
-                  <input type="checkbox" checked={form.wouldRecommend} onChange={(e) => setForm((p) => ({ ...p, wouldRecommend: e.target.checked }))} style={{ width:'16px', height:'16px', accentColor:'#7c3aed' }} />
-                  <span style={{ fontSize:'0.85rem', color:'#374151' }}>Yes, would recommend</span>
+        <form onSubmit={save} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+          <div className="ei-form-body">
+
+            {/* Section 1 — Employee Details */}
+            <div className="ei-form-section">
+              <div className="ei-form-section-title">1 — Employee Details</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 20px' }}>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '0.73rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Employee Name</span>
+                  <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} style={fStyle} />
                 </label>
-              </label>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '0.73rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Termination Date</span>
+                  <input type="date" value={form.departureDate} onChange={e => setForm(p => ({ ...p, departureDate: e.target.value }))} style={fStyle} />
+                </label>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '0.73rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Employee ID</span>
+                  <input value={form.employeeId} onChange={e => setForm(p => ({ ...p, employeeId: e.target.value }))} style={fStyle} />
+                </label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '0.73rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Eligible to Re-employ</span>
+                  <div style={{ display: 'flex', gap: '16px', marginTop: '6px' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', cursor: 'pointer' }}>
+                      <input type="radio" name="rehire" checked={form.rehireEligible} onChange={() => setForm(p => ({ ...p, rehireEligible: true }))} /> Yes
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', cursor: 'pointer' }}>
+                      <input type="radio" name="rehire" checked={!form.rehireEligible} onChange={() => setForm(p => ({ ...p, rehireEligible: false }))} /> No
+                    </label>
+                  </div>
+                </div>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '0.73rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Job Title / Designation</span>
+                  <input value={form.designation} onChange={e => setForm(p => ({ ...p, designation: e.target.value }))} style={fStyle} />
+                </label>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '0.73rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Section / Department</span>
+                  <input value={form.department} onChange={e => setForm(p => ({ ...p, department: e.target.value }))} style={fStyle} />
+                </label>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '0.73rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Period of Service</span>
+                  <input value={form.periodOfService} onChange={e => setForm(p => ({ ...p, periodOfService: e.target.value }))} placeholder="e.g. 3y 6m" style={fStyle} />
+                </label>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '0.73rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Interview Date</span>
+                  <input type="date" value={form.interviewDate} onChange={e => setForm(p => ({ ...p, interviewDate: e.target.value }))} style={fStyle} />
+                </label>
+              </div>
             </div>
-            <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
-              <span className="trn-modal-field-lbl">Reason for Leaving</span>
-              <input value={form.reasonForLeaving} onChange={(e) => setForm((p) => ({ ...p, reasonForLeaving: e.target.value }))} placeholder="Primary reason stated by employee" style={fStyle} />
-            </label>
-          </div>
 
-          {/* Satisfaction ratings */}
-          <div className="trn-modal-card" style={{ marginBottom:'14px' }}>
-            <p className="trn-modal-field-lbl" style={{ marginBottom:'12px' }}>Satisfaction Ratings &nbsp;<span style={{ fontWeight:400, color:'#6b7280' }}>1 = Very Dissatisfied · 5 = Very Satisfied</span></p>
-            <div className="ei-ratings-grid">
-              {eiCategories.map(({ key, label }) => <RatingRow key={key} catKey={key} label={label} />)}
+            {/* Section 2 — Reasons */}
+            <div className="ei-form-section">
+              <div className="ei-form-section-title">2 — Reasons for Resignation / Termination</div>
+              <div className="ei-reasons-grid">
+                <div>
+                  <div className="ei-reason-col-title">Involuntary</div>
+                  {invReasonsList.map(r => (
+                    <label key={r} className="ei-reason-check">
+                      <input type="checkbox" checked={form.involuntaryReasons.includes(r)} onChange={() => toggleInv(r)} />
+                      {r}
+                    </label>
+                  ))}
+                  <div style={{ marginTop: '6px' }}>
+                    <label className="ei-reason-check" style={{ alignItems: 'flex-start', flexDirection: 'column', gap: '4px' }}>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Other:</span>
+                      <input value={form.invOther} onChange={e => setForm(p => ({ ...p, invOther: e.target.value }))} style={{ ...fStyle, width: '100%' }} placeholder="Specify…" />
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <div className="ei-reason-col-title">Voluntary</div>
+                  {volReasonsList.map(r => (
+                    <label key={r} className="ei-reason-check">
+                      <input type="checkbox" checked={form.voluntaryReasons.includes(r)} onChange={() => toggleVol(r)} />
+                      {r}
+                    </label>
+                  ))}
+                  <div style={{ marginTop: '6px' }}>
+                    <label className="ei-reason-check" style={{ alignItems: 'flex-start', flexDirection: 'column', gap: '4px' }}>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Other:</span>
+                      <input value={form.volOther} onChange={e => setForm(p => ({ ...p, volOther: e.target.value }))} style={{ ...fStyle, width: '100%' }} placeholder="Specify…" />
+                    </label>
+                  </div>
+                </div>
+              </div>
             </div>
+
+            {/* Section 3 — Employee Comments */}
+            <div className="ei-form-section">
+              <div className="ei-form-section-title">3 — Employee Comments</div>
+              <textarea value={form.employeeComments} onChange={e => setForm(p => ({ ...p, employeeComments: e.target.value }))} style={{ ...taStyle, minHeight: '70px' }} placeholder="Employee's general comments…" />
+            </div>
+
+            {/* Section 4 — Questionnaire */}
+            <div className="ei-form-section">
+              <div className="ei-form-section-title">4 — Satisfaction Questionnaire</div>
+              <table className="ei-quest-table">
+                <thead>
+                  <tr>
+                    <th>Category</th>
+                    <th>Very Satisfied</th>
+                    <th>Satisfied</th>
+                    <th>Dissatisfied</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {eiQuestionnaireCategories.map(({ key, label }) => (
+                    <tr key={key}>
+                      <td>{label}</td>
+                      {(['Very Satisfied', 'Satisfied', 'Dissatisfied'] as EISatisfactionLevel[]).map(opt => (
+                        <td key={opt}>
+                          <input
+                            type="radio"
+                            className="ei-quest-radio"
+                            name={`q-${key}`}
+                            checked={form.questionnaire[key] === opt}
+                            onChange={() => setQuestionnaire(key, opt)}
+                          />
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div style={{ marginTop: '10px' }}>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '0.73rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Areas to be Improved</span>
+                  <input value={form.areasToImprove} onChange={e => setForm(p => ({ ...p, areasToImprove: e.target.value }))} style={fStyle} placeholder="Areas the employee suggests for improvement…" />
+                </label>
+              </div>
+            </div>
+
+            {/* Section 5 — Short Questions */}
+            <div className="ei-form-section">
+              <div className="ei-form-section-title">5 — Short Questions</div>
+              {eiShortQuestions.map((q, i) => {
+                const qKey = `q${i + 1}` as keyof ExitInterviewRecord
+                return (
+                  <div key={i} className="ei-question">
+                    <span className="ei-question-label">{i + 1}. {q}</span>
+                    <textarea
+                      value={form[qKey] as string}
+                      onChange={e => setForm(p => ({ ...p, [qKey]: e.target.value }))}
+                    />
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Section 6 — Interviewer */}
+            <div className="ei-form-section">
+              <div className="ei-form-section-title">6 — Interviewer</div>
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '0.73rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Interviewer Comments</span>
+                  <textarea value={form.interviewerComments} onChange={e => setForm(p => ({ ...p, interviewerComments: e.target.value }))} style={{ ...taStyle, minHeight: '60px' }} />
+                </label>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 20px' }}>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '0.73rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Interviewer Name</span>
+                  <input value={form.interviewerName} onChange={e => setForm(p => ({ ...p, interviewerName: e.target.value }))} style={fStyle} />
+                </label>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '0.73rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Interview Date</span>
+                  <input type="date" value={form.interviewDate} onChange={e => setForm(p => ({ ...p, interviewDate: e.target.value }))} style={fStyle} />
+                </label>
+              </div>
+            </div>
+
           </div>
 
-          {/* Comments */}
-          <div className="trn-modal-card">
-            <span className="trn-modal-field-lbl">Additional Comments</span>
-            <textarea rows={3} value={form.comments} onChange={(e) => setForm((p) => ({ ...p, comments: e.target.value }))} placeholder="Any additional feedback from the employee…" style={{ ...fStyle, marginTop:'4px', resize:'vertical' }} />
-          </div>
-
-          <div className="modal-actions">
+          {/* Footer */}
+          <div className="modal-actions" style={{ flexShrink: 0, borderTop: '1px solid #e8eaf0', padding: '12px 24px' }}>
             <button className="quiet-button light" onClick={onClose} type="button">Cancel</button>
-            <button className="primary-button" type="submit" disabled={!form.employeeId}>{isNew ? 'Save Interview' : 'Save Changes'}</button>
+            <button className="quiet-button" type="button" onClick={() => printExitInterview(form)} style={{ marginLeft: 'auto' }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 5 }}><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+              Print
+            </button>
+            <button className="primary-button" type="submit">Save</button>
           </div>
         </form>
       </section>
@@ -5525,26 +5928,56 @@ function ExitInterviewModal({ record, completedTerminations, onClose, onSave }: 
   )
 }
 
+/* ─── ExitInterviewAnalyticsModal ────────────────────────── */
+
 function ExitInterviewAnalyticsModal({ records, onClose }: { records: ExitInterviewRecord[]; onClose: () => void }) {
   const total = records.length
-  const avg = (key: keyof ExitInterviewRecord) => total ? records.reduce((s, r) => s + (r[key] as number), 0) / total : 0
-  const avgOverall   = avg('overall')
-  const recommendPct = total ? Math.round(records.filter(r => r.wouldRecommend).length / total * 100) : 0
-  const reasonCounts = useMemo(() => {
+  const completed = records.filter(r =>
+    Object.values(r.questionnaire).some(v => v !== '')
+  ).length
+  const rehireCount = records.filter(r => r.rehireEligible).length
+
+  // Top voluntary reason
+  const allVolReasons = useMemo(() => {
     const m: Record<string, number> = {}
-    records.forEach(r => { m[r.terminationType] = (m[r.terminationType] ?? 0) + 1 })
+    records.forEach(r => {
+      r.voluntaryReasons.forEach(v => { m[v] = (m[v] ?? 0) + 1 })
+      r.involuntaryReasons.forEach(v => { m[v] = (m[v] ?? 0) + 1 })
+    })
+    return m
+  }, [records])
+  const topReason = Object.entries(allVolReasons).sort((a, b) => b[1] - a[1])[0]?.[0] ?? '—'
+
+  // Questionnaire stacked bars
+  const questStats = useMemo(() =>
+    eiQuestionnaireCategories.map(({ key, label }) => {
+      const vsCount = records.filter(r => r.questionnaire[key] === 'Very Satisfied').length
+      const sCount  = records.filter(r => r.questionnaire[key] === 'Satisfied').length
+      const dCount  = records.filter(r => r.questionnaire[key] === 'Dissatisfied').length
+      const filled  = vsCount + sCount + dCount
+      return { key, label, vsPct: filled ? vsCount / filled * 100 : 0, sPct: filled ? sCount / filled * 100 : 0, dPct: filled ? dCount / filled * 100 : 0, filled }
+    }),
+  [records])
+
+  // Voluntary/Involuntary reason counts
+  const invCounts = useMemo(() => {
+    const m: Record<string, number> = {}
+    records.forEach(r => r.involuntaryReasons.forEach(v => { m[v] = (m[v] ?? 0) + 1 }))
     return Object.entries(m).sort((a, b) => b[1] - a[1])
   }, [records])
-  const topReason = reasonCounts[0]?.[0] ?? '—'
+  const volCounts = useMemo(() => {
+    const m: Record<string, number> = {}
+    records.forEach(r => r.voluntaryReasons.forEach(v => { m[v] = (m[v] ?? 0) + 1 }))
+    return Object.entries(m).sort((a, b) => b[1] - a[1])
+  }, [records])
+  const maxInv = invCounts[0]?.[1] ?? 1
+  const maxVol = volCounts[0]?.[1] ?? 1
 
-  const ScoreBar = ({ label, value }: { label: string; value: number }) => (
-    <div className="ei-score-row">
-      <span className="ei-score-label">{label}</span>
-      <div className="ei-score-track"><div className="ei-score-fill" style={{ width: `${(value/5)*100}%`, background: ratingColor(value) }} /></div>
-      <span className="ei-score-num" style={{ color: ratingColor(value) }}>{value ? value.toFixed(1) : '—'}</span>
-      {value > 0 && <span className="ei-score-desc" style={{ color: ratingColor(value), background: ratingBg(value) }}>{ratingLabel(value)}</span>}
-    </div>
-  )
+  // Q5 (return?) and Q6 (recommend?) simple yes/no count
+  const returnYes = records.filter(r => /yes|return|would/i.test(r.q5)).length
+  const returnNo  = records.filter(r => /no|unlikely|not/i.test(r.q5) && !/yes/i.test(r.q5)).length
+  const recYes    = records.filter(r => /yes|definitely|would/i.test(r.q6)).length
+  const recNo     = records.filter(r => /no|not|unlikely/i.test(r.q6) && !/yes/i.test(r.q6)).length
 
   return (
     <div className="modal-backdrop" role="presentation">
@@ -5559,41 +5992,92 @@ function ExitInterviewAnalyticsModal({ records, onClose }: { records: ExitInterv
         {total === 0
           ? <p style={{ padding: '24px', color: '#94a3b8', textAlign: 'center' }}>No exit interview data to analyse.</p>
           : (
-            <>
+            <div style={{ padding: '0 20px 20px', overflowY: 'auto', maxHeight: 'calc(85vh - 110px)' }}>
               {/* KPI row */}
-              <div className="ei-stat-row" style={{ margin: '0 0 16px' }}>
-                <div className="ei-stat ei-stat-purple"><strong>{total}</strong><span>Total Interviews</span></div>
-                <div className="ei-stat ei-stat-blue"><strong>{avgOverall ? avgOverall.toFixed(1) : '—'}<small>/5</small></strong><span>Avg Satisfaction</span></div>
-                <div className="ei-stat ei-stat-green"><strong>{recommendPct}<small>%</small></strong><span>Would Recommend</span></div>
-                <div className="ei-stat ei-stat-amber"><strong>{topReason}</strong><span>Top Exit Reason</span></div>
+              <div className="ei-stat-row" style={{ margin: '16px 0' }}>
+                <div className="ei-stat ei-stat-purple"><strong>{total}</strong><span>Total</span></div>
+                <div className="ei-stat ei-stat-blue"><strong>{completed}</strong><span>Completed</span></div>
+                <div className="ei-stat ei-stat-green"><strong>{rehireCount}</strong><span>Rehire Eligible</span></div>
+                <div className="ei-stat ei-stat-amber" style={{ fontSize: '0.72rem' }}><strong style={{ fontSize: '0.85rem', wordBreak: 'break-word' }}>{topReason}</strong><span>Top Exit Reason</span></div>
               </div>
 
-              {/* Dashboard grid */}
-              <div className="ei-dashboard-grid">
+              {/* Satisfaction stacked bars */}
+              <div className="ei-panel" style={{ marginBottom: '16px' }}>
+                <h3 className="ei-panel-title">Satisfaction by Category</h3>
+                {questStats.map(({ key, label, vsPct, sPct, dPct, filled }) => (
+                  <div key={key} className="ei-an-stacked-row">
+                    <span style={{ fontSize: '0.78rem', color: '#374151', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
+                    {filled === 0
+                      ? <span style={{ fontSize: '0.74rem', color: '#94a3b8' }}>No data</span>
+                      : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: 1 }}>
+                          <div className="ei-an-stacked-bar">
+                            {vsPct > 0 && <div className="ei-an-vs" style={{ width: `${vsPct}%` }} title={`Very Satisfied: ${Math.round(vsPct)}%`} />}
+                            {sPct  > 0 && <div className="ei-an-s"  style={{ width: `${sPct}%`  }} title={`Satisfied: ${Math.round(sPct)}%`} />}
+                            {dPct  > 0 && <div className="ei-an-d"  style={{ width: `${dPct}%`  }} title={`Dissatisfied: ${Math.round(dPct)}%`} />}
+                          </div>
+                          <div style={{ display: 'flex', gap: '8px', fontSize: '0.7rem', color: '#6b7280' }}>
+                            {vsPct > 0 && <span style={{ color: '#16a34a' }}>{Math.round(vsPct)}% VS</span>}
+                            {sPct  > 0 && <span style={{ color: '#d97706' }}>{Math.round(sPct)}% S</span>}
+                            {dPct  > 0 && <span style={{ color: '#dc2626' }}>{Math.round(dPct)}% D</span>}
+                          </div>
+                        </div>
+                      )}
+                  </div>
+                ))}
+                <div style={{ display: 'flex', gap: '16px', marginTop: '8px' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.74rem' }}><span style={{ width: 10, height: 10, borderRadius: 2, background: '#16a34a', display: 'inline-block' }} /> Very Satisfied</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.74rem' }}><span style={{ width: 10, height: 10, borderRadius: 2, background: '#d97706', display: 'inline-block' }} /> Satisfied</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.74rem' }}><span style={{ width: 10, height: 10, borderRadius: 2, background: '#dc2626', display: 'inline-block' }} /> Dissatisfied</span>
+                </div>
+              </div>
+
+              {/* Exit Reasons */}
+              <div className="ei-dashboard-grid" style={{ marginBottom: '16px' }}>
                 <div className="ei-panel">
-                  <h3 className="ei-panel-title">Satisfaction by Area</h3>
-                  {eiCategories.map(({ key, label }) => (
-                    <ScoreBar key={key} label={label} value={avg(key)} />
-                  ))}
+                  <h3 className="ei-panel-title">Involuntary Reasons</h3>
+                  {invCounts.length === 0
+                    ? <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>None recorded</p>
+                    : invCounts.map(([reason, count]) => (
+                      <div key={reason} className="ei-reason-row">
+                        <span className="ei-reason-name">{reason}</span>
+                        <div className="ei-reason-track"><div className="ei-reason-fill" style={{ width: `${(count / maxInv) * 100}%`, background: '#ef4444' }} /></div>
+                        <span className="ei-reason-count">{count}</span>
+                      </div>
+                    ))}
                 </div>
                 <div className="ei-panel">
-                  <h3 className="ei-panel-title">Exit Reasons</h3>
-                  {reasonCounts.map(([reason, count]) => (
-                    <div key={reason} className="ei-reason-row">
-                      <span className="ei-reason-name">{reason}</span>
-                      <div className="ei-reason-track"><div className="ei-reason-fill" style={{ width: `${(count/total)*100}%` }} /></div>
-                      <span className="ei-reason-count">{count} <small>({Math.round(count/total*100)}%)</small></span>
-                    </div>
-                  ))}
-                  <div className="ei-recommend-ring" style={{ marginTop: '24px' }}>
-                    <div className="ei-ring-label">
-                      <strong style={{ fontSize: '2rem', color: recommendPct >= 60 ? '#16a34a' : '#dc2626' }}>{recommendPct}%</strong>
-                      <span>would recommend TIC as an employer</span>
-                    </div>
+                  <h3 className="ei-panel-title">Voluntary Reasons</h3>
+                  {volCounts.length === 0
+                    ? <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>None recorded</p>
+                    : volCounts.map(([reason, count]) => (
+                      <div key={reason} className="ei-reason-row">
+                        <span className="ei-reason-name">{reason}</span>
+                        <div className="ei-reason-track"><div className="ei-reason-fill" style={{ width: `${(count / maxVol) * 100}%` }} /></div>
+                        <span className="ei-reason-count">{count}</span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+
+              {/* Q5/Q6 */}
+              <div className="ei-dashboard-grid">
+                <div className="ei-panel">
+                  <h3 className="ei-panel-title">Would Return? (Q5)</h3>
+                  <div style={{ display: 'flex', gap: '16px' }}>
+                    <div className="ei-stat ei-stat-green" style={{ flex: 1 }}><strong>{returnYes}</strong><span>Likely Yes</span></div>
+                    <div className="ei-stat" style={{ flex: 1, background: '#fee2e2' }}><strong style={{ color: '#dc2626' }}>{returnNo}</strong><span style={{ color: '#991b1b' }}>Likely No</span></div>
+                  </div>
+                </div>
+                <div className="ei-panel">
+                  <h3 className="ei-panel-title">Would Recommend? (Q6)</h3>
+                  <div style={{ display: 'flex', gap: '16px' }}>
+                    <div className="ei-stat ei-stat-green" style={{ flex: 1 }}><strong>{recYes}</strong><span>Likely Yes</span></div>
+                    <div className="ei-stat" style={{ flex: 1, background: '#fee2e2' }}><strong style={{ color: '#dc2626' }}>{recNo}</strong><span style={{ color: '#991b1b' }}>Likely No</span></div>
                   </div>
                 </div>
               </div>
-            </>
+            </div>
           )}
 
         <div className="modal-actions">
@@ -5604,15 +6088,13 @@ function ExitInterviewAnalyticsModal({ records, onClose }: { records: ExitInterv
   )
 }
 
-function ExitInterviewSection({ records, completedTerminations, onUpdate }: {
+function ExitInterviewSection({ records, onUpdate }: {
   records: ExitInterviewRecord[]
-  completedTerminations: CompletedTerminationRecord[]
   onUpdate: (fn: (prev: ExitInterviewRecord[]) => ExitInterviewRecord[]) => void
 }) {
   const [monthFilter, setMonthFilter] = useState('All')
   const [deptFilter, setDeptFilter] = useState('All Sections')
   const [editing, setEditing] = useState<ExitInterviewRecord | null>(null)
-  const [viewing, setViewing] = useState<ExitInterviewRecord | null>(null)
   const [showAnalytics, setShowAnalytics] = useState(false)
 
   const months = useMemo(() => {
@@ -5626,6 +6108,9 @@ function ExitInterviewSection({ records, completedTerminations, onUpdate }: {
     return mOk && dOk
   }), [records, monthFilter, deptFilter])
 
+  const eiStatus = (r: ExitInterviewRecord) =>
+    Object.values(r.questionnaire).some(v => v !== '') ? 'Completed' : 'Draft'
+
   const save = (r: ExitInterviewRecord) => {
     onUpdate((prev) => {
       const idx = prev.findIndex((x) => x.id === r.id)
@@ -5637,18 +6122,10 @@ function ExitInterviewSection({ records, completedTerminations, onUpdate }: {
   const del = (id: string) => onUpdate((prev) => prev.filter((x) => x.id !== id))
 
   const exportReport = () => {
-    const headers = ['ID','Employee','Section','Nationality','Departure','Type','Recommend','Management','Work Env','Compensation','Work-Life','Career Growth','Communication','Overall','Reason','Comments']
-    const rows = filtered.map((r) => [r.id, r.name, r.department, r.nationality, formatDateDisplay(r.departureDate), r.terminationType, r.wouldRecommend ? 'Yes' : 'No', String(r.management), String(r.workEnvironment), String(r.compensation), String(r.workLifeBalance), String(r.careerGrowth), String(r.communication), String(r.overall), r.reasonForLeaving, r.comments])
+    const headers = ['ID','Employee','Designation','Section','Nationality','Departure','Type','Status','Rehire','Interviewer','InterviewDate']
+    const rows = filtered.map((r) => [r.id, r.name, r.designation, r.department, r.nationality, formatDateDisplay(r.departureDate), r.terminationType, eiStatus(r), r.rehireEligible ? 'Yes' : 'No', r.interviewerName, r.interviewDate])
     downloadCsv('exit-interview-report.csv', [headers, ...rows])
   }
-
-  const newEI = (): ExitInterviewRecord => ({
-    id: 'EI-new', employeeId: '', name: '', department: '', nationality: '',
-    terminationType: 'Resignation', departureDate: '', interviewDate: new Date().toISOString().slice(0,10),
-    management: 3, workEnvironment: 3, compensation: 3, workLifeBalance: 3,
-    careerGrowth: 3, communication: 3, overall: 3,
-    wouldRecommend: false, reasonForLeaving: '', comments: '',
-  })
 
   return (
     <>
@@ -5670,116 +6147,66 @@ function ExitInterviewSection({ records, completedTerminations, onUpdate }: {
           Analytics
         </button>
         <button className="quiet-button light" type="button" onClick={exportReport}>⬇ Export</button>
-        <button className="primary-button" type="button" onClick={() => setEditing(newEI())}>+ Add Interview</button>
       </div>
 
-      {/* Table — at top, always visible */}
+      {/* Table */}
       <div className="employee-table-shell compact-scroll">
-          <table className="data-table ei-table">
-            <thead>
-              <tr>
-                <th className="term-empid">Emp ID</th>
-                <th>Name</th>
-                <th>Section</th>
-                <th>Departure</th>
-                <th>Type</th>
-                <th>Overall</th>
-                <th>Recommend</th>
-                <th>Reason</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0
-                ? <tr><td colSpan={9} className="empty-row">No exit interview records. Add one using "+ Add Interview" above.</td></tr>
-                : filtered.map((r) => (
+        <table className="data-table ei-table">
+          <thead>
+            <tr>
+              <th className="term-empid">Emp ID</th>
+              <th>Name</th>
+              <th>Section</th>
+              <th>Departure</th>
+              <th>Type</th>
+              <th>Rehire</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length === 0
+              ? <tr><td colSpan={8} className="empty-row">No exit interview records. They are auto-created when a termination reaches the Exit Interview stage.</td></tr>
+              : filtered.map((r) => {
+                const status = eiStatus(r)
+                return (
                   <tr key={r.id}>
                     <td className="term-empid">{r.employeeId}</td>
-                    <td className="name-cell"><button className="name-link" type="button" onClick={() => setViewing(r)}>{r.name}</button></td>
+                    <td className="name-cell"><button className="name-link" type="button" onClick={() => setEditing(r)}>{r.name}</button></td>
                     <td>{r.department}</td>
                     <td>{formatDateDisplay(r.departureDate)}</td>
                     <td><span className="req-type-chip">{r.terminationType}</span></td>
                     <td>
-                      <span className="ei-overall-badge" style={{ color: ratingColor(r.overall), background: ratingBg(r.overall) }}>{r.overall}/5</span>
+                      {r.rehireEligible
+                        ? <span className="doc-yes" style={{ fontSize: '0.75rem', fontWeight: 700 }}>Yes</span>
+                        : <span className="doc-no" style={{ fontSize: '0.75rem' }}>No</span>}
                     </td>
                     <td>
-                      {r.wouldRecommend
-                        ? <span className="doc-yes" style={{fontSize:'0.75rem', fontWeight:700}}>✓ Yes</span>
-                        : <span className="doc-no" style={{fontSize:'0.75rem'}}>No</span>}
+                      <span style={{ fontSize: '0.74rem', fontWeight: 700, padding: '2px 8px', borderRadius: '10px',
+                        background: status === 'Completed' ? '#dcfce7' : '#fef3c7',
+                        color: status === 'Completed' ? '#15803d' : '#92400e',
+                      }}>{status}</span>
                     </td>
-                    <td className="ei-reason-td">{r.reasonForLeaving || '—'}</td>
                     <td>
                       <div className="row-actions">
-                        <button className="action-glyph" title="View" onClick={() => setViewing(r)} type="button">👁</button>
-                        <button className="action-glyph edit" title="Edit" onClick={() => setEditing(r)} type="button">✎</button>
+                        <button className="action-glyph" title="Open Form" onClick={() => setEditing(r)} type="button">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                          </svg>
+                        </button>
                         <button className="action-glyph delete" title="Delete" onClick={() => del(r.id)} type="button">🗑</button>
                       </div>
                     </td>
                   </tr>
-                ))}
-            </tbody>
-          </table>
-        </div>
+                )
+              })}
+          </tbody>
+        </table>
+      </div>
 
       {showAnalytics && <ExitInterviewAnalyticsModal records={filtered} onClose={() => setShowAnalytics(false)} />}
-
-      {/* View modal */}
-      {viewing && (
-        <div className="modal-backdrop" role="presentation">
-          <section className="registration-modal wide-modal" role="dialog" aria-modal="true">
-            <div className="modal-header">
-              <div>
-                <p className="eyebrow">Exit Interview · {viewing.id}</p>
-                <h2>{viewing.name}</h2>
-                <p style={{margin:0, fontSize:'0.78rem', color:'rgba(255,255,255,0.6)'}}>{viewing.department} · {formatDateDisplay(viewing.departureDate)}</p>
-              </div>
-              <button className="icon-button" onClick={() => setViewing(null)} type="button">×</button>
-            </div>
-            <div className="ei-view-grid">
-              <div className="ei-panel" style={{gridColumn:'1/-1'}}>
-                <div className="trn-modal-detail-row">
-                  <div><span className="trn-modal-field-lbl">Employee</span><p style={{margin:0, fontWeight:700}}>{viewing.name}</p></div>
-                  <div><span className="trn-modal-field-lbl">Section</span><p style={{margin:0}}>{viewing.department}</p></div>
-                  <div><span className="trn-modal-field-lbl">Departure</span><p style={{margin:0}}>{formatDateDisplay(viewing.departureDate)}</p></div>
-                  <div><span className="trn-modal-field-lbl">Type</span><p style={{margin:0}}>{viewing.terminationType}</p></div>
-                  <div><span className="trn-modal-field-lbl">Would Recommend</span><p style={{margin:0, color: viewing.wouldRecommend ? '#16a34a' : '#dc2626', fontWeight:700}}>{viewing.wouldRecommend ? '✓ Yes' : '✗ No'}</p></div>
-                </div>
-              </div>
-              <div className="ei-panel">
-                <h3 className="ei-panel-title">Ratings</h3>
-                {eiCategories.map(({ key, label }) => {
-                  const v = viewing[key] as number
-                  return (
-                    <div className="ei-score-row" key={key}>
-                      <span className="ei-score-label">{label}</span>
-                      <div className="ei-score-track"><div className="ei-score-fill" style={{ width: `${(v/5)*100}%`, background: ratingColor(v) }} /></div>
-                      <span className="ei-score-num" style={{ color: ratingColor(v) }}>{v ? v.toFixed(1) : '—'}</span>
-                      {v > 0 && <span className="ei-score-desc" style={{ color: ratingColor(v), background: ratingBg(v) }}>{ratingLabel(v)}</span>}
-                    </div>
-                  )
-                })}
-              </div>
-              <div className="ei-panel">
-                <h3 className="ei-panel-title">Feedback</h3>
-                <div style={{marginBottom:'12px'}}>
-                  <span className="trn-modal-field-lbl">Reason for Leaving</span>
-                  <p style={{margin:'4px 0 0', fontSize:'0.87rem', color:'#374151'}}>{viewing.reasonForLeaving || '—'}</p>
-                </div>
-                <div>
-                  <span className="trn-modal-field-lbl">Additional Comments</span>
-                  <p style={{margin:'4px 0 0', fontSize:'0.87rem', color:'#374151', lineHeight:1.6}}>{viewing.comments || '—'}</p>
-                </div>
-              </div>
-            </div>
-            <div className="modal-actions">
-              <button className="primary-button" type="button" onClick={() => { setViewing(null); setEditing(viewing) }}>✎ Edit</button>
-              <button className="quiet-button light" type="button" onClick={() => setViewing(null)}>Close</button>
-            </div>
-          </section>
-        </div>
-      )}
-
-      {editing && <ExitInterviewModal record={editing} completedTerminations={completedTerminations} onClose={() => setEditing(null)} onSave={save} />}
+      {editing && <ExitInterviewFormModal record={editing} onClose={() => setEditing(null)} onSave={save} />}
     </>
   )
 }
@@ -5812,6 +6239,7 @@ function TerminationPage({
   const [completedDepartmentFilter, setCompletedDepartmentFilter] = useState('All Departments')
   const [noticeStageFilter, setNoticeStageFilter] = useState<'All' | TerminationStage>('All')
   const [expandedTermId, setExpandedTermId] = useState<string | null>(null)
+  const [viewingEI, setViewingEI] = useState<ExitInterviewRecord | null>(null)
 
   const getDuration = (joinDate: string) => {
     if (!joinDate) return '-'
@@ -5908,40 +6336,58 @@ function TerminationPage({
                                 <button className="action-glyph" onClick={() => onViewDetails(r)} type="button" title="View">👁</button>
                                 <button className="action-glyph edit" onClick={() => onEdit(r)} type="button" title="Edit">✎</button>
                                 <button className="action-glyph delete" onClick={() => onDelete(r.id)} type="button" title="Delete">🗑</button>
+                                {exitInterviews.some(ei => ei.employeeId === r.employeeId) && (
+                                  <button className="action-glyph action-glyph-ei"
+                                    onClick={() => {
+                                      const ei = exitInterviews.find(x => x.employeeId === r.employeeId)
+                                      if (ei) setViewingEI(ei)
+                                    }}
+                                    type="button" title="Exit Interview">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                      <polyline points="14 2 14 8 20 8"/>
+                                      <line x1="16" y1="13" x2="8" y2="13"/>
+                                      <line x1="16" y1="17" x2="8" y2="17"/>
+                                    </svg>
+                                  </button>
+                                )}
                               </div>
                             </td>
                           </tr>
                           {isExp && (
                             <tr className="lr-pipeline-row">
                               <td colSpan={11}>
-                                <div className="lr-pipeline">
-                                  {allTerminationStages.map((stage, i) => {
-                                    const isDone = i < stageIdx
-                                    const isCurrent = i === stageIdx
-                                    const cls = isDone ? 'lr-done' : isCurrent ? 'lr-current' : 'lr-future'
-                                    // Show dates only for Letter Submitted and Pending Departure
-                                    const showStageDate = stage === 'Letter Submitted' || stage === 'Pending Departure'
-                                    const stageDate = showStageDate
-                                      ? (r.stageDates?.[stage] ?? (stage === 'Letter Submitted' ? r.dateSubmitted : r.departureDate))
-                                      : undefined
+                                <div className="trn-detail-dates">
+                                  <div className="trn-dd-item">
+                                    <span className="trn-dd-lbl">Date Submitted</span>
+                                    <span className="trn-dd-val">{formatDateDisplay(r.dateSubmitted)}</span>
+                                  </div>
+                                  {allTerminationStages.map((stage) => {
+                                    const isDone = allTerminationStages.indexOf(stage) < stageIdx
+                                    const isCurrent = stage === r.currentStage
+                                    const stageDate = r.stageDates?.[stage]
+                                      ?? (stage === 'Letter Submitted' ? r.dateSubmitted
+                                        : stage === 'Pending Departure' ? r.departureDate
+                                        : undefined)
                                     return (
-                                      <Fragment key={stage}>
-                                        <button
-                                          className={`lr-pip-step ${cls}`}
-                                          onClick={(e) => { e.stopPropagation(); onSetStage(r.id, stage) }}
-                                          type="button"
-                                          title={`Set to: ${stage}`}
-                                        >
-                                          <div className="lr-pip-circle">{isDone ? '✓' : i + 1}</div>
-                                          <div className="lr-pip-label">{stage}</div>
-                                          <div className="lr-pip-date">{stageDate ? formatDateDisplay(stageDate) : '—'}</div>
-                                        </button>
-                                        {i < allTerminationStages.length - 1 && (
-                                          <div className={`lr-pip-line ${isDone ? 'lr-pip-line-done' : 'lr-pip-line-future'}`} />
-                                        )}
-                                      </Fragment>
+                                      <div className="trn-dd-item" key={stage} style={{ opacity: isDone || isCurrent ? 1 : 0.45 }}>
+                                        <span className="trn-dd-lbl">{stage}</span>
+                                        <span className="trn-dd-val">{stageDate ? formatDateDisplay(stageDate) : (isDone || isCurrent ? '—' : '')}</span>
+                                      </div>
                                     )
                                   })}
+                                  <div className="trn-dd-item">
+                                    <span className="trn-dd-lbl">Last Working</span>
+                                    <span className="trn-dd-val">{formatDateDisplay(r.lastWorkingDate)}</span>
+                                  </div>
+                                  <div className="trn-dd-item">
+                                    <span className="trn-dd-lbl">Departure</span>
+                                    <span className="trn-dd-val">{formatDateDisplay(r.departureDate)}</span>
+                                  </div>
+                                  <div className="trn-dd-item">
+                                    <span className="trn-dd-lbl">Type</span>
+                                    <span className="trn-dd-val">{r.terminationType}</span>
+                                  </div>
                                 </div>
                               </td>
                             </tr>
@@ -5990,11 +6436,23 @@ function TerminationPage({
         {activeTab === 'exit-interview' && (
           <ExitInterviewSection
             records={exitInterviews}
-            completedTerminations={completedTerminations}
             onUpdate={onUpdateExitInterviews}
           />
         )}
       </section>
+      {viewingEI && (
+        <ExitInterviewFormModal
+          record={viewingEI}
+          onClose={() => setViewingEI(null)}
+          onSave={(r) => {
+            onUpdateExitInterviews(prev => {
+              const idx = prev.findIndex(x => x.id === r.id)
+              return idx >= 0 ? prev.map(x => x.id === r.id ? r : x) : [r, ...prev]
+            })
+            setViewingEI(null)
+          }}
+        />
+      )}
     </>
   )
 }
@@ -7923,18 +8381,42 @@ function App() {
 
   const setTerminationStage = (id: string, stage: TerminationStage) => {
     const today = new Date().toISOString().slice(0, 10)
-    setNoticeTerminations((cur) => cur.map((r) => {
-      if (r.id !== id) return r
-      // Letter Submitted date comes from dateSubmitted field; don't overwrite if already set
-      const dateForStage = stage === 'Letter Submitted'
-        ? (r.stageDates?.['Letter Submitted'] ?? r.dateSubmitted ?? today)
-        : (r.stageDates?.[stage] ?? today)
-      return {
-        ...r,
-        currentStage: stage,
-        stageDates: { ...(r.stageDates ?? {}), [stage]: dateForStage },
-      }
-    }))
+    let targetRecord: EnhancedTerminationRecord | undefined
+
+    setNoticeTerminations((cur) => {
+      targetRecord = cur.find(r => r.id === id)
+      return cur.map((r) => {
+        if (r.id !== id) return r
+        const dateForStage = stage === 'Letter Submitted'
+          ? (r.stageDates?.['Letter Submitted'] ?? r.dateSubmitted ?? today)
+          : (r.stageDates?.[stage] ?? today)
+        return { ...r, currentStage: stage, stageDates: { ...(r.stageDates ?? {}), [stage]: dateForStage } }
+      })
+    })
+
+    // Auto-create draft exit interview when stage reaches 'Exit Interview'
+    if (stage === 'Exit Interview') {
+      setTimeout(() => {
+        if (!targetRecord) return
+        const r = targetRecord
+        setExitInterviews((prev) => {
+          if (prev.some(ei => ei.employeeId === r.employeeId)) return prev
+          const draft: ExitInterviewRecord = {
+            id: `EI-${Date.now()}`, employeeId: r.employeeId, name: r.name,
+            department: r.department, designation: r.designation, nationality: r.nationality,
+            terminationType: r.terminationType, departureDate: r.departureDate,
+            periodOfService: '', rehireEligible: true, interviewDate: '',
+            involuntaryReasons: [], voluntaryReasons: [], invOther: '', volOther: '',
+            employeeComments: '',
+            questionnaire: blankQuestionnaire(),
+            areasToImprove: '', q1: '', q2: '', q3: '', q4: '', q5: '', q6: '', q7: '',
+            q8: '', q9: '', q10: '', q11: '', q12: '', q13: '', q14: '',
+            interviewerComments: '', interviewerName: '',
+          }
+          return [draft, ...prev]
+        })
+      }, 0)
+    }
   }
 
   const saveTerminationRecord = (record: EnhancedTerminationRecord) => {
