@@ -5612,20 +5612,24 @@ function printExitInterview(record: ExitInterviewRecord) {
     </div>`
   }).join('')
 
-  // Page header — matches PDF exactly: logo left, HR & Admin + VILLA HAKATHA right, EXIT INTERVIEW centered below
+  // SVG logo matching the actual Villa Hakatha logo (4 downward triangles: 2 blue + 1 purple top, 1 blue bottom)
+  const logoSvg = `<svg viewBox="0 0 500 440" xmlns="http://www.w3.org/2000/svg" style="width:68pt;height:60pt;flex-shrink:0;">
+    <polygon points="3,3 248,3 128,212" fill="#009FDA"/>
+    <polygon points="252,3 497,3 372,212" fill="#009FDA"/>
+    <polygon points="128,3 372,3 250,209" fill="#2B2082"/>
+    <polygon points="128,226 372,226 250,437" fill="#009FDA"/>
+  </svg>`
+
+  // Page header — exact PDF layout: logo left, company name right, EXIT INTERVIEW centered below
   const pageHdr = `
-    <div style="display:flex;align-items:center;gap:14pt;margin-bottom:6pt;">
-      <!-- Triangle logo approximation -->
-      <div style="width:60pt;height:60pt;flex-shrink:0;position:relative;">
-        <div style="width:0;height:0;border-left:30pt solid transparent;border-right:30pt solid transparent;border-bottom:52pt solid #2563eb;position:absolute;top:0;left:0;"></div>
-        <div style="width:0;height:0;border-left:18pt solid transparent;border-right:18pt solid transparent;border-bottom:32pt solid #6d28d9;position:absolute;top:10pt;left:12pt;"></div>
-      </div>
+    <div style="display:flex;align-items:center;gap:12pt;margin-bottom:4pt;">
+      ${logoSvg}
       <div>
-        <div style="font-size:11pt;color:#111;">Human Resource &amp; Administration</div>
-        <div style="font-size:14pt;font-weight:900;letter-spacing:0.5px;color:#111;">VILLA HAKATHA PVT LTD</div>
+        <div style="font-size:11pt;font-weight:400;color:#111;font-family:Arial,Helvetica,sans-serif;">Human Resource &amp; Administration</div>
+        <div style="font-size:14pt;font-weight:900;letter-spacing:1pt;color:#111;font-family:Arial,Helvetica,sans-serif;text-transform:uppercase;">VILLA HAKATHA PVT LTD</div>
       </div>
     </div>
-    <div style="text-align:center;font-size:13pt;font-weight:800;letter-spacing:1px;margin:12pt 0 16pt;">EXIT INTERVIEW</div>`
+    <div style="text-align:center;font-size:12pt;font-weight:800;letter-spacing:2pt;margin:14pt 0 16pt;font-family:Arial,Helvetica,sans-serif;">EXIT INTERVIEW</div>`
 
   const fieldRow = (l1: string, v1: string, l2: string, v2: string) =>
     `<tr>
