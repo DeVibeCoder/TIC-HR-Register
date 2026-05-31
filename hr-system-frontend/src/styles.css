@@ -2042,18 +2042,17 @@ h2 { margin: 0; color: #111; font-size: 0.95rem; line-height: 1.2; }
 .induction-table td:nth-child(6),
 .induction-table th:last-child,
 .induction-table td:last-child,
-.training-table th:nth-child(1),
-.training-table td:nth-child(1),
-.training-table th:nth-child(5),
-.training-table td:nth-child(5),
-.training-table th:nth-child(6),
-.training-table td:nth-child(6),
-.training-table th:nth-child(8),
-.training-table td:nth-child(8),
-.training-table th:last-child,
-.training-table td:last-child {
+/* Training table: columns 2=Date, 4=Type, 5=Participants, 6=Action centered */
+.training-table th, .training-table td { vertical-align: middle; }
+.training-table th:nth-child(2), .training-table td:nth-child(2),
+.training-table th:nth-child(4), .training-table td:nth-child(4),
+.training-table th:nth-child(5), .training-table td:nth-child(5),
+.training-table th:nth-child(6), .training-table td:nth-child(6) {
   text-align: center;
 }
+/* Center the action buttons row inside the centered cell */
+.training-table td:last-child .row-actions,
+.training-table td:last-child .ind-actions { justify-content: center; }
 .leave-workspace .status-badge { min-height: 24px; font-size: 0.66rem; padding: 0 10px; }
 
 .leave-section-tabs {
