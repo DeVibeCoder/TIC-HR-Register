@@ -2053,11 +2053,11 @@ h2 { margin: 0; color: #111; font-size: 0.95rem; line-height: 1.2; }
 
 .leave-section-tabs {
   display: flex;
-  gap: 0;
+  gap: 6px;
   margin-bottom: 10px;
-  background: #f1f5f9;
-  border-radius: 14px;
-  padding: 5px;
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
 }
 
 .lst-btn {
@@ -2077,17 +2077,49 @@ h2 { margin: 0; color: #111; font-size: 0.95rem; line-height: 1.2; }
   cursor: pointer;
   transition: all 160ms;
   white-space: nowrap;
+  border: 2px solid transparent;
+  border-radius: 11px;
 }
-.lst-btn:hover {
-  color: #374151;
-  background: rgba(255,255,255,0.7);
+
+/* ── Leave section: each tab has its own color ── */
+/* Leave Request — blue */
+.leave-section-tabs .lst-btn:nth-child(1) {
+  background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe;
 }
-.lst-btn.active {
-  color: #fff;
-  background: var(--brand, #6366f1);
-  box-shadow: 0 2px 10px rgba(99,102,241,0.30);
+.leave-section-tabs .lst-btn:nth-child(1):hover { background: #dbeafe; }
+.leave-section-tabs .lst-btn:nth-child(1).active {
+  background: #2563eb; color: #fff; border-color: #2563eb;
+  box-shadow: 0 3px 12px rgba(37,99,235,0.35);
 }
-.lst-btn svg { flex-shrink: 0; opacity: 0.85; }
+/* Active Leaves — emerald */
+.leave-section-tabs .lst-btn:nth-child(2) {
+  background: #f0fdf4; color: #15803d; border-color: #bbf7d0;
+}
+.leave-section-tabs .lst-btn:nth-child(2):hover { background: #dcfce7; }
+.leave-section-tabs .lst-btn:nth-child(2).active {
+  background: #16a34a; color: #fff; border-color: #16a34a;
+  box-shadow: 0 3px 12px rgba(22,163,74,0.35);
+}
+/* Leave History — amber */
+.leave-section-tabs .lst-btn:nth-child(3) {
+  background: #fffbeb; color: #b45309; border-color: #fde68a;
+}
+.leave-section-tabs .lst-btn:nth-child(3):hover { background: #fef3c7; }
+.leave-section-tabs .lst-btn:nth-child(3).active {
+  background: #d97706; color: #fff; border-color: #d97706;
+  box-shadow: 0 3px 12px rgba(217,119,6,0.35);
+}
+/* Medical Leave — rose */
+.leave-section-tabs .lst-btn:nth-child(4) {
+  background: #fff1f2; color: #be123c; border-color: #fecdd3;
+}
+.leave-section-tabs .lst-btn:nth-child(4):hover { background: #ffe4e6; }
+.leave-section-tabs .lst-btn:nth-child(4).active {
+  background: #e11d48; color: #fff; border-color: #e11d48;
+  box-shadow: 0 3px 12px rgba(225,29,72,0.35);
+}
+
+.lst-btn svg { flex-shrink: 0; opacity: 0.9; }
 
 .row-actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
 .history-confirm-actions { gap: 4px; }
@@ -2332,15 +2364,43 @@ button.step-pill:hover { filter: brightness(0.98); }
 }
 
 .termination-tabs {
-  margin-bottom: 6px;
-  border-radius: 0;
+  margin-bottom: 10px;
+  gap: 6px;
 }
 
-.termination-tabs button {
-  border-radius: 0;
-  box-shadow: none;
-  min-height: 30px;
-  font-size: 0.68rem;
+/* Termination tabs: each with its own color */
+/* Notice Period — amber/orange */
+.termination-tabs button:nth-child(1) {
+  background: #fff7ed; color: #c2410c; border: 2px solid #fed7aa; border-radius: 11px;
+  font-size: 0.78rem; font-weight: 700; min-height: 40px;
+  transition: all 160ms;
+}
+.termination-tabs button:nth-child(1):hover { background: #ffedd5; }
+.termination-tabs button:nth-child(1).active {
+  background: #ea580c; color: #fff; border-color: #ea580c;
+  box-shadow: 0 3px 12px rgba(234,88,12,0.35);
+}
+/* History — slate */
+.termination-tabs button:nth-child(2) {
+  background: #f1f5f9; color: #475569; border: 2px solid #cbd5e1; border-radius: 11px;
+  font-size: 0.78rem; font-weight: 700; min-height: 40px;
+  transition: all 160ms;
+}
+.termination-tabs button:nth-child(2):hover { background: #e2e8f0; }
+.termination-tabs button:nth-child(2).active {
+  background: #334155; color: #fff; border-color: #334155;
+  box-shadow: 0 3px 12px rgba(51,65,85,0.35);
+}
+/* Exit Interviews — purple */
+.termination-tabs button:nth-child(3) {
+  background: #faf5ff; color: #7e22ce; border: 2px solid #e9d5ff; border-radius: 11px;
+  font-size: 0.78rem; font-weight: 700; min-height: 40px;
+  transition: all 160ms;
+}
+.termination-tabs button:nth-child(3):hover { background: #f3e8ff; }
+.termination-tabs button:nth-child(3).active {
+  background: #7c3aed; color: #fff; border-color: #7c3aed;
+  box-shadow: 0 3px 12px rgba(124,58,237,0.35);
 }
 
 .termination-topbar {
