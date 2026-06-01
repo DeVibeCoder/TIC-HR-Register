@@ -8071,7 +8071,38 @@ function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves:
         </div>
       </div>
 
-      {/* Everything below is Admin-only — Manager sees only their profile card */}
+      {/* Non-admin: show own details only (read-only) */}
+      {!isAdmin && (
+        <div className="user-mgmt-table-wrap" style={{ marginTop: 16 }}>
+          <div className="user-table-toolbar">
+            <h2 style={{ fontSize: '0.84rem', fontWeight: 700, color: '#374151', margin: 0 }}>My Account Details</h2>
+          </div>
+          <div className="employee-table-shell">
+            <table className="data-table user-table">
+              <thead>
+                <tr><th>Name</th><th>Username</th><th>Role</th><th>Designation</th><th>Status</th><th>Last Login</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <div className="user-avatar-cell">
+                      <span className="user-avatar">{profileInitials(currentAppUser?.name ?? currentUserName)}</span>
+                      <strong>{currentAppUser?.name ?? currentUserName}</strong>
+                    </div>
+                  </td>
+                  <td><code className="user-username">{currentAppUser?.username ?? '—'}</code></td>
+                  <td><span className={`role-chip ${roleColors[currentAppUser?.role ?? 'HR Manager']}`}>{currentAppUser?.role ?? '—'}</span></td>
+                  <td>{currentAppUser?.designation ?? '—'}</td>
+                  <td><span style={{ fontSize: '0.76rem', fontWeight: 700, color: '#15803d', background: '#dcfce7', padding: '2px 9px', borderRadius: 8 }}>{currentAppUser?.status ?? 'Active'}</span></td>
+                  <td>{currentAppUser?.lastLogin ? formatDateDisplay(currentAppUser.lastLogin) : '—'}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Everything below is Admin-only */}
       {isAdmin && (
         <>
           {/* Section 2 — System Users */}
