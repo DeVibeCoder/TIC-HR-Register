@@ -8220,7 +8220,7 @@ function LoginPage({ onLogin }: { onLogin: (name: string) => void }) {
     event.preventDefault()
     if (loginUser === 'Rashid50814' && loginPass === 'Admin@TIC#') {
       setLoginError(false); onLogin('Arushulla Rashid')
-    } else if (loginUser === 'Chacko58692' && loginPass === 'Chacko@TIC#') {
+    } else if (loginUser === 'Chacko58692' && loginPass === '12345') {
       setLoginError(false); onLogin('Shantumon Pathiyil Chacko')
     } else if (loginUser === 'admin' && loginPass === 'Admin@Pending') {
       setLoginError(false); onLogin('Administrator')
