@@ -3230,10 +3230,11 @@ button.step-pill:hover { filter: brightness(0.98); }
 
 /* ─── Settings / User Management ─────────────────── */
 
-/* Page container — fills workspace */
+/* Page container — fills workspace with gap from sidebar */
 .settings-page {
   width: 100%;
   max-width: none;
+  padding-left: 12px;
 }
 
 .user-mgmt-page {

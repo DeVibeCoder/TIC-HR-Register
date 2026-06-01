@@ -5339,87 +5339,89 @@ function TerminationFormModal({
           <button className="icon-button" onClick={onClose} type="button">×</button>
         </div>
 
-        <form onSubmit={save} style={{ overflowY: 'auto', maxHeight: 'calc(90vh - 110px)', padding: '0 2px' }}>
-          {/* Card 1 — Employee Details */}
-          <div className="trn-modal-card" style={{ marginBottom: '14px' }}>
-            <div className="mc-form-divider" style={{ marginBottom: '10px' }}>Employee Details</div>
-            <div style={{ position: 'relative', marginBottom: '10px' }}>
-              <label>
-                <span>Search Staff (ID or Name)</span>
-                <input
-                  className="lf-search-input"
-                  placeholder="Search by employee ID or name…"
-                  type="search"
-                  value={searchQuery}
-                  autoComplete="off"
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  onFocus={() => !form.employeeId && setShowResults(true)}
-                />
-              </label>
-              {showResults && searchResults.length > 0 && (
-                <ul className="lf-search-results" style={{ top: '100%', zIndex: 100 }}>
-                  {searchResults.map((emp) => (
-                    <li key={emp.employeeId} onMouseDown={() => selectEmployee(emp)}>
-                      <span className="lf-res-id">{emp.employeeId}</span>
-                      <span className="lf-res-name">{emp.fullName}</span>
-                      <span className="lf-res-dept">{emp.department}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-            {form.employeeId && (
-              <div className="os-emp-pill" style={{ marginTop: 8 }}>
-                <div>
-                  <strong>{form.name}</strong>
-                  <span style={{ display: 'block', fontSize: '0.74rem', color: '#3b82f6' }}>
-                    {form.employeeId} · {form.designation} · {form.department}
-                  </span>
-                </div>
-              </div>
-            )}
-            <div className="mc-form-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr', marginTop: form.employeeId ? 8 : 0 }}>
-              <label><span>Designation</span><input readOnly value={form.designation} placeholder="—" className="lf-readonly" /></label>
-              <label><span>Section</span><input readOnly value={form.department} placeholder="—" className="lf-readonly" /></label>
-              <label><span>Nationality</span><input readOnly value={form.nationality} placeholder="—" className="lf-readonly" /></label>
-              <label><span>Date of Join</span><input readOnly value={form.dateOfJoin} placeholder="—" className="lf-readonly" /></label>
-            </div>
-          </div>
+        <form onSubmit={save}>
+          {/* Two-column layout: Employee Details (left) | Termination Details (right) */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 12 }}>
 
-          {/* Card 2 — Termination Details */}
-          <div className="trn-modal-card" style={{ marginBottom: '14px' }}>
-            <div className="mc-form-divider" style={{ marginBottom: '10px' }}>Termination Details</div>
-            <div className="mc-form-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr' }}>
-              <label><span>Termination Type</span>
-                <select value={form.terminationType} onChange={(e) => setForm((cur) => ({ ...cur, terminationType: e.target.value as TerminationType }))}>
-                  <option>Resignation</option><option>Dismissal</option><option>Probation End</option>
-                  <option>Contract Expiry</option><option>Absconded</option><option>Other</option>
-                </select>
-              </label>
-              <label><span>Date Submitted</span><input type="date" value={form.dateSubmitted ?? ''} onChange={(e) => setForm((cur) => ({ ...cur, dateSubmitted: e.target.value }))} /></label>
-              <label><span>Last Working Date</span><input type="date" value={form.lastWorkingDate} onChange={(e) => setForm((cur) => ({ ...cur, lastWorkingDate: e.target.value }))} required /></label>
-              <label><span>Departure Date</span><input type="date" value={form.departureDate} onChange={(e) => setForm((cur) => ({ ...cur, departureDate: e.target.value }))} required /></label>
+            {/* Left — Employee Details */}
+            <div className="trn-modal-card" style={{ margin: 0 }}>
+              <div className="mc-form-divider" style={{ marginBottom: 10, fontSize: '0.72rem' }}>Employee Details</div>
+              <div style={{ position: 'relative', marginBottom: 8 }}>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <span style={{ fontSize: '0.70rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Search Staff</span>
+                  <input
+                    className="lf-search-input" style={{ fontSize: '0.82rem' }}
+                    placeholder="Employee ID or name…"
+                    type="search" value={searchQuery} autoComplete="off"
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                    onFocus={() => !form.employeeId && setShowResults(true)}
+                  />
+                </label>
+                {showResults && searchResults.length > 0 && (
+                  <ul className="lf-search-results" style={{ top: '100%', zIndex: 100 }}>
+                    {searchResults.map((emp) => (
+                      <li key={emp.employeeId} onMouseDown={() => selectEmployee(emp)}>
+                        <span className="lf-res-id">{emp.employeeId}</span>
+                        <span className="lf-res-name">{emp.fullName}</span>
+                        <span className="lf-res-dept">{emp.department}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              {form.employeeId && (
+                <div className="os-emp-pill" style={{ marginBottom: 8 }}>
+                  <div>
+                    <strong style={{ fontSize: '0.84rem' }}>{form.name}</strong>
+                    <span style={{ display: 'block', fontSize: '0.72rem', color: '#3b82f6' }}>{form.employeeId} · {form.department}</span>
+                  </div>
+                </div>
+              )}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Designation</span><input readOnly value={form.designation} placeholder="—" className="lf-readonly" style={{ fontSize: '0.78rem' }} /></label>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Nationality</span><input readOnly value={form.nationality} placeholder="—" className="lf-readonly" style={{ fontSize: '0.78rem' }} /></label>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Section</span><input readOnly value={form.department} placeholder="—" className="lf-readonly" style={{ fontSize: '0.78rem' }} /></label>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Date of Join</span><input readOnly value={form.dateOfJoin} placeholder="—" className="lf-readonly" style={{ fontSize: '0.78rem' }} /></label>
+              </div>
             </div>
-            {mode === 'edit' && (
-              <div className="mc-form-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr', marginTop: 6 }}>
-                <label><span>Stage</span>
-                  <select value={form.currentStage} onChange={(e) => setForm((cur) => ({ ...cur, currentStage: e.target.value as TerminationStage }))} required>
-                    {statusOptions.map((s) => <option key={s} value={s}>{s}</option>)}
+
+            {/* Right — Termination Details */}
+            <div className="trn-modal-card" style={{ margin: 0 }}>
+              <div className="mc-form-divider" style={{ marginBottom: 10, fontSize: '0.72rem' }}>Termination Details</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Termination Type</span>
+                  <select value={form.terminationType} onChange={(e) => setForm((cur) => ({ ...cur, terminationType: e.target.value as TerminationType }))} style={{ fontSize: '0.82rem' }}>
+                    <option>Resignation</option><option>Dismissal</option><option>Probation End</option>
+                    <option>Contract Expiry</option><option>Absconded</option><option>Other</option>
                   </select>
                 </label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Date Submitted</span><input type="date" value={form.dateSubmitted ?? ''} onChange={(e) => setForm((cur) => ({ ...cur, dateSubmitted: e.target.value }))} style={{ fontSize: '0.82rem' }} /></label>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Last Working Date</span><input type="date" value={form.lastWorkingDate} onChange={(e) => setForm((cur) => ({ ...cur, lastWorkingDate: e.target.value }))} required style={{ fontSize: '0.82rem' }} /></label>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Departure Date</span><input type="date" value={form.departureDate} onChange={(e) => setForm((cur) => ({ ...cur, departureDate: e.target.value }))} required style={{ fontSize: '0.82rem' }} /></label>
+                  {mode === 'edit' && (
+                    <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Stage</span>
+                      <select value={form.currentStage} onChange={(e) => setForm((cur) => ({ ...cur, currentStage: e.target.value as TerminationStage }))} required style={{ fontSize: '0.82rem' }}>
+                        {statusOptions.map((s) => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </label>
+                  )}
+                </div>
               </div>
-            )}
+            </div>
           </div>
 
-          {/* Card 3 — Additional Info */}
-          <div className="trn-modal-card" style={{ marginBottom: '14px' }}>
-            <div className="mc-form-divider" style={{ marginBottom: '10px' }}>Additional Info</div>
-            <div className="mc-form-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
-              <label style={{ gridColumn: 'span 2' }}><span>Reason for Leaving</span>
-                <textarea rows={2} placeholder="Reason for termination" value={form.reasonForLeaving} onChange={(e) => setForm((cur) => ({ ...cur, reasonForLeaving: e.target.value }))} style={{ resize: 'vertical', fontFamily: 'inherit', fontSize: '0.82rem', padding: '7px 10px', borderRadius: 8, border: '1.5px solid #e2e8f0', width: '100%' }} />
+          {/* Bottom — Reason & Comments (full width, compact) */}
+          <div className="trn-modal-card" style={{ marginBottom: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Reason for Leaving</span>
+                <textarea rows={2} placeholder="Reason for termination" value={form.reasonForLeaving} onChange={(e) => setForm((cur) => ({ ...cur, reasonForLeaving: e.target.value }))} style={{ resize: 'none', fontFamily: 'inherit', fontSize: '0.80rem', padding: '6px 10px', borderRadius: 7, border: '1.5px solid #e2e8f0', width: '100%' }} />
               </label>
-              <label><span>Comments (optional)</span>
-                <textarea rows={2} placeholder="Any additional notes…" value={form.comments ?? ''} onChange={(e) => setForm((cur) => ({ ...cur, comments: e.target.value }))} style={{ resize: 'vertical', fontFamily: 'inherit', fontSize: '0.82rem', padding: '7px 10px', borderRadius: 8, border: '1.5px solid #e2e8f0', width: '100%' }} />
+              <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Comments (optional)</span>
+                <textarea rows={2} placeholder="Any additional notes…" value={form.comments ?? ''} onChange={(e) => setForm((cur) => ({ ...cur, comments: e.target.value }))} style={{ resize: 'none', fontFamily: 'inherit', fontSize: '0.80rem', padding: '6px 10px', borderRadius: 7, border: '1.5px solid #e2e8f0', width: '100%' }} />
               </label>
             </div>
           </div>
@@ -5441,7 +5443,6 @@ function TerminationDetailsModal({
   record: EnhancedTerminationRecord | CompletedTerminationRecord
   onClose: () => void
 }) {
-  const currentStage = record.currentStage
   const termination = 'dateSubmitted' in record ? record : null
   const isCompletedRecord = !('dateSubmitted' in record)
 
@@ -5495,19 +5496,6 @@ function TerminationDetailsModal({
           </div>
         </div>
 
-        {/* Status Progression — Notice Period only */}
-        {!isCompletedRecord && (
-          <div className="term-detail-section">
-            <h3 className="term-section-title">Status Progression</h3>
-            <div className="detail-status-track">
-              {allTerminationStages.map((stage, index) => {
-                const currentIndex = allTerminationStages.indexOf(currentStage)
-                const stateClass = index < currentIndex ? 'done' : index === currentIndex ? 'active' : 'pending'
-                return <span key={stage} className={`detail-step ${stateClass}`}>{stage}</span>
-              })}
-            </div>
-          </div>
-        )}
 
         <div className="modal-actions">
           <button className="primary-button" onClick={onClose} type="button">Close</button>
@@ -5877,8 +5865,22 @@ function ExitInterviewFormModal({ record, employees, onClose, onSave, viewOnly =
 
   const servicePeriod = calcService(form.joinDate ?? '', form.departureDate)
 
-  const questFilled = eiQuestionnaireCategories.every(({ key }) => form.questionnaire[key] !== '')
-  const canSave = form.skipped ? !!form.skipReason : questFilled
+  const questFilled = eiQuestionnaireCategories.every(({ key }) => (form.questionnaire?.[key] ?? '') !== '')
+  const allQsFilled = ['q1','q2','q3','q4','q5','q6','q7','q8','q9','q10','q11','q12','q13','q14']
+    .every(k => !!(form[k as keyof ExitInterviewRecord] as string)?.trim())
+  const hasReason = (form.involuntaryReasons?.length ?? 0) > 0 || (form.voluntaryReasons?.length ?? 0) > 0
+    || !!form.invOther?.trim() || !!form.volOther?.trim()
+  const hasInterviewer = !!form.interviewerName?.trim()
+  const canSave = form.skipped
+    ? !!form.skipReason
+    : questFilled && allQsFilled && hasReason && hasInterviewer && !!form.employeeComments?.trim()
+  const missingFields = form.skipped ? [] : [
+    !questFilled && 'Questionnaire (all 10 categories)',
+    !hasReason && 'Reason for resignation/termination',
+    !allQsFilled && 'All 14 short questions',
+    !form.employeeComments?.trim() && 'Employee comments',
+    !hasInterviewer && 'Interviewer name',
+  ].filter(Boolean) as string[]
 
   const fStyle: React.CSSProperties = { padding: '7px 10px', borderRadius: '7px', border: '1.5px solid #e2e8f0', fontSize: '0.85rem', background: '#fff', width: '100%', boxSizing: 'border-box', fontFamily: 'inherit' }
   const roStyle: React.CSSProperties = { ...fStyle, background: '#f8fafc', color: '#374151' }
@@ -6160,6 +6162,11 @@ function ExitInterviewFormModal({ record, employees, onClose, onSave, viewOnly =
           </div>
 
           {/* Footer */}
+          {!viewOnly && !canSave && missingFields.length > 0 && (
+            <div style={{ background: '#fef3c7', border: '1px solid #fde68a', borderRadius: 8, padding: '8px 14px', margin: '0 24px 4px', fontSize: '0.76rem', color: '#92400e' }}>
+              <strong>Required before saving:</strong> {missingFields.join(' · ')}
+            </div>
+          )}
           <div className="modal-actions" style={{ flexShrink: 0, borderTop: '1px solid #e8eaf0', padding: '12px 24px' }}>
             <button className="quiet-button light" onClick={onClose} type="button">Cancel</button>
             <button className="quiet-button" type="button" onClick={() => printExitInterview({ ...form, periodOfService: servicePeriod || form.periodOfService })} style={{ marginLeft: 'auto' }}>
@@ -6569,7 +6576,7 @@ function TerminationPage({
                           <tr className={`termination-row lr-row${isExp ? ' lr-row-open' : ''}`} onClick={() => setExpandedTermId(isExp ? null : r.id)}>
                             <td className="lr-expand-td"><span className={`mc-arrow${isExp ? ' mc-arrow-open' : ''}`}>›</span></td>
                             <td className="term-empid">{r.employeeId}</td>
-                            <td className="name-cell" onClick={(e) => e.stopPropagation()}><button className="name-link" onClick={() => onViewDetails(r)} type="button">{r.name}</button></td>
+                            <td className="name-cell" onClick={(e) => e.stopPropagation()}>{r.name}</td>
                             <td>{r.department}</td>
                             <td>{r.nationality}</td>
                             <td>{formatDateDisplay(r.dateOfJoin)}</td>
@@ -6681,7 +6688,7 @@ function TerminationPage({
                     : completedRows.map((r) => (
                       <tr key={r.id} className="termination-row">
                         <td className="term-empid">{r.employeeId}</td>
-                        <td className="name-cell"><button className="name-link" onClick={() => onViewDetails(r)} type="button">{r.name}</button></td>
+                        <td className="name-cell">{r.name}</td>
                         <td>{r.department}</td>
                         <td>{r.nationality}</td>
                         <td>{formatDateDisplay(r.dateOfJoin)}</td>
@@ -8044,6 +8051,7 @@ function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves:
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
   }
   const currentAppUser = users.find(u => u.name === currentUserName) ?? users[0]
+  const isAdmin = currentAppUser?.role === 'Admin'
 
   return (
     <div className="settings-page user-mgmt-page">
@@ -8067,9 +8075,9 @@ function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves:
       <div className="user-mgmt-header">
         <div>
           <h1 className="user-mgmt-title">System Users</h1>
-          <p className="user-mgmt-subtitle">Manage who can access the TIC HR system and what they can do.</p>
+          <p className="user-mgmt-subtitle">{isAdmin ? 'Manage who can access the TIC HR system and what they can do.' : 'View system user accounts.'}</p>
         </div>
-        <button className="primary-button" onClick={() => setShowAdd(true)} type="button">+ Add User</button>
+        {isAdmin && <button className="primary-button" onClick={() => setShowAdd(true)} type="button">+ Add User</button>}
       </div>
 
       {/* Role legend — 3 horizontal cards */}
@@ -8133,12 +8141,14 @@ function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves:
                       {user.status}
                     </button>
                   </td>
+                  {isAdmin && (
                   <td>
                     <div className="row-actions">
                       <button className="action-glyph edit" onClick={() => setEditing(user)} type="button" title="Edit user" aria-label="Edit user">✎</button>
                       <button className="action-glyph delete" onClick={() => deleteUser(user.id)} type="button" title={user.id === 'USR-001' ? 'Cannot delete admin' : 'Delete user'} aria-label="Delete user" disabled={user.id === 'USR-001'}>🗑</button>
                     </div>
                   </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -8154,8 +8164,8 @@ function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves:
         />
       )}
 
-      {/* Section 3 — Danger Zone */}
-      <div className="settings-danger-zone">
+      {/* Section 3 — Danger Zone (Admin only) */}
+      {isAdmin && <div className="settings-danger-zone">
         <div className="danger-zone-header">
           <h2>Danger Zone</h2>
           <p>Irreversible actions. Proceed with caution.</p>
@@ -8167,7 +8177,7 @@ function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves:
           </div>
           <button className="danger-button" type="button" onClick={onReset}>Reset All Data</button>
         </div>
-      </div>
+      </div>}
     </div>
   )
 }
