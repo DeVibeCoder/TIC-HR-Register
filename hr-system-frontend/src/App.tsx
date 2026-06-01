@@ -8071,113 +8071,102 @@ function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves:
         </div>
       </div>
 
-      {/* Section 2 — System Users */}
-      <div className="user-mgmt-header">
-        <div>
-          <h1 className="user-mgmt-title">System Users</h1>
-          <p className="user-mgmt-subtitle">{isAdmin ? 'Manage who can access the TIC HR system and what they can do.' : 'View system user accounts.'}</p>
-        </div>
-        {isAdmin && <button className="primary-button" onClick={() => setShowAdd(true)} type="button">+ Add User</button>}
-      </div>
-
-      {/* Role legend — 3 horizontal cards */}
-      <div className="role-legend">
-        {(Object.entries(rolePermissions) as [UserRole, string][]).map(([role, desc]) => (
-          <div key={role} className="role-legend-item">
-            <span className={`role-chip ${roleColors[role]}`}>{role}</span>
-            <span className="role-legend-desc">{desc}</span>
-            <span className="role-legend-note">Role assignment available when backend is connected.</span>
+      {/* Everything below is Admin-only — Manager sees only their profile card */}
+      {isAdmin && (
+        <>
+          {/* Section 2 — System Users */}
+          <div className="user-mgmt-header">
+            <div>
+              <h1 className="user-mgmt-title">System Users</h1>
+              <p className="user-mgmt-subtitle">Manage who can access the TIC HR system and what they can do.</p>
+            </div>
+            <button className="primary-button" onClick={() => setShowAdd(true)} type="button">+ Add User</button>
           </div>
-        ))}
-      </div>
 
-      {/* Search + table filling remaining space */}
-      <div className="user-mgmt-table-wrap">
-        <div className="user-table-toolbar">
-          <label className="search-field">
-            <span>Search</span>
-            <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Name, username or role" />
-          </label>
-          <span className="user-count">{filtered.length} user{filtered.length !== 1 ? 's' : ''}</span>
-        </div>
+          {/* Role legend */}
+          <div className="role-legend">
+            {(Object.entries(rolePermissions) as [UserRole, string][]).map(([role, desc]) => (
+              <div key={role} className="role-legend-item">
+                <span className={`role-chip ${roleColors[role]}`}>{role}</span>
+                <span className="role-legend-desc">{desc}</span>
+                <span className="role-legend-note">Role assignment available when backend is connected.</span>
+              </div>
+            ))}
+          </div>
 
-        <div className="employee-table-shell">
-          <table className="data-table user-table">
-            <thead>
-              <tr>
-                <th>User</th>
-                <th>Username</th>
-                <th>Role</th>
-                <th>Permissions</th>
-                <th>Last Login</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((user) => (
-                <tr key={user.id} className={user.status === 'Inactive' ? 'user-row-inactive' : ''}>
-                  <td>
-                    <div className="user-avatar-cell">
-                      <span className="user-avatar">{profileInitials(user.name)}</span>
-                      <div>
-                        <strong>{user.name}</strong>
-                        {user.designation && <div style={{ fontSize: '0.72rem', color: '#64748b' }}>{user.designation}</div>}
-                      </div>
-                    </div>
-                  </td>
-                  <td><code className="user-username">{user.username}</code></td>
-                  <td><span className={`role-chip ${roleColors[user.role]}`}>{user.role}</span></td>
-                  <td className="user-perms">{rolePermissions[user.role]}</td>
-                  <td>{user.lastLogin ? formatDateDisplay(user.lastLogin) : '—'}</td>
-                  <td>
-                    <button
-                      type="button"
-                      className={`status-toggle-btn ${user.status === 'Active' ? 'active' : 'inactive'}`}
-                      onClick={() => toggleStatus(user.id)}
-                      disabled={user.id === 'USR-001'}
-                      title={user.id === 'USR-001' ? 'Cannot deactivate admin' : `Set ${user.status === 'Active' ? 'Inactive' : 'Active'}`}
-                    >
-                      {user.status}
-                    </button>
-                  </td>
-                  {isAdmin && (
-                  <td>
-                    <div className="row-actions">
-                      <button className="action-glyph edit" onClick={() => setEditing(user)} type="button" title="Edit user" aria-label="Edit user">✎</button>
-                      <button className="action-glyph delete" onClick={() => deleteUser(user.id)} type="button" title={user.id === 'USR-001' ? 'Cannot delete admin' : 'Delete user'} aria-label="Delete user" disabled={user.id === 'USR-001'}>🗑</button>
-                    </div>
-                  </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+          {/* Search + table */}
+          <div className="user-mgmt-table-wrap">
+            <div className="user-table-toolbar">
+              <label className="search-field">
+                <span>Search</span>
+                <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Name, username or role" />
+              </label>
+              <span className="user-count">{filtered.length} user{filtered.length !== 1 ? 's' : ''}</span>
+            </div>
+            <div className="employee-table-shell">
+              <table className="data-table user-table">
+                <thead>
+                  <tr>
+                    <th>User</th><th>Username</th><th>Role</th><th>Permissions</th>
+                    <th>Last Login</th><th>Status</th><th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((user) => (
+                    <tr key={user.id} className={user.status === 'Inactive' ? 'user-row-inactive' : ''}>
+                      <td>
+                        <div className="user-avatar-cell">
+                          <span className="user-avatar">{profileInitials(user.name)}</span>
+                          <div>
+                            <strong>{user.name}</strong>
+                            {user.designation && <div style={{ fontSize: '0.72rem', color: '#64748b' }}>{user.designation}</div>}
+                          </div>
+                        </div>
+                      </td>
+                      <td><code className="user-username">{user.username}</code></td>
+                      <td><span className={`role-chip ${roleColors[user.role]}`}>{user.role}</span></td>
+                      <td className="user-perms">{rolePermissions[user.role]}</td>
+                      <td>{user.lastLogin ? formatDateDisplay(user.lastLogin) : '—'}</td>
+                      <td>
+                        <button type="button" className={`status-toggle-btn ${user.status === 'Active' ? 'active' : 'inactive'}`}
+                          onClick={() => toggleStatus(user.id)} disabled={user.id === 'USR-001'}
+                          title={user.id === 'USR-001' ? 'Cannot deactivate admin' : `Set ${user.status === 'Active' ? 'Inactive' : 'Active'}`}>
+                          {user.status}
+                        </button>
+                      </td>
+                      <td>
+                        <div className="row-actions">
+                          <button className="action-glyph edit" onClick={() => setEditing(user)} type="button" title="Edit user">✎</button>
+                          <button className="action-glyph delete" onClick={() => deleteUser(user.id)} type="button" disabled={user.id === 'USR-001'} title={user.id === 'USR-001' ? 'Cannot delete admin' : 'Delete user'}>🗑</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
 
-      {(editing || showAdd) && (
-        <UserFormModal
-          user={editing ?? newUser}
-          onClose={() => { setEditing(null); setShowAdd(false) }}
-          onSave={saveUser}
-        />
+          {(editing || showAdd) && (
+            <UserFormModal user={editing ?? newUser} onClose={() => { setEditing(null); setShowAdd(false) }} onSave={saveUser} />
+          )}
+
+          {/* Section 3 — Danger Zone */}
+          <div className="settings-danger-zone">
+            <div className="danger-zone-header">
+              <h2>Danger Zone</h2>
+              <p>Irreversible actions. Proceed with caution.</p>
+            </div>
+            <div className="danger-zone-row">
+              <div>
+                <strong>Reset All Data</strong>
+                <p>Permanently delete all employees, leave records, terminations, and operations data. This cannot be undone.</p>
+              </div>
+              <button className="danger-button" type="button" onClick={onReset}>Reset All Data</button>
+            </div>
+          </div>
+        </>
       )}
-
-      {/* Section 3 — Danger Zone (Admin only) */}
-      {isAdmin && <div className="settings-danger-zone">
-        <div className="danger-zone-header">
-          <h2>Danger Zone</h2>
-          <p>Irreversible actions. Proceed with caution.</p>
-        </div>
-        <div className="danger-zone-row">
-          <div>
-            <strong>Reset All Data</strong>
-            <p>Permanently delete all employees, leave records, terminations, and operations data. This cannot be undone.</p>
-          </div>
-          <button className="danger-button" type="button" onClick={onReset}>Reset All Data</button>
-        </div>
-      </div>}
     </div>
   )
 }
