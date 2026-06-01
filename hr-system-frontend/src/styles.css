@@ -2089,9 +2089,9 @@ h2 { margin: 0; color: #111; font-size: 0.95rem; line-height: 1.2; }
   box-shadow: 0 2px 8px rgba(109,40,217,0.35);
 }
 .lst-btn.active {
-  background: #4c1d95;
+  background: #1a0533;
   color: #fff;
-  box-shadow: 0 4px 12px rgba(76,29,149,0.45);
+  box-shadow: 0 4px 14px rgba(26,5,51,0.60);
 }
 .lst-btn svg { flex-shrink: 0; opacity: 0.9; }
 
@@ -2356,8 +2356,8 @@ button.step-pill:hover { filter: brightness(0.98); }
   box-shadow: 0 2px 8px rgba(109,40,217,0.35);
 }
 .termination-tabs button.active {
-  background: #4c1d95; color: #fff;
-  box-shadow: 0 4px 12px rgba(76,29,149,0.45);
+  background: #1a0533; color: #fff;
+  box-shadow: 0 4px 14px rgba(26,5,51,0.60);
 }
 
 .termination-topbar {
