@@ -5348,7 +5348,6 @@ function TerminationFormModal({
         </div>
 
         <form onSubmit={save} className="trn-form-body">
-          {/* Two-column layout: Employee Details (left) | Termination Details (right) */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 12 }}>
 
             {/* Left — Employee Details */}
@@ -5358,16 +5357,13 @@ function TerminationFormModal({
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 Employee Details
               </div>
-              <div style={{ position: 'relative', marginBottom: 8 }}>
-                <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <span style={{ fontSize: '0.70rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Search Staff</span>
-                  <input
-                    className="lf-search-input" style={{ fontSize: '0.82rem' }}
-                    placeholder="Employee ID or name…"
+              {/* Employee search */}
+              <div style={{ position: 'relative', marginBottom: 10 }}>
+                <label><span>Search Staff</span>
+                  <input className="lf-search-input" placeholder="Employee ID or name…"
                     type="search" value={searchQuery} autoComplete="off"
                     onChange={(e) => handleSearchChange(e.target.value)}
-                    onFocus={() => !form.employeeId && setShowResults(true)}
-                  />
+                    onFocus={() => !form.employeeId && setShowResults(true)} />
                 </label>
                 {showResults && searchResults.length > 0 && (
                   <ul className="lf-search-results" style={{ top: '100%', zIndex: 100 }}>
@@ -5382,18 +5378,19 @@ function TerminationFormModal({
                 )}
               </div>
               {form.employeeId && (
-                <div className="os-emp-pill" style={{ marginBottom: 8 }}>
+                <div className="os-emp-pill" style={{ marginBottom: 10 }}>
                   <div>
-                    <strong style={{ fontSize: '0.84rem' }}>{form.name}</strong>
+                    <strong>{form.name}</strong>
                     <span style={{ display: 'block', fontSize: '0.72rem', color: '#3b82f6' }}>{form.employeeId} · {form.department}</span>
                   </div>
                 </div>
               )}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Designation</span><input readOnly value={form.designation} placeholder="—" className="lf-readonly" style={{ fontSize: '0.78rem' }} /></label>
-                <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Nationality</span><input readOnly value={form.nationality} placeholder="—" className="lf-readonly" style={{ fontSize: '0.78rem' }} /></label>
-                <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Section</span><input readOnly value={form.department} placeholder="—" className="lf-readonly" style={{ fontSize: '0.78rem' }} /></label>
-                <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Date of Join</span><input readOnly value={form.dateOfJoin} placeholder="—" className="lf-readonly" style={{ fontSize: '0.78rem' }} /></label>
+              {/* Readonly fields — same form-grid pattern as rest of app */}
+              <div className="form-grid">
+                <label><span>Designation</span><input readOnly value={form.designation} placeholder="—" className="lf-readonly" /></label>
+                <label><span>Nationality</span><input readOnly value={form.nationality} placeholder="—" className="lf-readonly" /></label>
+                <label><span>Section</span><input readOnly value={form.department} placeholder="—" className="lf-readonly" /></label>
+                <label><span>Date of Join</span><input readOnly value={form.dateOfJoin} placeholder="—" className="lf-readonly" /></label>
               </div>
             </div>
 
@@ -5404,45 +5401,41 @@ function TerminationFormModal({
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2.2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                 Termination Details
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                  <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Termination Type</span>
-                  <select value={form.terminationType} onChange={(e) => setForm((cur) => ({ ...cur, terminationType: e.target.value as TerminationType }))} style={{ fontSize: '0.82rem' }}>
+              <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
+                <label style={{ gridColumn: '1 / -1' }}>
+                  <span>Termination Type</span>
+                  <select value={form.terminationType} onChange={(e) => setForm((cur) => ({ ...cur, terminationType: e.target.value as TerminationType }))}>
                     <option>Resignation</option><option>Dismissal</option><option>Probation End</option>
                     <option>Contract Expiry</option><option>Absconded</option><option>Other</option>
                   </select>
                 </label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                  <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Date Submitted</span><input type="date" value={form.dateSubmitted ?? ''} onChange={(e) => setForm((cur) => ({ ...cur, dateSubmitted: e.target.value }))} style={{ fontSize: '0.82rem' }} /></label>
-                  <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Last Working Date</span><input type="date" value={form.lastWorkingDate} onChange={(e) => setForm((cur) => ({ ...cur, lastWorkingDate: e.target.value }))} required style={{ fontSize: '0.82rem' }} /></label>
-                  <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Departure Date</span><input type="date" value={form.departureDate} onChange={(e) => setForm((cur) => ({ ...cur, departureDate: e.target.value }))} required style={{ fontSize: '0.82rem' }} /></label>
-                  {mode === 'edit' && (
-                    <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Stage</span>
-                      <select value={form.currentStage} onChange={(e) => setForm((cur) => ({ ...cur, currentStage: e.target.value as TerminationStage }))} required style={{ fontSize: '0.82rem' }}>
-                        {statusOptions.map((s) => <option key={s} value={s}>{s}</option>)}
-                      </select>
-                    </label>
-                  )}
-                </div>
+                <label><span>Date Submitted</span><input type="date" value={form.dateSubmitted ?? ''} onChange={(e) => setForm((cur) => ({ ...cur, dateSubmitted: e.target.value }))} /></label>
+                <label><span>Last Working Date</span><input type="date" value={form.lastWorkingDate} onChange={(e) => setForm((cur) => ({ ...cur, lastWorkingDate: e.target.value }))} required /></label>
+                <label><span>Departure Date</span><input type="date" value={form.departureDate} onChange={(e) => setForm((cur) => ({ ...cur, departureDate: e.target.value }))} required /></label>
+                {mode === 'edit' && (
+                  <label><span>Stage</span>
+                    <select value={form.currentStage} onChange={(e) => setForm((cur) => ({ ...cur, currentStage: e.target.value as TerminationStage }))} required>
+                      {statusOptions.map((s) => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </label>
+                )}
               </div>
             </div>
           </div>
 
-          {/* Bottom — Reason & Comments (full width, compact) */}
+          {/* Bottom — Reason & Comments */}
           <div className="trn-form-section trn-section-notes" style={{ marginBottom: 12 }}>
             <div className="trn-section-label">
               <span className="trn-section-dot trn-dot-amber"/>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               Reason &amp; Notes
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Reason for Leaving</span>
-                <textarea rows={2} placeholder="Reason for termination" value={form.reasonForLeaving} onChange={(e) => setForm((cur) => ({ ...cur, reasonForLeaving: e.target.value }))} style={{ resize: 'none', fontFamily: 'inherit', fontSize: '0.80rem', padding: '6px 10px', borderRadius: 7, border: '1.5px solid #e2e8f0', width: '100%' }} />
+            <div className="form-grid">
+              <label><span>Reason for Leaving</span>
+                <textarea rows={2} placeholder="Reason for termination" value={form.reasonForLeaving} onChange={(e) => setForm((cur) => ({ ...cur, reasonForLeaving: e.target.value }))} style={{ resize: 'none' }} />
               </label>
-              <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Comments (optional)</span>
-                <textarea rows={2} placeholder="Any additional notes…" value={form.comments ?? ''} onChange={(e) => setForm((cur) => ({ ...cur, comments: e.target.value }))} style={{ resize: 'none', fontFamily: 'inherit', fontSize: '0.80rem', padding: '6px 10px', borderRadius: 7, border: '1.5px solid #e2e8f0', width: '100%' }} />
+              <label><span>Comments (optional)</span>
+                <textarea rows={2} placeholder="Any additional notes…" value={form.comments ?? ''} onChange={(e) => setForm((cur) => ({ ...cur, comments: e.target.value }))} style={{ resize: 'none' }} />
               </label>
             </div>
           </div>
