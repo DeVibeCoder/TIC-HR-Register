@@ -2329,7 +2329,7 @@ button.step-pill:hover { filter: brightness(0.98); }
 /* Termination Module Styles */
 
 .termination-workspace {
-  padding: 0;
+  padding: 10px 10px 6px;
   border: 0;
   border-radius: 0;
   box-shadow: none;
