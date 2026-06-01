@@ -3230,11 +3230,11 @@ button.step-pill:hover { filter: brightness(0.98); }
 
 /* ─── Settings / User Management ─────────────────── */
 
-/* Page container — fills workspace with gap from sidebar */
+/* Page container — fills workspace */
 .settings-page {
   width: 100%;
   max-width: none;
-  padding-left: 12px;
+  box-sizing: border-box;
 }
 
 .user-mgmt-page {
@@ -3325,6 +3325,14 @@ button.step-pill:hover { filter: brightness(0.98); }
   overflow: hidden;
   background: rgba(255, 255, 255, 0.99);
   box-shadow: var(--soft-shadow);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+/* Inner table shell scrolls horizontally only if truly needed */
+.user-mgmt-table-wrap .employee-table-shell {
+  overflow-x: auto;
+  overflow-y: auto;
 }
 
 .user-table-toolbar {
@@ -3351,9 +3359,11 @@ button.step-pill:hover { filter: brightness(0.98); }
   overflow-y: auto;
 }
 
-.user-table { border-radius: 0 !important; width: 100%; }
-.user-table thead th { background: rgba(221, 214, 254,0.5); position: sticky; top: 0; z-index: 1; }
-.user-table tbody tr { height: 58px; }
+.user-table { border-radius: 0 !important; width: 100%; min-width: 0 !important; table-layout: auto; }
+.user-table thead th { background: rgba(221, 214, 254,0.5); position: sticky; top: 0; z-index: 1; white-space: nowrap; }
+.user-table tbody tr { height: 52px; }
+/* Allow user-perms column to wrap */
+.user-table .user-perms { white-space: normal; font-size: 0.76rem; max-width: 200px; }
 
 .user-avatar-cell {
   display: flex;
