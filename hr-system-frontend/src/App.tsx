@@ -7788,72 +7788,109 @@ function InventoryCategoryTab({ cat, items, usage, onUpdateItems, onUpdateUsage,
     setUsingItem(null)
   }
 
+  const stockPct = (item: InventoryItem) => item.minQuantity > 0 ? Math.min(100, Math.round(item.quantity / item.minQuantity * 100)) : 100
+  const stockColor = (item: InventoryItem) => item.quantity <= 0 ? '#dc2626' : item.quantity <= item.minQuantity ? '#f59e0b' : '#16a34a'
+
+  const catColor = cat === 'Medical' ? { accent: '#059669', light: '#f0fdf4', border: '#bbf7d0', badge: '#16a34a' }
+    : { accent: '#2563eb', light: '#eff6ff', border: '#bfdbfe', badge: '#2563eb' }
+
+  const issueCount = usage.filter(u => catItemIds.has(u.itemId)).length
+  const totalStock = catItems.reduce((s, i) => s + i.quantity, 0)
+
   return (
     <>
-      {/* KPI strip */}
-      <div className="inv-kpi-row" style={{ paddingBottom: 0 }}>
-        <div className="inv-kpi inv-kpi-blue"><span className="inv-kpi-num">{catItems.length}</span><span className="inv-kpi-lbl">Items</span></div>
-        {lowStockCount > 0 && <div className="inv-kpi inv-kpi-red"><span className="inv-kpi-num">{lowStockCount}</span><span className="inv-kpi-lbl">Low Stock</span></div>}
-        <div className="inv-kpi inv-kpi-green"><span className="inv-kpi-num">{usage.filter(u => catItemIds.has(u.itemId)).length}</span><span className="inv-kpi-lbl">Issues Recorded</span></div>
+      {/* Category header banner */}
+      <div className="inv-cat-banner" style={{ background: `linear-gradient(135deg, ${catColor.accent} 0%, ${catColor.accent}cc 100%)` }}>
+        <div className="inv-cat-banner-icon">
+          {cat === 'Medical'
+            ? <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>}
+        </div>
+        <div>
+          <p className="inv-banner-eyebrow">Inventory</p>
+          <h3 className="inv-banner-title">{cat} Supplies</h3>
+        </div>
+        <div className="inv-banner-kpis">
+          <div className="inv-banner-kpi"><span className="inv-banner-num">{catItems.length}</span><span className="inv-banner-lbl">Items</span></div>
+          <div className="inv-banner-kpi"><span className="inv-banner-num">{totalStock}</span><span className="inv-banner-lbl">In Stock</span></div>
+          {lowStockCount > 0 && <div className="inv-banner-kpi inv-banner-kpi-warn"><span className="inv-banner-num">{lowStockCount}</span><span className="inv-banner-lbl">Low Stock</span></div>}
+          <div className="inv-banner-kpi"><span className="inv-banner-num">{issueCount}</span><span className="inv-banner-lbl">Issued</span></div>
+        </div>
+        <button className="inv-add-btn" onClick={() => setEditingItem(newItem())} type="button">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Item
+        </button>
       </div>
 
-      <div className="inv-cat-layout">
-        {/* Stock table */}
-        <div className="inv-cat-main">
-          <div className="table-toolbar leave-toolbar-has-btn" style={{ display: 'flex', gap: 10, padding: '10px 0', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-            <label className="search-field"><span>Search</span><input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder={`Search ${cat} items…`} /></label>
-            <button className="primary-button toolbar-add-btn" onClick={() => setEditingItem(newItem())} type="button">+ Add Item</button>
-          </div>
-          <div className="employee-table-shell compact-scroll">
-            <table className="data-table inv-table">
-              <thead><tr>
-                <th>Item Name</th>
-                <th style={{ textAlign: 'center' }}>Qty</th>
-                <th style={{ textAlign: 'center' }}>Unit</th>
-                <th style={{ textAlign: 'center' }}>Min</th>
-                <th>Location</th>
-                <th style={{ textAlign: 'center' }}>Updated</th>
-                <th>Remarks</th>
-                <th style={{ textAlign: 'center' }}>Action</th>
-              </tr></thead>
-              <tbody>
-                {filtered.length === 0
-                  ? <tr><td colSpan={8} className="empty-row">No {cat} items. Click "+ Add Item".</td></tr>
-                  : filtered.map(item => {
-                    const isLow = item.quantity <= item.minQuantity
-                    return (
-                      <tr key={item.id} className={isLow ? 'inv-low-stock-row' : ''}>
-                        <td><strong>{item.name}</strong>{isLow && <span className="inv-low-badge">Low</span>}</td>
-                        <td style={{ textAlign: 'center' }}><strong style={{ color: isLow ? '#ef4444' : '#111827' }}>{item.quantity}</strong></td>
-                        <td style={{ textAlign: 'center' }}>{item.unit}</td>
-                        <td style={{ textAlign: 'center' }}>{item.minQuantity}</td>
-                        <td>{item.location}</td>
-                        <td style={{ textAlign: 'center' }}>{formatDateDisplay(item.lastUpdated)}</td>
-                        <td style={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.remarks || '—'}</td>
-                        <td style={{ textAlign: 'center' }}>
-                          <div className="row-actions request-inline-actions" style={{ justifyContent: 'center' }}>
-                            <button className="action-glyph" onClick={() => setUsingItem(item)} type="button" title="Issue / Record usage" style={{ color: '#059669' }}>↓</button>
-                            <button className="action-glyph edit" onClick={() => setEditingItem(item)} type="button" title="Edit">✎</button>
-                            <button className="action-glyph delete" onClick={() => delItem(item.id)} type="button" title="Delete">🗑</button>
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })}
-              </tbody>
-            </table>
-          </div>
+      {/* Search bar */}
+      <div style={{ padding: '10px 0 6px', display: 'flex', gap: 10 }}>
+        <label className="search-field" style={{ flex: 1 }}>
+          <span>Search</span>
+          <input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder={`Search ${cat} items by name or location…`} />
+        </label>
+      </div>
+
+      {/* Main layout: items cards + dept sidebar */}
+      <div className="inv-redesign-layout">
+        {/* Items */}
+        <div className="inv-items-area">
+          {filtered.length === 0
+            ? <div className="leave-empty-zone">No {cat} items yet. Click "Add Item" above.</div>
+            : filtered.map(item => {
+              const isLow = item.quantity <= item.minQuantity
+              const isEmpty = item.quantity === 0
+              const pct = stockPct(item)
+              const color = stockColor(item)
+              return (
+                <div key={item.id} className={`inv-item-card${isLow ? ' inv-item-low' : ''}${isEmpty ? ' inv-item-empty' : ''}`}>
+                  <div className="inv-item-card-left">
+                    <div className="inv-item-name">
+                      {item.name}
+                      {isEmpty && <span className="inv-badge-empty">Out of Stock</span>}
+                      {!isEmpty && isLow && <span className="inv-badge-low">Low Stock</span>}
+                    </div>
+                    <div className="inv-item-meta">{item.location || '—'}{item.remarks ? ` · ${item.remarks}` : ''}</div>
+                    {/* Stock level bar */}
+                    <div className="inv-stock-bar-wrap">
+                      <div className="inv-stock-bar-track">
+                        <div className="inv-stock-bar-fill" style={{ width: `${Math.min(100,pct)}%`, background: color }} />
+                      </div>
+                      <span className="inv-stock-label" style={{ color }}>
+                        {item.quantity} / {item.minQuantity} {item.unit}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="inv-item-card-right">
+                    <div className="inv-item-qty" style={{ color }}>
+                      <span className="inv-qty-num">{item.quantity}</span>
+                      <span className="inv-qty-unit">{item.unit}</span>
+                    </div>
+                    <div className="inv-item-actions">
+                      <button className="inv-issue-btn" onClick={() => setUsingItem(item)} type="button" title="Issue item">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="8 5 2 12 8 19"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+                        Issue
+                      </button>
+                      <button className="action-glyph edit" onClick={() => setEditingItem(item)} type="button" title="Edit">✎</button>
+                      <button className="action-glyph delete" onClick={() => delItem(item.id)} type="button" title="Delete">🗑</button>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
         </div>
 
         {/* Dept issuance sidebar */}
         {deptBreakdown.length > 0 && (
-          <div className="inv-dept-panel">
-            <p className="inv-dept-title">Issued to Departments</p>
+          <div className="inv-dept-panel" style={{ borderColor: catColor.border, background: catColor.light }}>
+            <p className="inv-dept-title" style={{ color: catColor.accent }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" style={{ marginRight: 5 }}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              Issued to Departments
+            </p>
             {deptBreakdown.map(([dept, val]) => (
               <div className="inv-dept-row" key={dept}>
                 <div className="inv-dept-name" title={dept}>{dept}</div>
                 <div className="inv-dept-track">
-                  <div className="inv-dept-fill" style={{ width: `${Math.round((val.qty / maxDept) * 100)}%` }} />
+                  <div className="inv-dept-fill" style={{ width: `${Math.round((val.qty / maxDept) * 100)}%`, background: catColor.accent }} />
                 </div>
                 <div className="inv-dept-meta">{val.qty} · {val.times}×</div>
               </div>
@@ -7888,22 +7925,36 @@ function InventorySection({ items, usage, onUpdateItems, onUpdateUsage, employee
   }, [usage, histSearch, histDeptFilter])
 
   const histDepts = useMemo(() => ['All', ...Array.from(new Set(usage.map(u => u.department))).sort()], [usage])
-
-  const lowStock = items.filter(i => i.quantity <= i.minQuantity).length
+  const totalLow = items.filter(i => i.quantity <= i.minQuantity).length
+  const medLow   = items.filter(i => i.category === 'Medical' && i.quantity <= i.minQuantity).length
 
   return (
-    <section className="employee-workspace">
-      {/* Sub-tabs */}
-      <div className="inv-subtabs">
-        <button className={subTab === 'stationery' ? 'active' : ''} onClick={() => setSubTab('stationery')} type="button">
-          📋 Stationery
+    <section className="employee-workspace inv-workspace">
+      {/* Main tabs */}
+      <div className="inv-main-tabs">
+        <button className={`inv-tab-btn${subTab === 'stationery' ? ' inv-tab-active inv-tab-blue' : ''}`} onClick={() => setSubTab('stationery')} type="button">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Stationery
+          {items.filter(i => i.category === 'Stationery').length > 0 && (
+            <span className="inv-tab-count">{items.filter(i => i.category === 'Stationery').length}</span>
+          )}
         </button>
-        <button className={subTab === 'medical' ? 'active' : ''} onClick={() => setSubTab('medical')} type="button">
-          🏥 Medical{lowStock > 0 && items.some(i => i.category === 'Medical' && i.quantity <= i.minQuantity) && <span className="tab-count" style={{ background: '#ef4444' }}>{items.filter(i => i.category === 'Medical' && i.quantity <= i.minQuantity).length}</span>}
+        <button className={`inv-tab-btn${subTab === 'medical' ? ' inv-tab-active inv-tab-green' : ''}`} onClick={() => setSubTab('medical')} type="button">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          Medical
+          {medLow > 0 && <span className="inv-tab-count inv-tab-count-warn">{medLow}</span>}
         </button>
-        <button className={subTab === 'history' ? 'active' : ''} onClick={() => setSubTab('history')} type="button">
-          📋 Usage History
+        <button className={`inv-tab-btn${subTab === 'history' ? ' inv-tab-active inv-tab-purple' : ''}`} onClick={() => setSubTab('history')} type="button">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Usage History
+          {usage.length > 0 && <span className="inv-tab-count">{usage.length}</span>}
         </button>
+        {totalLow > 0 && (
+          <div className="inv-alert-pill">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            {totalLow} item{totalLow !== 1 ? 's' : ''} need reorder
+          </div>
+        )}
       </div>
 
       {subTab === 'stationery' && (
@@ -7917,7 +7968,7 @@ function InventorySection({ items, usage, onUpdateItems, onUpdateUsage, employee
       {subTab === 'history' && (
         <>
           <div className="table-toolbar" style={{ display: 'flex', gap: 10, padding: '10px 0', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-            <label className="search-field"><span>Search</span><input type="search" value={histSearch} onChange={e => setHistSearch(e.target.value)} placeholder="Item, employee, department, purpose…" /></label>
+            <label className="search-field" style={{ flex: 2 }}><span>Search</span><input type="search" value={histSearch} onChange={e => setHistSearch(e.target.value)} placeholder="Item name, employee, department, purpose…" /></label>
             <label><span>Department</span>
               <select value={histDeptFilter} onChange={e => setHistDeptFilter(e.target.value)}>
                 {histDepts.map(d => <option key={d}>{d}</option>)}
@@ -7927,42 +7978,38 @@ function InventorySection({ items, usage, onUpdateItems, onUpdateUsage, employee
           <div className="employee-table-shell compact-scroll">
             <table className="data-table inv-table">
               <thead><tr>
-                <th style={{ textAlign: 'center' }}>Date</th>
-                <th>Item</th>
-                <th style={{ textAlign: 'center' }}>Category</th>
-                <th style={{ textAlign: 'center' }}>Qty</th>
-                <th style={{ textAlign: 'center' }}>Unit</th>
-                <th>Issued To (Dept)</th>
-                <th>Issued By</th>
-                <th>Purpose</th>
-                <th>Remarks</th>
+                <th>Date</th><th>Item</th><th>Category</th>
+                <th style={{ textAlign: 'center' }}>Qty</th><th style={{ textAlign: 'center' }}>Unit</th>
+                <th>Issued To</th><th>Issued By</th><th>Purpose</th>
               </tr></thead>
               <tbody>
                 {filteredHistory.length === 0
-                  ? <tr><td colSpan={9} className="empty-row">No usage records found.</td></tr>
+                  ? <tr><td colSpan={8} className="empty-row">No usage records found.</td></tr>
                   : filteredHistory.map(u => {
-                    const itemCat = items.find(i => i.id === u.itemId)?.category ?? '—'
+                    const catItem = items.find(i => i.id === u.itemId)
+                    const isMedial = catItem?.category === 'Medical'
                     return (
                       <tr key={u.id}>
-                        <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>{formatDateDisplay(u.usedDate)}</td>
+                        <td style={{ whiteSpace: 'nowrap' }}>{formatDateDisplay(u.usedDate)}</td>
                         <td><strong>{u.itemName}</strong></td>
-                        <td style={{ textAlign: 'center' }}><span className="inv-cat-badge">{itemCat}</span></td>
+                        <td>
+                          <span style={{ fontSize: '0.74rem', fontWeight: 700, padding: '2px 8px', borderRadius: 8, background: isMedial ? '#f0fdf4' : '#eff6ff', color: isMedial ? '#059669' : '#2563eb', border: `1px solid ${isMedial ? '#bbf7d0' : '#bfdbfe'}` }}>
+                            {catItem?.category ?? '—'}
+                          </span>
+                        </td>
                         <td style={{ textAlign: 'center' }}><strong>{u.quantityUsed}</strong></td>
                         <td style={{ textAlign: 'center' }}>{u.unit}</td>
                         <td><strong>{u.department}</strong></td>
                         <td>{u.usedBy}</td>
                         <td>{u.purpose}</td>
-                        <td>{u.remarks || '—'}</td>
                       </tr>
                     )
                   })}
               </tbody>
             </table>
           </div>
-          {filteredHistory.length === 0 && <div className="leave-empty-zone">No usage records yet.</div>}
         </>
       )}
-
     </section>
   )
 }
