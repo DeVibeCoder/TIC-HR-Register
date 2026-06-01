@@ -2088,9 +2088,10 @@ h2 { margin: 0; color: #111; font-size: 0.95rem; line-height: 1.2; }
   color: #fff;
   box-shadow: 0 2px 8px rgba(109,40,217,0.35);
 }
+/* Selected tab: hard dark purple */
 .lst-btn.active {
-  background: #1a0533;
-  color: #fff;
+  background: #1a0533 !important;
+  color: #fff !important;
   box-shadow: 0 4px 14px rgba(26,5,51,0.60);
 }
 .lst-btn svg { flex-shrink: 0; opacity: 0.9; }
@@ -2355,8 +2356,9 @@ button.step-pill:hover { filter: brightness(0.98); }
   background: #6d28d9; color: #fff;
   box-shadow: 0 2px 8px rgba(109,40,217,0.35);
 }
+/* Selected termination tab: same hard dark purple */
 .termination-tabs button.active {
-  background: #1a0533; color: #fff;
+  background: #1a0533 !important; color: #fff !important;
   box-shadow: 0 4px 14px rgba(26,5,51,0.60);
 }
 
