@@ -5330,22 +5330,34 @@ function TerminationFormModal({
 
   return (
     <div className="modal-backdrop" role="presentation">
-      <section className="registration-modal mc-wide-modal termination-form-modal" role="dialog" aria-modal="true" aria-labelledby="termination-form-title">
-        <div className="modal-header">
-          <div>
-            <p className="eyebrow">Termination Workflow</p>
-            <h2 id="termination-form-title">{mode === 'add' ? 'Add Termination' : 'Edit Termination'}</h2>
+      <section className="registration-modal mc-wide-modal trn-form-redesign" role="dialog" aria-modal="true" aria-labelledby="termination-form-title">
+
+        {/* Gradient header */}
+        <div className="trn-form-header">
+          <div className="trn-form-header-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
           </div>
-          <button className="icon-button" onClick={onClose} type="button">×</button>
+          <div>
+            <p className="trn-form-eyebrow">Termination Workflow</p>
+            <h2 id="termination-form-title" className="trn-form-title">{mode === 'add' ? 'Add Termination Record' : 'Edit Termination Record'}</h2>
+          </div>
+          <button className="trn-form-close" onClick={onClose} type="button">×</button>
         </div>
 
-        <form onSubmit={save}>
+        <form onSubmit={save} className="trn-form-body">
           {/* Two-column layout: Employee Details (left) | Termination Details (right) */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 12 }}>
 
             {/* Left — Employee Details */}
-            <div className="trn-modal-card" style={{ margin: 0 }}>
-              <div className="mc-form-divider" style={{ marginBottom: 10, fontSize: '0.72rem' }}>Employee Details</div>
+            <div className="trn-form-section trn-section-emp">
+              <div className="trn-section-label">
+                <span className="trn-section-dot trn-dot-blue"/>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Employee Details
+              </div>
               <div style={{ position: 'relative', marginBottom: 8 }}>
                 <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <span style={{ fontSize: '0.70rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Search Staff</span>
@@ -5386,8 +5398,12 @@ function TerminationFormModal({
             </div>
 
             {/* Right — Termination Details */}
-            <div className="trn-modal-card" style={{ margin: 0 }}>
-              <div className="mc-form-divider" style={{ marginBottom: 10, fontSize: '0.72rem' }}>Termination Details</div>
+            <div className="trn-form-section trn-section-term">
+              <div className="trn-section-label">
+                <span className="trn-section-dot trn-dot-red"/>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2.2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Termination Details
+              </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                   <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Termination Type</span>
@@ -5413,7 +5429,12 @@ function TerminationFormModal({
           </div>
 
           {/* Bottom — Reason & Comments (full width, compact) */}
-          <div className="trn-modal-card" style={{ marginBottom: 12 }}>
+          <div className="trn-form-section trn-section-notes" style={{ marginBottom: 12 }}>
+            <div className="trn-section-label">
+              <span className="trn-section-dot trn-dot-amber"/>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Reason &amp; Notes
+            </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                 <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Reason for Leaving</span>
@@ -5785,13 +5806,15 @@ function printExitInterview(record: ExitInterviewRecord) {
 
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 80pt;margin-top:40pt;">
     <div>
-      <div style="border-top:1pt solid #111;padding-top:4pt;">
+      <div style="border-top:1pt solid #111;padding-top:5pt;">
         <div style="font-size:9pt;font-weight:700;">Employee's Signature</div>
+        <div style="font-size:9pt;margin-top:4pt;">${esc(record.name)}</div>
       </div>
     </div>
     <div>
-      <div style="border-top:1pt solid #111;padding-top:4pt;">
+      <div style="border-top:1pt solid #111;padding-top:5pt;">
         <div style="font-size:9pt;font-weight:700;">Interviewer's Signature</div>
+        <div style="font-size:9pt;margin-top:4pt;">${esc(record.interviewerName || '—')}</div>
       </div>
     </div>
   </div>
@@ -5953,7 +5976,7 @@ function ExitInterviewFormModal({ record, employees, onClose, onSave, viewOnly =
             )}
 
             {/* Section 1 — Employee Details */}
-            <div className="ei-form-section">
+            <div className="ei-form-section" style={{ margin: '0 4px' }}>
               <div className="ei-form-section-title">1 — Employee Details</div>
               {autoFilled && (
                 <p style={{ fontSize: '0.76rem', color: '#6366f1', marginBottom: 8, fontStyle: 'italic' }}>
@@ -6188,152 +6211,253 @@ function ExitInterviewFormModal({ record, employees, onClose, onSave, viewOnly =
 /* ─── ExitInterviewAnalyticsModal ────────────────────────── */
 
 function ExitInterviewAnalyticsModal({ records, onClose }: { records: ExitInterviewRecord[]; onClose: () => void }) {
-  const total = records.length
-  const completed = records.filter(r =>
-    Object.values(r.questionnaire).some(v => v !== '')
-  ).length
+  const [view, setView] = useState<'overall' | 'person'>('overall')
+  const [selectedEmpId, setSelectedEmpId] = useState<string>('')
+
+  const completed = records.filter(r => r.questionnaire && Object.values(r.questionnaire).some(v => v !== ''))
+  const skipped   = records.filter(r => r.skipped)
   const rehireCount = records.filter(r => r.rehireEligible).length
+  const total = records.length
 
-  // Top voluntary reason
-  const allVolReasons = useMemo(() => {
-    const m: Record<string, number> = {}
-    records.forEach(r => {
-      r.voluntaryReasons.forEach(v => { m[v] = (m[v] ?? 0) + 1 })
-      r.involuntaryReasons.forEach(v => { m[v] = (m[v] ?? 0) + 1 })
-    })
-    return m
-  }, [records])
-  const topReason = Object.entries(allVolReasons).sort((a, b) => b[1] - a[1])[0]?.[0] ?? '—'
+  // For per-person view
+  const personRecord = records.find(r => r.employeeId === selectedEmpId) ?? null
 
-  // Questionnaire stacked bars
-  const questStats = useMemo(() =>
+  const buildQuestStats = (src: ExitInterviewRecord[]) =>
     eiQuestionnaireCategories.map(({ key, label }) => {
-      const vsCount = records.filter(r => r.questionnaire?.[key] === 'Very Satisfied').length
-      const sCount  = records.filter(r => r.questionnaire?.[key] === 'Satisfied').length
-      const dCount  = records.filter(r => r.questionnaire?.[key] === 'Dissatisfied').length
-      const filled  = vsCount + sCount + dCount
-      return { key, label, vsPct: filled ? vsCount / filled * 100 : 0, sPct: filled ? sCount / filled * 100 : 0, dPct: filled ? dCount / filled * 100 : 0, filled }
-    }),
-  [records])
+      const vs = src.filter(r => r.questionnaire?.[key] === 'Very Satisfied').length
+      const s  = src.filter(r => r.questionnaire?.[key] === 'Satisfied').length
+      const d  = src.filter(r => r.questionnaire?.[key] === 'Dissatisfied').length
+      const n  = vs + s + d
+      return { key, label, vs, s, d, n, vsPct: n ? vs/n*100 : 0, sPct: n ? s/n*100 : 0, dPct: n ? d/n*100 : 0 }
+    })
 
-  // Voluntary/Involuntary reason counts
-  const invCounts = useMemo(() => {
+  const buildReasonCounts = (src: ExitInterviewRecord[], type: 'inv' | 'vol') => {
     const m: Record<string, number> = {}
-    records.forEach(r => r.involuntaryReasons.forEach(v => { m[v] = (m[v] ?? 0) + 1 }))
+    src.forEach(r => {
+      const arr = type === 'inv' ? r.involuntaryReasons : r.voluntaryReasons
+      arr?.forEach(v => { m[v] = (m[v] ?? 0) + 1 })
+    })
     return Object.entries(m).sort((a, b) => b[1] - a[1])
-  }, [records])
-  const volCounts = useMemo(() => {
-    const m: Record<string, number> = {}
-    records.forEach(r => r.voluntaryReasons.forEach(v => { m[v] = (m[v] ?? 0) + 1 }))
-    return Object.entries(m).sort((a, b) => b[1] - a[1])
-  }, [records])
-  const maxInv = invCounts[0]?.[1] ?? 1
-  const maxVol = volCounts[0]?.[1] ?? 1
+  }
 
-  // Q5 (return?) and Q6 (recommend?) simple yes/no count
-  const returnYes = records.filter(r => /yes|return|would/i.test(r.q5)).length
-  const returnNo  = records.filter(r => /no|unlikely|not/i.test(r.q5) && !/yes/i.test(r.q5)).length
-  const recYes    = records.filter(r => /yes|definitely|would/i.test(r.q6)).length
-  const recNo     = records.filter(r => /no|not|unlikely/i.test(r.q6) && !/yes/i.test(r.q6)).length
+  const SatisfactionBars = ({ src }: { src: ExitInterviewRecord[] }) => {
+    const stats = buildQuestStats(src)
+    return (
+      <div className="ei-panel" style={{ marginBottom: 14 }}>
+        <h3 className="ei-panel-title">Satisfaction by Category</h3>
+        {stats.map(({ key, label, vsPct, sPct, dPct, n }) => (
+          <div key={key} style={{ display: 'grid', gridTemplateColumns: '160px 1fr 80px', gap: 8, alignItems: 'center', marginBottom: 8 }}>
+            <span style={{ fontSize: '0.78rem', color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
+            {n === 0
+              ? <span style={{ fontSize: '0.74rem', color: '#94a3b8' }}>No data</span>
+              : <div className="ei-an-stacked-bar" style={{ height: 16, borderRadius: 8 }}>
+                  {vsPct > 0 && <div className="ei-an-vs" style={{ width: `${vsPct}%` }} title={`Very Satisfied ${Math.round(vsPct)}%`} />}
+                  {sPct  > 0 && <div className="ei-an-s"  style={{ width: `${sPct}%`  }} title={`Satisfied ${Math.round(sPct)}%`} />}
+                  {dPct  > 0 && <div className="ei-an-d"  style={{ width: `${dPct}%`  }} title={`Dissatisfied ${Math.round(dPct)}%`} />}
+                </div>
+            }
+            <span style={{ fontSize: '0.70rem', color: '#64748b', textAlign: 'right' }}>
+              {n > 0 && <>{Math.round(vsPct)}% · {Math.round(sPct)}% · {Math.round(dPct)}%</>}
+            </span>
+          </div>
+        ))}
+        <div style={{ display: 'flex', gap: 14, marginTop: 6 }}>
+          {[['#16a34a','Very Satisfied'],['#d97706','Satisfied'],['#dc2626','Dissatisfied']].map(([c,l])=>(
+            <span key={l} style={{ display:'flex', alignItems:'center', gap:4, fontSize:'0.72rem' }}>
+              <span style={{ width:10, height:10, borderRadius:2, background:c, display:'inline-block' }}/>{l}
+            </span>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  const ReasonBars = ({ src, type }: { src: ExitInterviewRecord[]; type: 'inv'|'vol' }) => {
+    const counts = buildReasonCounts(src, type)
+    const max = counts[0]?.[1] ?? 1
+    if (counts.length === 0) return <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>None recorded</p>
+    return (
+      <>
+        {counts.map(([reason, count]) => (
+          <div key={reason} className="ei-reason-row">
+            <span className="ei-reason-name">{reason}</span>
+            <div className="ei-reason-track"><div className="ei-reason-fill" style={{ width: `${(count/max)*100}%`, background: type==='inv' ? '#ef4444' : '#6366f1' }} /></div>
+            <span className="ei-reason-count">{count}</span>
+          </div>
+        ))}
+      </>
+    )
+  }
 
   return (
     <div className="modal-backdrop" role="presentation">
       <section className="registration-modal ei-analytics-modal" role="dialog" aria-modal="true">
         <div className="modal-header">
-          <div><p className="eyebrow">Exit Interviews</p><h2>Analytics</h2>
-            <p style={{ fontSize: '0.82rem', color: '#64748b', marginTop: 2 }}>{total} interview{total !== 1 ? 's' : ''} recorded</p>
+          <div>
+            <p className="eyebrow">Exit Interviews</p>
+            <h2>Analytics</h2>
+            <p style={{ fontSize: '0.82rem', color: '#64748b', marginTop: 2 }}>{total} interview{total !== 1 ? 's' : ''} recorded · {completed.length} completed · {skipped.length} skipped</p>
           </div>
-          <button className="icon-button" onClick={onClose} type="button">×</button>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {/* View toggle */}
+            <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: 8, padding: 3, gap: 2 }}>
+              <button type="button" onClick={() => setView('overall')} style={{ padding: '4px 12px', borderRadius: 6, border: 'none', fontSize: '0.76rem', fontWeight: 700, background: view==='overall' ? '#fff' : 'transparent', color: view==='overall' ? '#4338ca' : '#64748b', cursor: 'pointer', boxShadow: view==='overall' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}>Overall</button>
+              <button type="button" onClick={() => setView('person')} style={{ padding: '4px 12px', borderRadius: 6, border: 'none', fontSize: '0.76rem', fontWeight: 700, background: view==='person' ? '#fff' : 'transparent', color: view==='person' ? '#4338ca' : '#64748b', cursor: 'pointer', boxShadow: view==='person' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}>Per Employee</button>
+            </div>
+            <button className="icon-button" onClick={onClose} type="button">×</button>
+          </div>
         </div>
 
         {total === 0
           ? <p style={{ padding: '24px', color: '#94a3b8', textAlign: 'center' }}>No exit interview data to analyse.</p>
           : (
-            <div style={{ padding: '0 20px 20px', overflowY: 'auto', maxHeight: 'calc(85vh - 110px)' }}>
-              {/* KPI row */}
-              <div className="ei-stat-row" style={{ margin: '16px 0' }}>
-                <div className="ei-stat ei-stat-purple"><strong>{total}</strong><span>Total</span></div>
-                <div className="ei-stat ei-stat-blue"><strong>{completed}</strong><span>Completed</span></div>
-                <div className="ei-stat ei-stat-green"><strong>{rehireCount}</strong><span>Rehire Eligible</span></div>
-                <div className="ei-stat ei-stat-amber" style={{ fontSize: '0.72rem' }}><strong style={{ fontSize: '0.85rem', wordBreak: 'break-word' }}>{topReason}</strong><span>Top Exit Reason</span></div>
-              </div>
+            <div style={{ padding: '0 20px 20px', overflowY: 'auto', maxHeight: 'calc(85vh - 120px)' }}>
 
-              {/* Satisfaction stacked bars */}
-              <div className="ei-panel" style={{ marginBottom: '16px' }}>
-                <h3 className="ei-panel-title">Satisfaction by Category</h3>
-                {questStats.map(({ key, label, vsPct, sPct, dPct, filled }) => (
-                  <div key={key} className="ei-an-stacked-row">
-                    <span style={{ fontSize: '0.78rem', color: '#374151', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
-                    {filled === 0
-                      ? <span style={{ fontSize: '0.74rem', color: '#94a3b8' }}>No data</span>
-                      : (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: 1 }}>
-                          <div className="ei-an-stacked-bar">
-                            {vsPct > 0 && <div className="ei-an-vs" style={{ width: `${vsPct}%` }} title={`Very Satisfied: ${Math.round(vsPct)}%`} />}
-                            {sPct  > 0 && <div className="ei-an-s"  style={{ width: `${sPct}%`  }} title={`Satisfied: ${Math.round(sPct)}%`} />}
-                            {dPct  > 0 && <div className="ei-an-d"  style={{ width: `${dPct}%`  }} title={`Dissatisfied: ${Math.round(dPct)}%`} />}
+              {/* ── OVERALL VIEW ── */}
+              {view === 'overall' && (
+                <>
+                  <div className="ei-stat-row" style={{ margin: '14px 0' }}>
+                    <div className="ei-stat ei-stat-purple"><strong>{total}</strong><span>Total</span></div>
+                    <div className="ei-stat ei-stat-blue"><strong>{completed.length}</strong><span>Completed</span></div>
+                    <div className="ei-stat ei-stat-amber"><strong>{skipped.length}</strong><span>Skipped</span></div>
+                    <div className="ei-stat ei-stat-green"><strong>{rehireCount}</strong><span>Rehire Eligible</span></div>
+                  </div>
+
+                  <SatisfactionBars src={completed} />
+
+                  <div className="ei-dashboard-grid" style={{ marginBottom: 14 }}>
+                    <div className="ei-panel">
+                      <h3 className="ei-panel-title">Involuntary Exit Reasons</h3>
+                      <ReasonBars src={records} type="inv" />
+                    </div>
+                    <div className="ei-panel">
+                      <h3 className="ei-panel-title">Voluntary Exit Reasons</h3>
+                      <ReasonBars src={records} type="vol" />
+                    </div>
+                  </div>
+
+                  {/* Department breakdown */}
+                  {(() => {
+                    const deptMap: Record<string, number> = {}
+                    records.forEach(r => { if (r.department) deptMap[r.department] = (deptMap[r.department] ?? 0) + 1 })
+                    const sorted = Object.entries(deptMap).sort((a,b) => b[1]-a[1])
+                    const max = sorted[0]?.[1] ?? 1
+                    return sorted.length > 0 ? (
+                      <div className="ei-panel" style={{ marginBottom: 14 }}>
+                        <h3 className="ei-panel-title">Exits by Department</h3>
+                        {sorted.map(([dept, count]) => (
+                          <div key={dept} className="ei-reason-row">
+                            <span className="ei-reason-name">{dept}</span>
+                            <div className="ei-reason-track"><div className="ei-reason-fill" style={{ width: `${(count/max)*100}%`, background: '#6366f1' }} /></div>
+                            <span className="ei-reason-count">{count}</span>
                           </div>
-                          <div style={{ display: 'flex', gap: '8px', fontSize: '0.7rem', color: '#6b7280' }}>
-                            {vsPct > 0 && <span style={{ color: '#16a34a' }}>{Math.round(vsPct)}% VS</span>}
-                            {sPct  > 0 && <span style={{ color: '#d97706' }}>{Math.round(sPct)}% S</span>}
-                            {dPct  > 0 && <span style={{ color: '#dc2626' }}>{Math.round(dPct)}% D</span>}
+                        ))}
+                      </div>
+                    ) : null
+                  })()}
+
+                  {/* Rehire bar */}
+                  <div className="ei-panel">
+                    <h3 className="ei-panel-title">Rehire Eligibility</h3>
+                    <div style={{ display: 'flex', gap: 14 }}>
+                      <div className="ei-stat ei-stat-green" style={{ flex: 1 }}><strong>{rehireCount}</strong><span>Eligible</span></div>
+                      <div className="ei-stat" style={{ flex: 1, background: '#fee2e2' }}><strong style={{ color: '#dc2626' }}>{total - rehireCount}</strong><span style={{ color: '#991b1b' }}>Not Eligible</span></div>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* ── PER EMPLOYEE VIEW ── */}
+              {view === 'person' && (
+                <>
+                  <div style={{ margin: '14px 0 16px' }}>
+                    <label style={{ fontSize: '0.78rem', fontWeight: 700, color: '#374151', display: 'block', marginBottom: 6 }}>Select Employee</label>
+                    <select value={selectedEmpId} onChange={e => setSelectedEmpId(e.target.value)}
+                      style={{ padding: '8px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: '0.82rem', width: '100%', maxWidth: 400 }}>
+                      <option value="">— Select an employee —</option>
+                      {records.map(r => (
+                        <option key={r.id} value={r.employeeId}>{r.name} ({r.employeeId}) · {r.department}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {!personRecord && (
+                    <p style={{ color: '#94a3b8', textAlign: 'center', padding: '24px 0' }}>Select an employee above to view their exit interview details.</p>
+                  )}
+
+                  {personRecord && (
+                    <>
+                      {/* Employee header card */}
+                      <div style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4338ca 100%)', borderRadius: 12, padding: '14px 18px', color: '#fff', marginBottom: 14, display: 'flex', gap: 14, alignItems: 'center' }}>
+                        <div style={{ width: 46, height: 46, borderRadius: '50%', background: 'rgba(255,255,255,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', fontWeight: 900, flexShrink: 0 }}>
+                          {(personRecord.name[0] ?? '').toUpperCase()}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 800, fontSize: '1rem' }}>{personRecord.name}</div>
+                          <div style={{ fontSize: '0.78rem', opacity: 0.8 }}>{personRecord.employeeId} · {personRecord.department} · {personRecord.designation}</div>
+                          <div style={{ fontSize: '0.74rem', opacity: 0.7, marginTop: 2 }}>
+                            Terminated: {formatDateDisplay(personRecord.departureDate)} · Service: {personRecord.periodOfService || '—'} · Rehire: {personRecord.rehireEligible ? '✓ Yes' : '✗ No'}
                           </div>
                         </div>
+                        <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
+                          <span style={{ background: personRecord.skipped ? '#fef3c7' : 'rgba(255,255,255,0.2)', color: personRecord.skipped ? '#92400e' : '#fff', padding: '3px 10px', borderRadius: 8, fontSize: '0.74rem', fontWeight: 700 }}>
+                            {personRecord.skipped ? `Skipped: ${personRecord.skipReason}` : 'Completed'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {!personRecord.skipped && (
+                        <>
+                          {/* Satisfaction */}
+                          <SatisfactionBars src={[personRecord]} />
+
+                          {/* Reasons */}
+                          <div className="ei-dashboard-grid" style={{ marginBottom: 14 }}>
+                            <div className="ei-panel">
+                              <h3 className="ei-panel-title">Exit Reasons — Involuntary</h3>
+                              <ReasonBars src={[personRecord]} type="inv" />
+                              {personRecord.invOther && <div style={{ fontSize: '0.80rem', marginTop: 6 }}>Other: {personRecord.invOther}</div>}
+                            </div>
+                            <div className="ei-panel">
+                              <h3 className="ei-panel-title">Exit Reasons — Voluntary</h3>
+                              <ReasonBars src={[personRecord]} type="vol" />
+                              {personRecord.volOther && <div style={{ fontSize: '0.80rem', marginTop: 6 }}>Other: {personRecord.volOther}</div>}
+                            </div>
+                          </div>
+
+                          {/* Short answers */}
+                          <div className="ei-panel" style={{ marginBottom: 14 }}>
+                            <h3 className="ei-panel-title">Interview Responses</h3>
+                            {eiShortQuestions.map((q, i) => {
+                              const ans = personRecord[`q${i+1}` as keyof ExitInterviewRecord] as string
+                              return ans ? (
+                                <div key={i} style={{ marginBottom: 10, borderBottom: '1px solid #f1f5f9', paddingBottom: 8 }}>
+                                  <div style={{ fontSize: '0.76rem', fontWeight: 700, color: '#6366f1', marginBottom: 2 }}>{i+1}. {q}</div>
+                                  <div style={{ fontSize: '0.82rem', color: '#374151', lineHeight: 1.5 }}>{ans}</div>
+                                </div>
+                              ) : null
+                            })}
+                            {personRecord.employeeComments && (
+                              <div style={{ marginTop: 8, background: '#f8fafc', borderRadius: 8, padding: '8px 12px' }}>
+                                <div style={{ fontSize: '0.74rem', fontWeight: 700, color: '#64748b', marginBottom: 4 }}>Employee Comments</div>
+                                <div style={{ fontSize: '0.82rem', color: '#374151' }}>{personRecord.employeeComments}</div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Areas to improve */}
+                          {personRecord.areasToImprove && (
+                            <div className="ei-panel">
+                              <h3 className="ei-panel-title">Areas to be Improved</h3>
+                              <p style={{ fontSize: '0.82rem', color: '#374151' }}>{personRecord.areasToImprove}</p>
+                            </div>
+                          )}
+                        </>
                       )}
-                  </div>
-                ))}
-                <div style={{ display: 'flex', gap: '16px', marginTop: '8px' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.74rem' }}><span style={{ width: 10, height: 10, borderRadius: 2, background: '#16a34a', display: 'inline-block' }} /> Very Satisfied</span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.74rem' }}><span style={{ width: 10, height: 10, borderRadius: 2, background: '#d97706', display: 'inline-block' }} /> Satisfied</span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.74rem' }}><span style={{ width: 10, height: 10, borderRadius: 2, background: '#dc2626', display: 'inline-block' }} /> Dissatisfied</span>
-                </div>
-              </div>
-
-              {/* Exit Reasons */}
-              <div className="ei-dashboard-grid" style={{ marginBottom: '16px' }}>
-                <div className="ei-panel">
-                  <h3 className="ei-panel-title">Involuntary Reasons</h3>
-                  {invCounts.length === 0
-                    ? <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>None recorded</p>
-                    : invCounts.map(([reason, count]) => (
-                      <div key={reason} className="ei-reason-row">
-                        <span className="ei-reason-name">{reason}</span>
-                        <div className="ei-reason-track"><div className="ei-reason-fill" style={{ width: `${(count / maxInv) * 100}%`, background: '#ef4444' }} /></div>
-                        <span className="ei-reason-count">{count}</span>
-                      </div>
-                    ))}
-                </div>
-                <div className="ei-panel">
-                  <h3 className="ei-panel-title">Voluntary Reasons</h3>
-                  {volCounts.length === 0
-                    ? <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>None recorded</p>
-                    : volCounts.map(([reason, count]) => (
-                      <div key={reason} className="ei-reason-row">
-                        <span className="ei-reason-name">{reason}</span>
-                        <div className="ei-reason-track"><div className="ei-reason-fill" style={{ width: `${(count / maxVol) * 100}%` }} /></div>
-                        <span className="ei-reason-count">{count}</span>
-                      </div>
-                    ))}
-                </div>
-              </div>
-
-              {/* Q5/Q6 */}
-              <div className="ei-dashboard-grid">
-                <div className="ei-panel">
-                  <h3 className="ei-panel-title">Would Return? (Q5)</h3>
-                  <div style={{ display: 'flex', gap: '16px' }}>
-                    <div className="ei-stat ei-stat-green" style={{ flex: 1 }}><strong>{returnYes}</strong><span>Likely Yes</span></div>
-                    <div className="ei-stat" style={{ flex: 1, background: '#fee2e2' }}><strong style={{ color: '#dc2626' }}>{returnNo}</strong><span style={{ color: '#991b1b' }}>Likely No</span></div>
-                  </div>
-                </div>
-                <div className="ei-panel">
-                  <h3 className="ei-panel-title">Would Recommend? (Q6)</h3>
-                  <div style={{ display: 'flex', gap: '16px' }}>
-                    <div className="ei-stat ei-stat-green" style={{ flex: 1 }}><strong>{recYes}</strong><span>Likely Yes</span></div>
-                    <div className="ei-stat" style={{ flex: 1, background: '#fee2e2' }}><strong style={{ color: '#dc2626' }}>{recNo}</strong><span style={{ color: '#991b1b' }}>Likely No</span></div>
-                  </div>
-                </div>
-              </div>
+                    </>
+                  )}
+                </>
+              )}
             </div>
           )}
 
@@ -6600,32 +6724,6 @@ function TerminationPage({
                                 <button className="action-glyph" onClick={() => onViewDetails(r)} type="button" title="View">👁</button>
                                 <button className="action-glyph edit" onClick={() => onEdit(r)} type="button" title="Edit">✎</button>
                                 <button className="action-glyph delete" onClick={() => onDelete(r.id)} type="button" title="Delete">🗑</button>
-                                {(() => {
-                                  const ei = exitInterviews.find(x => x.employeeId === r.employeeId)
-                                  if (!ei) return null
-                                  const eiCompleted = ei.skipped || (ei.questionnaire && Object.values(ei.questionnaire).every(v => v !== ''))
-                                  if (eiCompleted) {
-                                    return (
-                                      <button className="action-glyph action-glyph-ei"
-                                        onClick={() => { setViewingEI(ei); setViewingEIReadOnly(true) }}
-                                        type="button" title="View Exit Interview (Completed)">
-                                        👁
-                                      </button>
-                                    )
-                                  }
-                                  return (
-                                    <button className="action-glyph action-glyph-ei"
-                                      onClick={() => { setViewingEI(ei); setViewingEIReadOnly(false) }}
-                                      type="button" title="Exit Interview">
-                                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                        <polyline points="14 2 14 8 20 8"/>
-                                        <line x1="16" y1="13" x2="8" y2="13"/>
-                                        <line x1="16" y1="17" x2="8" y2="17"/>
-                                      </svg>
-                                    </button>
-                                  )
-                                })()}
                               </div>
                             </td>
                           </tr>
