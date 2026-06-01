@@ -287,8 +287,12 @@ type ExitInterviewRecord = {
   terminationType: TerminationType
   departureDate: string
   periodOfService: string
+  joinDate?: string
   rehireEligible: boolean
   interviewDate: string
+  skipped?: boolean
+  skipReason?: string
+  interviewerEmployeeId?: string
   // Reasons
   involuntaryReasons: string[]
   voluntaryReasons: string[]
@@ -565,6 +569,16 @@ const initialMedicalCases: MedicalCaseRecord[] = [
   { id: 'MC-2026-012', caseDate: '2026-03-22', employeeId: '53029', name: 'KUMARAN VAITHILINGAM', department: 'STORES', reason: 'Chest pain, Palpitations', hospital: 'ADK Hospital', departTime: '10:30', returnTime: '16:00', doctorAdvice: '- Chest discomfort, palpitations since morning\n- ECG performed — normal sinus rhythm\n- Stress-related symptoms\n- Advised to reduce caffeine, manage stress\n- Medication for 5 days\n- Follow-up in 2 weeks recommended\n- MC : 22/03/26 to 23/03/26', mcProvided: true, sickLeaveFrom: '2026-03-22', sickLeaveTo: '2026-03-23', sickLeaveDays: 2, recordedBy: 'HR Admin', isUrgent: false, isAdmitted: false },
 ]
 const allTerminationStages: TerminationStage[] = ['Letter Submitted', 'Exit Interview', 'Ticket', 'Pending Departure']
+
+const getMaldivianNationalities = () => ['MALDIVES', 'MALDIVIAN', 'MDVS']
+
+const getStagesForNationality = (nationality: string): TerminationStage[] => {
+  const nat = nationality?.toUpperCase() ?? ''
+  if (getMaldivianNationalities().some(m => nat.includes(m))) {
+    return ['Letter Submitted', 'Exit Interview', 'Pending Departure'] as TerminationStage[]
+  }
+  return allTerminationStages
+}
 const initialPersonalFiles: PersonalFileRecord[] = [
   { fileNo: '0001', employeeId: '25431', fullName: 'THILINA LAKSHAN PERERA', department: 'STORES', staffStatus: 'Terminated', coc: true, jd: true, ea: true, eaExpiryDate: '2022-12-31', remarks: 'Left company Dec 2022' },
   { fileNo: '0002', employeeId: '31672', fullName: 'MD RAFIQUL ISLAM', department: 'ADMINISTRATION', staffStatus: 'Terminated', coc: true, jd: true, ea: true, eaExpiryDate: '2023-06-30', remarks: 'Contract not renewed' },
@@ -5354,7 +5368,17 @@ function TerminationFormModal({
                 </ul>
               )}
             </div>
-            <div className="mc-form-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr' }}>
+            {form.employeeId && (
+              <div className="os-emp-pill" style={{ marginTop: 8 }}>
+                <div>
+                  <strong>{form.name}</strong>
+                  <span style={{ display: 'block', fontSize: '0.74rem', color: '#3b82f6' }}>
+                    {form.employeeId} · {form.designation} · {form.department}
+                  </span>
+                </div>
+              </div>
+            )}
+            <div className="mc-form-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr', marginTop: form.employeeId ? 8 : 0 }}>
               <label><span>Designation</span><input readOnly value={form.designation} placeholder="—" className="lf-readonly" /></label>
               <label><span>Section</span><input readOnly value={form.department} placeholder="—" className="lf-readonly" /></label>
               <label><span>Nationality</span><input readOnly value={form.nationality} placeholder="—" className="lf-readonly" /></label>
@@ -5394,13 +5418,6 @@ function TerminationFormModal({
               <label style={{ gridColumn: 'span 2' }}><span>Reason for Leaving</span>
                 <textarea rows={2} placeholder="Reason for termination" value={form.reasonForLeaving} onChange={(e) => setForm((cur) => ({ ...cur, reasonForLeaving: e.target.value }))} style={{ resize: 'vertical', fontFamily: 'inherit', fontSize: '0.82rem', padding: '7px 10px', borderRadius: 8, border: '1.5px solid #e2e8f0', width: '100%' }} />
               </label>
-              <div>
-                <span style={{ display: 'block', fontSize: '0.72rem', fontWeight: 700, color: '#64748b', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rehire Eligible</span>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button type="button" className={form.rehireEligible ? 'primary-button' : 'quiet-button light'} style={{ padding: '5px 18px', fontSize: '0.78rem' }} onClick={() => setForm((cur) => ({ ...cur, rehireEligible: true }))}>Yes</button>
-                  <button type="button" className={!form.rehireEligible ? 'primary-button' : 'quiet-button light'} style={{ padding: '5px 18px', fontSize: '0.78rem' }} onClick={() => setForm((cur) => ({ ...cur, rehireEligible: false }))}>No</button>
-                </div>
-              </div>
               <label><span>Comments (optional)</span>
                 <textarea rows={2} placeholder="Any additional notes…" value={form.comments ?? ''} onChange={(e) => setForm((cur) => ({ ...cur, comments: e.target.value }))} style={{ resize: 'vertical', fontFamily: 'inherit', fontSize: '0.82rem', padding: '7px 10px', borderRadius: 8, border: '1.5px solid #e2e8f0', width: '100%' }} />
               </label>
@@ -5803,10 +5820,23 @@ function printExitInterview(record: ExitInterviewRecord) {
 }
 
 /* ─── ExitInterviewFormModal ─────────────────────────────── */
-function ExitInterviewFormModal({ record, onClose, onSave }: {
+const calcService = (join: string, depart: string) => {
+  if (!join || !depart) return ''
+  const j = new Date(join), d = new Date(depart)
+  let years = d.getFullYear() - j.getFullYear()
+  let months = d.getMonth() - j.getMonth()
+  if (months < 0) { years--; months += 12 }
+  return years > 0
+    ? `${years} year${years !== 1 ? 's' : ''} ${months} month${months !== 1 ? 's' : ''}`
+    : `${months} month${months !== 1 ? 's' : ''}`
+}
+
+function ExitInterviewFormModal({ record, employees, onClose, onSave, viewOnly = false }: {
   record: ExitInterviewRecord
+  employees: Employee[]
   onClose: () => void
   onSave: (r: ExitInterviewRecord) => void
+  viewOnly?: boolean
 }) {
   const blankQ: EIQuestionnaire = { duties: '', training: '', advancement: '', salary: '', benefits: '', workConditions: '', workHours: '', coworkers: '', supervision: '', overall: '' }
   const [form, setForm] = useState<ExitInterviewRecord>(() => ({
@@ -5824,7 +5854,13 @@ function ExitInterviewFormModal({ record, onClose, onSave }: {
     interviewerComments: record.interviewerComments ?? '',
     interviewerName: record.interviewerName ?? '',
     questionnaire: record.questionnaire ?? blankQ,
+    skipped: record.skipped ?? false,
+    skipReason: record.skipReason ?? '',
+    joinDate: record.joinDate ?? '',
   }))
+
+  const hrEmployees = employees.filter(e => e.department === 'HUMAN RESOURCES')
+  const autoFilled = !!record.employeeId
 
   const toggleInv = (reason: string) => setForm(p => ({
     ...p, involuntaryReasons: (p.involuntaryReasons ?? []).includes(reason)
@@ -5839,10 +5875,19 @@ function ExitInterviewFormModal({ record, onClose, onSave }: {
   const setQuestionnaire = (key: keyof EIQuestionnaire, val: EISatisfactionLevel) =>
     setForm(p => ({ ...p, questionnaire: { ...p.questionnaire, [key]: val } }))
 
+  const servicePeriod = calcService(form.joinDate ?? '', form.departureDate)
+
+  const questFilled = eiQuestionnaireCategories.every(({ key }) => form.questionnaire[key] !== '')
+  const canSave = form.skipped ? !!form.skipReason : questFilled
+
   const fStyle: React.CSSProperties = { padding: '7px 10px', borderRadius: '7px', border: '1.5px solid #e2e8f0', fontSize: '0.85rem', background: '#fff', width: '100%', boxSizing: 'border-box', fontFamily: 'inherit' }
+  const roStyle: React.CSSProperties = { ...fStyle, background: '#f8fafc', color: '#374151' }
   const taStyle: React.CSSProperties = { ...fStyle, resize: 'vertical', minHeight: '52px' }
 
-  const save = (e: FormEvent) => { e.preventDefault(); onSave(form) }
+  const save = (e: FormEvent) => {
+    e.preventDefault()
+    onSave({ ...form, periodOfService: servicePeriod || form.periodOfService })
+  }
 
   return (
     <div className="modal-backdrop" role="presentation">
@@ -5854,174 +5899,260 @@ function ExitInterviewFormModal({ record, onClose, onSave }: {
             <h2>{record.name || 'New Exit Interview'}</h2>
             {record.department && <p style={{ margin: 0, fontSize: '0.78rem', color: 'rgba(255,255,255,0.7)' }}>{record.department} · {record.designation}</p>}
           </div>
-          <button className="icon-button" onClick={onClose} type="button">×</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {viewOnly && <span className="ei-completed-badge">✓ Completed</span>}
+            <button className="icon-button" onClick={onClose} type="button">×</button>
+          </div>
         </div>
 
         <form onSubmit={save} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
           <div className="ei-form-body">
 
+            {/* Skip Banner — at the very top */}
+            {!viewOnly && (
+              <div className="ei-skip-banner">
+                <div className="ei-skip-banner-text">
+                  <strong>Skip Exit Interview</strong>
+                  <p>Use when a formal interview is not applicable (dismissal, absconded, etc.)</p>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  {form.skipped && (
+                    <select
+                      value={form.skipReason ?? ''}
+                      onChange={e => setForm(p => ({ ...p, skipReason: e.target.value }))}
+                      style={{ ...fStyle, width: 'auto', minWidth: 180 }}
+                    >
+                      <option value="">Select reason…</option>
+                      <option>Dismissal</option>
+                      <option>Probationary Release</option>
+                      <option>Absconded</option>
+                      <option>Other</option>
+                    </select>
+                  )}
+                  <button
+                    type="button"
+                    className={form.skipped ? 'primary-button' : 'quiet-button light'}
+                    style={{ padding: '5px 16px', fontSize: '0.78rem' }}
+                    onClick={() => setForm(p => ({ ...p, skipped: !p.skipped, skipReason: p.skipped ? '' : p.skipReason }))}
+                  >
+                    {form.skipped ? 'Skipped ✓' : 'Mark as Skipped'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {viewOnly && form.skipped && (
+              <div className="ei-skip-banner">
+                <div className="ei-skip-banner-text">
+                  <strong>Interview was skipped</strong>
+                  <p>Reason: {form.skipReason || '—'}</p>
+                </div>
+              </div>
+            )}
+
             {/* Section 1 — Employee Details */}
             <div className="ei-form-section">
               <div className="ei-form-section-title">1 — Employee Details</div>
+              {autoFilled && (
+                <p style={{ fontSize: '0.76rem', color: '#6366f1', marginBottom: 8, fontStyle: 'italic' }}>
+                  Employee details are automatically populated from the Notice Period record.
+                </p>
+              )}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 20px' }}>
                 <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <span style={{ fontSize: '0.73rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Employee Name</span>
-                  <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} style={fStyle} />
+                  <input value={form.name} readOnly style={roStyle} />
                 </label>
                 <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <span style={{ fontSize: '0.73rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Termination Date</span>
-                  <input type="date" value={form.departureDate} onChange={e => setForm(p => ({ ...p, departureDate: e.target.value }))} style={fStyle} />
+                  <input type="date" value={form.departureDate} onChange={e => !viewOnly && setForm(p => ({ ...p, departureDate: e.target.value }))} style={viewOnly ? roStyle : fStyle} readOnly={viewOnly} />
                 </label>
                 <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <span style={{ fontSize: '0.73rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Employee ID</span>
-                  <input value={form.employeeId} onChange={e => setForm(p => ({ ...p, employeeId: e.target.value }))} style={fStyle} />
+                  <input value={form.employeeId} readOnly style={roStyle} />
                 </label>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <span style={{ fontSize: '0.73rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Eligible to Re-employ</span>
-                  <div style={{ display: 'flex', gap: '16px', marginTop: '6px' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', cursor: 'pointer' }}>
-                      <input type="radio" name="rehire" checked={form.rehireEligible} onChange={() => setForm(p => ({ ...p, rehireEligible: true }))} /> Yes
-                    </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', cursor: 'pointer' }}>
-                      <input type="radio" name="rehire" checked={!form.rehireEligible} onChange={() => setForm(p => ({ ...p, rehireEligible: false }))} /> No
-                    </label>
-                  </div>
-                </div>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '0.73rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Nationality</span>
+                  <input value={form.nationality} readOnly style={roStyle} />
+                </label>
                 <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <span style={{ fontSize: '0.73rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Job Title / Designation</span>
-                  <input value={form.designation} onChange={e => setForm(p => ({ ...p, designation: e.target.value }))} style={fStyle} />
+                  <input value={form.designation} readOnly style={roStyle} />
                 </label>
                 <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <span style={{ fontSize: '0.73rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Section / Department</span>
-                  <input value={form.department} onChange={e => setForm(p => ({ ...p, department: e.target.value }))} style={fStyle} />
+                  <input value={form.department} readOnly style={roStyle} />
+                </label>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '0.73rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Join Date</span>
+                  <input value={form.joinDate ?? ''} readOnly style={roStyle} />
                 </label>
                 <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <span style={{ fontSize: '0.73rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Period of Service</span>
-                  <input value={form.periodOfService} onChange={e => setForm(p => ({ ...p, periodOfService: e.target.value }))} placeholder="e.g. 3y 6m" style={fStyle} />
+                  <input value={servicePeriod} readOnly style={roStyle} placeholder="—" />
                 </label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '0.73rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Eligible to Re-employ?</span>
+                  <div style={{ display: 'flex', gap: '16px', marginTop: '6px' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', cursor: viewOnly ? 'default' : 'pointer' }}>
+                      <input type="radio" name="rehire" checked={form.rehireEligible} onChange={() => !viewOnly && setForm(p => ({ ...p, rehireEligible: true }))} disabled={viewOnly} /> Yes
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', cursor: viewOnly ? 'default' : 'pointer' }}>
+                      <input type="radio" name="rehire" checked={!form.rehireEligible} onChange={() => !viewOnly && setForm(p => ({ ...p, rehireEligible: false }))} disabled={viewOnly} /> No
+                    </label>
+                  </div>
+                </div>
                 <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <span style={{ fontSize: '0.73rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Interview Date</span>
-                  <input type="date" value={form.interviewDate} onChange={e => setForm(p => ({ ...p, interviewDate: e.target.value }))} style={fStyle} />
+                  <input type="date" value={form.interviewDate} onChange={e => !viewOnly && setForm(p => ({ ...p, interviewDate: e.target.value }))} style={viewOnly ? roStyle : fStyle} readOnly={viewOnly} />
                 </label>
               </div>
             </div>
 
-            {/* Section 2 — Reasons */}
-            <div className="ei-form-section">
-              <div className="ei-form-section-title">2 — Reasons for Resignation / Termination</div>
-              <div className="ei-reasons-grid">
-                <div>
-                  <div className="ei-reason-col-title">Involuntary</div>
-                  {invReasonsList.map(r => (
-                    <label key={r} className="ei-reason-check">
-                      <input type="checkbox" checked={form.involuntaryReasons.includes(r)} onChange={() => toggleInv(r)} />
-                      {r}
-                    </label>
-                  ))}
-                  <div style={{ marginTop: '6px' }}>
-                    <label className="ei-reason-check" style={{ alignItems: 'flex-start', flexDirection: 'column', gap: '4px' }}>
-                      <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Other:</span>
-                      <input value={form.invOther} onChange={e => setForm(p => ({ ...p, invOther: e.target.value }))} style={{ ...fStyle, width: '100%' }} placeholder="Specify…" />
-                    </label>
-                  </div>
-                </div>
-                <div>
-                  <div className="ei-reason-col-title">Voluntary</div>
-                  {volReasonsList.map(r => (
-                    <label key={r} className="ei-reason-check">
-                      <input type="checkbox" checked={form.voluntaryReasons.includes(r)} onChange={() => toggleVol(r)} />
-                      {r}
-                    </label>
-                  ))}
-                  <div style={{ marginTop: '6px' }}>
-                    <label className="ei-reason-check" style={{ alignItems: 'flex-start', flexDirection: 'column', gap: '4px' }}>
-                      <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Other:</span>
-                      <input value={form.volOther} onChange={e => setForm(p => ({ ...p, volOther: e.target.value }))} style={{ ...fStyle, width: '100%' }} placeholder="Specify…" />
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Section 3 — Employee Comments */}
-            <div className="ei-form-section">
-              <div className="ei-form-section-title">3 — Employee Comments</div>
-              <textarea value={form.employeeComments} onChange={e => setForm(p => ({ ...p, employeeComments: e.target.value }))} style={{ ...taStyle, minHeight: '70px' }} placeholder="Employee's general comments…" />
-            </div>
-
-            {/* Section 4 — Questionnaire */}
-            <div className="ei-form-section">
-              <div className="ei-form-section-title">4 — Satisfaction Questionnaire</div>
-              <table className="ei-quest-table">
-                <thead>
-                  <tr>
-                    <th>Category</th>
-                    <th>Very Satisfied</th>
-                    <th>Satisfied</th>
-                    <th>Dissatisfied</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {eiQuestionnaireCategories.map(({ key, label }) => (
-                    <tr key={key}>
-                      <td>{label}</td>
-                      {(['Very Satisfied', 'Satisfied', 'Dissatisfied'] as EISatisfactionLevel[]).map(opt => (
-                        <td key={opt}>
-                          <input
-                            type="radio"
-                            className="ei-quest-radio"
-                            name={`q-${key}`}
-                            checked={form.questionnaire[key] === opt}
-                            onChange={() => setQuestionnaire(key, opt)}
-                          />
-                        </td>
+            {/* Only show full form if NOT skipped */}
+            {!form.skipped && (
+              <>
+                {/* Section 2 — Reasons */}
+                <div className="ei-form-section">
+                  <div className="ei-form-section-title">2 — Reasons for Resignation / Termination</div>
+                  <div className="ei-reasons-grid">
+                    <div>
+                      <div className="ei-reason-col-title">Involuntary</div>
+                      {invReasonsList.map(r => (
+                        <label key={r} className="ei-reason-check">
+                          <input type="checkbox" checked={form.involuntaryReasons.includes(r)} onChange={() => !viewOnly && toggleInv(r)} disabled={viewOnly} />
+                          {r}
+                        </label>
                       ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <div style={{ marginTop: '10px' }}>
-                <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <span style={{ fontSize: '0.73rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Areas to be Improved</span>
-                  <input value={form.areasToImprove} onChange={e => setForm(p => ({ ...p, areasToImprove: e.target.value }))} style={fStyle} placeholder="Areas the employee suggests for improvement…" />
-                </label>
-              </div>
-            </div>
-
-            {/* Section 5 — Short Questions */}
-            <div className="ei-form-section">
-              <div className="ei-form-section-title">5 — Short Questions</div>
-              {eiShortQuestions.map((q, i) => {
-                const qKey = `q${i + 1}` as keyof ExitInterviewRecord
-                return (
-                  <div key={i} className="ei-question">
-                    <span className="ei-question-label">{i + 1}. {q}</span>
-                    <textarea
-                      value={form[qKey] as string}
-                      onChange={e => setForm(p => ({ ...p, [qKey]: e.target.value }))}
-                    />
+                      <div style={{ marginTop: '6px' }}>
+                        <label className="ei-reason-check" style={{ alignItems: 'flex-start', flexDirection: 'column', gap: '4px' }}>
+                          <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Other:</span>
+                          <input value={form.invOther} onChange={e => !viewOnly && setForm(p => ({ ...p, invOther: e.target.value }))} style={{ ...fStyle, width: '100%' }} placeholder="Specify…" readOnly={viewOnly} />
+                        </label>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="ei-reason-col-title">Voluntary</div>
+                      {volReasonsList.map(r => (
+                        <label key={r} className="ei-reason-check">
+                          <input type="checkbox" checked={form.voluntaryReasons.includes(r)} onChange={() => !viewOnly && toggleVol(r)} disabled={viewOnly} />
+                          {r}
+                        </label>
+                      ))}
+                      <div style={{ marginTop: '6px' }}>
+                        <label className="ei-reason-check" style={{ alignItems: 'flex-start', flexDirection: 'column', gap: '4px' }}>
+                          <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Other:</span>
+                          <input value={form.volOther} onChange={e => !viewOnly && setForm(p => ({ ...p, volOther: e.target.value }))} style={{ ...fStyle, width: '100%' }} placeholder="Specify…" readOnly={viewOnly} />
+                        </label>
+                      </div>
+                    </div>
                   </div>
-                )
-              })}
-            </div>
+                </div>
+
+                {/* Section 3 — Employee Comments */}
+                <div className="ei-form-section">
+                  <div className="ei-form-section-title">3 — Employee Comments</div>
+                  <textarea value={form.employeeComments} onChange={e => !viewOnly && setForm(p => ({ ...p, employeeComments: e.target.value }))} style={{ ...taStyle, minHeight: '70px' }} placeholder="Employee's general comments…" readOnly={viewOnly} />
+                </div>
+
+                {/* Section 4 — Questionnaire */}
+                <div className="ei-form-section">
+                  <div className="ei-form-section-title">4 — Satisfaction Questionnaire</div>
+                  {!viewOnly && !questFilled && (
+                    <p style={{ fontSize: '0.76rem', color: '#dc2626', marginBottom: 8 }}>Please complete all 10 questionnaire fields before saving.</p>
+                  )}
+                  <table className="ei-quest-table">
+                    <thead>
+                      <tr>
+                        <th>Category</th>
+                        <th>Very Satisfied</th>
+                        <th>Satisfied</th>
+                        <th>Dissatisfied</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {eiQuestionnaireCategories.map(({ key, label }) => (
+                        <tr key={key}>
+                          <td>{label}</td>
+                          {(['Very Satisfied', 'Satisfied', 'Dissatisfied'] as EISatisfactionLevel[]).map(opt => (
+                            <td key={opt}>
+                              <input
+                                type="radio"
+                                className="ei-quest-radio"
+                                name={`q-${key}`}
+                                checked={form.questionnaire[key] === opt}
+                                onChange={() => !viewOnly && setQuestionnaire(key, opt)}
+                                disabled={viewOnly}
+                              />
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div style={{ marginTop: '10px' }}>
+                    <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <span style={{ fontSize: '0.73rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Areas to be Improved</span>
+                      <input value={form.areasToImprove} onChange={e => !viewOnly && setForm(p => ({ ...p, areasToImprove: e.target.value }))} style={viewOnly ? roStyle : fStyle} placeholder="Areas the employee suggests for improvement…" readOnly={viewOnly} />
+                    </label>
+                  </div>
+                </div>
+
+                {/* Section 5 — Short Questions */}
+                <div className="ei-form-section">
+                  <div className="ei-form-section-title">5 — Short Questions</div>
+                  {eiShortQuestions.map((q, i) => {
+                    const qKey = `q${i + 1}` as keyof ExitInterviewRecord
+                    return (
+                      <div key={i} className="ei-question">
+                        <span className="ei-question-label">{i + 1}. {q}</span>
+                        <textarea
+                          value={form[qKey] as string}
+                          onChange={e => !viewOnly && setForm(p => ({ ...p, [qKey]: e.target.value }))}
+                          readOnly={viewOnly}
+                        />
+                      </div>
+                    )
+                  })}
+                </div>
+              </>
+            )}
 
             {/* Section 6 — Interviewer */}
             <div className="ei-form-section">
-              <div className="ei-form-section-title">6 — Interviewer</div>
+              <div className="ei-form-section-title">{form.skipped ? '2' : '6'} — Interviewer</div>
               <div style={{ marginBottom: '12px' }}>
                 <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <span style={{ fontSize: '0.73rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Interviewer Comments</span>
-                  <textarea value={form.interviewerComments} onChange={e => setForm(p => ({ ...p, interviewerComments: e.target.value }))} style={{ ...taStyle, minHeight: '60px' }} />
+                  <textarea value={form.interviewerComments} onChange={e => !viewOnly && setForm(p => ({ ...p, interviewerComments: e.target.value }))} style={{ ...taStyle, minHeight: '60px' }} readOnly={viewOnly} />
                 </label>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 20px' }}>
                 <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <span style={{ fontSize: '0.73rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Interviewer Name</span>
-                  <input value={form.interviewerName} onChange={e => setForm(p => ({ ...p, interviewerName: e.target.value }))} style={fStyle} />
+                  <span style={{ fontSize: '0.73rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Interviewer (HR Staff)</span>
+                  {viewOnly
+                    ? <input value={form.interviewerName} readOnly style={roStyle} />
+                    : (
+                      <select
+                        value={form.interviewerEmployeeId ?? ''}
+                        onChange={e => {
+                          const emp = hrEmployees.find(x => x.employeeId === e.target.value)
+                          setForm(p => ({ ...p, interviewerEmployeeId: e.target.value, interviewerName: emp?.fullName ?? p.interviewerName }))
+                        }}
+                        style={fStyle}
+                      >
+                        <option value="">— Select HR staff —</option>
+                        {hrEmployees.map(e => <option key={e.employeeId} value={e.employeeId}>{e.fullName}</option>)}
+                      </select>
+                    )
+                  }
+                  {!viewOnly && form.interviewerName && (
+                    <span style={{ fontSize: '0.74rem', color: '#6366f1', marginTop: 2 }}>{form.interviewerName}</span>
+                  )}
                 </label>
                 <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <span style={{ fontSize: '0.73rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Interview Date</span>
-                  <input type="date" value={form.interviewDate} onChange={e => setForm(p => ({ ...p, interviewDate: e.target.value }))} style={fStyle} />
+                  <input type="date" value={form.interviewDate} onChange={e => !viewOnly && setForm(p => ({ ...p, interviewDate: e.target.value }))} style={viewOnly ? roStyle : fStyle} readOnly={viewOnly} />
                 </label>
               </div>
             </div>
@@ -6031,11 +6162,15 @@ function ExitInterviewFormModal({ record, onClose, onSave }: {
           {/* Footer */}
           <div className="modal-actions" style={{ flexShrink: 0, borderTop: '1px solid #e8eaf0', padding: '12px 24px' }}>
             <button className="quiet-button light" onClick={onClose} type="button">Cancel</button>
-            <button className="quiet-button" type="button" onClick={() => printExitInterview(form)} style={{ marginLeft: 'auto' }}>
+            <button className="quiet-button" type="button" onClick={() => printExitInterview({ ...form, periodOfService: servicePeriod || form.periodOfService })} style={{ marginLeft: 'auto' }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 5 }}><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
               Print
             </button>
-            <button className="primary-button" type="submit">Save</button>
+            {!viewOnly && (
+              <button className="primary-button" type="submit" disabled={!canSave}>
+                {form.skipped ? 'Mark as Skipped' : 'Save'}
+              </button>
+            )}
           </div>
         </form>
       </section>
@@ -6203,9 +6338,10 @@ function ExitInterviewAnalyticsModal({ records, onClose }: { records: ExitInterv
   )
 }
 
-function ExitInterviewSection({ records, onUpdate }: {
+function ExitInterviewSection({ records, onUpdate, employees }: {
   records: ExitInterviewRecord[]
   onUpdate: (fn: (prev: ExitInterviewRecord[]) => ExitInterviewRecord[]) => void
+  employees: Employee[]
 }) {
   const [monthFilter, setMonthFilter] = useState('All')
   const [deptFilter, setDeptFilter] = useState('All Sections')
@@ -6223,8 +6359,10 @@ function ExitInterviewSection({ records, onUpdate }: {
     return mOk && dOk
   }), [records, monthFilter, deptFilter])
 
-  const eiStatus = (r: ExitInterviewRecord) =>
-    r.questionnaire && Object.values(r.questionnaire).some(v => v !== '') ? 'Completed' : 'Draft'
+  const eiStatus = (r: ExitInterviewRecord): 'Completed' | 'Skipped' | 'Draft' =>
+    r.skipped ? 'Skipped'
+    : (r.questionnaire && Object.values(r.questionnaire).every(v => v !== '')) ? 'Completed'
+    : 'Draft'
 
   const save = (r: ExitInterviewRecord) => {
     onUpdate((prev) => {
@@ -6298,8 +6436,8 @@ function ExitInterviewSection({ records, onUpdate }: {
                     </td>
                     <td>
                       <span style={{ fontSize: '0.74rem', fontWeight: 700, padding: '2px 8px', borderRadius: '10px',
-                        background: status === 'Completed' ? '#dcfce7' : '#fef3c7',
-                        color: status === 'Completed' ? '#15803d' : '#92400e',
+                        background: status === 'Completed' ? '#dcfce7' : status === 'Skipped' ? '#f1f5f9' : '#fef3c7',
+                        color: status === 'Completed' ? '#15803d' : status === 'Skipped' ? '#64748b' : '#92400e',
                       }}>{status}</span>
                     </td>
                     <td>
@@ -6321,7 +6459,7 @@ function ExitInterviewSection({ records, onUpdate }: {
       </div>
 
       {showAnalytics && <ExitInterviewAnalyticsModal records={filtered} onClose={() => setShowAnalytics(false)} />}
-      {editing && <ExitInterviewFormModal record={editing} onClose={() => setEditing(null)} onSave={save} />}
+      {editing && <ExitInterviewFormModal record={editing} employees={employees} onClose={() => setEditing(null)} onSave={save} />}
     </>
   )
 }
@@ -6330,6 +6468,7 @@ function TerminationPage({
   noticeTerminations,
   completedTerminations,
   exitInterviews,
+  employees,
   onAdd,
   onEdit,
   onSetStage,
@@ -6340,6 +6479,7 @@ function TerminationPage({
   noticeTerminations: EnhancedTerminationRecord[]
   completedTerminations: CompletedTerminationRecord[]
   exitInterviews: ExitInterviewRecord[]
+  employees: Employee[]
   onAdd: () => void
   onEdit: (record: EnhancedTerminationRecord) => void
   onSetStage: (id: string, stage: TerminationStage) => void
@@ -6355,6 +6495,7 @@ function TerminationPage({
   const [noticeStageFilter, setNoticeStageFilter] = useState<'All' | TerminationStage>('All')
   const [expandedTermId, setExpandedTermId] = useState<string | null>(null)
   const [viewingEI, setViewingEI] = useState<ExitInterviewRecord | null>(null)
+  const [viewingEIReadOnly, setViewingEIReadOnly] = useState(false)
 
   const getDuration = (joinDate: string) => {
     if (!joinDate) return '-'
@@ -6418,9 +6559,10 @@ function TerminationPage({
                   {noticeRows.length === 0
                     ? <tr><td colSpan={11} className="empty-row">No notice period records.</td></tr>
                     : noticeRows.map((r) => {
-                      const stageIdx = allTerminationStages.indexOf(r.currentStage)
-                      const isLast = stageIdx === allTerminationStages.length - 1
-                      const nextStage = isLast ? null : allTerminationStages[stageIdx + 1]
+                      const stages = getStagesForNationality(r.nationality)
+                      const stageIdx = stages.indexOf(r.currentStage)
+                      const isLast = stageIdx === stages.length - 1
+                      const nextStage = isLast ? null : stages[stageIdx + 1]
                       const isExp = expandedTermId === r.id
                       return (
                         <Fragment key={r.id}>
@@ -6451,21 +6593,32 @@ function TerminationPage({
                                 <button className="action-glyph" onClick={() => onViewDetails(r)} type="button" title="View">👁</button>
                                 <button className="action-glyph edit" onClick={() => onEdit(r)} type="button" title="Edit">✎</button>
                                 <button className="action-glyph delete" onClick={() => onDelete(r.id)} type="button" title="Delete">🗑</button>
-                                {exitInterviews.some(ei => ei.employeeId === r.employeeId) && (
-                                  <button className="action-glyph action-glyph-ei"
-                                    onClick={() => {
-                                      const ei = exitInterviews.find(x => x.employeeId === r.employeeId)
-                                      if (ei) setViewingEI(ei)
-                                    }}
-                                    type="button" title="Exit Interview">
-                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                      <polyline points="14 2 14 8 20 8"/>
-                                      <line x1="16" y1="13" x2="8" y2="13"/>
-                                      <line x1="16" y1="17" x2="8" y2="17"/>
-                                    </svg>
-                                  </button>
-                                )}
+                                {(() => {
+                                  const ei = exitInterviews.find(x => x.employeeId === r.employeeId)
+                                  if (!ei) return null
+                                  const eiCompleted = ei.skipped || (ei.questionnaire && Object.values(ei.questionnaire).every(v => v !== ''))
+                                  if (eiCompleted) {
+                                    return (
+                                      <button className="action-glyph action-glyph-ei"
+                                        onClick={() => { setViewingEI(ei); setViewingEIReadOnly(true) }}
+                                        type="button" title="View Exit Interview (Completed)">
+                                        👁
+                                      </button>
+                                    )
+                                  }
+                                  return (
+                                    <button className="action-glyph action-glyph-ei"
+                                      onClick={() => { setViewingEI(ei); setViewingEIReadOnly(false) }}
+                                      type="button" title="Exit Interview">
+                                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                        <polyline points="14 2 14 8 20 8"/>
+                                        <line x1="16" y1="13" x2="8" y2="13"/>
+                                        <line x1="16" y1="17" x2="8" y2="17"/>
+                                      </svg>
+                                    </button>
+                                  )
+                                })()}
                               </div>
                             </td>
                           </tr>
@@ -6474,7 +6627,7 @@ function TerminationPage({
                               <td colSpan={11}>
                                 {/* Visual pipeline with dates for all stages */}
                                 <div className="lr-pipeline" style={{ margin: '8px 8px 4px', borderRadius: 8 }}>
-                                  {allTerminationStages.map((stage, i) => {
+                                  {stages.map((stage, i) => {
                                     const isDone = i < stageIdx
                                     const isCurrent = i === stageIdx
                                     const cls = isDone ? 'lr-done' : isCurrent ? 'lr-current' : 'lr-future'
@@ -6494,19 +6647,12 @@ function TerminationPage({
                                           <div className="lr-pip-label">{stage}</div>
                                           <div className="lr-pip-date">{stageDate ? formatDateDisplay(stageDate) : (isDone || isCurrent ? '—' : '')}</div>
                                         </button>
-                                        {i < allTerminationStages.length - 1 && (
+                                        {i < stages.length - 1 && (
                                           <div className={`lr-pip-line ${isDone ? 'lr-pip-line-done' : 'lr-pip-line-future'}`} />
                                         )}
                                       </Fragment>
                                     )
                                   })}
-                                </div>
-                                {/* Key dates row below pipeline */}
-                                <div className="trn-detail-dates">
-                                  <div className="trn-dd-item"><span className="trn-dd-lbl">Date Submitted</span><span className="trn-dd-val">{formatDateDisplay(r.dateSubmitted)}</span></div>
-                                  <div className="trn-dd-item"><span className="trn-dd-lbl">Last Working</span><span className="trn-dd-val">{formatDateDisplay(r.lastWorkingDate)}</span></div>
-                                  <div className="trn-dd-item"><span className="trn-dd-lbl">Departure</span><span className="trn-dd-val">{formatDateDisplay(r.departureDate)}</span></div>
-                                  <div className="trn-dd-item"><span className="trn-dd-lbl">Type</span><span className="trn-dd-val">{r.terminationType}</span></div>
                                 </div>
                               </td>
                             </tr>
@@ -6556,19 +6702,23 @@ function TerminationPage({
           <ExitInterviewSection
             records={exitInterviews}
             onUpdate={onUpdateExitInterviews}
+            employees={employees}
           />
         )}
       </section>
       {viewingEI && (
         <ExitInterviewFormModal
           record={viewingEI}
-          onClose={() => setViewingEI(null)}
+          employees={employees}
+          viewOnly={viewingEIReadOnly}
+          onClose={() => { setViewingEI(null); setViewingEIReadOnly(false) }}
           onSave={(r) => {
             onUpdateExitInterviews(prev => {
               const idx = prev.findIndex(x => x.id === r.id)
               return idx >= 0 ? prev.map(x => x.id === r.id ? r : x) : [r, ...prev]
             })
             setViewingEI(null)
+            setViewingEIReadOnly(false)
           }}
         />
       )}
@@ -7762,12 +7912,12 @@ type AppUser = {
   role: UserRole
   status: AppUserStatus
   lastLogin: string
+  designation?: string
 }
 
 const initialAppUsers: AppUser[] = [
-  { id: 'USR-001', name: 'System Admin', username: 'admin', role: 'Admin', status: 'Active', lastLogin: '2026-05-14' },
-  { id: 'USR-002', name: 'Arushulla Rashid', username: 'arushulla.r', role: 'HR Manager', status: 'Active', lastLogin: '2026-05-13' },
-  { id: 'USR-003', name: 'Shantumon Pathiyil', username: 'shantumon.p', role: 'HR Manager', status: 'Active', lastLogin: '2026-05-10' },
+  { id: 'USR-001', name: 'Arushulla Rashid', username: 'Rashid50814', role: 'Admin', status: 'Active', lastLogin: '2026-06-01', designation: 'Administrator' },
+  { id: 'USR-002', name: 'Shantumon Pathiyil Chacko', username: 'Chacko58692', role: 'HR Manager', status: 'Active', lastLogin: '2026-06-01', designation: 'Administration Assistant' },
 ]
 
 const rolePermissions: Record<UserRole, string> = {
@@ -7784,6 +7934,7 @@ function UserFormModal({ user, onClose, onSave }: {
   const isNew = user.id.startsWith('USR-new')
   const [name, setName] = useState(user.name)
   const [username, setUsername] = useState(user.username)
+  const [designation, setDesignation] = useState(user.designation ?? '')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState<UserRole>(user.role)
   const [status, setStatus] = useState<AppUserStatus>(user.status)
@@ -7791,7 +7942,7 @@ function UserFormModal({ user, onClose, onSave }: {
 
   const save = (e: FormEvent) => {
     e.preventDefault()
-    onSave({ ...user, id: isNew ? `USR-${String(Date.now()).slice(-4)}` : user.id, name, username, role, status, lastLogin: user.lastLogin || new Date().toISOString().slice(0, 10) })
+    onSave({ ...user, id: isNew ? `USR-${String(Date.now()).slice(-4)}` : user.id, name, username, designation, role, status, lastLogin: user.lastLogin || new Date().toISOString().slice(0, 10) })
   }
 
   return (
@@ -7808,6 +7959,7 @@ function UserFormModal({ user, onClose, onSave }: {
           <div className="form-grid">
             <label><span>Full Name</span><input value={name} onChange={(e) => setName(e.target.value)} required placeholder="Display name" /></label>
             <label><span>Username</span><input value={username} onChange={(e) => setUsername(e.target.value)} required placeholder="Login username" /></label>
+            <label><span>Designation</span><input value={designation} onChange={(e) => setDesignation(e.target.value)} placeholder="e.g. HR Manager" /></label>
             <label><span>Role</span>
               <select value={role} onChange={(e) => setRole(e.target.value as UserRole)}>
                 <option>Admin</option>
@@ -7843,11 +7995,12 @@ function UserFormModal({ user, onClose, onSave }: {
   )
 }
 
-function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves: _al, onReset }: {
+function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves: _al, onReset, currentUserName }: {
   employees: Employee[]
   leaveRequests: LeaveRequestRecord[]
   activeLeaves: ActiveLeaveRecord[]
   onReset: () => void
+  currentUserName: string
 }) {
   const [users, setUsers] = useState<AppUser[]>(initialAppUsers)
   const [editing, setEditing] = useState<AppUser | null>(null)
@@ -7884,11 +8037,36 @@ function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves:
     'Viewer': 'role-viewer',
   }
 
+  // Helpers for profile card
+  const profileInitials = (name: string) => {
+    const parts = name.trim().split(/\s+/)
+    if (parts.length === 1) return parts[0][0]?.toUpperCase() ?? 'A'
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+  }
+  const currentAppUser = users.find(u => u.name === currentUserName) ?? users[0]
+
   return (
     <div className="settings-page user-mgmt-page">
+      {/* Section 1 — User Profile Card */}
+      <div className="settings-profile-card">
+        <div className="settings-avatar">{profileInitials(currentAppUser?.name ?? currentUserName)}</div>
+        <div className="settings-profile-info">
+          <div className="profile-name">{currentAppUser?.name ?? currentUserName}</div>
+          <div className="profile-desig">{currentAppUser?.designation ?? 'HR Staff'}</div>
+          <div className="profile-username">@{currentAppUser?.username ?? 'admin'}</div>
+          <span className={`settings-role-badge`}>{currentAppUser?.role ?? 'Admin'}</span>
+        </div>
+        <div style={{ marginLeft: 'auto' }}>
+          <button className="quiet-button light" type="button" style={{ fontSize: '0.78rem', background: 'rgba(255,255,255,0.15)', color: '#fff', border: '1.5px solid rgba(255,255,255,0.3)' }}>
+            Change Password
+          </button>
+        </div>
+      </div>
+
+      {/* Section 2 — System Users */}
       <div className="user-mgmt-header">
         <div>
-          <h1 className="user-mgmt-title">User Management</h1>
+          <h1 className="user-mgmt-title">System Users</h1>
           <p className="user-mgmt-subtitle">Manage who can access the TIC HR system and what they can do.</p>
         </div>
         <button className="primary-button" onClick={() => setShowAdd(true)} type="button">+ Add User</button>
@@ -7933,8 +8111,11 @@ function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves:
                 <tr key={user.id} className={user.status === 'Inactive' ? 'user-row-inactive' : ''}>
                   <td>
                     <div className="user-avatar-cell">
-                      <span className="user-avatar">{user.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()}</span>
-                      <strong>{user.name}</strong>
+                      <span className="user-avatar">{profileInitials(user.name)}</span>
+                      <div>
+                        <strong>{user.name}</strong>
+                        {user.designation && <div style={{ fontSize: '0.72rem', color: '#64748b' }}>{user.designation}</div>}
+                      </div>
                     </div>
                   </td>
                   <td><code className="user-username">{user.username}</code></td>
@@ -7947,7 +8128,7 @@ function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves:
                       className={`status-toggle-btn ${user.status === 'Active' ? 'active' : 'inactive'}`}
                       onClick={() => toggleStatus(user.id)}
                       disabled={user.id === 'USR-001'}
-                      title={user.id === 'USR-001' ? 'Cannot deactivate system admin' : `Set ${user.status === 'Active' ? 'Inactive' : 'Active'}`}
+                      title={user.id === 'USR-001' ? 'Cannot deactivate admin' : `Set ${user.status === 'Active' ? 'Inactive' : 'Active'}`}
                     >
                       {user.status}
                     </button>
@@ -7955,7 +8136,7 @@ function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves:
                   <td>
                     <div className="row-actions">
                       <button className="action-glyph edit" onClick={() => setEditing(user)} type="button" title="Edit user" aria-label="Edit user">✎</button>
-                      <button className="action-glyph delete" onClick={() => deleteUser(user.id)} type="button" title={user.id === 'USR-001' ? 'Cannot delete system admin' : 'Delete user'} aria-label="Delete user" disabled={user.id === 'USR-001'}>🗑</button>
+                      <button className="action-glyph delete" onClick={() => deleteUser(user.id)} type="button" title={user.id === 'USR-001' ? 'Cannot delete admin' : 'Delete user'} aria-label="Delete user" disabled={user.id === 'USR-001'}>🗑</button>
                     </div>
                   </td>
                 </tr>
@@ -7973,6 +8154,7 @@ function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves:
         />
       )}
 
+      {/* Section 3 — Danger Zone */}
       <div className="settings-danger-zone">
         <div className="danger-zone-header">
           <h2>Danger Zone</h2>
@@ -8030,15 +8212,18 @@ function PendingTasksModal({ employees, onEdit, onClose }: { employees: Employee
   )
 }
 
-function LoginPage({ onLogin }: { onLogin: () => void }) {
+function LoginPage({ onLogin }: { onLogin: (name: string) => void }) {
   const [loginUser, setLoginUser] = useState('')
   const [loginPass, setLoginPass] = useState('')
   const [loginError, setLoginError] = useState(false)
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (loginUser === 'admin' && loginPass === 'Admin@Pending') {
-      setLoginError(false)
-      onLogin()
+    if (loginUser === 'Rashid50814' && loginPass === 'Admin@TIC#') {
+      setLoginError(false); onLogin('Arushulla Rashid')
+    } else if (loginUser === 'Chacko58692' && loginPass === 'Chacko@TIC#') {
+      setLoginError(false); onLogin('Shantumon Pathiyil Chacko')
+    } else if (loginUser === 'admin' && loginPass === 'Admin@Pending') {
+      setLoginError(false); onLogin('Administrator')
     } else {
       setLoginError(true)
     }
@@ -8174,10 +8359,24 @@ function App() {
     })
   }
   const [loggingOut, setLoggingOut] = useState(false)
-  const login = () => { localStorage.setItem('tic_auth', '1'); setIsLoggedIn(true) }
+  const [currentUserName, setCurrentUserName] = useState(() => localStorage.getItem('tic_user') ?? 'Administrator')
+
+  const getInitials = (name: string) => {
+    const parts = name.trim().split(/\s+/)
+    if (parts.length === 1) return parts[0][0]?.toUpperCase() ?? 'A'
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+  }
+  const getFirstName = (name: string) => name.trim().split(/\s+/)[0]
+
+  const login = (name: string) => {
+    localStorage.setItem('tic_auth', '1')
+    localStorage.setItem('tic_user', name)
+    setCurrentUserName(name)
+    setIsLoggedIn(true)
+  }
   const logout = () => {
     setLoggingOut(true)
-    setTimeout(() => { localStorage.removeItem('tic_auth'); setIsLoggedIn(false); setLoggingOut(false) }, 700)
+    setTimeout(() => { localStorage.removeItem('tic_auth'); localStorage.removeItem('tic_user'); setIsLoggedIn(false); setLoggingOut(false) }, 700)
   }
   const [importResult, setImportResult] = useState<{ added: number; updated: number; skipped: number } | null>(null)
 
@@ -8524,7 +8723,8 @@ function App() {
             id: `EI-${Date.now()}`, employeeId: r.employeeId, name: r.name,
             department: r.department, designation: r.designation, nationality: r.nationality,
             terminationType: r.terminationType, departureDate: r.departureDate,
-            periodOfService: '', rehireEligible: true, interviewDate: '',
+            periodOfService: '', joinDate: r.dateOfJoin, rehireEligible: true, interviewDate: '',
+            skipped: false, skipReason: '',
             involuntaryReasons: [], voluntaryReasons: [], invOther: '', volOther: '',
             employeeComments: '',
             questionnaire: blankQuestionnaire(),
@@ -8687,9 +8887,9 @@ function App() {
         </nav>
 
         <div className="sidebar-bottom">
-          <div className="sidebar-user" title={sidebarCollapsed ? 'admin' : undefined}>
-            <div className="sidebar-user-avatar">A</div>
-            {!sidebarCollapsed && <span className="sidebar-user-name">admin</span>}
+          <div className="sidebar-user" title={sidebarCollapsed ? getFirstName(currentUserName) : undefined}>
+            <div className="sidebar-user-avatar">{getInitials(currentUserName)}</div>
+            {!sidebarCollapsed && <span className="sidebar-user-name">{getFirstName(currentUserName)}</span>}
           </div>
           <button className="sidebar-logout" onClick={logout} type="button" title={sidebarCollapsed ? 'Logout' : undefined}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -8728,8 +8928,8 @@ function App() {
           {activePage === 'leave' && <LeavePage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} medicalCases={medicalCases} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onSetRequestStep={setLeaveRequestStep} onExtendLeave={extendActiveLeave} onEditActiveLeave={editActiveLeave} onHistoryConfirm={updateHistoryConfirmation} onUpdateMedical={(fn) => setMedicalCases(fn)} />}
           {activePage === 'operations' && <OperationsPage employees={employees} completedTerminations={completedTerminations} />}
           {activePage === 'activities' && <ActivitiesPage employees={employees} passportHandovers={passportHandovers} onUpdatePassport={(fn) => setPassportHandovers(fn)} inventoryItems={inventoryItems} inventoryUsage={inventoryUsage} onUpdateInventoryItems={(fn) => setInventoryItems(fn)} onUpdateInventoryUsage={(fn) => setInventoryUsage(fn)} />}
-          {activePage === 'termination' && <TerminationPage noticeTerminations={noticeTerminations} completedTerminations={completedTerminations} exitInterviews={exitInterviews} onAdd={openAddTermination} onEdit={openEditTermination} onSetStage={setTerminationStage} onDelete={deleteTermination} onViewDetails={(record) => setTerminationDetails(record)} onUpdateExitInterviews={(fn) => setExitInterviews(fn)} />}
-          {activePage === 'settings' && <SettingsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} onReset={resetAllData} />}
+          {activePage === 'termination' && <TerminationPage noticeTerminations={noticeTerminations} completedTerminations={completedTerminations} exitInterviews={exitInterviews} employees={employees} onAdd={openAddTermination} onEdit={openEditTermination} onSetStage={setTerminationStage} onDelete={deleteTermination} onViewDetails={(record) => setTerminationDetails(record)} onUpdateExitInterviews={(fn) => setExitInterviews(fn)} />}
+          {activePage === 'settings' && <SettingsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} onReset={resetAllData} currentUserName={currentUserName} />}
         </main>
       </div> {/* .workspace */}
 
