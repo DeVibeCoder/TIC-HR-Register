@@ -82,7 +82,39 @@ type PassportHandoverRecord = LeaveBase & {
   remarks: string
 }
 
-type OpsSection = 'files' | 'induction' | 'training' | 'bank'
+type OpsSection = 'files' | 'induction' | 'training' | 'bank' | 'meetings'
+
+type MeetingAttendance = 'Attended' | 'On Leave' | 'Absent'
+type MeetingRep = {
+  id: string
+  name: string
+  designation: string
+  meetingDept: string
+  deptCode: string
+  attendance: MeetingAttendance
+  reason: string
+}
+type MeetingDeptUpdate = {
+  dept: string
+  points: string
+}
+type MeetingRecord = {
+  id: string
+  refNumber: string
+  date: string
+  timeStarted: string
+  timeEnded: string
+  venue: string
+  chairperson: string
+  reps: MeetingRep[]
+  agendaItems: string
+  deptUpdates: MeetingDeptUpdate[]
+  otherMatters: string
+  preparedBy: string
+  approvedBy: string
+  status: 'Draft' | 'Final'
+  createdAt: string
+}
 
 type StaffStatus = 'Active' | 'Terminated' | 'Retired' | 'Transferred'
 
@@ -364,6 +396,24 @@ const pages: Array<{ id: Page; label: string }> = [
 ]
 
 const departmentsList = ['ADMINISTRATION', 'HUMAN RESOURCES', 'ACCOUNTS AND FINANCE', 'CAFE', 'STORES', 'HOUSEKEEPING', 'LPG PLANT', 'OXYGEN PLANT', 'CEMENT PLANT', 'FUEL FARM', 'ENGINEERING ADMINISTRATION', 'MECHANICAL', 'ELECTRICAL', 'MAINTENANCE', 'POWER HOUSE', 'PAINTING PROJECT', 'KITCHEN', 'STAFF MESS', 'LOSS PREVENTION', 'ROOFING FACTORY', 'BATCHING PLANT']
+
+// HOD meeting departments — maps display name + code to app department names
+const MEETING_DEPTS = [
+  { label: 'Accounts & Finance',  code: 'ACC', appDepts: ['ACCOUNTS AND FINANCE'] },
+  { label: 'Administration',       code: 'ADM', appDepts: ['ADMINISTRATION'] },
+  { label: 'Batching Plant',       code: 'BP',  appDepts: ['BATCHING PLANT'] },
+  { label: 'Cement Plant',         code: 'CP',  appDepts: ['CEMENT PLANT'] },
+  { label: 'Engineering',          code: 'ENG', appDepts: ['ENGINEERING ADMINISTRATION','MECHANICAL','ELECTRICAL','MAINTENANCE','POWER HOUSE','PAINTING PROJECT'] },
+  { label: 'Fuel Farm',            code: 'FF',  appDepts: ['FUEL FARM'] },
+  { label: 'Food & Beverage',      code: 'F&B', appDepts: ['KITCHEN','STAFF MESS','CAFE'] },
+  { label: 'Human Resource',       code: 'HR',  appDepts: ['HUMAN RESOURCES'] },
+  { label: 'Housekeeping',         code: 'HK',  appDepts: ['HOUSEKEEPING'] },
+  { label: 'Loss Prevention',      code: 'LP',  appDepts: ['LOSS PREVENTION'] },
+  { label: 'LPG & Oxygen Plant',   code: 'LPG', appDepts: ['LPG PLANT','OXYGEN PLANT'] },
+  { label: 'QMarine',              code: 'QM',  appDepts: ['QMARINE','Q MARINE'] },
+  { label: 'Roofing Factory',      code: 'RF',  appDepts: ['ROOFING FACTORY'] },
+  { label: 'Stores',               code: 'STR', appDepts: ['STORES'] },
+] as const
 const nationalities = ['MALDIVES', 'INDIA', 'BANGLADESH', 'SRI LANKA', 'NEPAL', 'FINLAND', 'MALAYSIA', 'PHILIPPINES', 'MYANMAR', 'PAKISTAN']
 
 const leaveTypeOptions: Array<{ code: LeaveTypeCode; label: string }> = [
@@ -6824,11 +6874,613 @@ function TerminationPage({
   )
 }
 
-function OperationsPage({ employees, completedTerminations }: {
+/* ══════════════════════════════════════════════════════════════
+   MEETING MINUTES MODULE
+   ══════════════════════════════════════════════════════════════ */
+
+function calcMeetingHeadcount(
+  dept: typeof MEETING_DEPTS[number],
+  employees: Employee[],
+  activeLeaves: ActiveLeaveRecord[]
+) {
+  const lower = dept.appDepts.map((d: string) => d.toLowerCase())
+  const inDept = employees.filter(e => lower.includes(e.department.toLowerCase()))
+  const activeLeaveIds = new Set(activeLeaves.map(l => l.employeeId))
+  const onDuty     = inDept.filter(e => e.siteStatus === 'On Site').length
+  const notInSite  = inDept.filter(e => e.siteStatus === 'Off Site').length
+  const onLeave    = inDept.filter(e => e.siteStatus === 'On Leave' || activeLeaveIds.has(e.employeeId)).length
+  return { onDuty, notInSite, sickLeave: 0, onLeave, total: onDuty + notInSite + onLeave }
+}
+
+function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activeLeaves: ActiveLeaveRecord[]) {
+  const esc = (s: string) => (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  const pad2 = (n: number) => String(n).padStart(2, '0')
+
+  const fmtMeetingDate = (d: string) => {
+    if (!d) return ''
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December']
+    const days   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
+    const dt  = new Date(d + 'T12:00:00')
+    const day = dt.getDate()
+    const ord = (day===1||day===21||day===31)?'st':(day===2||day===22)?'nd':(day===3||day===23)?'rd':'th'
+    return `${day}${ord} ${months[dt.getMonth()]} ${dt.getFullYear()}, ${days[dt.getDay()]}`
+  }
+
+  const attended   = record.reps.filter(r => r.attendance === 'Attended' && r.name.trim())
+  const onLeaveR   = record.reps.filter(r => r.attendance === 'On Leave' && r.name.trim())
+  const absentR    = record.reps.filter(r => r.attendance === 'Absent'   && r.name.trim())
+
+  const pRows: string[] = []
+  for (let i = 0; i < attended.length; i += 2) {
+    const l = attended[i]; const r2 = attended[i+1]
+    pRows.push(`<tr>
+      <td style="padding:3pt 5pt;font-size:9pt;width:44%;">${esc(l.name)} – ${esc(l.designation)}</td>
+      <td style="padding:3pt 3pt;font-size:9pt;color:#555;width:6%;">(${esc(l.deptCode)})</td>
+      ${r2
+        ? `<td style="padding:3pt 5pt;font-size:9pt;width:44%;">${esc(r2.name)} – ${esc(r2.designation)}</td><td style="padding:3pt 3pt;font-size:9pt;color:#555;width:6%;">(${esc(r2.deptCode)})</td>`
+        : '<td colspan="2"></td>'}
+    </tr>`)
+  }
+
+  const repRows = (list: MeetingRep[], emptyRows = 3) => list.length === 0
+    ? Array(emptyRows).fill(`<tr>${Array(4).fill('<td style="padding:4pt;border-bottom:0.5pt solid #e0e0e0;">&nbsp;</td>').join('')}</tr>`).join('')
+    : list.map(r => `<tr>
+        <td style="padding:3pt 5pt;font-size:9pt;width:44%;">${esc(r.name)} – ${esc(r.designation)}</td>
+        <td style="padding:3pt 3pt;font-size:9pt;color:#555;width:6%;">(${esc(r.deptCode)})</td>
+        <td style="padding:3pt 5pt;font-size:9pt;width:44%;">${esc(r.reason || (r.attendance === 'On Leave' ? 'Annual Leave' : ''))}</td>
+        <td style="width:6%;"></td>
+      </tr>`).join('')
+
+  const hcRows = MEETING_DEPTS.map(dept => {
+    const { onDuty, notInSite, sickLeave, onLeave, total } = calcMeetingHeadcount(dept, employees, activeLeaves)
+    if (total === 0) return ''
+    return `<tr>
+      <td style="padding:4pt 6pt;font-size:9pt;border:0.5pt solid #bbb;">${esc(dept.label)}</td>
+      <td style="text-align:center;padding:4pt;font-size:9pt;border:0.5pt solid #bbb;">${pad2(onDuty)}</td>
+      <td style="text-align:center;padding:4pt;font-size:9pt;border:0.5pt solid #bbb;">${pad2(notInSite)}</td>
+      <td style="text-align:center;padding:4pt;font-size:9pt;border:0.5pt solid #bbb;">${pad2(sickLeave)}</td>
+      <td style="text-align:center;padding:4pt;font-size:9pt;border:0.5pt solid #bbb;">${pad2(onLeave)}</td>
+      <td style="padding:4pt 6pt;font-size:9pt;border:0.5pt solid #bbb;"></td>
+      <td style="text-align:center;padding:4pt;font-size:9pt;border:0.5pt solid #bbb;font-weight:700;">${pad2(total)}</td>
+    </tr>`
+  }).filter(Boolean).join('')
+
+  const totOnDuty    = employees.filter(e => e.siteStatus === 'On Site').length
+  const totNotInSite = employees.filter(e => e.siteStatus === 'Off Site').length
+  const totOnLeave   = employees.filter(e => e.siteStatus === 'On Leave').length
+  const grandTotal   = totOnDuty + totNotInSite + totOnLeave
+
+  const deptHtml = record.deptUpdates
+    .filter(d => d.points.trim())
+    .map(d => {
+      const bullets = d.points.split('\n').filter(p => p.trim())
+        .map(p => `<li style="margin-bottom:4pt;font-size:9pt;">${esc(p.trim())}</li>`).join('')
+      return `<div style="margin-bottom:12pt;">
+        <div style="font-size:9pt;font-weight:700;text-decoration:underline;margin-bottom:4pt;">${esc(d.dept)}</div>
+        <ul style="margin:0;padding-left:16pt;">${bullets}</ul>
+      </div>`
+    }).join('')
+
+  const agendaLines = record.agendaItems.split('\n').filter(a => a.trim())
+    .map(a => `<li style="margin-bottom:4pt;font-size:9pt;">${esc(a.trim())}</li>`).join('')
+
+  const logoSvg = `<svg viewBox="0 0 500 430" xmlns="http://www.w3.org/2000/svg" style="width:58pt;height:50pt;flex-shrink:0;">
+    <rect width="500" height="430" fill="white"/>
+    <polygon points="10,6 240,6 125,204" fill="#1796E6"/>
+    <polygon points="260,6 490,6 375,204" fill="#1796E6"/>
+    <polygon points="135,210 365,210 250,12" fill="#2E1A78"/>
+    <polygon points="135,222 365,222 250,421" fill="#1796E6"/>
+  </svg>`
+
+  const refSeq = record.refNumber.split('/').pop() || ''
+
+  const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/>
+<title>Briefing Meeting Minutes — ${esc(record.refNumber)}</title>
+<style>
+  @page { size:A4 portrait; margin:14mm 18mm 14mm 18mm; }
+  *,*::before,*::after { box-sizing:border-box; }
+  body { font-family:Arial,Helvetica,sans-serif; font-size:9pt; color:#111; background:#e8e8e8; margin:0; padding:0; }
+  .pbar { display:flex; align-items:center; gap:14px; padding:10px 20px; background:#1e1b4b; position:sticky; top:0; z-index:10; font-family:system-ui,sans-serif; font-size:13px; }
+  .pbar button { padding:7px 18px; background:#6d28d9; color:#fff; border:none; border-radius:6px; font-size:13px; font-weight:700; cursor:pointer; }
+  .pbar span { color:rgba(221,214,254,0.7); font-size:12px; }
+  .wrap { max-width:210mm; margin:20px auto; display:flex; flex-direction:column; gap:18px; padding-bottom:40px; }
+  .page { background:#fff; box-shadow:0 4px 24px rgba(0,0,0,0.16); padding:14mm 18mm; }
+  .info-tbl { width:100%; border-collapse:collapse; margin-bottom:12pt; }
+  .info-tbl td { border:0.8pt solid #888; padding:4pt 7pt; font-size:9pt; vertical-align:top; }
+  .info-tbl td.lbl { font-weight:700; white-space:nowrap; width:26mm; background:#f8f9ff; }
+  .hc-tbl { width:100%; border-collapse:collapse; }
+  .hc-tbl th { background:#1e1b4b; color:#fff; font-size:8pt; font-weight:700; padding:5pt 4pt; border:0.5pt solid #333; text-align:center; }
+  .hc-tbl th.lft { text-align:left; }
+  .hc-tbl .tot td { font-weight:800; background:#f0f0f0; }
+  .footer { text-align:center; font-size:8pt; color:#999; margin-top:12pt; border-top:0.5pt solid #ddd; padding-top:4pt; }
+  @media print {
+    body { background:#fff; }
+    .pbar { display:none !important; }
+    .wrap { max-width:none; margin:0; padding:0; gap:0; }
+    .page { box-shadow:none; padding:0; }
+    .pgbrk { page-break-before:always; }
+  }
+</style></head><body>
+<div class="pbar">
+  <button onclick="window.print()">🖨&nbsp; Print / Save as PDF</button>
+  <span>Briefing Meeting Minutes — ${esc(record.refNumber)}</span>
+</div>
+<div class="wrap">
+
+<div class="page">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:8pt;border-bottom:2pt solid #1e1b4b;margin-bottom:10pt;">
+    <div style="display:flex;align-items:center;gap:10pt;">${logoSvg}
+      <div>
+        <div style="font-size:14pt;font-weight:900;color:#1e1b4b;letter-spacing:1.5pt;line-height:1.1;">VILLA</div>
+        <div style="font-size:7pt;font-weight:700;color:#1e1b4b;letter-spacing:0.3pt;">Hakatha Private Limited</div>
+      </div>
+    </div>
+    <div style="text-align:right;font-size:7.5pt;color:#555;line-height:1.7;">
+      Villa Building, Ibrahim Hassan Didi Magu, male'<br/>Republic of Maldives<br/>
+      Tel: +960 3325195 &nbsp; Fax: +960 3325177<br/>email: info@villa.com.mv
+    </div>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10pt;">
+    <span style="font-size:11pt;font-weight:900;text-transform:uppercase;">Briefing Meeting Minutes</span>
+    <span style="font-size:10pt;font-weight:700;">Ref: ${esc(record.refNumber)}</span>
+  </div>
+  <table class="info-tbl">
+    <tr><td class="lbl">Date</td><td>${esc(fmtMeetingDate(record.date))}</td></tr>
+    <tr><td class="lbl">Time Started</td><td>${esc(record.timeStarted)} hrs.</td></tr>
+    <tr><td class="lbl">Time Ended</td><td>${esc(record.timeEnded)} hrs.</td></tr>
+    <tr><td class="lbl">Venue</td><td>${esc(record.venue)}</td></tr>
+    <tr><td class="lbl">Chairperson</td><td>${esc(record.chairperson)}</td></tr>
+    <tr><td class="lbl">Participants</td><td><table style="width:100%;border-collapse:collapse;">${pRows.join('')}</table></td></tr>
+    <tr><td class="lbl">On Leave</td><td><table style="width:100%;border-collapse:collapse;">${repRows(onLeaveR)}</table></td></tr>
+    <tr><td class="lbl">Absentees</td><td><table style="width:100%;border-collapse:collapse;">${repRows(absentR)}</table></td></tr>
+  </table>
+  <div style="font-size:10pt;font-weight:800;margin-bottom:7pt;">Daily Headcount of Departments</div>
+  <table class="hc-tbl">
+    <thead><tr>
+      <th class="lft">Department</th>
+      <th>On Duty</th><th>Not in Site</th><th>Sick Leave</th><th>On Leave</th>
+      <th>Details</th><th>Total +<br/>HOD</th>
+    </tr></thead>
+    <tbody>${hcRows}</tbody>
+    <tfoot><tr class="tot">
+      <td style="padding:4pt 6pt;font-size:9pt;border:0.5pt solid #bbb;font-weight:800;">TOTAL</td>
+      <td style="text-align:center;padding:4pt;font-size:9pt;border:0.5pt solid #bbb;">${pad2(totOnDuty)}</td>
+      <td style="text-align:center;padding:4pt;font-size:9pt;border:0.5pt solid #bbb;">${pad2(totNotInSite)}</td>
+      <td style="text-align:center;padding:4pt;font-size:9pt;border:0.5pt solid #bbb;">00</td>
+      <td style="text-align:center;padding:4pt;font-size:9pt;border:0.5pt solid #bbb;">${pad2(totOnLeave)}</td>
+      <td style="padding:4pt;font-size:9pt;border:0.5pt solid #bbb;"></td>
+      <td style="text-align:center;padding:4pt;font-size:9pt;border:0.5pt solid #bbb;font-weight:800;">${pad2(grandTotal)}</td>
+    </tr></tfoot>
+  </table>
+  <div class="footer">BRIEFING MEETING MINUTES — ${esc(refSeq)} &nbsp;&nbsp;&nbsp; 1</div>
+</div>
+
+<div class="page pgbrk">
+  <div style="font-size:9pt;font-weight:700;margin-bottom:12pt;padding-bottom:8pt;border-bottom:0.5pt solid #ccc;">The discussions and actions points agreed during the meeting are as follows.</div>
+  <div style="margin-bottom:12pt;">
+    <div style="display:inline-flex;align-items:baseline;gap:8pt;margin-bottom:5pt;">
+      <span style="font-size:10pt;">○</span>
+      <strong style="font-size:9pt;text-transform:uppercase;">Agenda:</strong>
+    </div>
+    <ol style="margin:0 0 0 18pt;padding:0;">
+      ${agendaLines || `<li style="margin-bottom:4pt;font-size:9pt;">REVIEW OF MINUTES FROM THE PREVIOUS MEETING</li><li style="margin-bottom:4pt;font-size:9pt;">DISCUSSION OF ISSUES, UPDATES AND CHALLENGES FACED BY EACH DEPARTMENT</li><li style="margin-bottom:4pt;font-size:9pt;">ANY OTHER MATTERS THAT NEED TO BE ADDRESSED</li>`}
+    </ol>
+  </div>
+  ${deptHtml ? `<div style="margin-bottom:14pt;"><div style="font-size:9pt;font-weight:800;text-decoration:underline;text-transform:uppercase;margin-bottom:10pt;">2. Discussion of Issues, Updates and Challenges Faced by Each Department:</div>${deptHtml}</div>` : ''}
+  ${record.otherMatters.trim() ? `<div style="margin-bottom:14pt;"><div style="font-size:9pt;font-weight:800;text-decoration:underline;text-transform:uppercase;margin-bottom:8pt;">3. Any Other Matters That Need to Be Addressed</div><div style="font-size:9pt;white-space:pre-line;line-height:1.6;">${esc(record.otherMatters)}</div></div>` : ''}
+  <div style="text-align:center;border:0.8pt solid #888;padding:7pt;margin:18pt 0;font-size:9pt;color:#555;font-style:italic;">We'll end the meeting if there's nothing else to discuss.</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:40pt;margin-top:12pt;">
+    <div style="border:0.8pt solid #888;padding:12pt 14pt;">
+      <div style="font-size:9pt;margin-bottom:22pt;">Prepared by:</div>
+      <div style="border-bottom:0.8pt solid #888;margin-bottom:6pt;height:16pt;"></div>
+      <div style="font-size:9pt;font-weight:700;">${esc(record.preparedBy)}</div>
+      <div style="font-size:9pt;">Administrator</div>
+    </div>
+    <div style="border:0.8pt solid #888;padding:12pt 14pt;">
+      <div style="font-size:9pt;margin-bottom:22pt;">Approved by:</div>
+      <div style="border-bottom:0.8pt solid #888;margin-bottom:6pt;height:16pt;"></div>
+      <div style="font-size:9pt;font-weight:700;">${esc(record.approvedBy)}</div>
+      <div style="font-size:9pt;">General Manager</div>
+    </div>
+  </div>
+  <div class="footer">BRIEFING MEETING MINUTES — ${esc(refSeq)} &nbsp;&nbsp;&nbsp; 2</div>
+</div>
+
+</div></body></html>`
+  const win = window.open('', '_blank')
+  if (win) { win.document.write(html); win.document.close() }
+}
+
+/* ─── MeetingFormModal ─────────────────────────────────────────── */
+function MeetingFormModal({ record, employees, activeLeaves, onClose, onSave }: {
+  record: MeetingRecord
+  employees: Employee[]
+  activeLeaves: ActiveLeaveRecord[]
+  onClose: () => void
+  onSave: (r: MeetingRecord) => void
+}) {
+  const isNew = record.id.includes('-new-')
+  const [tab, setTab] = useState<'details'|'attendance'|'minutes'|'other'>('details')
+  const [refNumber,   setRefNumber]   = useState(record.refNumber)
+  const [date,        setDate]        = useState(record.date)
+  const [timeStarted, setTimeStarted] = useState(record.timeStarted)
+  const [timeEnded,   setTimeEnded]   = useState(record.timeEnded)
+  const [venue,       setVenue]       = useState(record.venue)
+  const [chairperson, setChairperson] = useState(record.chairperson)
+  const [status,      setStatus]      = useState<'Draft'|'Final'>(record.status)
+  const [preparedBy,  setPreparedBy]  = useState(record.preparedBy)
+  const [approvedBy,  setApprovedBy]  = useState(record.approvedBy)
+  const [reps,        setReps]        = useState<MeetingRep[]>(record.reps)
+  const [deptUpdates, setDeptUpdates] = useState<MeetingDeptUpdate[]>(record.deptUpdates)
+  const [agendaItems, setAgendaItems] = useState(record.agendaItems)
+  const [otherMatters,setOtherMatters]= useState(record.otherMatters)
+
+  const buildCurrent = (): MeetingRecord => ({
+    ...record, refNumber, date, timeStarted, timeEnded, venue, chairperson,
+    status, preparedBy, approvedBy, reps, deptUpdates, agendaItems, otherMatters
+  })
+
+  const updateRep = (id: string, field: keyof MeetingRep, value: string) =>
+    setReps(prev => prev.map(r => r.id === id ? { ...r, [field]: value } : r))
+
+  const updateDeptPts = (dept: string, points: string) =>
+    setDeptUpdates(prev => prev.map(d => d.dept === dept ? { ...d, points } : d))
+
+  const inp: React.CSSProperties = { padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.83rem', background:'#fff', width:'100%', boxSizing:'border-box' }
+  const ta:  React.CSSProperties = { ...inp, resize:'vertical', minHeight:'72px', fontFamily:'inherit', lineHeight:'1.5' }
+
+  const tabLabels: Record<string, string> = { details:'Meeting Details', attendance:'Attendance', minutes:'Dept Minutes', other:'Agenda & Other' }
+
+  return (
+    <div className="modal-backdrop" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="registration-modal" style={{ width:'94vw', maxWidth:'960px', height:'88vh', maxHeight:'88vh', display:'flex', flexDirection:'column', overflow:'hidden', padding:0, borderRadius:16 }}>
+
+        {/* Header */}
+        <div style={{ padding:'14px 20px', borderBottom:'1px solid #f1f5f9', flexShrink:0, display:'flex', alignItems:'center', gap:12 }}>
+          <div>
+            <h2 style={{ margin:0, fontSize:'1rem', fontWeight:800, color:'#1e1b4b' }}>
+              {isNew ? 'New Meeting Minutes' : `Edit — ${record.refNumber}`}
+            </h2>
+            <p style={{ margin:'2px 0 0', fontSize:'0.72rem', color:'#64748b' }}>HOD Briefing Meeting Record</p>
+          </div>
+          <div style={{ marginLeft:'auto', display:'flex', gap:8, alignItems:'center' }}>
+            <button type="button" className="quiet-button" style={{ fontSize:'0.76rem', padding:'5px 12px' }}
+              onClick={() => printMeetingMinutes(buildCurrent(), employees, activeLeaves)}>
+              🖨 Preview &amp; Print
+            </button>
+            <button type="button" className="quiet-button" onClick={onClose} style={{ padding:'5px 10px' }}>✕</button>
+          </div>
+        </div>
+
+        {/* Inner tab bar */}
+        <div style={{ display:'flex', gap:2, padding:'0 20px', borderBottom:'1px solid #f1f5f9', flexShrink:0, background:'#fafbff' }}>
+          {(['details','attendance','minutes','other'] as const).map(t => (
+            <button key={t} type="button"
+              onClick={() => setTab(t)}
+              style={{ padding:'9px 16px', fontSize:'0.78rem', fontWeight:tab===t?800:600, color:tab===t?'#4f46e5':'#64748b',
+                borderBottom: tab===t?'2px solid #4f46e5':'2px solid transparent', background:'transparent',
+                border:'none', borderRadius:0, cursor:'pointer', transition:'color 120ms' }}>
+              {tabLabels[t]}
+            </button>
+          ))}
+        </div>
+
+        {/* Body — scrollable */}
+        <div style={{ flex:1, minHeight:0, overflowY:'auto', padding:'18px 20px' }}>
+
+          {/* ── TAB 1: Meeting Details ── */}
+          {tab === 'details' && (
+            <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+                <label style={{ display:'flex', flexDirection:'column', gap:4 }}>
+                  <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151' }}>Reference Number</span>
+                  <input style={inp} value={refNumber} onChange={e => setRefNumber(e.target.value)} placeholder="VHPL/MBM/26/033" />
+                </label>
+                <label style={{ display:'flex', flexDirection:'column', gap:4 }}>
+                  <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151' }}>Status</span>
+                  <select style={inp} value={status} onChange={e => setStatus(e.target.value as 'Draft'|'Final')}>
+                    <option>Draft</option><option>Final</option>
+                  </select>
+                </label>
+              </div>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10 }}>
+                <label style={{ display:'flex', flexDirection:'column', gap:4 }}>
+                  <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151' }}>Date</span>
+                  <input type="date" style={inp} value={date} onChange={e => setDate(e.target.value)} />
+                </label>
+                <label style={{ display:'flex', flexDirection:'column', gap:4 }}>
+                  <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151' }}>Time Started</span>
+                  <input type="time" style={inp} value={timeStarted} onChange={e => setTimeStarted(e.target.value)} />
+                </label>
+                <label style={{ display:'flex', flexDirection:'column', gap:4 }}>
+                  <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151' }}>Time Ended</span>
+                  <input type="time" style={inp} value={timeEnded} onChange={e => setTimeEnded(e.target.value)} />
+                </label>
+              </div>
+              <label style={{ display:'flex', flexDirection:'column', gap:4 }}>
+                <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151' }}>Venue</span>
+                <input style={inp} value={venue} onChange={e => setVenue(e.target.value)} />
+              </label>
+              <label style={{ display:'flex', flexDirection:'column', gap:4 }}>
+                <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151' }}>Chairperson</span>
+                <input style={inp} value={chairperson} onChange={e => setChairperson(e.target.value)} />
+              </label>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+                <label style={{ display:'flex', flexDirection:'column', gap:4 }}>
+                  <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151' }}>Prepared By</span>
+                  <input style={inp} value={preparedBy} onChange={e => setPreparedBy(e.target.value)} />
+                </label>
+                <label style={{ display:'flex', flexDirection:'column', gap:4 }}>
+                  <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151' }}>Approved By</span>
+                  <input style={inp} value={approvedBy} onChange={e => setApprovedBy(e.target.value)} />
+                </label>
+              </div>
+            </div>
+          )}
+
+          {/* ── TAB 2: Attendance ── */}
+          {tab === 'attendance' && (
+            <div>
+              <p style={{ margin:'0 0 12px', fontSize:'0.76rem', color:'#64748b' }}>
+                Enter each department representative&apos;s name and mark their attendance status.
+                The <strong>Participants / On Leave / Absentees</strong> sections in the printout are auto-generated from this.
+              </p>
+              <div style={{ overflowX:'auto' }}>
+                <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'0.81rem', minWidth:700 }}>
+                  <thead>
+                    <tr style={{ background:'linear-gradient(135deg,#1e1b4b,#4338ca)', color:'#fff' }}>
+                      <th style={{ padding:'9px 12px', textAlign:'left', fontSize:'0.72rem', fontWeight:700, letterSpacing:'0.04em', width:160 }}>Department</th>
+                      <th style={{ padding:'9px 10px', textAlign:'left', fontSize:'0.72rem', fontWeight:700, letterSpacing:'0.04em' }}>Representative Name</th>
+                      <th style={{ padding:'9px 10px', textAlign:'left', fontSize:'0.72rem', fontWeight:700, letterSpacing:'0.04em' }}>Designation</th>
+                      <th style={{ padding:'9px 10px', textAlign:'center', fontSize:'0.72rem', fontWeight:700, letterSpacing:'0.04em', width:180 }}>Attendance</th>
+                      <th style={{ padding:'9px 10px', textAlign:'left', fontSize:'0.72rem', fontWeight:700, letterSpacing:'0.04em' }}>Reason (if absent / on leave)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {reps.map((rep, idx) => (
+                      <tr key={rep.id} style={{ background: idx % 2 === 0 ? '#fafbff' : '#fff', borderBottom:'1px solid #e8eaf0' }}>
+                        <td style={{ padding:'8px 12px', fontWeight:700, fontSize:'0.78rem', color:'#1e1b4b', whiteSpace:'nowrap' }}>
+                          {rep.meetingDept}
+                          <span style={{ marginLeft:5, fontSize:'0.63rem', fontWeight:700, background:'#e0e7ff', color:'#4338ca', borderRadius:4, padding:'1px 5px' }}>{rep.deptCode}</span>
+                        </td>
+                        <td style={{ padding:'6px 8px' }}>
+                          <input style={{ ...inp, minWidth:140 }} value={rep.name} onChange={e => updateRep(rep.id,'name',e.target.value)} placeholder="Full name" />
+                        </td>
+                        <td style={{ padding:'6px 8px' }}>
+                          <input style={{ ...inp, minWidth:120 }} value={rep.designation} onChange={e => updateRep(rep.id,'designation',e.target.value)} placeholder="Designation" />
+                        </td>
+                        <td style={{ padding:'6px 10px' }}>
+                          <div style={{ display:'flex', gap:4, justifyContent:'center' }}>
+                            {(['Attended','On Leave','Absent'] as MeetingAttendance[]).map(a => {
+                              const active = rep.attendance === a
+                              const colors: Record<MeetingAttendance,{bg:string;border:string;text:string}> = {
+                                'Attended':{'bg':'#dcfce7','border':'#16a34a','text':'#15803d'},
+                                'On Leave':{'bg':'#fef3c7','border':'#d97706','text':'#b45309'},
+                                'Absent':  {'bg':'#fee2e2','border':'#dc2626','text':'#b91c1c'}
+                              }
+                              const c = active ? colors[a] : {bg:'#f8fafc',border:'#e2e8f0',text:'#94a3b8'}
+                              return (
+                                <button key={a} type="button"
+                                  onClick={() => updateRep(rep.id,'attendance',a)}
+                                  style={{ padding:'3px 7px', borderRadius:6, border:`1.5px solid ${c.border}`, fontSize:'0.67rem', fontWeight:700, cursor:'pointer', background:c.bg, color:c.text, transition:'all 100ms' }}>
+                                  {a === 'Attended' ? '✓ Attended' : a === 'On Leave' ? 'On Leave' : 'Absent'}
+                                </button>
+                              )
+                            })}
+                          </div>
+                        </td>
+                        <td style={{ padding:'6px 8px' }}>
+                          {rep.attendance !== 'Attended'
+                            ? <input style={{ ...inp, minWidth:130 }} value={rep.reason} onChange={e => updateRep(rep.id,'reason',e.target.value)} placeholder={rep.attendance === 'On Leave' ? 'e.g. Annual Leave' : 'Reason for absence'} />
+                            : <span style={{ fontSize:'0.72rem', color:'#cbd5e1' }}>—</span>
+                          }
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* ── TAB 3: Department Minutes ── */}
+          {tab === 'minutes' && (
+            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+              <p style={{ margin:'0 0 8px', fontSize:'0.76rem', color:'#64748b' }}>
+                Enter updates for each department — <strong>one bullet point per line</strong>. Empty departments are skipped in the printout.
+              </p>
+              {deptUpdates.map(d => {
+                const pts = d.points.split('\n').filter(p => p.trim()).length
+                return (
+                  <div key={d.dept} style={{ background:'#f8fafc', border:`1.5px solid ${d.points.trim() ? '#c7d2fe' : '#e8eaf0'}`, borderRadius:10, padding:'10px 14px' }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
+                      <span style={{ fontSize:'0.81rem', fontWeight:800, color:'#1e1b4b' }}>{d.dept}</span>
+                      {pts > 0 && <span style={{ fontSize:'0.64rem', fontWeight:700, background:'#e0e7ff', color:'#4338ca', borderRadius:5, padding:'2px 7px' }}>{pts} point{pts !== 1 ? 's' : ''}</span>}
+                    </div>
+                    <textarea
+                      style={ta}
+                      value={d.points}
+                      onChange={e => updateDeptPts(d.dept, e.target.value)}
+                      placeholder={`Updates for ${d.dept} (one item per line → becomes a bullet point)`}
+                    />
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* ── TAB 4: Agenda & Other ── */}
+          {tab === 'other' && (
+            <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+              <label style={{ display:'flex', flexDirection:'column', gap:5 }}>
+                <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151' }}>
+                  Agenda Items <span style={{ fontWeight:400, color:'#94a3b8' }}>(one item per line — numbered automatically in printout)</span>
+                </span>
+                <textarea style={{ ...ta, minHeight:100 }} value={agendaItems} onChange={e => setAgendaItems(e.target.value)} />
+              </label>
+              <label style={{ display:'flex', flexDirection:'column', gap:5 }}>
+                <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151' }}>
+                  Other Matters / AOB <span style={{ fontWeight:400, color:'#94a3b8' }}>(free text — printed as a block under section 3)</span>
+                </span>
+                <textarea style={{ ...ta, minHeight:200 }} value={otherMatters} onChange={e => setOtherMatters(e.target.value)} placeholder="Type any other matters discussed during the meeting..." />
+              </label>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div style={{ flexShrink:0, borderTop:'1px solid #f1f5f9', padding:'10px 20px', display:'flex', gap:8, justifyContent:'flex-end', background:'#fafbff' }}>
+          <button type="button" className="primary-button" onClick={() => onSave(buildCurrent())}>
+            {isNew ? 'Create Meeting Record' : 'Save Changes'}
+          </button>
+          <button type="button" className="quiet-button" onClick={onClose}>Cancel</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ─── MeetingsSection ──────────────────────────────────────────── */
+function MeetingsSection({ records, onUpdate, employees, activeLeaves }: {
+  records: MeetingRecord[]
+  onUpdate: (fn: (prev: MeetingRecord[]) => MeetingRecord[]) => void
+  employees: Employee[]
+  activeLeaves: ActiveLeaveRecord[]
+}) {
+  const [editing, setEditing] = useState<MeetingRecord | null>(null)
+  const [search,  setSearch]  = useState('')
+
+  const mkNew = (): MeetingRecord => {
+    const seq = String(records.length + 34).padStart(3,'0')
+    const yr  = new Date().getFullYear().toString().slice(-2)
+    return {
+      id: `MTG-new-${Date.now()}`,
+      refNumber: `VHPL/MBM/${yr}/${seq}`,
+      date: new Date().toISOString().split('T')[0],
+      timeStarted: '09:30', timeEnded: '10:00',
+      venue: 'Villa Hakatha Pvt Ltd, Thilafushi, Meeting Room',
+      chairperson: 'Ali Didi – General Manager',
+      reps: MEETING_DEPTS.map((d, i) => ({
+        id: `rep-${i}`, name: '', designation: '', meetingDept: d.label, deptCode: d.code,
+        attendance: 'Attended' as MeetingAttendance, reason: ''
+      })),
+      agendaItems: `REVIEW OF MINUTES FROM THE PREVIOUS MEETING\nDISCUSSION OF ISSUES, UPDATES AND CHALLENGES FACED BY EACH DEPARTMENT\nANY OTHER MATTERS THAT NEED TO BE ADDRESSED`,
+      deptUpdates: MEETING_DEPTS.map(d => ({ dept: d.label, points: '' })),
+      otherMatters: '',
+      preparedBy: 'Arushulla Rashid',
+      approvedBy: 'Ali Didi',
+      status: 'Draft',
+      createdAt: new Date().toISOString(),
+    }
+  }
+
+  const save = (r: MeetingRecord) => {
+    onUpdate(prev => {
+      const final = r.id.includes('-new-') ? { ...r, id: `MTG-${Date.now()}` } : r
+      const idx = prev.findIndex(x => x.id === r.id)
+      return idx >= 0 ? prev.map(x => x.id === r.id ? final : x) : [final, ...prev]
+    })
+    setEditing(null)
+  }
+
+  const del = (id: string) => {
+    if (confirm('Delete this meeting record?')) onUpdate(prev => prev.filter(x => x.id !== id))
+  }
+
+  const fmtD = (d: string) => {
+    if (!d) return '—'
+    const [y,m,dd] = d.split('-')
+    return { day: dd, rest: `${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(m,10)-1]} ${y}` }
+  }
+
+  const filtered = search
+    ? records.filter(r => r.refNumber.toLowerCase().includes(search.toLowerCase()) || r.date.includes(search) || r.chairperson.toLowerCase().includes(search.toLowerCase()))
+    : records
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+      <div className="section-header">
+        <div>
+          <h2 style={{ margin:0, fontSize:'0.9rem', fontWeight:800, color:'#1e1b4b' }}>HOD Meeting Minutes</h2>
+          <p style={{ margin:'2px 0 0', fontSize:'0.73rem', color:'#64748b' }}>Briefing meeting records — daily headcount auto-calculated from employee database</p>
+        </div>
+        <div className="top-actions">
+          <label className="search-field">
+            <span>Search</span>
+            <input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Ref, date, chairperson…" />
+          </label>
+          <button className="primary-button" onClick={() => setEditing(mkNew())} type="button">+ New Meeting</button>
+        </div>
+      </div>
+
+      {records.length === 0 ? (
+        <div style={{ textAlign:'center', padding:'40px 20px', color:'#94a3b8', background:'#f8fafc', borderRadius:12, border:'1.5px dashed #e2e8f0', fontSize:'0.84rem' }}>
+          No meeting records yet. Click <strong>&ldquo;+ New Meeting&rdquo;</strong> to create the first one.
+        </div>
+      ) : filtered.length === 0 ? (
+        <div style={{ textAlign:'center', padding:'24px', color:'#94a3b8', fontSize:'0.84rem' }}>No results match that search.</div>
+      ) : (
+        <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+          {filtered.map(rec => {
+            const nAttended = rec.reps.filter(r => r.attendance === 'Attended' && r.name.trim()).length
+            const nLeave    = rec.reps.filter(r => r.attendance === 'On Leave').length
+            const nAbsent   = rec.reps.filter(r => r.attendance === 'Absent').length
+            const deptNotes = rec.deptUpdates.filter(d => d.points.trim()).map(d => d.dept)
+            const dt = fmtD(rec.date)
+            return (
+              <div key={rec.id} className="mtg-card">
+                {typeof dt === 'object' && (
+                  <div className="mtg-date-box">
+                    <span className="mtg-day">{dt.day}</span>
+                    <span className="mtg-month">{dt.rest}</span>
+                  </div>
+                )}
+                <div className="mtg-card-body">
+                  <div className="mtg-top-row">
+                    <span className="mtg-ref">{rec.refNumber}</span>
+                    <span className={`mtg-badge ${rec.status === 'Final' ? 'final' : 'draft'}`}>{rec.status}</span>
+                  </div>
+                  <div className="mtg-chair">{rec.chairperson}</div>
+                  <div className="mtg-chips">
+                    <span className="mtg-chip attended">{nAttended} attended</span>
+                    {nLeave  > 0 && <span className="mtg-chip leave">{nLeave} on leave</span>}
+                    {nAbsent > 0 && <span className="mtg-chip absent">{nAbsent} absent</span>}
+                  </div>
+                  {deptNotes.length > 0 && (
+                    <div className="mtg-dept-line">{deptNotes.join(' · ')}</div>
+                  )}
+                </div>
+                <div className="mtg-actions">
+                  <button className="quiet-button" type="button" onClick={() => setEditing(rec)} style={{ fontSize:'0.76rem', padding:'4px 10px' }}>✎ Edit</button>
+                  <button className="quiet-button" type="button" onClick={() => printMeetingMinutes(rec, employees, activeLeaves)} style={{ fontSize:'0.76rem', padding:'4px 10px' }}>🖨 Print</button>
+                  <button className="quiet-button" type="button" onClick={() => del(rec.id)} style={{ fontSize:'0.76rem', padding:'4px 10px', color:'#ef4444' }}>🗑</button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {editing && (
+        <MeetingFormModal
+          record={editing}
+          employees={employees}
+          activeLeaves={activeLeaves}
+          onClose={() => setEditing(null)}
+          onSave={save}
+        />
+      )}
+    </div>
+  )
+}
+
+function OperationsPage({ employees, completedTerminations, activeLeaves }: {
   employees: Employee[]
   completedTerminations: CompletedTerminationRecord[]
+  activeLeaves: ActiveLeaveRecord[]
 }) {
   const [activeSection, setActiveSection] = useState<OpsSection>('files')
+  const [meetingRecords, setMeetingRecords] = useState<MeetingRecord[]>([])
   const [personalFiles, setPersonalFiles] = useState<PersonalFileRecord[]>(initialPersonalFiles)
   const [inductionRecords, setInductionRecords] = useState<InductionRecord[]>(initialInductionRecords)
   const [trainingRecords, setTrainingRecords] = useState<TrainingRecord[]>(initialTrainingRecords)
@@ -6903,11 +7555,15 @@ function OperationsPage({ employees, completedTerminations }: {
         <button className={activeSection === 'induction' ? 'active' : ''} onClick={() => setActiveSection('induction')} type="button">Induction</button>
         <button className={activeSection === 'training' ? 'active' : ''} onClick={() => setActiveSection('training')} type="button">Training</button>
         <button className={activeSection === 'bank' ? 'active' : ''} onClick={() => setActiveSection('bank')} type="button">Bank Account</button>
+        <button className={activeSection === 'meetings' ? 'active' : ''} onClick={() => setActiveSection('meetings')} type="button">
+          Meetings {meetingRecords.length > 0 && <span className="tab-count">{meetingRecords.length}</span>}
+        </button>
       </div>
-      {activeSection === 'files' && <PersonalFilesSection records={personalFiles} onUpdate={setPersonalFiles} onBack={() => {}} />}
+      {activeSection === 'files'     && <PersonalFilesSection records={personalFiles} onUpdate={setPersonalFiles} onBack={() => {}} />}
       {activeSection === 'induction' && <InductionSection employees={employees} records={inductionRecords} onUpdate={setInductionRecords} onBack={() => {}} />}
-      {activeSection === 'training' && <TrainingSection records={trainingRecords} employees={employees} onUpdate={setTrainingRecords} onBack={() => {}} />}
-      {activeSection === 'bank' && <BankAccountSection employees={employees} records={bankAccountRecords} onUpdate={setBankAccountRecords} onBack={() => {}} />}
+      {activeSection === 'training'  && <TrainingSection records={trainingRecords} employees={employees} onUpdate={setTrainingRecords} onBack={() => {}} />}
+      {activeSection === 'bank'      && <BankAccountSection employees={employees} records={bankAccountRecords} onUpdate={setBankAccountRecords} onBack={() => {}} />}
+      {activeSection === 'meetings'  && <MeetingsSection records={meetingRecords} onUpdate={setMeetingRecords} employees={employees} activeLeaves={activeLeaves} />}
     </>
   )
 }
@@ -9096,7 +9752,7 @@ function App() {
           {activePage === 'overview' && <OverviewPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} />}
           {activePage === 'employees' && <EmployeesPage employees={employees} medicalCases={medicalCases} noticeTerminations={noticeTerminations} offSiteRecords={offSiteRecords} onUpdateOffSite={(fn) => setOffSiteRecords(fn)} onAdd={() => { setEmployeeMode('add'); setEmployeeForm(emptyEmployee); setShowEmployeeForm(true) }} onEdit={openEditEmployee} onExport={exportCsv} onImport={importCsv} onTemplate={downloadTemplate} onShowTasks={() => setShowPendingTasks(true)} />}
           {activePage === 'leave' && <LeavePage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} medicalCases={medicalCases} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onSetRequestStep={setLeaveRequestStep} onExtendLeave={extendActiveLeave} onEditActiveLeave={editActiveLeave} onHistoryConfirm={updateHistoryConfirmation} onUpdateMedical={(fn) => setMedicalCases(fn)} />}
-          {activePage === 'operations' && <OperationsPage employees={employees} completedTerminations={completedTerminations} />}
+          {activePage === 'operations' && <OperationsPage employees={employees} completedTerminations={completedTerminations} activeLeaves={activeLeaves} />}
           {activePage === 'activities' && <ActivitiesPage employees={employees} passportHandovers={passportHandovers} onUpdatePassport={(fn) => setPassportHandovers(fn)} inventoryItems={inventoryItems} inventoryUsage={inventoryUsage} onUpdateInventoryItems={(fn) => setInventoryItems(fn)} onUpdateInventoryUsage={(fn) => setInventoryUsage(fn)} />}
           {activePage === 'termination' && <TerminationPage noticeTerminations={noticeTerminations} completedTerminations={completedTerminations} exitInterviews={exitInterviews} employees={employees} onAdd={openAddTermination} onEdit={openEditTermination} onSetStage={setTerminationStage} onDelete={deleteTermination} onViewDetails={(record) => setTerminationDetails(record)} onUpdateExitInterviews={(fn) => setExitInterviews(fn)} />}
           {activePage === 'settings' && <SettingsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} onReset={resetAllData} currentUserName={currentUserName} />}
