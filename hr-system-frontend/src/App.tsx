@@ -6987,11 +6987,12 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
 
   const refSeq = record.refNumber.split('/').pop() || ''
 
-  // Footer — left aligned: page number · document title
+  // Footer: title on LEFT · page number in CENTRE · right side empty
   const pgFooter = (n: number) =>
-    `<div style="display:flex;align-items:center;gap:14pt;border-top:0.8pt solid #1B2B7E;padding-top:5pt;margin-top:14pt;font-size:7.5pt;color:#1B2B7E;">
-      <span style="font-weight:800;min-width:10pt;">${n}</span>
-      <span style="letter-spacing:0.4pt;opacity:0.75;">BRIEFING MEETING MINUTES &mdash; ${esc(refSeq)}</span>
+    `<div style="display:flex;align-items:center;border-top:0.8pt solid #1B2B7E;padding-top:5pt;margin-top:14pt;font-size:7.5pt;color:#1B2B7E;">
+      <span style="flex:1;letter-spacing:0.4pt;opacity:0.75;">BRIEFING MEETING MINUTES &mdash; ${esc(refSeq)}</span>
+      <span style="flex:1;text-align:center;font-weight:800;">${n}</span>
+      <span style="flex:1;"></span>
     </div>`
 
   const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/>
