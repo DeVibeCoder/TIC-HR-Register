@@ -7417,8 +7417,10 @@ button.step-pill:hover { filter: brightness(0.98); }
   padding: 12px 14px;
 }
 
-/* Staff scroll: no internal scroll — show all rows, modal outer scroll handles it */
+/* Staff scroll: fixed height with scrollbar so all staff are reachable */
 .mc-an-staff-scroll {
+  max-height: 220px;
+  overflow-y: auto;
   border: 1px solid #f1f5f9;
   border-radius: 6px;
 }
