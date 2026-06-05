@@ -6999,14 +6999,14 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/>
 <title>Briefing Meeting Minutes — ${esc(record.refNumber)}</title>
 <style>
-  @page { size:A4 portrait; margin:14mm 18mm 14mm 18mm; }
+  @page { size:A4 portrait; margin:8mm 18mm 14mm 18mm; }
   *,*::before,*::after { box-sizing:border-box; }
   body { font-family:Arial,Helvetica,sans-serif; font-size:9pt; color:#111; background:#e8e8e8; margin:0; padding:0; }
   .pbar { display:flex; align-items:center; gap:14px; padding:10px 20px; background:#1e1b4b; position:sticky; top:0; z-index:10; font-family:system-ui,sans-serif; font-size:13px; }
   .pbar button { padding:7px 18px; background:#6d28d9; color:#fff; border:none; border-radius:6px; font-size:13px; font-weight:700; cursor:pointer; }
   .pbar span { color:rgba(221,214,254,0.7); font-size:12px; }
   .wrap { max-width:210mm; margin:20px auto; display:flex; flex-direction:column; gap:18px; padding-bottom:40px; }
-  .page { background:#fff; box-shadow:0 4px 24px rgba(0,0,0,0.16); padding:14mm 18mm; }
+  .page { background:#fff; box-shadow:0 4px 24px rgba(0,0,0,0.16); padding:8mm 18mm 14mm; }
   .info-tbl { width:100%; border-collapse:collapse; margin-bottom:12pt; }
   .info-tbl td { border:0.8pt solid #888; padding:4pt 7pt; font-size:9pt; vertical-align:top; }
   .info-tbl td.lbl { font-weight:700; white-space:nowrap; width:26mm; background:#f8f9ff; }
@@ -7034,10 +7034,10 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
        Displays the real Villa Hakatha letterhead image, centred at
        the top of each printed page.  File: public/letterhead.png
        ═══════════════════════════════════════════════════════════ -->
-  <div style="text-align:center;margin-bottom:14pt;padding-bottom:10pt;border-bottom:1pt solid #d0d8ee;">
+  <div style="text-align:center;margin-bottom:12pt;padding-bottom:10pt;border-bottom:1pt solid #d0d8ee;">
     <img src="${letterheadUrl}"
          alt="Villa Hakatha Pvt. Ltd. Letterhead"
-         style="max-width:100%;width:auto;height:auto;max-height:90pt;display:inline-block;"
+         style="max-width:100%;width:auto;height:auto;max-height:120pt;display:inline-block;"
          onerror="this.style.display='none'"/>
   </div>
   <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10pt;">
