@@ -6927,21 +6927,20 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   for (let i = 0; i < attended.length; i += 2) {
     const l = attended[i]; const r2 = attended[i+1]
     pRows.push(`<tr>
-      <td style="padding:3pt 5pt;font-size:9pt;width:44%;">${esc(l.name)} – ${esc(l.designation)}</td>
-      <td style="padding:3pt 3pt;font-size:9pt;color:#555;width:6%;">(${esc(l.deptCode)})</td>
+      <td style="width:43%;">${esc(l.name)}<span style="color:#555;font-size:8pt;"> &ndash; ${esc(l.designation)}</span></td>
+      <td class="code" style="width:7%;">${esc(l.deptCode)}</td>
       ${r2
-        ? `<td style="padding:3pt 5pt;font-size:9pt;width:44%;">${esc(r2.name)} – ${esc(r2.designation)}</td><td style="padding:3pt 3pt;font-size:9pt;color:#555;width:6%;">(${esc(r2.deptCode)})</td>`
+        ? `<td style="width:43%;">${esc(r2.name)}<span style="color:#555;font-size:8pt;"> &ndash; ${esc(r2.designation)}</span></td><td class="code" style="width:7%;">${esc(r2.deptCode)}</td>`
         : '<td colspan="2"></td>'}
     </tr>`)
   }
 
-  const repRows = (list: MeetingRep[], emptyRows = 3) => list.length === 0
-    ? Array(emptyRows).fill(`<tr>${Array(4).fill('<td style="padding:4pt;border-bottom:0.5pt solid #e0e0e0;">&nbsp;</td>').join('')}</tr>`).join('')
+  const repRows = (list: MeetingRep[], emptyRows = 2) => list.length === 0
+    ? Array(emptyRows).fill(`<tr><td colspan="4" style="padding:5pt;">&nbsp;</td></tr>`).join('')
     : list.map(r => `<tr>
-        <td style="padding:3pt 5pt;font-size:9pt;width:44%;">${esc(r.name)} – ${esc(r.designation)}</td>
-        <td style="padding:3pt 3pt;font-size:9pt;color:#555;width:6%;">(${esc(r.deptCode)})</td>
-        <td style="padding:3pt 5pt;font-size:9pt;width:44%;">${esc(r.reason || (r.attendance === 'On Leave' ? 'Annual Leave' : ''))}</td>
-        <td style="width:6%;"></td>
+        <td style="width:43%;">${esc(r.name)}<span style="color:#555;font-size:8pt;"> &ndash; ${esc(r.designation)}</span></td>
+        <td class="code" style="width:7%;">${esc(r.deptCode)}</td>
+        <td class="reason" style="width:50%;">${esc(r.reason || (r.attendance === 'On Leave' ? 'Annual Leave' : ''))}</td>
       </tr>`).join('')
 
   const hcRows = HEADCOUNT_DEPTS.map(dept => {
@@ -6988,12 +6987,11 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
 
   const refSeq = record.refNumber.split('/').pop() || ''
 
-  // 3-column footer: left empty | center page# | right title
+  // Footer — left aligned: page number · document title
   const pgFooter = (n: number) =>
-    `<div style="display:flex;align-items:center;border-top:0.5pt solid #ccc;padding-top:5pt;margin-top:12pt;font-size:8pt;color:#666;">
-      <span style="flex:1;"></span>
-      <span style="flex:1;text-align:center;">${n}</span>
-      <span style="flex:1;text-align:right;">BRIEFING MEETING MINUTES &mdash; ${esc(refSeq)}</span>
+    `<div style="display:flex;align-items:center;gap:14pt;border-top:0.8pt solid #1B2B7E;padding-top:5pt;margin-top:14pt;font-size:7.5pt;color:#1B2B7E;">
+      <span style="font-weight:800;min-width:10pt;">${n}</span>
+      <span style="letter-spacing:0.4pt;opacity:0.75;">BRIEFING MEETING MINUTES &mdash; ${esc(refSeq)}</span>
     </div>`
 
   const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/>
@@ -7007,9 +7005,16 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   .pbar span { color:rgba(221,214,254,0.7); font-size:12px; }
   .wrap { max-width:210mm; margin:20px auto; display:flex; flex-direction:column; gap:18px; padding-bottom:40px; }
   .page { background:#fff; box-shadow:0 4px 24px rgba(0,0,0,0.16); padding:5mm 18mm 14mm; }
-  .info-tbl { width:100%; border-collapse:collapse; margin-bottom:12pt; }
-  .info-tbl td { border:0.8pt solid #888; padding:4pt 7pt; font-size:9pt; vertical-align:top; }
-  .info-tbl td.lbl { font-weight:700; white-space:nowrap; width:26mm; background:#f8f9ff; }
+  .info-tbl { width:100%; border-collapse:collapse; margin-bottom:14pt; border:1.2pt solid #1B2B7E; }
+  .info-tbl tr { border-bottom:0.5pt solid #c8d4f0; }
+  .info-tbl tr:last-child { border-bottom:none; }
+  .info-tbl td { padding:5.5pt 10pt; font-size:9pt; vertical-align:top; }
+  .info-tbl td.lbl { font-weight:700; white-space:nowrap; width:32mm; background:#1B2B7E; color:#fff; font-size:8pt; text-transform:uppercase; letter-spacing:0.5pt; border-right:none; }
+  .info-tbl .sub-tbl { width:100%; border-collapse:collapse; }
+  .info-tbl .sub-tbl td { padding:2.5pt 4pt; font-size:8.5pt; border-bottom:0.4pt solid #eef0f8; vertical-align:top; }
+  .info-tbl .sub-tbl tr:last-child td { border-bottom:none; }
+  .info-tbl .sub-tbl .code { color:#1B2B7E; font-weight:700; font-size:8pt; white-space:nowrap; }
+  .info-tbl .sub-tbl .reason { color:#555; font-size:8pt; }
   .hc-tbl { width:100%; border-collapse:collapse; }
   .hc-tbl th { background:#1e1b4b; color:#fff; font-size:8pt; font-weight:700; padding:5pt 4pt; border:0.5pt solid #333; text-align:center; }
   .hc-tbl th.lft { text-align:left; }
@@ -7040,19 +7045,20 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
          style="max-width:100%;width:auto;height:auto;max-height:110pt;display:inline-block;vertical-align:top;mix-blend-mode:multiply;"
          onerror="this.style.display='none'"/>
   </div>
-  <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10pt;">
-    <span style="font-size:11pt;font-weight:900;text-transform:uppercase;">Briefing Meeting Minutes</span>
-    <span style="font-size:10pt;font-weight:700;">Ref: ${esc(record.refNumber)}</span>
+  <!-- Document title banner -->
+  <div style="background:#1B2B7E;color:#fff;padding:7pt 10pt;display:flex;justify-content:space-between;align-items:center;margin-bottom:0;">
+    <span style="font-size:11pt;font-weight:900;text-transform:uppercase;letter-spacing:1pt;">Briefing Meeting Minutes</span>
+    <span style="font-size:8.5pt;font-weight:600;letter-spacing:0.5pt;opacity:0.9;">Ref: ${esc(record.refNumber)}</span>
   </div>
   <table class="info-tbl">
     <tr><td class="lbl">Date</td><td>${esc(fmtMeetingDate(record.date))}</td></tr>
     <tr><td class="lbl">Time Started</td><td>${esc(record.timeStarted)} hrs.</td></tr>
-    <tr><td class="lbl">Time Ended</td><td>${esc(record.timeEnded)} hrs.</td></tr>
+    <tr><td class="lbl">Time Ended</td><td>${esc(record.timeEnded ? record.timeEnded + ' hrs.' : '—')}</td></tr>
     <tr><td class="lbl">Venue</td><td>${esc(record.venue)}</td></tr>
-    <tr><td class="lbl">Chairperson</td><td>${esc(record.chairperson)}</td></tr>
-    <tr><td class="lbl">Participants</td><td><table style="width:100%;border-collapse:collapse;">${pRows.join('')}</table></td></tr>
-    <tr><td class="lbl">On Leave</td><td><table style="width:100%;border-collapse:collapse;">${repRows(onLeaveR)}</table></td></tr>
-    <tr><td class="lbl">Absentees</td><td><table style="width:100%;border-collapse:collapse;">${repRows(absentR)}</table></td></tr>
+    <tr><td class="lbl">Chairperson</td><td style="font-weight:600;">${esc(record.chairperson)}</td></tr>
+    <tr><td class="lbl">Participants</td><td style="padding:4pt 10pt;"><table class="sub-tbl">${pRows.join('')}</table></td></tr>
+    <tr><td class="lbl">On Leave</td><td style="padding:4pt 10pt;"><table class="sub-tbl">${repRows(onLeaveR)}</table></td></tr>
+    <tr><td class="lbl">Absentees</td><td style="padding:4pt 10pt;"><table class="sub-tbl">${repRows(absentR)}</table></td></tr>
   </table>
   <div style="font-size:10pt;font-weight:800;margin-bottom:7pt;">Daily Headcount of Departments</div>
   <table class="hc-tbl">
