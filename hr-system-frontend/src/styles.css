@@ -561,6 +561,10 @@ button:disabled { cursor: not-allowed; opacity: 0.5; }
   display: flex;
   flex-direction: column;
 }
+/* Settings page gets its own scroll */
+.workspace-inner:has(.settings-page) {
+  overflow-y: auto;
+}
 
 .workspace-wide {
   width: calc(100% - 16px);
@@ -3254,14 +3258,15 @@ button.step-pill:hover { filter: brightness(0.98); }
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  padding: 12px 14px 8px;
+  padding: 12px 14px 24px;
+  overflow-y: auto;
+  height: 100%;
 }
 
 .user-mgmt-page {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  min-height: calc(100vh - 56px);
+  gap: 10px;
 }
 
 /* Header */
@@ -3291,18 +3296,24 @@ button.step-pill:hover { filter: brightness(0.98); }
 .role-legend {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  gap: 8px;
 }
 
 .role-legend-item {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 12px 14px;
+  gap: 4px;
+  padding: 10px 12px;
   border: 1px solid rgba(148, 163, 184, 0.42);
-  border-radius: 12px;
+  border-radius: 10px;
   background: rgba(248, 250, 255, 0.9);
   box-shadow: var(--soft-shadow);
+}
+
+/* Collapse role legend on small screens */
+@media (max-width: 900px) {
+  .role-legend { grid-template-columns: 1fr; }
+  .role-legend-note { display: none; }
 }
 
 .role-legend-desc {
@@ -3334,12 +3345,10 @@ button.step-pill:hover { filter: brightness(0.98); }
 .role-hr { background: rgba(139, 92, 246,0.1); color: #6d28d9; border: 1px solid rgba(139, 92, 246,0.18); }
 .role-viewer { background: rgba(100, 116, 139, 0.1); color: #334155; border: 1px solid rgba(100, 116, 139, 0.2); }
 
-/* User table wrapper — fills remaining space */
+/* User table wrapper */
 .user-mgmt-table-wrap {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: 0;
   border: 1px solid rgba(148, 163, 184, 0.45);
   border-radius: 14px;
   overflow: hidden;
@@ -3348,6 +3357,7 @@ button.step-pill:hover { filter: brightness(0.98); }
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
+  max-height: 360px;
 }
 /* Inner table shell scrolls horizontally only if truly needed */
 .user-mgmt-table-wrap .employee-table-shell {
@@ -7398,10 +7408,10 @@ button.step-pill:hover { filter: brightness(0.98); }
   flex-direction: column;
 }
 
-/* Staff summary panel — takes remaining space, ONLY this scrolls */
+/* Staff summary panel — always visible regardless of parent flex context */
 .mc-an-staff-panel {
   flex: 1;
-  min-height: 0;
+  min-height: 260px;      /* was 0 — without a flex parent the panel collapsed to 0 */
   display: flex;
   flex-direction: column;
   background: #f8fafc;
@@ -7411,10 +7421,11 @@ button.step-pill:hover { filter: brightness(0.98); }
   overflow: hidden;
 }
 
-/* Staff scroll: the ONLY scrolling element */
+/* Staff scroll: explicit max-height so it scrolls at a fixed boundary */
 .mc-an-staff-scroll {
   flex: 1;
   min-height: 0;
+  max-height: 240px;      /* caps the scroll area; modal outer scroll shows the panel itself */
   overflow-y: auto;
   border: 1px solid #f1f5f9;
   border-radius: 6px;
@@ -7424,6 +7435,32 @@ button.step-pill:hover { filter: brightness(0.98); }
 
 @media (max-width: 700px) {
   .mc-top-row { grid-template-columns: 1fr; height: auto; }
+
+  /* ── small-screen fixes: body scrolls, every section stays visible ── */
+  .mc-analytics-body {
+    overflow-y: auto;          /* body scrolls instead of clipping */
+    padding: 10px 12px 8px;   /* tighter side padding on narrow screens */
+  }
+  .mc-top-row .mc-an-panel {
+    max-height: 220px;         /* cap monthly + dept panels so they don't push staff off screen */
+    overflow-y: auto;
+  }
+  .mc-an-staff-panel {
+    flex: none;                /* don't collapse to 0 when top-row is tall */
+    min-height: 220px;         /* always show a useful chunk of the table */
+  }
+  .mc-an-staff-scroll {
+    flex: none;
+    max-height: 200px;         /* explicit height — flex:1 can't rely on a scrolling parent */
+    overflow-y: auto;
+  }
+  /* Compact KPI chips so they don't stack into 2 full rows */
+  .mc-an-kpi-row .mc-kpi-chip {
+    padding: 6px 10px;
+    gap: 6px;
+  }
+  .mc-an-kpi-row .mc-kpi-num  { font-size: 1.15rem; }
+  .mc-an-kpi-row .mc-kpi-lbl  { font-size: 0.63rem; }
 }
 
 /* ═══ Termination Form Redesign ═════════════════════════ */
