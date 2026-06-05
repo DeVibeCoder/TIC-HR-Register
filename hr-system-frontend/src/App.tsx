@@ -7034,10 +7034,10 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
        Displays the real Villa Hakatha letterhead image, centred at
        the top of each printed page.  File: public/letterhead.png
        ═══════════════════════════════════════════════════════════ -->
-  <div style="text-align:center;margin-top:0;margin-bottom:8pt;padding-bottom:6pt;border-bottom:1pt solid #d0d8ee;background:#fff;">
+  <div style="text-align:center;margin-top:0;margin-bottom:8pt;padding-bottom:6pt;border-bottom:1pt solid #d0d8ee;">
     <img src="${letterheadUrl}"
          alt="Villa Hakatha Pvt. Ltd. Letterhead"
-         style="max-width:100%;width:auto;height:auto;max-height:110pt;display:inline-block;vertical-align:top;"
+         style="max-width:100%;width:auto;height:auto;max-height:110pt;display:inline-block;vertical-align:top;mix-blend-mode:multiply;"
          onerror="this.style.display='none'"/>
   </div>
   <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10pt;">
@@ -7123,19 +7123,21 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
     </div>
   </div>
 
-  <div style="text-align:center;border:0.8pt solid #888;padding:7pt;margin:18pt 0;font-size:9pt;color:#555;font-style:italic;">We'll end the meeting if there's nothing else to discuss.</div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:40pt;margin-top:12pt;">
-    <div style="border:0.8pt solid #888;padding:12pt 14pt;">
-      <div style="font-size:9pt;margin-bottom:22pt;">Prepared by:</div>
-      <div style="border-bottom:0.8pt solid #888;margin-bottom:6pt;height:16pt;"></div>
-      <div style="font-size:9pt;font-weight:700;">${esc(record.preparedBy)}</div>
-      <div style="font-size:9pt;">Administrator</div>
-    </div>
-    <div style="border:0.8pt solid #888;padding:12pt 14pt;">
-      <div style="font-size:9pt;margin-bottom:22pt;">Approved by:</div>
-      <div style="border-bottom:0.8pt solid #888;margin-bottom:6pt;height:16pt;"></div>
-      <div style="font-size:9pt;font-weight:700;">${esc(record.approvedBy)}</div>
-      <div style="font-size:9pt;">General Manager</div>
+  <div style="page-break-inside:avoid;break-inside:avoid;">
+    <div style="text-align:center;border:0.8pt solid #888;padding:7pt;margin:18pt 0;font-size:9pt;color:#555;font-style:italic;">We'll end the meeting if there's nothing else to discuss.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:40pt;margin-top:12pt;">
+      <div style="border:0.8pt solid #888;padding:12pt 14pt;">
+        <div style="font-size:9pt;margin-bottom:22pt;">Prepared by:</div>
+        <div style="border-bottom:0.8pt solid #888;margin-bottom:6pt;height:16pt;"></div>
+        <div style="font-size:9pt;font-weight:700;">${esc(record.preparedBy)}</div>
+        <div style="font-size:9pt;">Administrator</div>
+      </div>
+      <div style="border:0.8pt solid #888;padding:12pt 14pt;">
+        <div style="font-size:9pt;margin-bottom:22pt;">Approved by:</div>
+        <div style="border-bottom:0.8pt solid #888;margin-bottom:6pt;height:16pt;"></div>
+        <div style="font-size:9pt;font-weight:700;">${esc(record.approvedBy)}</div>
+        <div style="font-size:9pt;">General Manager</div>
+      </div>
     </div>
   </div>
   ${pgFooter(2)}
