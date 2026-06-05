@@ -7480,7 +7480,7 @@ function MeetingsSection({ records, onUpdate, employees, activeLeaves }: {
     : records
 
   return (
-    <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+    <div style={{ display:'flex', flexDirection:'column', gap:10, padding:'12px 14px 8px' }}>
       <div className="section-header">
         <div>
           <h2 style={{ margin:0, fontSize:'0.9rem', fontWeight:800, color:'#1e1b4b' }}>HOD Meeting Minutes</h2>
