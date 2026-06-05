@@ -6983,13 +6983,8 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
     return `${months[dt.getMonth()]} ${day}${ord}, ${dt.getFullYear()}`
   }
 
-  // Logo: two outer cyan triangles (W shape) + dark inner triangle + lower cyan triangle
-  const logoSvg = `<svg viewBox="0 0 500 460" xmlns="http://www.w3.org/2000/svg" style="width:82pt;height:72pt;flex-shrink:0;display:block;">
-    <polygon points="8,0 245,0 126,210" fill="#00AEEF"/>
-    <polygon points="255,0 492,0 374,210" fill="#00AEEF"/>
-    <polygon points="130,216 370,216 250,10" fill="#1B2B7E"/>
-    <polygon points="130,228 370,228 250,458" fill="#00AEEF"/>
-  </svg>`
+  // Letterhead image URL — file must be at public/letterhead.png in the project
+  const letterheadUrl = `${window.location.origin}/letterhead.png`
 
   const refSeq = record.refNumber.split('/').pop() || ''
 
@@ -7035,41 +7030,15 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
 <div class="wrap">
 
 <div class="page">
-  <!-- ══ LETTERHEAD ═══════════════════════════════════════════════
-       Matches the Villa Hakatha official company letterhead exactly.
-       Layout: [Logo + VILLA brand] ── [Arabic Bismillah] ── [| Company details]
+  <!-- ══ LETTERHEAD — official image ═══════════════════════════════
+       Displays the real Villa Hakatha letterhead image, centred at
+       the top of each printed page.  File: public/letterhead.png
        ═══════════════════════════════════════════════════════════ -->
-  <div style="display:flex;align-items:center;padding-bottom:10pt;border-bottom:1.2pt solid #b0bce8;margin-bottom:14pt;gap:0;">
-
-    <!-- ── LEFT: Logo mark + brand name ───────────────────────── -->
-    <div style="display:flex;align-items:center;gap:11pt;flex-shrink:0;">
-      ${logoSvg}
-      <div style="line-height:1.1;">
-        <div style="font-size:27pt;font-weight:900;color:#1B2B7E;letter-spacing:2.5pt;line-height:1.05;font-family:Arial,Helvetica,sans-serif;">VILLA<span style="font-size:9pt;vertical-align:super;letter-spacing:0;font-weight:600;">&#174;</span></div>
-        <div style="font-size:9.5pt;color:#1B2B7E;font-weight:500;letter-spacing:0.6pt;margin-top:1pt;font-family:Arial,Helvetica,sans-serif;">Hakatha Private Limited</div>
-      </div>
-    </div>
-
-    <!-- ── CENTER: Arabic Bismillah (handwriting style, top-center) -->
-    <div style="flex:1;text-align:center;padding:0 18pt;align-self:center;">
-      <div style="font-size:11pt;font-family:'Arabic Typesetting','Noto Nastaliq Urdu','Traditional Arabic','Scheherazade New',serif;direction:rtl;color:#1a1a1a;line-height:1.5;font-style:italic;">&#x628;&#x633;&#x645;&#x20;&#x627;&#x644;&#x644;&#x647;&#x20;&#x627;&#x644;&#x631;&#x62D;&#x645;&#x646;&#x20;&#x627;&#x644;&#x631;&#x62D;&#x64A;&#x645;</div>
-    </div>
-
-    <!-- ── RIGHT: Vertical rule + Company details ─────────────── -->
-    <div style="display:flex;align-items:stretch;flex-shrink:0;">
-      <!-- Vertical divider line -->
-      <div style="width:1.5pt;background:#1B2B7E;flex-shrink:0;margin-right:11pt;border-radius:1pt;"></div>
-      <!-- Text block -->
-      <div style="padding-top:1pt;">
-        <div style="font-size:12pt;font-weight:800;color:#1B2B7E;margin-bottom:3pt;font-family:Arial,Helvetica,sans-serif;letter-spacing:0.2pt;">Villa Hakatha Pvt. Ltd.</div>
-        <div style="font-size:7.5pt;color:#1B2B7E;line-height:1.85;font-family:Arial,Helvetica,sans-serif;">
-          Villa Building,&nbsp;&nbsp;Brohinn Hassan Didi Magu, male&#x2019;<br/>
-          Republic of Maldives,&nbsp;&nbsp;Tel: +960 3325195,&nbsp;&nbsp;Fax: +960 3325177<br/>
-          email: info@villa.com.mv
-        </div>
-      </div>
-    </div>
-
+  <div style="text-align:center;margin-bottom:14pt;padding-bottom:10pt;border-bottom:1pt solid #d0d8ee;">
+    <img src="${letterheadUrl}"
+         alt="Villa Hakatha Pvt. Ltd. Letterhead"
+         style="max-width:100%;width:auto;height:auto;max-height:90pt;display:inline-block;"
+         onerror="this.style.display='none'"/>
   </div>
   <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10pt;">
     <span style="font-size:11pt;font-weight:900;text-transform:uppercase;">Briefing Meeting Minutes</span>
