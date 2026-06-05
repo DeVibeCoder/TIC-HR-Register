@@ -7518,24 +7518,28 @@ function MeetingsSection({ records, onUpdate, employees, activeLeaves }: {
                   </div>
                 )}
                 <div className="mtg-card-body">
+                  {/* Row 1: ref + badge + chair all inline */}
                   <div className="mtg-top-row">
                     <span className="mtg-ref">{rec.refNumber}</span>
                     <span className={`mtg-badge ${rec.status === 'Final' ? 'final' : 'draft'}`}>{rec.status}</span>
+                    <span className="mtg-chair" style={{ marginLeft: 2 }}>{rec.chairperson}</span>
                   </div>
-                  <div className="mtg-chair">{rec.chairperson}</div>
-                  <div className="mtg-chips">
-                    <span className="mtg-chip attended">{nAttended} attended</span>
-                    {nLeave  > 0 && <span className="mtg-chip leave">{nLeave} on leave</span>}
-                    {nAbsent > 0 && <span className="mtg-chip absent">{nAbsent} absent</span>}
+                  {/* Row 2: chips + dept preview inline */}
+                  <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
+                    <div className="mtg-chips" style={{ margin:0 }}>
+                      <span className="mtg-chip attended">{nAttended} attended</span>
+                      {nLeave  > 0 && <span className="mtg-chip leave">{nLeave} on leave</span>}
+                      {nAbsent > 0 && <span className="mtg-chip absent">{nAbsent} absent</span>}
+                    </div>
+                    {deptNotes.length > 0 && (
+                      <div className="mtg-dept-line" style={{ flex:1 }}>{deptNotes.join(' · ')}</div>
+                    )}
                   </div>
-                  {deptNotes.length > 0 && (
-                    <div className="mtg-dept-line">{deptNotes.join(' · ')}</div>
-                  )}
                 </div>
                 <div className="mtg-actions">
-                  <button className="quiet-button" type="button" onClick={() => setEditing(rec)} style={{ fontSize:'0.76rem', padding:'4px 10px' }}>✎ Edit</button>
-                  <button className="quiet-button" type="button" onClick={() => printMeetingMinutes(rec, employees, activeLeaves)} style={{ fontSize:'0.76rem', padding:'4px 10px' }}>🖨 Print</button>
-                  <button className="quiet-button" type="button" onClick={() => del(rec.id)} style={{ fontSize:'0.76rem', padding:'4px 10px', color:'#ef4444' }}>🗑</button>
+                  <button className="quiet-button" type="button" onClick={() => setEditing(rec)} style={{ fontSize:'0.74rem', padding:'3px 10px' }}>✎ Edit</button>
+                  <button className="quiet-button" type="button" onClick={() => printMeetingMinutes(rec, employees, activeLeaves)} style={{ fontSize:'0.74rem', padding:'3px 10px' }}>🖨 Print</button>
+                  <button className="quiet-button" type="button" onClick={() => del(rec.id)} style={{ fontSize:'0.74rem', padding:'3px 8px', color:'#ef4444' }}>🗑</button>
                 </div>
               </div>
             )
