@@ -6423,16 +6423,16 @@ button.step-pill:hover { filter: brightness(0.98); }
 .mc-kpi-chip {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   background: #fff;
   border: 1px solid #e8eaf0;
   border-radius: 10px;
-  padding: 8px 16px;
+  padding: 6px 14px;
   flex-shrink: 0;
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 .mc-kpi-num {
-  font-size: 1.45rem;
+  font-size: 1.25rem;
   font-weight: 800;
   line-height: 1;
 }
@@ -7153,7 +7153,7 @@ button.step-pill:hover { filter: brightness(0.98); }
   background: #f8fafc;
   border: 1px solid #e8eaf0;
   border-radius: 10px;
-  padding: 16px;
+  padding: 10px 14px;
 }
 .mc-an-title {
   font-size: 0.76rem;
@@ -7170,7 +7170,7 @@ button.step-pill:hover { filter: brightness(0.98); }
   align-items: flex-end;
   gap: 10px;
   flex: 1;          /* fills available space in the panel */
-  min-height: 180px;
+  min-height: 100px;
 }
 
 /* Scrollable staff table */
@@ -7394,12 +7394,12 @@ button.step-pill:hover { filter: brightness(0.98); }
   margin-bottom: 0 !important;
 }
 
-/* Top 2-column row (monthly + dept) — fixed height */
+/* Top 2-column row (monthly + dept) — compact height so staff always shows */
 .mc-top-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-  height: 260px;
+  height: 180px;
 }
 .mc-top-row .mc-an-panel {
   overflow: hidden;
