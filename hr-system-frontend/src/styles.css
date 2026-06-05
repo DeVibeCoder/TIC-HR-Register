@@ -7137,8 +7137,9 @@ button.step-pill:hover { filter: brightness(0.98); }
 .mc-analytics-modal {
   max-width: 860px !important;
   width: 96vw !important;
-  max-height: calc(100vh - 32px) !important;  /* use near-full viewport height */
-  overflow-y: auto !important;                 /* modal itself scrolls to show everything */
+  max-height: calc(100vh - 32px) !important;
+  overflow-y: scroll !important;   /* always show scrollbar so user knows there's more */
+  padding: 14px 20px !important;   /* tighter than default 20px to save vertical space */
 }
 .mc-analytics-grid {
   display: grid;
@@ -7377,13 +7378,12 @@ button.step-pill:hover { filter: brightness(0.98); }
   flex-shrink: 0; border-top: 1px solid #f1f5f9; padding: 8px 24px;
 }
 
-/* Body: flex column, NO scrollbar — all content fits */
+/* Body: flex column, single scroll on the modal */
 .mc-analytics-body {
-  /* no overflow:hidden — that was clipping the staff panel */
-  padding: 12px 20px 8px;
+  padding: 8px 0 4px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 /* KPI row */
@@ -7399,7 +7399,7 @@ button.step-pill:hover { filter: brightness(0.98); }
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-  height: 180px;
+  height: 150px;
 }
 .mc-top-row .mc-an-panel {
   overflow: hidden;
@@ -7417,10 +7417,8 @@ button.step-pill:hover { filter: brightness(0.98); }
   padding: 12px 14px;
 }
 
-/* Staff scroll: fixed height with scrollbar so all staff are reachable */
+/* Staff scroll: no height cap — show all rows, modal scrollbar handles the rest */
 .mc-an-staff-scroll {
-  max-height: 220px;
-  overflow-y: auto;
   border: 1px solid #f1f5f9;
   border-radius: 6px;
 }
