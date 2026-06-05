@@ -7137,6 +7137,8 @@ button.step-pill:hover { filter: brightness(0.98); }
 .mc-analytics-modal {
   max-width: 860px !important;
   width: 96vw !important;
+  max-height: calc(100vh - 32px) !important;  /* use near-full viewport height */
+  overflow-y: auto !important;                 /* modal itself scrolls to show everything */
 }
 .mc-analytics-grid {
   display: grid;
@@ -7415,10 +7417,8 @@ button.step-pill:hover { filter: brightness(0.98); }
   padding: 12px 14px;
 }
 
-/* Staff scroll: fixed max-height so it scrolls internally */
+/* Staff scroll: no internal scroll — show all rows, modal outer scroll handles it */
 .mc-an-staff-scroll {
-  max-height: 280px;
-  overflow-y: auto;
   border: 1px solid #f1f5f9;
   border-radius: 6px;
 }
@@ -7426,9 +7426,8 @@ button.step-pill:hover { filter: brightness(0.98); }
 .mc-an-bar.mc-an-bar-active { background: linear-gradient(to top, #f59e0b, #fbbf24) !important; }
 
 @media (max-width: 700px) {
-  .mc-top-row { grid-template-columns: 1fr; height: auto; }
-  .mc-top-row .mc-an-panel   { max-height: 220px; overflow-y: auto; }
-  .mc-an-staff-scroll        { max-height: 200px; }
+  .mc-top-row                { grid-template-columns: 1fr; height: auto; }
+  .mc-top-row .mc-an-panel   { height: 180px; }   /* compact chart height on mobile */
   .mc-analytics-body         { padding: 10px 12px 8px; }
   /* Compact KPI chips on mobile */
   .mc-an-kpi-row .mc-kpi-chip { padding: 6px 10px; gap: 6px; }
