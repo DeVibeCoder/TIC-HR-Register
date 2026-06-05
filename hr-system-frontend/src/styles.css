@@ -7377,10 +7377,8 @@ button.step-pill:hover { filter: brightness(0.98); }
 
 /* Body: flex column, NO scrollbar — all content fits */
 .mc-analytics-body {
-  flex: 1;
-  overflow: hidden;
+  /* no overflow:hidden — that was clipping the staff panel */
   padding: 12px 20px 8px;
-  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -7394,38 +7392,32 @@ button.step-pill:hover { filter: brightness(0.98); }
   margin-bottom: 0 !important;
 }
 
-/* Top 2-column row (monthly + dept) — fixed height, no scroll */
+/* Top 2-column row (monthly + dept) — fixed height */
 .mc-top-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-  flex-shrink: 0;
-  height: 300px;
+  height: 260px;
 }
 .mc-top-row .mc-an-panel {
-  overflow: hidden;   /* clip dept bars if too many */
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
-/* Staff summary panel — always visible regardless of parent flex context */
+/* Staff summary panel — always a solid block, never flex-sized */
 .mc-an-staff-panel {
-  flex: 1;
-  min-height: 260px;      /* was 0 — without a flex parent the panel collapsed to 0 */
   display: flex;
   flex-direction: column;
   background: #f8fafc;
   border: 1px solid #e8eaf0;
   border-radius: 10px;
   padding: 12px 14px;
-  overflow: hidden;
 }
 
-/* Staff scroll: explicit max-height so it scrolls at a fixed boundary */
+/* Staff scroll: fixed max-height so it scrolls internally */
 .mc-an-staff-scroll {
-  flex: 1;
-  min-height: 0;
-  max-height: 240px;      /* caps the scroll area; modal outer scroll shows the panel itself */
+  max-height: 280px;
   overflow-y: auto;
   border: 1px solid #f1f5f9;
   border-radius: 6px;
@@ -7435,30 +7427,11 @@ button.step-pill:hover { filter: brightness(0.98); }
 
 @media (max-width: 700px) {
   .mc-top-row { grid-template-columns: 1fr; height: auto; }
-
-  /* ── small-screen fixes: body scrolls, every section stays visible ── */
-  .mc-analytics-body {
-    overflow-y: auto;          /* body scrolls instead of clipping */
-    padding: 10px 12px 8px;   /* tighter side padding on narrow screens */
-  }
-  .mc-top-row .mc-an-panel {
-    max-height: 220px;         /* cap monthly + dept panels so they don't push staff off screen */
-    overflow-y: auto;
-  }
-  .mc-an-staff-panel {
-    flex: none;                /* don't collapse to 0 when top-row is tall */
-    min-height: 220px;         /* always show a useful chunk of the table */
-  }
-  .mc-an-staff-scroll {
-    flex: none;
-    max-height: 200px;         /* explicit height — flex:1 can't rely on a scrolling parent */
-    overflow-y: auto;
-  }
-  /* Compact KPI chips so they don't stack into 2 full rows */
-  .mc-an-kpi-row .mc-kpi-chip {
-    padding: 6px 10px;
-    gap: 6px;
-  }
+  .mc-top-row .mc-an-panel   { max-height: 220px; overflow-y: auto; }
+  .mc-an-staff-scroll        { max-height: 200px; }
+  .mc-analytics-body         { padding: 10px 12px 8px; }
+  /* Compact KPI chips on mobile */
+  .mc-an-kpi-row .mc-kpi-chip { padding: 6px 10px; gap: 6px; }
   .mc-an-kpi-row .mc-kpi-num  { font-size: 1.15rem; }
   .mc-an-kpi-row .mc-kpi-lbl  { font-size: 0.63rem; }
 }
