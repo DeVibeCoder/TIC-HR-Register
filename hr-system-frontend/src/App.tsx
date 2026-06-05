@@ -6983,12 +6983,12 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
     return `${months[dt.getMonth()]} ${day}${ord}, ${dt.getFullYear()}`
   }
 
-  const logoSvg = `<svg viewBox="0 0 500 430" xmlns="http://www.w3.org/2000/svg" style="width:62pt;height:54pt;flex-shrink:0;">
-    <rect width="500" height="430" fill="white"/>
-    <polygon points="10,6 240,6 125,204" fill="#1796E6"/>
-    <polygon points="260,6 490,6 375,204" fill="#1796E6"/>
-    <polygon points="135,210 365,210 250,12" fill="#2E1A78"/>
-    <polygon points="135,222 365,222 250,421" fill="#1796E6"/>
+  // Logo: two outer cyan triangles (W shape) + dark inner triangle + lower cyan triangle
+  const logoSvg = `<svg viewBox="0 0 500 460" xmlns="http://www.w3.org/2000/svg" style="width:82pt;height:72pt;flex-shrink:0;display:block;">
+    <polygon points="8,0 245,0 126,210" fill="#00AEEF"/>
+    <polygon points="255,0 492,0 374,210" fill="#00AEEF"/>
+    <polygon points="130,216 370,216 250,10" fill="#1B2B7E"/>
+    <polygon points="130,228 370,228 250,458" fill="#00AEEF"/>
   </svg>`
 
   const refSeq = record.refNumber.split('/').pop() || ''
@@ -7035,31 +7035,41 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
 <div class="wrap">
 
 <div class="page">
-  <!-- Letterhead — matches Villa Hakatha PDF header exactly -->
-  <div style="display:flex;align-items:center;padding-bottom:8pt;border-bottom:1pt solid #9fa8c8;margin-bottom:10pt;gap:0;">
-    <!-- Left: Logo + brand name -->
-    <div style="display:flex;align-items:center;gap:8pt;flex-shrink:0;min-width:0;flex:0 0 auto;">
+  <!-- ══ LETTERHEAD ═══════════════════════════════════════════════
+       Matches the Villa Hakatha official company letterhead exactly.
+       Layout: [Logo + VILLA brand] ── [Arabic Bismillah] ── [| Company details]
+       ═══════════════════════════════════════════════════════════ -->
+  <div style="display:flex;align-items:center;padding-bottom:10pt;border-bottom:1.2pt solid #b0bce8;margin-bottom:14pt;gap:0;">
+
+    <!-- ── LEFT: Logo mark + brand name ───────────────────────── -->
+    <div style="display:flex;align-items:center;gap:11pt;flex-shrink:0;">
       ${logoSvg}
-      <div style="line-height:1.15;">
-        <div style="font-size:20pt;font-weight:900;color:#1796E6;letter-spacing:2pt;line-height:1;">VILLA</div>
-        <div style="font-size:7.5pt;font-weight:500;color:#1796E6;letter-spacing:0.2pt;">Hakatha Private Limited</div>
+      <div style="line-height:1.1;">
+        <div style="font-size:27pt;font-weight:900;color:#1B2B7E;letter-spacing:2.5pt;line-height:1.05;font-family:Arial,Helvetica,sans-serif;">VILLA<span style="font-size:9pt;vertical-align:super;letter-spacing:0;font-weight:600;">&#174;</span></div>
+        <div style="font-size:9.5pt;color:#1B2B7E;font-weight:500;letter-spacing:0.6pt;margin-top:1pt;font-family:Arial,Helvetica,sans-serif;">Hakatha Private Limited</div>
       </div>
     </div>
-    <!-- Center: Arabic Bismillah -->
-    <div style="flex:1;text-align:center;padding:0 8pt;">
-      <div style="font-size:13pt;font-family:'Arabic Typesetting','Traditional Arabic','Scheherazade New',serif;direction:rtl;color:#333;line-height:1.4;">&#x628;&#x633;&#x645;&#x20;&#x627;&#x644;&#x644;&#x647;&#x20;&#x627;&#x644;&#x631;&#x62D;&#x645;&#x646;&#x20;&#x627;&#x644;&#x631;&#x62D;&#x64A;&#x645;</div>
+
+    <!-- ── CENTER: Arabic Bismillah (handwriting style, top-center) -->
+    <div style="flex:1;text-align:center;padding:0 18pt;align-self:center;">
+      <div style="font-size:11pt;font-family:'Arabic Typesetting','Noto Nastaliq Urdu','Traditional Arabic','Scheherazade New',serif;direction:rtl;color:#1a1a1a;line-height:1.5;font-style:italic;">&#x628;&#x633;&#x645;&#x20;&#x627;&#x644;&#x644;&#x647;&#x20;&#x627;&#x644;&#x631;&#x62D;&#x645;&#x646;&#x20;&#x627;&#x644;&#x631;&#x62D;&#x64A;&#x645;</div>
     </div>
-    <!-- Vertical separator -->
-    <div style="width:0.8pt;background:#9fa8c8;align-self:stretch;flex-shrink:0;"></div>
-    <!-- Right: Company details -->
-    <div style="padding-left:10pt;flex-shrink:0;min-width:0;">
-      <div style="font-size:10.5pt;font-weight:700;color:#3a4da8;margin-bottom:3pt;">Villa Hakatha Pvt. Ltd.</div>
-      <div style="font-size:7pt;color:#3a4da8;line-height:1.75;">
-        Villa Building, Ibrahim Hassan Didi Magu, male'<br/>
-        Republic of Maldives, Tel: +960 3325195, Fax: +960 3325177<br/>
-        email: info@villa.com.mv
+
+    <!-- ── RIGHT: Vertical rule + Company details ─────────────── -->
+    <div style="display:flex;align-items:stretch;flex-shrink:0;">
+      <!-- Vertical divider line -->
+      <div style="width:1.5pt;background:#1B2B7E;flex-shrink:0;margin-right:11pt;border-radius:1pt;"></div>
+      <!-- Text block -->
+      <div style="padding-top:1pt;">
+        <div style="font-size:12pt;font-weight:800;color:#1B2B7E;margin-bottom:3pt;font-family:Arial,Helvetica,sans-serif;letter-spacing:0.2pt;">Villa Hakatha Pvt. Ltd.</div>
+        <div style="font-size:7.5pt;color:#1B2B7E;line-height:1.85;font-family:Arial,Helvetica,sans-serif;">
+          Villa Building,&nbsp;&nbsp;Brohinn Hassan Didi Magu, male&#x2019;<br/>
+          Republic of Maldives,&nbsp;&nbsp;Tel: +960 3325195,&nbsp;&nbsp;Fax: +960 3325177<br/>
+          email: info@villa.com.mv
+        </div>
       </div>
     </div>
+
   </div>
   <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10pt;">
     <span style="font-size:11pt;font-weight:900;text-transform:uppercase;">Briefing Meeting Minutes</span>
