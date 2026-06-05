@@ -7134,13 +7134,7 @@ button.step-pill:hover { filter: brightness(0.98); }
    MEDICAL LEAVE — Analytics modal
    ════════════════════════════════════════════════════════ */
 
-.mc-analytics-modal {
-  max-width: 860px !important;
-  width: 96vw !important;
-  max-height: calc(100vh - 32px) !important;
-  overflow-y: scroll !important;   /* always show scrollbar so user knows there's more */
-  padding: 14px 20px !important;   /* tighter than default 20px to save vertical space */
-}
+/* mc-analytics-modal main rule is below in the analytics section */
 .mc-analytics-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -7174,9 +7168,8 @@ button.step-pill:hover { filter: brightness(0.98); }
   min-height: 100px;
 }
 
-/* Scrollable staff table */
+/* Scrollable staff table — height set by flex parent, not max-height */
 .mc-an-staff-scroll {
-  max-height: 300px;
   overflow-y: auto;
   border: 1px solid #f1f5f9;
   border-radius: 6px;
@@ -7378,28 +7371,32 @@ button.step-pill:hover { filter: brightness(0.98); }
   flex-shrink: 0; border-top: 1px solid #f1f5f9; padding: 8px 24px;
 }
 
-/* Body: flex column, single scroll on the modal */
+/* Body fills the space between header and actions inside the flex modal */
 .mc-analytics-body {
-  padding: 8px 0 4px;
+  flex: 1;
+  min-height: 0;            /* essential — allows flex child to shrink below content size */
+  overflow: hidden;
+  padding: 10px 20px 6px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-/* KPI row */
+/* KPI row — fixed, never shrinks */
 .mc-an-kpi-row {
   flex-shrink: 0;
-  padding-bottom: 10px !important;
+  padding-bottom: 8px !important;
   border-bottom: 1px solid #f1f5f9;
   margin-bottom: 0 !important;
 }
 
-/* Top 2-column row (monthly + dept) — compact height so staff always shows */
+/* Charts row — fixed height */
 .mc-top-row {
+  flex-shrink: 0;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-  height: 150px;
+  height: 160px;
 }
 .mc-top-row .mc-an-panel {
   overflow: hidden;
@@ -7407,18 +7404,24 @@ button.step-pill:hover { filter: brightness(0.98); }
   flex-direction: column;
 }
 
-/* Staff summary panel — always a solid block, never flex-sized */
+/* Staff panel — takes ALL remaining space after charts */
 .mc-an-staff-panel {
+  flex: 1;
+  min-height: 0;            /* allows it to shrink so scroll works */
   display: flex;
   flex-direction: column;
   background: #f8fafc;
   border: 1px solid #e8eaf0;
   border-radius: 10px;
-  padding: 12px 14px;
+  padding: 10px 12px;
+  overflow: hidden;
 }
 
-/* Staff scroll: no height cap — show all rows, modal scrollbar handles the rest */
+/* Staff scroll — fills the staff panel, scrolls internally */
 .mc-an-staff-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   border: 1px solid #f1f5f9;
   border-radius: 6px;
 }
@@ -7426,13 +7429,12 @@ button.step-pill:hover { filter: brightness(0.98); }
 .mc-an-bar.mc-an-bar-active { background: linear-gradient(to top, #f59e0b, #fbbf24) !important; }
 
 @media (max-width: 700px) {
-  .mc-top-row                { grid-template-columns: 1fr; height: auto; }
-  .mc-top-row .mc-an-panel   { height: 180px; }   /* compact chart height on mobile */
-  .mc-analytics-body         { padding: 10px 12px 8px; }
-  /* Compact KPI chips on mobile */
-  .mc-an-kpi-row .mc-kpi-chip { padding: 6px 10px; gap: 6px; }
-  .mc-an-kpi-row .mc-kpi-num  { font-size: 1.15rem; }
-  .mc-an-kpi-row .mc-kpi-lbl  { font-size: 0.63rem; }
+  .mc-top-row                { grid-template-columns: 1fr; height: auto; flex-shrink: 0; }
+  .mc-top-row .mc-an-panel   { height: 140px; }
+  .mc-analytics-body         { padding: 8px 12px 4px; }
+  .mc-an-kpi-row .mc-kpi-chip { padding: 5px 10px; gap: 6px; }
+  .mc-an-kpi-row .mc-kpi-num  { font-size: 1.1rem; }
+  .mc-an-kpi-row .mc-kpi-lbl  { font-size: 0.62rem; }
 }
 
 /* ═══ Termination Form Redesign ═════════════════════════ */
