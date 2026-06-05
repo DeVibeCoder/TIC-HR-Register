@@ -107,7 +107,7 @@ type MeetingRecord = {
   venue: string
   chairperson: string
   reps: MeetingRep[]
-  agendaItems: string
+  prevMeetingDate: string   // date of previous meeting for agenda item 1
   deptUpdates: MeetingDeptUpdate[]
   otherMatters: string
   preparedBy: string
@@ -397,22 +397,16 @@ const pages: Array<{ id: Page; label: string }> = [
 
 const departmentsList = ['ADMINISTRATION', 'HUMAN RESOURCES', 'ACCOUNTS AND FINANCE', 'CAFE', 'STORES', 'HOUSEKEEPING', 'LPG PLANT', 'OXYGEN PLANT', 'CEMENT PLANT', 'FUEL FARM', 'ENGINEERING ADMINISTRATION', 'MECHANICAL', 'ELECTRICAL', 'MAINTENANCE', 'POWER HOUSE', 'PAINTING PROJECT', 'KITCHEN', 'STAFF MESS', 'LOSS PREVENTION', 'ROOFING FACTORY', 'BATCHING PLANT']
 
-// HOD meeting departments — maps display name + code to app department names
+// HOD briefing meeting — fixed 8 departments that attend
 const MEETING_DEPTS = [
-  { label: 'Accounts & Finance',  code: 'ACC', appDepts: ['ACCOUNTS AND FINANCE'] },
-  { label: 'Administration',       code: 'ADM', appDepts: ['ADMINISTRATION'] },
-  { label: 'Batching Plant',       code: 'BP',  appDepts: ['BATCHING PLANT'] },
-  { label: 'Cement Plant',         code: 'CP',  appDepts: ['CEMENT PLANT'] },
-  { label: 'Engineering',          code: 'ENG', appDepts: ['ENGINEERING ADMINISTRATION','MECHANICAL','ELECTRICAL','MAINTENANCE','POWER HOUSE','PAINTING PROJECT'] },
-  { label: 'Fuel Farm',            code: 'FF',  appDepts: ['FUEL FARM'] },
-  { label: 'Food & Beverage',      code: 'F&B', appDepts: ['KITCHEN','STAFF MESS','CAFE'] },
-  { label: 'Human Resource',       code: 'HR',  appDepts: ['HUMAN RESOURCES'] },
-  { label: 'Housekeeping',         code: 'HK',  appDepts: ['HOUSEKEEPING'] },
-  { label: 'Loss Prevention',      code: 'LP',  appDepts: ['LOSS PREVENTION'] },
-  { label: 'LPG & Oxygen Plant',   code: 'LPG', appDepts: ['LPG PLANT','OXYGEN PLANT'] },
-  { label: 'QMarine',              code: 'QM',  appDepts: ['QMARINE','Q MARINE'] },
-  { label: 'Roofing Factory',      code: 'RF',  appDepts: ['ROOFING FACTORY'] },
-  { label: 'Stores',               code: 'STR', appDepts: ['STORES'] },
+  { label: 'Accounts',        code: 'ACC', appDepts: ['ACCOUNTS AND FINANCE'] },
+  { label: 'Engineering',     code: 'ENG', appDepts: ['ENGINEERING ADMINISTRATION','MECHANICAL','ELECTRICAL','MAINTENANCE','POWER HOUSE','PAINTING PROJECT'] },
+  { label: 'Loss Prevention', code: 'LP',  appDepts: ['LOSS PREVENTION'] },
+  { label: 'Housekeeping',    code: 'HK',  appDepts: ['HOUSEKEEPING'] },
+  { label: 'Food & Beverage', code: 'F&B', appDepts: ['KITCHEN','STAFF MESS','CAFE'] },
+  { label: 'Stores',          code: 'STR', appDepts: ['STORES'] },
+  { label: 'LPG Plant',       code: 'LPG', appDepts: ['LPG PLANT','OXYGEN PLANT'] },
+  { label: 'Cement Plant',    code: 'CP',  appDepts: ['CEMENT PLANT'] },
 ] as const
 const nationalities = ['MALDIVES', 'INDIA', 'BANGLADESH', 'SRI LANKA', 'NEPAL', 'FINLAND', 'MALAYSIA', 'PHILIPPINES', 'MYANMAR', 'PAKISTAN']
 
@@ -6961,10 +6955,17 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
       </div>`
     }).join('')
 
-  const agendaLines = record.agendaItems.split('\n').filter(a => a.trim())
-    .map(a => `<li style="margin-bottom:4pt;font-size:9pt;">${esc(a.trim())}</li>`).join('')
+  // Fixed agenda — only the previous-meeting date changes
+  const fmtAgendaDate = (d: string) => {
+    if (!d) return '[DATE]'
+    const months = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER']
+    const dt = new Date(d + 'T12:00:00')
+    const day = dt.getDate()
+    const ord = (day===1||day===21||day===31)?'st':(day===2||day===22)?'nd':(day===3||day===23)?'rd':'th'
+    return `${months[dt.getMonth()]} ${day}${ord}, ${dt.getFullYear()}`
+  }
 
-  const logoSvg = `<svg viewBox="0 0 500 430" xmlns="http://www.w3.org/2000/svg" style="width:58pt;height:50pt;flex-shrink:0;">
+  const logoSvg = `<svg viewBox="0 0 500 430" xmlns="http://www.w3.org/2000/svg" style="width:62pt;height:54pt;flex-shrink:0;">
     <rect width="500" height="430" fill="white"/>
     <polygon points="10,6 240,6 125,204" fill="#1796E6"/>
     <polygon points="260,6 490,6 375,204" fill="#1796E6"/>
@@ -6973,6 +6974,14 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   </svg>`
 
   const refSeq = record.refNumber.split('/').pop() || ''
+
+  // 3-column footer: left empty | center page# | right title
+  const pgFooter = (n: number) =>
+    `<div style="display:flex;align-items:center;border-top:0.5pt solid #ccc;padding-top:5pt;margin-top:12pt;font-size:8pt;color:#666;">
+      <span style="flex:1;"></span>
+      <span style="flex:1;text-align:center;">${n}</span>
+      <span style="flex:1;text-align:right;">BRIEFING MEETING MINUTES &mdash; ${esc(refSeq)}</span>
+    </div>`
 
   const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/>
 <title>Briefing Meeting Minutes — ${esc(record.refNumber)}</title>
@@ -7008,16 +7017,30 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
 <div class="wrap">
 
 <div class="page">
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:8pt;border-bottom:2pt solid #1e1b4b;margin-bottom:10pt;">
-    <div style="display:flex;align-items:center;gap:10pt;">${logoSvg}
-      <div>
-        <div style="font-size:14pt;font-weight:900;color:#1e1b4b;letter-spacing:1.5pt;line-height:1.1;">VILLA</div>
-        <div style="font-size:7pt;font-weight:700;color:#1e1b4b;letter-spacing:0.3pt;">Hakatha Private Limited</div>
+  <!-- Letterhead — matches Villa Hakatha PDF header exactly -->
+  <div style="display:flex;align-items:center;padding-bottom:8pt;border-bottom:1pt solid #9fa8c8;margin-bottom:10pt;gap:0;">
+    <!-- Left: Logo + brand name -->
+    <div style="display:flex;align-items:center;gap:8pt;flex-shrink:0;min-width:0;flex:0 0 auto;">
+      ${logoSvg}
+      <div style="line-height:1.15;">
+        <div style="font-size:20pt;font-weight:900;color:#1796E6;letter-spacing:2pt;line-height:1;">VILLA</div>
+        <div style="font-size:7.5pt;font-weight:500;color:#1796E6;letter-spacing:0.2pt;">Hakatha Private Limited</div>
       </div>
     </div>
-    <div style="text-align:right;font-size:7.5pt;color:#555;line-height:1.7;">
-      Villa Building, Ibrahim Hassan Didi Magu, male'<br/>Republic of Maldives<br/>
-      Tel: +960 3325195 &nbsp; Fax: +960 3325177<br/>email: info@villa.com.mv
+    <!-- Center: Arabic Bismillah -->
+    <div style="flex:1;text-align:center;padding:0 8pt;">
+      <div style="font-size:13pt;font-family:'Arabic Typesetting','Traditional Arabic','Scheherazade New',serif;direction:rtl;color:#333;line-height:1.4;">&#x628;&#x633;&#x645;&#x20;&#x627;&#x644;&#x644;&#x647;&#x20;&#x627;&#x644;&#x631;&#x62D;&#x645;&#x646;&#x20;&#x627;&#x644;&#x631;&#x62D;&#x64A;&#x645;</div>
+    </div>
+    <!-- Vertical separator -->
+    <div style="width:0.8pt;background:#9fa8c8;align-self:stretch;flex-shrink:0;"></div>
+    <!-- Right: Company details -->
+    <div style="padding-left:10pt;flex-shrink:0;min-width:0;">
+      <div style="font-size:10.5pt;font-weight:700;color:#3a4da8;margin-bottom:3pt;">Villa Hakatha Pvt. Ltd.</div>
+      <div style="font-size:7pt;color:#3a4da8;line-height:1.75;">
+        Villa Building, Ibrahim Hassan Didi Magu, male'<br/>
+        Republic of Maldives, Tel: +960 3325195, Fax: +960 3325177<br/>
+        email: info@villa.com.mv
+      </div>
     </div>
   </div>
   <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10pt;">
@@ -7052,18 +7075,21 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
       <td style="text-align:center;padding:4pt;font-size:9pt;border:0.5pt solid #bbb;font-weight:800;">${pad2(grandTotal)}</td>
     </tr></tfoot>
   </table>
-  <div class="footer">BRIEFING MEETING MINUTES — ${esc(refSeq)} &nbsp;&nbsp;&nbsp; 1</div>
+  ${pgFooter(1)}
 </div>
 
 <div class="page pgbrk">
   <div style="font-size:9pt;font-weight:700;margin-bottom:12pt;padding-bottom:8pt;border-bottom:0.5pt solid #ccc;">The discussions and actions points agreed during the meeting are as follows.</div>
+  <!-- Fixed agenda — 3 standard items, only point-1 date changes -->
   <div style="margin-bottom:12pt;">
-    <div style="display:inline-flex;align-items:baseline;gap:8pt;margin-bottom:5pt;">
+    <div style="display:flex;align-items:baseline;gap:8pt;margin-bottom:5pt;">
       <span style="font-size:10pt;">○</span>
       <strong style="font-size:9pt;text-transform:uppercase;">Agenda:</strong>
     </div>
     <ol style="margin:0 0 0 18pt;padding:0;">
-      ${agendaLines || `<li style="margin-bottom:4pt;font-size:9pt;">REVIEW OF MINUTES FROM THE PREVIOUS MEETING</li><li style="margin-bottom:4pt;font-size:9pt;">DISCUSSION OF ISSUES, UPDATES AND CHALLENGES FACED BY EACH DEPARTMENT</li><li style="margin-bottom:4pt;font-size:9pt;">ANY OTHER MATTERS THAT NEED TO BE ADDRESSED</li>`}
+      <li style="margin-bottom:5pt;font-size:9pt;">REVIEW OF MINUTES FROM THE PREVIOUS MEETING HELD ON ${fmtAgendaDate(record.prevMeetingDate)}.</li>
+      <li style="margin-bottom:5pt;font-size:9pt;">DISCUSSION OF ISSUES, UPDATES AND CHALLENGES FACED BY EACH DEPARTMENT.</li>
+      <li style="margin-bottom:5pt;font-size:9pt;">ANY OTHER MATTERS THAT NEED TO BE ADDRESSED&hellip;</li>
     </ol>
   </div>
   ${deptHtml ? `<div style="margin-bottom:14pt;"><div style="font-size:9pt;font-weight:800;text-decoration:underline;text-transform:uppercase;margin-bottom:10pt;">2. Discussion of Issues, Updates and Challenges Faced by Each Department:</div>${deptHtml}</div>` : ''}
@@ -7083,7 +7109,7 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
       <div style="font-size:9pt;">General Manager</div>
     </div>
   </div>
-  <div class="footer">BRIEFING MEETING MINUTES — ${esc(refSeq)} &nbsp;&nbsp;&nbsp; 2</div>
+  ${pgFooter(2)}
 </div>
 
 </div></body></html>`
@@ -7111,13 +7137,13 @@ function MeetingFormModal({ record, employees, activeLeaves, onClose, onSave }: 
   const [preparedBy,  setPreparedBy]  = useState(record.preparedBy)
   const [approvedBy,  setApprovedBy]  = useState(record.approvedBy)
   const [reps,        setReps]        = useState<MeetingRep[]>(record.reps)
-  const [deptUpdates, setDeptUpdates] = useState<MeetingDeptUpdate[]>(record.deptUpdates)
-  const [agendaItems, setAgendaItems] = useState(record.agendaItems)
-  const [otherMatters,setOtherMatters]= useState(record.otherMatters)
+  const [deptUpdates,    setDeptUpdates]    = useState<MeetingDeptUpdate[]>(record.deptUpdates)
+  const [prevMeetingDate,setPrevMeetingDate] = useState(record.prevMeetingDate ?? '')
+  const [otherMatters,   setOtherMatters]   = useState(record.otherMatters)
 
   const buildCurrent = (): MeetingRecord => ({
     ...record, refNumber, date, timeStarted, timeEnded, venue, chairperson,
-    status, preparedBy, approvedBy, reps, deptUpdates, agendaItems, otherMatters
+    status, preparedBy, approvedBy, reps, deptUpdates, prevMeetingDate, otherMatters
   })
 
   const updateRep = (id: string, field: keyof MeetingRep, value: string) =>
@@ -7311,18 +7337,37 @@ function MeetingFormModal({ record, employees, activeLeaves, onClose, onSave }: 
 
           {/* ── TAB 4: Agenda & Other ── */}
           {tab === 'other' && (
-            <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+            <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+              {/* Previous meeting date — only editable part of agenda */}
               <label style={{ display:'flex', flexDirection:'column', gap:5 }}>
-                <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151' }}>
-                  Agenda Items <span style={{ fontWeight:400, color:'#94a3b8' }}>(one item per line — numbered automatically in printout)</span>
-                </span>
-                <textarea style={{ ...ta, minHeight:100 }} value={agendaItems} onChange={e => setAgendaItems(e.target.value)} />
+                <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151' }}>Previous Meeting Date <span style={{ fontWeight:400, color:'#94a3b8' }}>(used in Agenda item 1)</span></span>
+                <input type="date" style={{ ...inp, maxWidth:220 }} value={prevMeetingDate} onChange={e => setPrevMeetingDate(e.target.value)} />
               </label>
+              {/* Fixed agenda preview */}
+              <div style={{ background:'#f8fafc', border:'1.5px solid #e0e7ff', borderRadius:10, padding:'12px 16px' }}>
+                <div style={{ fontSize:'0.72rem', fontWeight:700, color:'#4338ca', marginBottom:8, textTransform:'uppercase', letterSpacing:'0.05em' }}>
+                  Fixed Agenda (printed automatically)
+                </div>
+                <ol style={{ margin:0, paddingLeft:20, color:'#374151', fontSize:'0.82rem', lineHeight:1.8 }}>
+                  <li>REVIEW OF MINUTES FROM THE PREVIOUS MEETING HELD ON <strong style={{ color:'#7c3aed' }}>
+                    {prevMeetingDate ? (() => {
+                      const months = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER']
+                      const dt = new Date(prevMeetingDate + 'T12:00:00')
+                      const d = dt.getDate()
+                      const ord = (d===1||d===21||d===31)?'st':(d===2||d===22)?'nd':(d===3||d===23)?'rd':'th'
+                      return `${months[dt.getMonth()]} ${d}${ord}, ${dt.getFullYear()}`
+                    })() : '[select date above]'}
+                  </strong>.</li>
+                  <li>DISCUSSION OF ISSUES, UPDATES AND CHALLENGES FACED BY EACH DEPARTMENT.</li>
+                  <li>ANY OTHER MATTERS THAT NEED TO BE ADDRESSED…</li>
+                </ol>
+              </div>
+              {/* Other matters */}
               <label style={{ display:'flex', flexDirection:'column', gap:5 }}>
                 <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151' }}>
-                  Other Matters / AOB <span style={{ fontWeight:400, color:'#94a3b8' }}>(free text — printed as a block under section 3)</span>
+                  Other Matters / AOB <span style={{ fontWeight:400, color:'#94a3b8' }}>(free text — printed under section 3)</span>
                 </span>
-                <textarea style={{ ...ta, minHeight:200 }} value={otherMatters} onChange={e => setOtherMatters(e.target.value)} placeholder="Type any other matters discussed during the meeting..." />
+                <textarea style={{ ...ta, minHeight:180 }} value={otherMatters} onChange={e => setOtherMatters(e.target.value)} placeholder="Type any other matters discussed during the meeting..." />
               </label>
             </div>
           )}
@@ -7364,7 +7409,7 @@ function MeetingsSection({ records, onUpdate, employees, activeLeaves }: {
         id: `rep-${i}`, name: '', designation: '', meetingDept: d.label, deptCode: d.code,
         attendance: 'Attended' as MeetingAttendance, reason: ''
       })),
-      agendaItems: `REVIEW OF MINUTES FROM THE PREVIOUS MEETING\nDISCUSSION OF ISSUES, UPDATES AND CHALLENGES FACED BY EACH DEPARTMENT\nANY OTHER MATTERS THAT NEED TO BE ADDRESSED`,
+      prevMeetingDate: '',
       deptUpdates: MEETING_DEPTS.map(d => ({ dept: d.label, points: '' })),
       otherMatters: '',
       preparedBy: 'Arushulla Rashid',
