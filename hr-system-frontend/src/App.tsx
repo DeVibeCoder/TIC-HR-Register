@@ -408,6 +408,25 @@ const MEETING_DEPTS = [
   { label: 'LPG Plant',       code: 'LPG', appDepts: ['LPG PLANT','OXYGEN PLANT'] },
   { label: 'Cement Plant',    code: 'CP',  appDepts: ['CEMENT PLANT'] },
 ] as const
+
+// All departments shown in the headcount table (matches the PDF layout)
+const HEADCOUNT_DEPTS = [
+  { label: 'Accounts & Finance',  appDepts: ['ACCOUNTS AND FINANCE','ACCOUNTS','FINANCE'] },
+  { label: 'Administration',      appDepts: ['ADMINISTRATION','ADMIN'] },
+  { label: 'Batching Plant',      appDepts: ['BATCHING PLANT'] },
+  { label: 'Cement Plant',        appDepts: ['CEMENT PLANT'] },
+  { label: 'Engineering',         appDepts: ['ENGINEERING ADMINISTRATION','MECHANICAL','ELECTRICAL','MAINTENANCE','POWER HOUSE','PAINTING PROJECT','ENGINEERING'] },
+  { label: 'Fuel Farm',           appDepts: ['FUEL FARM'] },
+  { label: 'Food & Beverage',     appDepts: ['KITCHEN','STAFF MESS','CAFE','FOOD AND BEVERAGE','FOOD & BEVERAGE'] },
+  { label: 'Human Resource',      appDepts: ['HUMAN RESOURCE','HUMAN RESOURCES','HR'] },
+  { label: 'Housekeeping',        appDepts: ['HOUSEKEEPING'] },
+  { label: 'Loss Prevention',     appDepts: ['LOSS PREVENTION'] },
+  { label: 'LPG & Oxygen Plant',  appDepts: ['LPG PLANT','OXYGEN PLANT','LPG'] },
+  { label: 'QMarine',             appDepts: ['QMARINE','Q MARINE','MARINE','Q-MARINE'] },
+  { label: 'Roofing Factory',     appDepts: ['ROOFING FACTORY','ROOFING'] },
+  { label: 'Stores',              appDepts: ['STORES','STORE'] },
+] as const
+
 const nationalities = ['MALDIVES', 'INDIA', 'BANGLADESH', 'SRI LANKA', 'NEPAL', 'FINLAND', 'MALAYSIA', 'PHILIPPINES', 'MYANMAR', 'PAKISTAN']
 
 const leaveTypeOptions: Array<{ code: LeaveTypeCode; label: string }> = [
@@ -6873,7 +6892,7 @@ function TerminationPage({
    ══════════════════════════════════════════════════════════════ */
 
 function calcMeetingHeadcount(
-  dept: typeof MEETING_DEPTS[number],
+  dept: { label: string; appDepts: readonly string[] },
   employees: Employee[],
   activeLeaves: ActiveLeaveRecord[]
 ) {
@@ -6925,9 +6944,8 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
         <td style="width:6%;"></td>
       </tr>`).join('')
 
-  const hcRows = MEETING_DEPTS.map(dept => {
+  const hcRows = HEADCOUNT_DEPTS.map(dept => {
     const { onDuty, notInSite, sickLeave, onLeave, total } = calcMeetingHeadcount(dept, employees, activeLeaves)
-    if (total === 0) return ''
     return `<tr>
       <td style="padding:4pt 6pt;font-size:9pt;border:0.5pt solid #bbb;">${esc(dept.label)}</td>
       <td style="text-align:center;padding:4pt;font-size:9pt;border:0.5pt solid #bbb;">${pad2(onDuty)}</td>
@@ -6937,7 +6955,7 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
       <td style="padding:4pt 6pt;font-size:9pt;border:0.5pt solid #bbb;"></td>
       <td style="text-align:center;padding:4pt;font-size:9pt;border:0.5pt solid #bbb;font-weight:700;">${pad2(total)}</td>
     </tr>`
-  }).filter(Boolean).join('')
+  }).join('')
 
   const totOnDuty    = employees.filter(e => e.siteStatus === 'On Site').length
   const totNotInSite = employees.filter(e => e.siteStatus === 'Off Site').length
@@ -7080,20 +7098,52 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
 
 <div class="page pgbrk">
   <div style="font-size:9pt;font-weight:700;margin-bottom:12pt;padding-bottom:8pt;border-bottom:0.5pt solid #ccc;">The discussions and actions points agreed during the meeting are as follows.</div>
-  <!-- Fixed agenda — 3 standard items, only point-1 date changes -->
-  <div style="margin-bottom:12pt;">
-    <div style="display:flex;align-items:baseline;gap:8pt;margin-bottom:5pt;">
-      <span style="font-size:10pt;">○</span>
-      <strong style="font-size:9pt;text-transform:uppercase;">Agenda:</strong>
+
+  <!-- AGENDA block 1: numbered list of all 3 items -->
+  <div style="margin-bottom:14pt;">
+    <div style="display:flex;align-items:baseline;gap:8pt;margin-bottom:6pt;">
+      <span style="font-size:10pt;">&#9675;</span>
+      <strong style="font-size:9pt;text-transform:uppercase;letter-spacing:0.3pt;">Agenda:</strong>
     </div>
-    <ol style="margin:0 0 0 18pt;padding:0;">
+    <ol style="margin:0 0 0 20pt;padding:0;">
       <li style="margin-bottom:5pt;font-size:9pt;">REVIEW OF MINUTES FROM THE PREVIOUS MEETING HELD ON ${fmtAgendaDate(record.prevMeetingDate)}.</li>
       <li style="margin-bottom:5pt;font-size:9pt;">DISCUSSION OF ISSUES, UPDATES AND CHALLENGES FACED BY EACH DEPARTMENT.</li>
       <li style="margin-bottom:5pt;font-size:9pt;">ANY OTHER MATTERS THAT NEED TO BE ADDRESSED&hellip;</li>
     </ol>
   </div>
-  ${deptHtml ? `<div style="margin-bottom:14pt;"><div style="font-size:9pt;font-weight:800;text-decoration:underline;text-transform:uppercase;margin-bottom:10pt;">2. Discussion of Issues, Updates and Challenges Faced by Each Department:</div>${deptHtml}</div>` : ''}
-  ${record.otherMatters.trim() ? `<div style="margin-bottom:14pt;"><div style="font-size:9pt;font-weight:800;text-decoration:underline;text-transform:uppercase;margin-bottom:8pt;">3. Any Other Matters That Need to Be Addressed</div><div style="font-size:9pt;white-space:pre-line;line-height:1.6;">${esc(record.otherMatters)}</div></div>` : ''}
+
+  <!-- AGENDA block 2: detailed discussion of each item -->
+  <div style="margin-bottom:14pt;">
+    <div style="display:flex;align-items:baseline;gap:8pt;margin-bottom:10pt;">
+      <span style="font-size:10pt;">&#9675;</span>
+      <strong style="font-size:9pt;text-transform:uppercase;letter-spacing:0.3pt;">Agenda:</strong>
+    </div>
+
+    <!-- Item 1 detail -->
+    <div style="margin-bottom:14pt;padding-left:18pt;">
+      <div style="font-size:9pt;font-weight:800;text-decoration:underline;text-transform:uppercase;margin-bottom:6pt;">
+        1. Review of Minutes from the Previous Meeting Held on ${fmtAgendaDate(record.prevMeetingDate)}.
+      </div>
+      <div style="font-size:9pt;line-height:1.6;">Highlighted: The minutes from the previous meeting were reviewed and accepted without any changes.</div>
+    </div>
+
+    <!-- Item 2 detail: 8 dept discussion sections -->
+    <div style="margin-bottom:14pt;padding-left:18pt;">
+      <div style="font-size:9pt;font-weight:800;text-decoration:underline;text-transform:uppercase;margin-bottom:10pt;">
+        2. Discussion of Issues, Updates and Challenges Faced by Each Department:
+      </div>
+      ${deptHtml || MEETING_DEPTS.map(d => `<div style="margin-bottom:12pt;"><div style="font-size:9pt;font-weight:700;text-decoration:underline;margin-bottom:4pt;">${esc(d.label)}</div><ul style="margin:0;padding-left:16pt;"><li style="font-size:9pt;color:#888;font-style:italic;">No updates recorded.</li></ul></div>`).join('')}
+    </div>
+
+    <!-- Item 3 detail: other matters -->
+    <div style="padding-left:18pt;">
+      <div style="font-size:9pt;font-weight:800;text-decoration:underline;text-transform:uppercase;margin-bottom:8pt;">
+        3. Any Other Matters That Need to Be Addressed:
+      </div>
+      <div style="font-size:9pt;white-space:pre-line;line-height:1.6;">${record.otherMatters.trim() ? esc(record.otherMatters) : '<span style="color:#888;font-style:italic;">None.</span>'}</div>
+    </div>
+  </div>
+
   <div style="text-align:center;border:0.8pt solid #888;padding:7pt;margin:18pt 0;font-size:9pt;color:#555;font-style:italic;">We'll end the meeting if there's nothing else to discuss.</div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:40pt;margin-top:12pt;">
     <div style="border:0.8pt solid #888;padding:12pt 14pt;">
@@ -7519,13 +7569,157 @@ function MeetingsSection({ records, onUpdate, employees, activeLeaves }: {
   )
 }
 
+/* ─── Sample meeting minutes ──────────────────────────────────── */
+const initialMeetingRecords: MeetingRecord[] = [
+  {
+    id: 'mtg-001',
+    refNumber: 'VHPL/MBM/26/031',
+    date: '2026-03-26',
+    timeStarted: '10:00',
+    timeEnded: '11:45',
+    venue: 'Conference Room, Administration Building',
+    chairperson: 'Ahmed Shareef — General Manager',
+    prevMeetingDate: '2026-02-26',
+    reps: [
+      { id: 'r01', name: 'Ibrahim Rasheed',  designation: 'Head of Accounts',        meetingDept: 'Accounts',        deptCode: 'ACC', attendance: 'Attended',  reason: '' },
+      { id: 'r02', name: 'Mohamed Nizam',    designation: 'Chief Engineer',           meetingDept: 'Engineering',     deptCode: 'ENG', attendance: 'Attended',  reason: '' },
+      { id: 'r03', name: 'Ali Shareef',      designation: 'LP Supervisor',            meetingDept: 'Loss Prevention', deptCode: 'LP',  attendance: 'Attended',  reason: '' },
+      { id: 'r04', name: 'Fathimath Laila',  designation: 'Housekeeping Supervisor',  meetingDept: 'Housekeeping',    deptCode: 'HK',  attendance: 'Attended',  reason: '' },
+      { id: 'r05', name: 'Hassan Niyaz',     designation: 'F&B Supervisor',           meetingDept: 'Food & Beverage', deptCode: 'F&B', attendance: 'On Leave',  reason: 'Annual Leave' },
+      { id: 'r06', name: 'Abdul Waheed',     designation: 'Store Keeper',             meetingDept: 'Stores',          deptCode: 'STR', attendance: 'Attended',  reason: '' },
+      { id: 'r07', name: 'Moosa Shakir',     designation: 'LPG Plant Operator',       meetingDept: 'LPG Plant',       deptCode: 'LPG', attendance: 'Attended',  reason: '' },
+      { id: 'r08', name: 'Ahmed Siraj',      designation: 'Cement Plant Supervisor',  meetingDept: 'Cement Plant',    deptCode: 'CP',  attendance: 'Attended',  reason: '' },
+    ],
+    deptUpdates: [
+      { dept: 'Accounts',        points: 'Monthly payroll processed on time.\nPetty cash reconciliation completed for February.' },
+      { dept: 'Engineering',     points: 'Generator 2 scheduled maintenance completed.\nElectrical panel inspection pending — scheduled for next week.' },
+      { dept: 'Loss Prevention', points: 'No major incidents reported this month.\nFire drill conducted on 20th March — all clear.' },
+      { dept: 'Housekeeping',    points: 'Deep cleaning of staff quarters completed.\nNew cleaning schedule implemented across all blocks.' },
+      { dept: 'Food & Beverage', points: 'Menu updated for Ramadan season.\nNew kitchen equipment installed and operational.' },
+      { dept: 'Stores',          points: 'Stock audit completed — report submitted to management.\nNew procurement requests for Q2 submitted.' },
+      { dept: 'LPG Plant',       points: 'LPG stock levels at 72% — refill scheduled end of month.\nAll safety valves tested and operational.' },
+      { dept: 'Cement Plant',    points: 'Production target met for February.\nConveyor belt replaced — downtime was 6 hours.' },
+    ],
+    otherMatters: 'Management reminded all HODs to submit Q1 performance reports by 31st March.\nNext meeting scheduled for 23rd April 2026.',
+    preparedBy: 'Mariyam Shifa',
+    approvedBy: 'Ahmed Shareef',
+    status: 'Final',
+    createdAt: '2026-03-26T12:00:00.000Z',
+  },
+  {
+    id: 'mtg-002',
+    refNumber: 'VHPL/MBM/26/032',
+    date: '2026-04-23',
+    timeStarted: '10:00',
+    timeEnded: '12:10',
+    venue: 'Conference Room, Administration Building',
+    chairperson: 'Ahmed Shareef — General Manager',
+    prevMeetingDate: '2026-03-26',
+    reps: [
+      { id: 'r01', name: 'Ibrahim Rasheed',  designation: 'Head of Accounts',        meetingDept: 'Accounts',        deptCode: 'ACC', attendance: 'Attended',  reason: '' },
+      { id: 'r02', name: 'Mohamed Nizam',    designation: 'Chief Engineer',           meetingDept: 'Engineering',     deptCode: 'ENG', attendance: 'Attended',  reason: '' },
+      { id: 'r03', name: 'Ali Shareef',      designation: 'LP Supervisor',            meetingDept: 'Loss Prevention', deptCode: 'LP',  attendance: 'Attended',  reason: '' },
+      { id: 'r04', name: 'Fathimath Laila',  designation: 'Housekeeping Supervisor',  meetingDept: 'Housekeeping',    deptCode: 'HK',  attendance: 'Absent',    reason: 'Medical Appointment' },
+      { id: 'r05', name: 'Hassan Niyaz',     designation: 'F&B Supervisor',           meetingDept: 'Food & Beverage', deptCode: 'F&B', attendance: 'Attended',  reason: '' },
+      { id: 'r06', name: 'Abdul Waheed',     designation: 'Store Keeper',             meetingDept: 'Stores',          deptCode: 'STR', attendance: 'Attended',  reason: '' },
+      { id: 'r07', name: 'Moosa Shakir',     designation: 'LPG Plant Operator',       meetingDept: 'LPG Plant',       deptCode: 'LPG', attendance: 'Attended',  reason: '' },
+      { id: 'r08', name: 'Ahmed Siraj',      designation: 'Cement Plant Supervisor',  meetingDept: 'Cement Plant',    deptCode: 'CP',  attendance: 'Attended',  reason: '' },
+    ],
+    deptUpdates: [
+      { dept: 'Accounts',        points: 'Q1 financial summary presented — within budget.\nStaff loan deductions reconciled for all departments.' },
+      { dept: 'Engineering',     points: 'Power House fuel consumption report submitted — 8% reduction achieved.\nMaintenance log for April updated and shared.' },
+      { dept: 'Loss Prevention', points: 'CCTV system upgraded in Zone B.\nNew SOP for visitor access distributed to all departments.' },
+      { dept: 'Housekeeping',    points: 'Laundry machine breakdown — temporary arrangements in place, repair ETA 3 days.' },
+      { dept: 'Food & Beverage', points: 'Staff mess feedback survey conducted — 87% satisfaction rate.\nNew supplier for vegetables onboarded.' },
+      { dept: 'Stores',          points: 'Slow-moving inventory list submitted to GM for disposal approval.\nBarcode system implementation in progress.' },
+      { dept: 'LPG Plant',       points: 'Monthly safety inspection completed — no issues found.\nLPG stock replenished on 18th April.' },
+      { dept: 'Cement Plant',    points: 'Cement production up 12% compared to March.\nDust control measures improved following complaint.' },
+    ],
+    otherMatters: 'GM announced annual leave schedule for May–June will be released by 30th April.\nAll departments to submit manpower requirements for Q3 by 10th May.',
+    preparedBy: 'Mariyam Shifa',
+    approvedBy: 'Ahmed Shareef',
+    status: 'Final',
+    createdAt: '2026-04-23T12:30:00.000Z',
+  },
+  {
+    id: 'mtg-003',
+    refNumber: 'VHPL/MBM/26/033',
+    date: '2026-05-28',
+    timeStarted: '10:00',
+    timeEnded: '11:55',
+    venue: 'Conference Room, Administration Building',
+    chairperson: 'Ahmed Shareef — General Manager',
+    prevMeetingDate: '2026-04-23',
+    reps: [
+      { id: 'r01', name: 'Ibrahim Rasheed',  designation: 'Head of Accounts',        meetingDept: 'Accounts',        deptCode: 'ACC', attendance: 'Attended',  reason: '' },
+      { id: 'r02', name: 'Mohamed Nizam',    designation: 'Chief Engineer',           meetingDept: 'Engineering',     deptCode: 'ENG', attendance: 'Attended',  reason: '' },
+      { id: 'r03', name: 'Ali Shareef',      designation: 'LP Supervisor',            meetingDept: 'Loss Prevention', deptCode: 'LP',  attendance: 'On Leave',  reason: 'Annual Leave' },
+      { id: 'r04', name: 'Fathimath Laila',  designation: 'Housekeeping Supervisor',  meetingDept: 'Housekeeping',    deptCode: 'HK',  attendance: 'Attended',  reason: '' },
+      { id: 'r05', name: 'Hassan Niyaz',     designation: 'F&B Supervisor',           meetingDept: 'Food & Beverage', deptCode: 'F&B', attendance: 'Attended',  reason: '' },
+      { id: 'r06', name: 'Abdul Waheed',     designation: 'Store Keeper',             meetingDept: 'Stores',          deptCode: 'STR', attendance: 'Attended',  reason: '' },
+      { id: 'r07', name: 'Moosa Shakir',     designation: 'LPG Plant Operator',       meetingDept: 'LPG Plant',       deptCode: 'LPG', attendance: 'Attended',  reason: '' },
+      { id: 'r08', name: 'Ahmed Siraj',      designation: 'Cement Plant Supervisor',  meetingDept: 'Cement Plant',    deptCode: 'CP',  attendance: 'Attended',  reason: '' },
+    ],
+    deptUpdates: [
+      { dept: 'Accounts',        points: 'May payroll preparation in progress — to be processed by 29th.\nAnnual audit documentation being compiled.' },
+      { dept: 'Engineering',     points: 'Air conditioning units serviced in all office blocks.\nBackup generator fuel topped up — stock sufficient for 3 weeks.' },
+      { dept: 'Loss Prevention', points: 'Acting LP Supervisor Hussain Rasheed representing department.\nIncident report for 15th May submitted and closed.' },
+      { dept: 'Housekeeping',    points: 'Pest control treatment carried out on 22nd May — all clear.\nCleaning supplies stock replenished.' },
+      { dept: 'Food & Beverage', points: 'Ramadan meal schedule concluded — back to regular menu from 1st June.\nKitchen deep cleaning completed post-Ramadan.' },
+      { dept: 'Stores',          points: 'Barcode system fully operational across main stores.\nMontly stock report submitted to GM on 25th May.' },
+      { dept: 'LPG Plant',       points: 'Quarterly safety audit conducted — passed with minor observations.\nObservations to be addressed by end of June.' },
+      { dept: 'Cement Plant',    points: 'New batch order received — production ramping up for June.\nOvertime approved for 12 workers for the coming 3 weeks.' },
+    ],
+    otherMatters: 'GM reminded all departments that new ID card system goes live on 1st June — all staff must register biometrics before 31st May.\nNext meeting tentatively scheduled for 25th June 2026.',
+    preparedBy: 'Mariyam Shifa',
+    approvedBy: 'Ahmed Shareef',
+    status: 'Final',
+    createdAt: '2026-05-28T13:00:00.000Z',
+  },
+  {
+    id: 'mtg-004',
+    refNumber: 'VHPL/MBM/26/034',
+    date: '2026-06-25',
+    timeStarted: '10:00',
+    timeEnded: '',
+    venue: 'Conference Room, Administration Building',
+    chairperson: 'Ahmed Shareef — General Manager',
+    prevMeetingDate: '2026-05-28',
+    reps: [
+      { id: 'r01', name: 'Ibrahim Rasheed',  designation: 'Head of Accounts',        meetingDept: 'Accounts',        deptCode: 'ACC', attendance: 'Attended',  reason: '' },
+      { id: 'r02', name: 'Mohamed Nizam',    designation: 'Chief Engineer',           meetingDept: 'Engineering',     deptCode: 'ENG', attendance: 'Attended',  reason: '' },
+      { id: 'r03', name: 'Ali Shareef',      designation: 'LP Supervisor',            meetingDept: 'Loss Prevention', deptCode: 'LP',  attendance: 'Attended',  reason: '' },
+      { id: 'r04', name: 'Fathimath Laila',  designation: 'Housekeeping Supervisor',  meetingDept: 'Housekeeping',    deptCode: 'HK',  attendance: 'Attended',  reason: '' },
+      { id: 'r05', name: 'Hassan Niyaz',     designation: 'F&B Supervisor',           meetingDept: 'Food & Beverage', deptCode: 'F&B', attendance: 'Attended',  reason: '' },
+      { id: 'r06', name: 'Abdul Waheed',     designation: 'Store Keeper',             meetingDept: 'Stores',          deptCode: 'STR', attendance: 'Attended',  reason: '' },
+      { id: 'r07', name: 'Moosa Shakir',     designation: 'LPG Plant Operator',       meetingDept: 'LPG Plant',       deptCode: 'LPG', attendance: 'Attended',  reason: '' },
+      { id: 'r08', name: 'Ahmed Siraj',      designation: 'Cement Plant Supervisor',  meetingDept: 'Cement Plant',    deptCode: 'CP',  attendance: 'Attended',  reason: '' },
+    ],
+    deptUpdates: [
+      { dept: 'Accounts',        points: '' },
+      { dept: 'Engineering',     points: '' },
+      { dept: 'Loss Prevention', points: '' },
+      { dept: 'Housekeeping',    points: '' },
+      { dept: 'Food & Beverage', points: '' },
+      { dept: 'Stores',          points: '' },
+      { dept: 'LPG Plant',       points: '' },
+      { dept: 'Cement Plant',    points: '' },
+    ],
+    otherMatters: '',
+    preparedBy: 'Mariyam Shifa',
+    approvedBy: 'Ahmed Shareef',
+    status: 'Draft',
+    createdAt: '2026-06-05T09:00:00.000Z',
+  },
+]
+
 function OperationsPage({ employees, completedTerminations, activeLeaves }: {
   employees: Employee[]
   completedTerminations: CompletedTerminationRecord[]
   activeLeaves: ActiveLeaveRecord[]
 }) {
   const [activeSection, setActiveSection] = useState<OpsSection>('files')
-  const [meetingRecords, setMeetingRecords] = useState<MeetingRecord[]>([])
+  const [meetingRecords, setMeetingRecords] = useState<MeetingRecord[]>(initialMeetingRecords)
   const [personalFiles, setPersonalFiles] = useState<PersonalFileRecord[]>(initialPersonalFiles)
   const [inductionRecords, setInductionRecords] = useState<InductionRecord[]>(initialInductionRecords)
   const [trainingRecords, setTrainingRecords] = useState<TrainingRecord[]>(initialTrainingRecords)
