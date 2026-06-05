@@ -3266,7 +3266,7 @@ button.step-pill:hover { filter: brightness(0.98); }
 .user-mgmt-page {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 /* Header */
@@ -3275,7 +3275,7 @@ button.step-pill:hover { filter: brightness(0.98); }
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding-bottom: 12px;
+  padding-bottom: 8px;
   border-bottom: 1px solid rgba(148, 163, 184, 0.4);
 }
 
@@ -3292,28 +3292,35 @@ button.step-pill:hover { filter: brightness(0.98); }
   color: #64748b;
 }
 
-/* Role legend — 3 horizontal cards */
+/* Role legend — compact inline row, not tall cards */
 .role-legend {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  flex-direction: row;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .role-legend-item {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 10px 12px;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
   border: 1px solid rgba(148, 163, 184, 0.42);
-  border-radius: 10px;
+  border-radius: 8px;
   background: rgba(248, 250, 255, 0.9);
   box-shadow: var(--soft-shadow);
+  flex: 1 1 auto;
+  min-width: 220px;
 }
+
+/* Always hide the backend note — not useful until backend is live */
+.role-legend-note { display: none; }
 
 /* Collapse role legend on small screens */
 @media (max-width: 900px) {
-  .role-legend { grid-template-columns: 1fr; }
-  .role-legend-note { display: none; }
+  .role-legend { flex-direction: column; }
+  .role-legend-item { min-width: 0; }
 }
 
 .role-legend-desc {
@@ -3345,7 +3352,7 @@ button.step-pill:hover { filter: brightness(0.98); }
 .role-hr { background: rgba(139, 92, 246,0.1); color: #6d28d9; border: 1px solid rgba(139, 92, 246,0.18); }
 .role-viewer { background: rgba(100, 116, 139, 0.1); color: #334155; border: 1px solid rgba(100, 116, 139, 0.2); }
 
-/* User table wrapper */
+/* User table wrapper — no max-height so all users are visible */
 .user-mgmt-table-wrap {
   display: flex;
   flex-direction: column;
@@ -3357,7 +3364,6 @@ button.step-pill:hover { filter: brightness(0.98); }
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  max-height: 360px;
 }
 /* Inner table shell scrolls horizontally only if truly needed */
 .user-mgmt-table-wrap .employee-table-shell {
@@ -4588,7 +4594,7 @@ button.step-pill:hover { filter: brightness(0.98); }
 
 /* ── Settings danger zone ────────────────────────────────── */
 .settings-danger-zone {
-  margin: 18px 0 0;
+  margin: 4px 0 0;
   border: 1px solid #fecaca;
   border-radius: 14px;
   overflow: hidden;
@@ -8173,25 +8179,31 @@ button.step-pill:hover { filter: brightness(0.98); }
   font-size: 0.78rem; font-weight: 700;
 }
 
-/* Settings user profile card */
+/* Settings user profile card — compact strip */
 .settings-profile-card {
   background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-  border-radius: 14px; padding: 24px; color: #fff; display: flex; gap: 20px; align-items: center;
-  margin-bottom: 20px;
+  border-radius: 12px;
+  padding: 12px 18px;
+  color: #fff;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 0;
 }
 .settings-avatar {
-  width: 64px; height: 64px; border-radius: 50%; background: rgba(255,255,255,0.25);
+  width: 42px; height: 42px; border-radius: 50%; background: rgba(255,255,255,0.25);
   display: flex; align-items: center; justify-content: center;
-  font-size: 1.5rem; font-weight: 900; color: #fff; flex-shrink: 0;
-  border: 2.5px solid rgba(255,255,255,0.4);
+  font-size: 1rem; font-weight: 900; color: #fff; flex-shrink: 0;
+  border: 2px solid rgba(255,255,255,0.4);
 }
-.settings-profile-info .profile-name { font-size: 1.1rem; font-weight: 800; }
-.settings-profile-info .profile-desig { font-size: 0.80rem; opacity: 0.80; margin: 2px 0; }
-.settings-profile-info .profile-username { font-size: 0.76rem; opacity: 0.70; }
+.settings-profile-info { display: flex; flex-direction: column; gap: 1px; }
+.settings-profile-name-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.settings-profile-info .profile-name { font-size: 0.92rem; font-weight: 800; line-height: 1.2; }
+.settings-profile-info .profile-desig { font-size: 0.74rem; opacity: 0.82; }
+.settings-profile-info .profile-username { font-size: 0.70rem; opacity: 0.65; }
 .settings-role-badge {
-  display: inline-block; padding: 3px 10px; border-radius: 8px;
-  background: rgba(255,255,255,0.22); font-size: 0.72rem; font-weight: 700;
-  margin-top: 6px;
+  display: inline-block; padding: 2px 9px; border-radius: 8px;
+  background: rgba(255,255,255,0.22); font-size: 0.70rem; font-weight: 700;
 }
 
 

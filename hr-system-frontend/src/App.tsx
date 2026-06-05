@@ -8197,10 +8197,12 @@ function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves:
       <div className="settings-profile-card">
         <div className="settings-avatar">{profileInitials(currentAppUser?.name ?? currentUserName)}</div>
         <div className="settings-profile-info">
-          <div className="profile-name">{currentAppUser?.name ?? currentUserName}</div>
+          <div className="settings-profile-name-row">
+            <div className="profile-name">{currentAppUser?.name ?? currentUserName}</div>
+            <span className="settings-role-badge">{currentAppUser?.role ?? 'Admin'}</span>
+          </div>
           <div className="profile-desig">{currentAppUser?.designation ?? 'HR Staff'}</div>
           <div className="profile-username">@{currentAppUser?.username ?? 'admin'}</div>
-          <span className={`settings-role-badge`}>{currentAppUser?.role ?? 'Admin'}</span>
         </div>
         <div style={{ marginLeft: 'auto' }}>
           <button className="quiet-button light" type="button" style={{ fontSize: '0.78rem', background: 'rgba(255,255,255,0.15)', color: '#fff', border: '1.5px solid rgba(255,255,255,0.3)' }}>
