@@ -6989,7 +6989,7 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
 
   // Footer: title on LEFT · page number in CENTRE · right side empty
   const pgFooter = (n: number) =>
-    `<div style="display:flex;align-items:center;border-top:0.8pt solid #1B2B7E;padding-top:5pt;margin-top:14pt;font-size:7.5pt;color:#1B2B7E;">
+    `<div style="display:flex;align-items:center;border-top:0.8pt solid #2f78c5;padding-top:5pt;margin-top:14pt;font-size:7.5pt;color:#2f78c5;">
       <span style="flex:1;letter-spacing:0.4pt;opacity:0.75;">BRIEFING MEETING MINUTES &mdash; ${esc(refSeq)}</span>
       <span style="flex:1;text-align:center;font-weight:800;">${n}</span>
       <span style="flex:1;"></span>
@@ -7006,11 +7006,11 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   .pbar span { color:rgba(221,214,254,0.7); font-size:12px; }
   .wrap { max-width:210mm; margin:20px auto; display:flex; flex-direction:column; gap:18px; padding-bottom:40px; }
   .page { background:#fff; box-shadow:0 4px 24px rgba(0,0,0,0.16); padding:5mm 18mm 14mm; }
-  .info-tbl { width:100%; border-collapse:collapse; margin-bottom:14pt; border:1.2pt solid #1B2B7E; }
-  .info-tbl tr { border-bottom:0.5pt solid #c8d4f0; }
+  .info-tbl { width:100%; border-collapse:collapse; margin-bottom:14pt; border:1.2pt solid #2f78c5; }
+  .info-tbl tr { border-bottom:0.5pt solid #d4e4f4; }
   .info-tbl tr:last-child { border-bottom:none; }
   .info-tbl td { padding:5.5pt 10pt; font-size:9pt; vertical-align:top; }
-  .info-tbl td.lbl { font-weight:700; white-space:nowrap; width:32mm; background:#1B2B7E; color:#fff; font-size:8pt; text-transform:uppercase; letter-spacing:0.5pt; border-right:none; }
+  .info-tbl td.lbl { font-weight:700; white-space:nowrap; width:32mm; background:#2f78c5; color:#fff; font-size:8pt; text-transform:uppercase; letter-spacing:0.5pt; border-right:none; }
   .info-tbl .sub-tbl { width:100%; border-collapse:collapse; }
   .info-tbl .sub-tbl td { padding:2.5pt 4pt; font-size:8.5pt; border-bottom:0.4pt solid #eef0f8; vertical-align:top; }
   .info-tbl .sub-tbl tr:last-child td { border-bottom:none; }
@@ -7047,7 +7047,7 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
          onerror="this.style.display='none'"/>
   </div>
   <!-- Document title banner -->
-  <div style="background:#1B2B7E;color:#fff;padding:7pt 10pt;display:flex;justify-content:space-between;align-items:center;margin-bottom:0;">
+  <div style="background:#1e508a;color:#fff;padding:7pt 10pt;display:flex;justify-content:space-between;align-items:center;margin-bottom:0;">
     <span style="font-size:11pt;font-weight:900;text-transform:uppercase;letter-spacing:1pt;">Briefing Meeting Minutes</span>
     <span style="font-size:8.5pt;font-weight:600;letter-spacing:0.5pt;opacity:0.9;">Ref: ${esc(record.refNumber)}</span>
   </div>
