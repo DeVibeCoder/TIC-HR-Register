@@ -1065,7 +1065,22 @@ function LeaveTypeBadge({ code }: { code: LeaveTypeCode }) {
   )
 }
 
-function OverviewPage({ employees, leaveRequests, activeLeaves, leaveHistory }: { employees: Employee[]; leaveRequests: LeaveRequestRecord[]; activeLeaves: ActiveLeaveRecord[]; leaveHistory: LeaveHistoryRecord[] }) {
+function OverviewPage({
+  employees, leaveRequests, activeLeaves, leaveHistory,
+  noticeTerminations, completedTerminations, exitInterviews,
+  medicalCases, inventoryItems, passportHandovers,
+}: {
+  employees: Employee[]
+  leaveRequests: LeaveRequestRecord[]
+  activeLeaves: ActiveLeaveRecord[]
+  leaveHistory: LeaveHistoryRecord[]
+  noticeTerminations: EnhancedTerminationRecord[]
+  completedTerminations: CompletedTerminationRecord[]
+  exitInterviews: ExitInterviewRecord[]
+  medicalCases: MedicalCaseRecord[]
+  inventoryItems: InventoryItem[]
+  passportHandovers: PassportHandoverRecord[]
+}) {
   const pendingEmployees = employees.filter((employee) => recordStatus(employee) === 'Pending')
   const onSite  = employees.filter((e) => e.siteStatus === 'On Site').length
   const offSite = employees.filter((e) => e.siteStatus === 'Off Site').length
@@ -1081,6 +1096,32 @@ function OverviewPage({ employees, leaveRequests, activeLeaves, leaveHistory }: 
   const maxDeptCount = deptCounts[0]?.[1] ?? 1
   const recentLeave = [...leaveRequests].sort((a, b) => b.departureDate.localeCompare(a.departureDate)).slice(0, 5)
 
+  // ── Nationality breakdown ──
+  const nationalityCounts = useMemo(() => {
+    const counts: Record<string, number> = {}
+    employees.forEach((e) => { counts[e.nationality] = (counts[e.nationality] ?? 0) + 1 })
+    return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 6)
+  }, [employees])
+  const maxNatCount = nationalityCounts[0]?.[1] ?? 1
+
+  // ── Inventory alerts ──
+  const lowStockItems = inventoryItems.filter(i => i.quantity <= i.minQuantity && i.quantity > 0).slice(0, 5)
+  const outOfStock    = inventoryItems.filter(i => i.quantity === 0).length
+
+  // ── Passport tracking ──
+  const passHeld   = passportHandovers.filter(p => p.passportStep === 'Collected').length
+  const passSentHO = passportHandovers.filter(p => p.passportStep === 'Sent to HO').length
+
+  // ── Medical cases ──
+  const recentMedical = [...medicalCases].sort((a, b) => b.caseDate.localeCompare(a.caseDate)).slice(0, 4)
+  const urgentCases   = medicalCases.filter(c => c.isUrgent).length
+  const admittedNow   = medicalCases.filter(c => c.isAdmitted && !c.dischargedDate).length
+
+  // ── Exit interviews ──
+  const exitDone    = exitInterviews.filter(e => !e.skipped).length
+  const exitSkipped = exitInterviews.filter(e => e.skipped).length
+  const exitDonePct = exitInterviews.length ? Math.round((exitDone / exitInterviews.length) * 100) : 0
+
   const todayStr = new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' })
 
   const stats = [
@@ -1093,6 +1134,13 @@ function OverviewPage({ employees, leaveRequests, activeLeaves, leaveHistory }: 
     { value: activeLeaves.length,     label: 'Active Leave',  color: '#7c3aed', bg: '#faf5ff', accent: '#e9d5ff', icon: '🗓' },
     { value: leaveHistory.length,     label: 'History',       color: '#475569', bg: '#f8fafc', accent: '#e2e8f0', icon: '📁' },
   ]
+
+  const stageColors: Record<string, string> = {
+    'Letter Submitted':  '#f59e0b',
+    'Exit Interview':    '#8b5cf6',
+    'Ticket':            '#3b82f6',
+    'Pending Departure': '#ef4444',
+  }
 
   return (
     <section className="nx-overview ov2-wrap">
@@ -1137,7 +1185,7 @@ function OverviewPage({ employees, leaveRequests, activeLeaves, leaveHistory }: 
         ))}
       </div>
 
-      {/* ── Main panels ── */}
+      {/* ── Main panels (2-col, natural heights) ── */}
       <div className="ov2-grid">
 
         {/* Site Presence */}
@@ -1243,6 +1291,202 @@ function OverviewPage({ employees, leaveRequests, activeLeaves, leaveHistory }: 
                   </li>
                 ))}
               </ul>
+          }
+        </article>
+
+      </div>
+
+      {/* ── Insights grid (3-col) ── */}
+      <div className="ov2-grid3">
+
+        {/* Active Terminations */}
+        <article className="ov2-panel">
+          <div className="ov2-panel-hd">
+            <span className="ov2-panel-ttl">Active Terminations</span>
+            <span className="ov2-chip" style={{ background:'#fef3c7', color:'#92400e' }}>{noticeTerminations.length} in progress</span>
+          </div>
+          {noticeTerminations.length === 0
+            ? <p className="ov-empty">No active termination notices.</p>
+            : <>
+                {noticeTerminations.slice(0, 4).map(t => (
+                  <div key={t.id} className="ov3-row">
+                    <div className="ov3-row-info">
+                      <span className="ov3-row-name">{t.name}</span>
+                      <span className="ov3-row-sub">{t.department}</span>
+                    </div>
+                    <span className="ov3-stage-badge" style={{ background: (stageColors[t.currentStage] || '#94a3b8') + '22', color: stageColors[t.currentStage] || '#64748b' }}>{t.currentStage}</span>
+                  </div>
+                ))}
+                {noticeTerminations.length > 4 && <p className="ov2-more" style={{ marginTop:6 }}>+{noticeTerminations.length - 4} more</p>}
+                <div className="ov3-footer-stat">
+                  <span>✓ {completedTerminations.length} completed all time</span>
+                </div>
+              </>
+          }
+        </article>
+
+        {/* Nationality Breakdown */}
+        <article className="ov2-panel">
+          <div className="ov2-panel-hd">
+            <span className="ov2-panel-ttl">Nationality Snapshot</span>
+            <span className="ov2-chip" style={{ background:'#f0fdf4', color:'#166534' }}>{nationalityCounts.length} nationalities</span>
+          </div>
+          {nationalityCounts.length === 0
+            ? <p className="ov-empty">No employees added yet.</p>
+            : <div style={{ marginTop:6 }}>
+                {nationalityCounts.map(([nat, cnt]) => (
+                  <div key={nat} style={{ display:'grid', gridTemplateColumns:'minmax(80px,1fr) 80px 28px', alignItems:'center', gap:'6px 8px', marginBottom:6 }}>
+                    <span style={{ fontSize:'0.76rem', color:'#374151', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{nat}</span>
+                    <div style={{ height:7, borderRadius:4, background:'#f1f5f9', overflow:'hidden' }}>
+                      <div style={{ height:'100%', width:`${Math.round((cnt/maxNatCount)*100)}%`, background:'#6366f1', borderRadius:4, transition:'width 0.5s' }} />
+                    </div>
+                    <span style={{ fontSize:'0.76rem', fontWeight:700, color:'#4f46e5', textAlign:'right' }}>{cnt}</span>
+                  </div>
+                ))}
+              </div>
+          }
+        </article>
+
+        {/* Passport Tracking */}
+        <article className="ov2-panel">
+          <div className="ov2-panel-hd">
+            <span className="ov2-panel-ttl">Passport Tracking</span>
+            <span className="ov2-chip" style={{ background:'#ecfdf5', color:'#065f46' }}>{passportHandovers.length} tracked</span>
+          </div>
+          {passportHandovers.length === 0
+            ? <p className="ov-empty">No passports tracked yet.</p>
+            : <>
+                <div className="ov3-stat-row">
+                  {[
+                    { label:'Issued', val: passportHandovers.filter(p=>p.passportStep==='Issued').length, c:'#2563eb' },
+                    { label:'Collected', val: passHeld, c:'#d97706' },
+                    { label:'Sent to HO', val: passSentHO, c:'#7c3aed' },
+                  ].map(s=>(
+                    <div key={s.label} className="ov3-stat-box">
+                      <span style={{ fontSize:'1.25rem', fontWeight:800, color:s.c }}>{s.val}</span>
+                      <span style={{ fontSize:'0.68rem', color:'#64748b', textAlign:'center', lineHeight:1.2 }}>{s.label}</span>
+                    </div>
+                  ))}
+                </div>
+                {passportHandovers.slice(0,3).map(p=>(
+                  <div key={p.id} className="ov3-row" style={{ marginTop:4 }}>
+                    <div className="ov3-row-info">
+                      <span className="ov3-row-name">{p.name}</span>
+                      <span className="ov3-row-sub">{p.department}</span>
+                    </div>
+                    <span style={{ fontSize:'0.7rem', fontWeight:700, color: p.passportStep==='Issued'?'#2563eb':p.passportStep==='Collected'?'#d97706':'#7c3aed', background: p.passportStep==='Issued'?'#eff6ff':p.passportStep==='Collected'?'#fffbeb':'#f5f3ff', padding:'2px 7px', borderRadius:20 }}>{p.passportStep}</span>
+                  </div>
+                ))}
+                {passportHandovers.length > 3 && <p className="ov2-more" style={{ marginTop:4 }}>+{passportHandovers.length-3} more</p>}
+              </>
+          }
+        </article>
+
+        {/* Medical Cases */}
+        <article className="ov2-panel">
+          <div className="ov2-panel-hd">
+            <span className="ov2-panel-ttl">Medical Cases</span>
+            <span className="ov2-chip" style={{ background: urgentCases?'#fef2f2':'#f8fafc', color: urgentCases?'#dc2626':'#475569' }}>{medicalCases.length} total</span>
+          </div>
+          {medicalCases.length === 0
+            ? <p className="ov-empty">No medical cases recorded.</p>
+            : <>
+                <div className="ov3-stat-row" style={{ marginBottom:8 }}>
+                  <div className="ov3-stat-box">
+                    <span style={{ fontSize:'1.1rem', fontWeight:800, color:'#dc2626' }}>{urgentCases}</span>
+                    <span style={{ fontSize:'0.68rem', color:'#64748b', textAlign:'center' }}>Urgent</span>
+                  </div>
+                  <div className="ov3-stat-box">
+                    <span style={{ fontSize:'1.1rem', fontWeight:800, color:'#d97706' }}>{admittedNow}</span>
+                    <span style={{ fontSize:'0.68rem', color:'#64748b', textAlign:'center' }}>Admitted</span>
+                  </div>
+                  <div className="ov3-stat-box">
+                    <span style={{ fontSize:'1.1rem', fontWeight:800, color:'#0891b2' }}>{medicalCases.filter(c=>c.mcProvided).length}</span>
+                    <span style={{ fontSize:'0.68rem', color:'#64748b', textAlign:'center' }}>MC Given</span>
+                  </div>
+                </div>
+                {recentMedical.map(c=>(
+                  <div key={c.id} className="ov3-row">
+                    <div className="ov3-row-info">
+                      <span className="ov3-row-name">{c.name}{c.isUrgent && <span style={{ marginLeft:4, fontSize:'0.65rem', color:'#ef4444', fontWeight:700 }}>URGENT</span>}</span>
+                      <span className="ov3-row-sub">{c.reason || c.hospital} · {formatDateDisplay(c.caseDate)}</span>
+                    </div>
+                  </div>
+                ))}
+              </>
+          }
+        </article>
+
+        {/* Inventory Alerts */}
+        <article className="ov2-panel">
+          <div className="ov2-panel-hd">
+            <span className="ov2-panel-ttl">Inventory Alerts</span>
+            <span className="ov2-chip" style={{ background: outOfStock?'#fef2f2':lowStockItems.length?'#fffbeb':'#f0fdf4', color: outOfStock?'#dc2626':lowStockItems.length?'#92400e':'#166534' }}>
+              {outOfStock} out · {lowStockItems.length} low
+            </span>
+          </div>
+          {inventoryItems.length === 0
+            ? <p className="ov-empty">No inventory items added yet.</p>
+            : outOfStock === 0 && lowStockItems.length === 0
+              ? <p className="ov-empty" style={{ color:'#16a34a' }}>✓ All items sufficiently stocked.</p>
+              : <>
+                  {outOfStock > 0 && (
+                    <div style={{ marginBottom:8, padding:'6px 10px', background:'#fef2f2', borderRadius:7, border:'1px solid #fecaca', fontSize:'0.78rem', color:'#dc2626', fontWeight:700 }}>
+                      ⚠ {outOfStock} item{outOfStock>1?'s':''} out of stock
+                    </div>
+                  )}
+                  {inventoryItems.filter(i=>i.quantity===0).slice(0,2).map(i=>(
+                    <div key={i.id} className="ov3-row">
+                      <div className="ov3-row-info">
+                        <span className="ov3-row-name" style={{ color:'#dc2626' }}>{i.name}</span>
+                        <span className="ov3-row-sub">{i.category} · {i.location}</span>
+                      </div>
+                      <span style={{ fontSize:'0.7rem', fontWeight:800, color:'#dc2626' }}>0 {i.unit}</span>
+                    </div>
+                  ))}
+                  {lowStockItems.map(i=>(
+                    <div key={i.id} className="ov3-row">
+                      <div className="ov3-row-info">
+                        <span className="ov3-row-name">{i.name}</span>
+                        <span className="ov3-row-sub">{i.category} · min {i.minQuantity} {i.unit}</span>
+                      </div>
+                      <span style={{ fontSize:'0.7rem', fontWeight:800, color:'#d97706' }}>{i.quantity} {i.unit}</span>
+                    </div>
+                  ))}
+                </>
+          }
+        </article>
+
+        {/* Exit Interviews */}
+        <article className="ov2-panel">
+          <div className="ov2-panel-hd">
+            <span className="ov2-panel-ttl">Exit Interviews</span>
+            <span className="ov2-chip" style={{ background:'#f5f3ff', color:'#6d28d9' }}>{exitInterviews.length} total</span>
+          </div>
+          {exitInterviews.length === 0
+            ? <p className="ov-empty">No exit interviews recorded.</p>
+            : <>
+                <div className="ov2-progress-row" style={{ marginBottom:4 }}>
+                  <div className="ov2-progress-track">
+                    <div style={{ height:'100%', width:`${exitDonePct}%`, background:'#8b5cf6', borderRadius:5, transition:'width 0.5s' }} />
+                  </div>
+                  <span className="ov2-progress-pct">{exitDonePct}%</span>
+                </div>
+                <div className="ov2-progress-labels" style={{ marginBottom:8 }}>
+                  <span>✓ {exitDone} conducted</span>
+                  <span>{exitSkipped} skipped</span>
+                </div>
+                {exitInterviews.slice(0,4).map(e=>(
+                  <div key={e.id} className="ov3-row">
+                    <div className="ov3-row-info">
+                      <span className="ov3-row-name">{e.name}</span>
+                      <span className="ov3-row-sub">{e.department} · {e.terminationType}</span>
+                    </div>
+                    <span style={{ fontSize:'0.7rem', fontWeight:700, color: e.skipped?'#94a3b8':'#7c3aed', background: e.skipped?'#f1f5f9':'#f5f3ff', padding:'2px 7px', borderRadius:20 }}>{e.skipped?'Skipped':'Done'}</span>
+                  </div>
+                ))}
+                {exitInterviews.length > 4 && <p className="ov2-more" style={{ marginTop:4 }}>+{exitInterviews.length-4} more</p>}
+              </>
           }
         </article>
 
@@ -10817,7 +11061,7 @@ function App() {
           <span className="topbar-page-title">{pages.find((p) => p.id === activePage)?.label}</span>
         </div>
         <main className="workspace-inner" id="top">
-          {activePage === 'overview' && <OverviewPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} />}
+          {activePage === 'overview' && <OverviewPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} noticeTerminations={noticeTerminations} completedTerminations={completedTerminations} exitInterviews={exitInterviews} medicalCases={medicalCases} inventoryItems={inventoryItems} passportHandovers={passportHandovers} />}
           {activePage === 'employees' && <EmployeesPage employees={employees} medicalCases={medicalCases} noticeTerminations={noticeTerminations} offSiteRecords={offSiteRecords} onUpdateOffSite={(fn) => setOffSiteRecords(fn)} onAdd={() => { setEmployeeMode('add'); setEmployeeForm(emptyEmployee); setShowEmployeeForm(true) }} onEdit={openEditEmployee} onExport={exportCsv} onImport={importCsv} onTemplate={downloadTemplate} onShowTasks={() => setShowPendingTasks(true)} />}
           {activePage === 'leave' && <LeavePage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} medicalCases={medicalCases} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onSetRequestStep={setLeaveRequestStep} onExtendLeave={extendActiveLeave} onEditActiveLeave={editActiveLeave} onHistoryConfirm={updateHistoryConfirmation} onUpdateMedical={(fn) => setMedicalCases(fn)} />}
           {activePage === 'operations' && <OperationsPage employees={employees} completedTerminations={completedTerminations} activeLeaves={activeLeaves} />}
