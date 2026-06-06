@@ -6965,19 +6965,19 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
 
   const allAttended = [...attended, ...replacements]
 
-  // Participants table — clean 3-column grid: Name | Designation | Section
+  // Participants table — 3 columns: Name (46%) | Designation (44%) | Section code (10%)
   const pTableRows = allAttended.map(r => `<tr>
-    <td style="padding:3pt 6pt;border:0.5pt solid #ddd;width:38%;font-size:8.5pt;">${esc(r.name)}</td>
-    <td style="padding:3pt 6pt;border:0.5pt solid #ddd;width:42%;font-size:8pt;color:#444;">${esc(r.designation)}</td>
-    <td style="padding:3pt 6pt;border:0.5pt solid #ddd;width:20%;text-align:center;font-weight:700;font-size:8pt;">${esc(r.deptCode)}</td>
+    <td style="padding:2.5pt 5pt;border:0.5pt solid #ddd;width:46%;font-size:8pt;">${esc(r.name)}</td>
+    <td style="padding:2.5pt 5pt;border:0.5pt solid #ddd;width:44%;font-size:7.5pt;color:#444;">${esc(r.designation)}</td>
+    <td style="padding:2.5pt 4pt;border:0.5pt solid #ddd;width:10%;text-align:center;font-weight:700;font-size:8pt;">${esc(r.deptCode)}</td>
   </tr>`).join('')
 
   const repRows = (list: MeetingRep[], emptyRows = 2) => list.length === 0
     ? Array(emptyRows).fill(`<tr><td colspan="3" style="padding:5pt;">&nbsp;</td></tr>`).join('')
     : list.map(r => `<tr>
-        <td style="padding:3pt 6pt;border:0.5pt solid #ddd;width:38%;font-size:8.5pt;">${esc(r.name)}</td>
-        <td style="padding:3pt 6pt;border:0.5pt solid #ddd;width:42%;font-size:8pt;color:#444;">${esc(r.reason || (r.attendance === 'On Leave' ? 'Annual Leave' : ''))}${r.replacementName?.trim() ? ` <em style="color:#666;">(Replacement: ${esc(r.replacementName)})</em>` : ''}</td>
-        <td style="padding:3pt 6pt;border:0.5pt solid #ddd;width:20%;text-align:center;font-weight:700;font-size:8pt;">${esc(r.deptCode)}</td>
+        <td style="padding:2.5pt 5pt;border:0.5pt solid #ddd;width:46%;font-size:8pt;">${esc(r.name)}</td>
+        <td style="padding:2.5pt 5pt;border:0.5pt solid #ddd;width:44%;font-size:7.5pt;color:#444;">${esc(r.reason || (r.attendance === 'On Leave' ? 'Annual Leave' : ''))}${r.replacementName?.trim() ? ` <em style="color:#666;">(Replacement: ${esc(r.replacementName)})</em>` : ''}</td>
+        <td style="padding:2.5pt 4pt;border:0.5pt solid #ddd;width:10%;text-align:center;font-weight:700;font-size:8pt;">${esc(r.deptCode)}</td>
       </tr>`).join('')
 
   const hcRows = HEADCOUNT_DEPTS.map(dept => {
@@ -7099,9 +7099,9 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
       <td style="padding:4pt 8pt;">
         <table class="p-tbl">
           <thead><tr>
-            <th style="width:38%;">NAME</th>
-            <th style="width:42%;">DESIGNATION</th>
-            <th class="ctr" style="width:20%;">SECTION</th>
+            <th style="width:46%;">NAME</th>
+            <th style="width:44%;">DESIGNATION</th>
+            <th class="ctr" style="width:10%;">SECTION</th>
           </tr></thead>
           <tbody>${pTableRows || '<tr><td colspan="3" style="padding:5pt;color:#aaa;">—</td></tr>'}</tbody>
         </table>
@@ -7111,7 +7111,7 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
       <td class="lbl">On Leave</td>
       <td style="padding:4pt 8pt;">
         <table class="p-tbl">
-          <thead><tr><th style="width:38%;">NAME</th><th style="width:42%;">REASON / REPLACEMENT</th><th class="ctr" style="width:20%;">SECTION</th></tr></thead>
+          <thead><tr><th style="width:46%;">NAME</th><th style="width:44%;">REASON / REPLACEMENT</th><th class="ctr" style="width:10%;">SECTION</th></tr></thead>
           <tbody>${repRows(onLeaveR)}</tbody>
         </table>
       </td>
@@ -7120,7 +7120,7 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
       <td class="lbl">Absentees</td>
       <td style="padding:4pt 8pt;">
         <table class="p-tbl">
-          <thead><tr><th style="width:38%;">NAME</th><th style="width:42%;">REASON</th><th class="ctr" style="width:20%;">SECTION</th></tr></thead>
+          <thead><tr><th style="width:46%;">NAME</th><th style="width:44%;">REASON</th><th class="ctr" style="width:10%;">SECTION</th></tr></thead>
           <tbody>${repRows(absentR)}</tbody>
         </table>
       </td>
