@@ -4390,6 +4390,324 @@ button.step-pill:hover { filter: brightness(0.98); }
   scrollbar-color: rgba(124,58,237,0.2) transparent;
 }
 
+/* ═══════════════════════════════════════════════════════
+   Overview v2  — complete redesign
+   ═══════════════════════════════════════════════════════ */
+
+/* Outer wrapper (replaces nx-overview grid styles) */
+.ov2-wrap {
+  display: flex !important;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Header banner ─────────────────────────────────────── */
+.ov2-header {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 45%, #4338ca 100%);
+  border-radius: 14px;
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.ov2-header-deco {
+  position: absolute;
+  width: 260px; height: 260px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.04);
+  right: 200px; top: -100px;
+  pointer-events: none;
+}
+.ov2-header-deco2 {
+  position: absolute;
+  width: 180px; height: 180px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.03);
+  right: -40px; bottom: -60px;
+  pointer-events: none;
+}
+.ov2-header-left { flex: 1; min-width: 0; }
+.ov2-eyebrow {
+  margin: 0 0 4px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: rgba(165,180,252,0.85);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.ov2-title {
+  margin: 0 0 4px;
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.1;
+}
+.ov2-date {
+  margin: 0;
+  font-size: 0.76rem;
+  color: rgba(199,210,254,0.7);
+}
+.ov2-header-kpis {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.13);
+  border-radius: 12px;
+  padding: 10px 16px;
+  flex-shrink: 0;
+}
+.ov2-kpi { text-align: center; padding: 0 14px; }
+.ov2-kpi-val {
+  display: block;
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+}
+.ov2-kpi-lbl {
+  display: block;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: rgba(199,210,254,0.75);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 3px;
+  white-space: nowrap;
+}
+.ov2-kpi-divider {
+  width: 1px;
+  height: 32px;
+  background: rgba(255,255,255,0.15);
+  flex-shrink: 0;
+}
+
+/* ── Stat strip — 8 cards, always 1 row ───────────────── */
+.ov2-strip {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 6px;
+}
+.ov2-card {
+  background: var(--ov-bg, #f8fafc);
+  border: 1.5px solid var(--ov-accent, #e2e8f0);
+  border-top: 3px solid var(--ov-color, #7c3aed);
+  border-radius: 10px;
+  padding: 9px 5px 7px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 2px;
+  transition: transform 120ms, box-shadow 120ms;
+  min-width: 0;
+}
+.ov2-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.09);
+}
+.ov2-card-top {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+}
+.ov2-card-icon {
+  font-size: 0.85rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.ov2-card-val {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--ov-color, #0f172a);
+  line-height: 1;
+}
+.ov2-card-lbl {
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Main 2-col panel grid ────────────────────────────── */
+.ov2-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.ov2-panel {
+  background: #fff;
+  border: 1px solid rgba(148,163,184,0.3);
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 5px rgba(15,23,42,0.04);
+}
+.ov2-panel-hd {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.ov2-panel-ttl {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #1e1b4b;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+.ov2-chip {
+  font-size: 0.65rem;
+  font-weight: 700;
+  border-radius: 6px;
+  padding: 2px 8px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* Presence bar */
+.ov2-presence-bar {
+  display: flex;
+  height: 12px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #e2e8f0;
+  margin-bottom: 10px;
+}
+.ov2-presence-legend {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.ov2-presence-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 6px 10px;
+  min-width: 0;
+}
+.ov2-dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.ov2-presence-val {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1;
+}
+.ov2-presence-lbl {
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 1px;
+}
+
+/* Progress row */
+.ov2-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0;
+}
+.ov2-progress-track {
+  flex: 1;
+  height: 10px;
+  border-radius: 6px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+.ov2-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #7c3aed, #a78bfa);
+  border-radius: 6px;
+  transition: width 600ms cubic-bezier(0.4,0,0.2,1);
+}
+.ov2-progress-pct {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #7c3aed;
+  flex-shrink: 0;
+  min-width: 36px;
+  text-align: right;
+}
+.ov2-progress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: #64748b;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+/* Pending list */
+.ov2-pending-list {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.ov2-pending-list li {
+  display: flex;
+  flex-direction: column;
+  padding: 5px 9px;
+  border-radius: 7px;
+  background: #fff5f5;
+  border: 1px solid #fecaca;
+}
+.ov2-pending-list li span { font-size: 0.76rem; font-weight: 700; color: #0f172a; }
+.ov2-pending-list li small { font-size: 0.67rem; color: #94a3b8; margin-top: 1px; }
+.ov2-more {
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #7c3aed;
+  padding: 3px 0;
+}
+
+/* Leave list */
+.ov2-leave-list {
+  list-style: none; margin: 4px 0 0; padding: 0;
+  display: flex; flex-direction: column; gap: 5px;
+}
+.ov2-leave-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: #fafbff;
+  border: 1px solid #eef2ff;
+}
+.ov2-leave-info { display: flex; flex-direction: column; min-width: 0; }
+.ov2-leave-info span { font-size: 0.78rem; font-weight: 700; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ov2-leave-info small { font-size: 0.66rem; color: #64748b; }
+
+/* ── Overview responsive ───────────────────────────────── */
+@media (max-width: 840px) {
+  .ov2-grid { grid-template-columns: 1fr; }
+  .ov2-header-kpis { display: none; }
+}
+@media (max-width: 600px) {
+  .ov2-card-val { font-size: 1.15rem; }
+  .ov2-card-icon { font-size: 0.7rem; }
+}
+
 /* ── Registration modal extra-wide ──────────────────────── */
 .registration-modal.extra-wide {
   max-width: 860px;

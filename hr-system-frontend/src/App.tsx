@@ -1067,119 +1067,155 @@ function LeaveTypeBadge({ code }: { code: LeaveTypeCode }) {
 
 function OverviewPage({ employees, leaveRequests, activeLeaves, leaveHistory }: { employees: Employee[]; leaveRequests: LeaveRequestRecord[]; activeLeaves: ActiveLeaveRecord[]; leaveHistory: LeaveHistoryRecord[] }) {
   const pendingEmployees = employees.filter((employee) => recordStatus(employee) === 'Pending')
-  const onSite = employees.filter((employee) => employee.siteStatus === 'On Site').length
-  const offSite = employees.filter((employee) => employee.siteStatus === 'Off Site').length
-  const onLeave = employees.filter((employee) => employee.siteStatus === 'On Leave').length
+  const onSite  = employees.filter((e) => e.siteStatus === 'On Site').length
+  const offSite = employees.filter((e) => e.siteStatus === 'Off Site').length
+  const onLeave = employees.filter((e) => e.siteStatus === 'On Leave').length
   const onSitePct = employees.length ? Math.round((onSite / employees.length) * 100) : 0
+  const completePct = employees.length ? Math.round(((employees.length - pendingEmployees.length) / employees.length) * 100) : 0
 
   const deptCounts = useMemo(() => {
     const counts: Record<string, number> = {}
     employees.forEach((e) => { counts[e.department] = (counts[e.department] ?? 0) + 1 })
     return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8)
   }, [employees])
-
   const maxDeptCount = deptCounts[0]?.[1] ?? 1
-
   const recentLeave = [...leaveRequests].sort((a, b) => b.departureDate.localeCompare(a.departureDate)).slice(0, 5)
 
+  const todayStr = new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' })
+
+  const stats = [
+    { value: employees.length,       label: 'Total Staff',   color: '#7c3aed', bg: '#f5f3ff', accent: '#ede9fe', icon: '👥' },
+    { value: onSite,                  label: 'On Site',       color: '#059669', bg: '#f0fdf4', accent: '#bbf7d0', icon: '🟢' },
+    { value: onLeave,                 label: 'On Leave',      color: '#2563eb', bg: '#eff6ff', accent: '#bfdbfe', icon: '✈️' },
+    { value: offSite,                 label: 'Off Site',      color: '#d97706', bg: '#fffbeb', accent: '#fde68a', icon: '🔄' },
+    { value: pendingEmployees.length, label: 'Pending',       color: '#dc2626', bg: '#fef2f2', accent: '#fecaca', icon: '⚠️' },
+    { value: leaveRequests.length,    label: 'Leave Req.',    color: '#0891b2', bg: '#f0f9ff', accent: '#bae6fd', icon: '📋' },
+    { value: activeLeaves.length,     label: 'Active Leave',  color: '#7c3aed', bg: '#faf5ff', accent: '#e9d5ff', icon: '🗓' },
+    { value: leaveHistory.length,     label: 'History',       color: '#475569', bg: '#f8fafc', accent: '#e2e8f0', icon: '📁' },
+  ]
+
   return (
-    <section className="nx-overview">
-      <div className="overview-header-band">
-        <div>
-          <p className="eyebrow">Thilafushi Industrial Complex</p>
-          <h1>HR Overview</h1>
-          <p className="overview-sub">Live summary of workforce status, leave activity, and record completeness.</p>
+    <section className="nx-overview ov2-wrap">
+
+      {/* ── Header banner ── */}
+      <div className="ov2-header">
+        <div className="ov2-header-deco" />
+        <div className="ov2-header-deco2" />
+        <div className="ov2-header-left">
+          <p className="ov2-eyebrow">Thilafushi Industrial Complex · HR Operations</p>
+          <h1 className="ov2-title">HR Overview</h1>
+          <p className="ov2-date">{todayStr}</p>
+        </div>
+        <div className="ov2-header-kpis">
+          <div className="ov2-kpi">
+            <span className="ov2-kpi-val">{onSitePct}%</span>
+            <span className="ov2-kpi-lbl">On Site</span>
+          </div>
+          <div className="ov2-kpi-divider" />
+          <div className="ov2-kpi">
+            <span className="ov2-kpi-val">{completePct}%</span>
+            <span className="ov2-kpi-lbl">Records Complete</span>
+          </div>
+          <div className="ov2-kpi-divider" />
+          <div className="ov2-kpi">
+            <span className="ov2-kpi-val">{employees.length}</span>
+            <span className="ov2-kpi-lbl">Total Staff</span>
+          </div>
         </div>
       </div>
 
-      <div className="overview-stats-row">
-        <div className="ov-stat ov-stat--purple">
-          <strong>{employees.length}</strong>
-          <span>Total Employees</span>
-        </div>
-        <div className="ov-stat ov-stat--green">
-          <strong>{onSite}</strong>
-          <span>On Site</span>
-        </div>
-        <div className="ov-stat ov-stat--blue">
-          <strong>{onLeave}</strong>
-          <span>On Leave</span>
-        </div>
-        <div className="ov-stat ov-stat--orange">
-          <strong>{offSite}</strong>
-          <span>Off Site</span>
-        </div>
-        <div className="ov-stat ov-stat--red">
-          <strong>{pendingEmployees.length}</strong>
-          <span>Pending Records</span>
-        </div>
-        <div className="ov-stat ov-stat--teal">
-          <strong>{leaveRequests.length}</strong>
-          <span>Leave Requests</span>
-        </div>
-        <div className="ov-stat ov-stat--indigo">
-          <strong>{activeLeaves.length}</strong>
-          <span>Active Leaves</span>
-        </div>
-        <div className="ov-stat ov-stat--slate">
-          <strong>{leaveHistory.length}</strong>
-          <span>Leave History</span>
-        </div>
+      {/* ── Stat strip — always 1 row ── */}
+      <div className="ov2-strip">
+        {stats.map(({ value, label, color, bg, accent, icon }) => (
+          <div key={label} className="ov2-card" style={{ '--ov-color': color, '--ov-bg': bg, '--ov-accent': accent } as React.CSSProperties}>
+            <div className="ov2-card-top">
+              <span className="ov2-card-icon">{icon}</span>
+              <strong className="ov2-card-val">{value}</strong>
+            </div>
+            <span className="ov2-card-lbl">{label}</span>
+          </div>
+        ))}
       </div>
 
-      <div className="overview-grid-2">
-        <article className="overview-panel">
-          <h3>Site Presence</h3>
-          <div className="ov-presence-bar">
-            <div className="ov-bar-segment ov-bar-green" style={{ width: `${onSitePct}%` }} title={`On Site: ${onSite}`} />
-            <div className="ov-bar-segment ov-bar-blue" style={{ width: `${employees.length ? Math.round((onLeave / employees.length) * 100) : 0}%` }} title={`On Leave: ${onLeave}`} />
-            <div className="ov-bar-segment ov-bar-orange" style={{ width: `${employees.length ? Math.round((offSite / employees.length) * 100) : 0}%` }} title={`Off Site: ${offSite}`} />
+      {/* ── Main panels ── */}
+      <div className="ov2-grid">
+
+        {/* Site Presence */}
+        <article className="ov2-panel">
+          <div className="ov2-panel-hd">
+            <span className="ov2-panel-ttl">Site Presence</span>
+            <span className="ov2-chip" style={{ background:'#ede9fe', color:'#6d28d9' }}>{onSitePct}% on site</span>
           </div>
-          <div className="ov-legend">
-            <span className="ov-dot green" />On Site ({onSite})
-            <span className="ov-dot blue" />On Leave ({onLeave})
-            <span className="ov-dot orange" />Off Site ({offSite})
+          <div className="ov2-presence-bar">
+            <div style={{ width:`${onSitePct}%`, background:'#10b981', transition:'width 0.6s' }} title={`On Site: ${onSite}`} />
+            <div style={{ width:`${employees.length ? Math.round((onLeave/employees.length)*100) : 0}%`, background:'#3b82f6', transition:'width 0.6s' }} title={`On Leave: ${onLeave}`} />
+            <div style={{ width:`${employees.length ? Math.round((offSite/employees.length)*100) : 0}%`, background:'#f59e0b', transition:'width 0.6s' }} title={`Off Site: ${offSite}`} />
           </div>
-          <div className="ov-site-pct">{onSitePct}% workforce on site</div>
+          <div className="ov2-presence-legend">
+            {[['#10b981','On Site',onSite],['#3b82f6','On Leave',onLeave],['#f59e0b','Off Site',offSite]].map(([c,l,v])=>(
+              <div key={l as string} className="ov2-presence-item">
+                <span className="ov2-dot" style={{ background: c as string }} />
+                <div>
+                  <div className="ov2-presence-val">{v as number}</div>
+                  <div className="ov2-presence-lbl">{l as string}</div>
+                </div>
+              </div>
+            ))}
+          </div>
         </article>
 
-        <article className="overview-panel">
-          <h3>Record Completion</h3>
+        {/* Record Completion */}
+        <article className="ov2-panel">
+          <div className="ov2-panel-hd">
+            <span className="ov2-panel-ttl">Record Completion</span>
+            {employees.length > 0 && (
+              <span className="ov2-chip" style={{ background: pendingEmployees.length?'#fee2e2':'#dcfce7', color: pendingEmployees.length?'#dc2626':'#15803d' }}>
+                {pendingEmployees.length} pending
+              </span>
+            )}
+          </div>
           {employees.length === 0
             ? <p className="ov-empty">No employees added yet.</p>
             : <>
-                <div className="ov-completion-bar">
-                  <div style={{ width: `${Math.round(((employees.length - pendingEmployees.length) / employees.length) * 100)}%` }} />
+                <div className="ov2-progress-row">
+                  <div className="ov2-progress-track">
+                    <div className="ov2-progress-fill" style={{ width:`${completePct}%` }} />
+                  </div>
+                  <span className="ov2-progress-pct">{completePct}%</span>
                 </div>
-                <div className="ov-completion-label">
-                  <span>{employees.length - pendingEmployees.length} complete</span>
+                <div className="ov2-progress-labels">
+                  <span>✓ {employees.length - pendingEmployees.length} complete</span>
                   <span>{pendingEmployees.length} pending</span>
                 </div>
                 {pendingEmployees.length > 0 && (
-                  <ul className="ov-list">
-                    {pendingEmployees.slice(0, 5).map((employee) => (
-                      <li key={employee.employeeId}>
-                        <span>{employee.fullName || 'Unnamed'}</span>
-                        <small>{getPendingTasks(employee).join(', ')}</small>
+                  <ul className="ov2-pending-list">
+                    {pendingEmployees.slice(0, 4).map((e) => (
+                      <li key={e.employeeId}>
+                        <span>{e.fullName || 'Unnamed'}</span>
+                        <small>{getPendingTasks(e).slice(0, 2).join(', ')}</small>
                       </li>
                     ))}
-                    {pendingEmployees.length > 5 && <li className="ov-more">+ {pendingEmployees.length - 5} more pending</li>}
+                    {pendingEmployees.length > 4 && <li className="ov2-more">+{pendingEmployees.length - 4} more</li>}
                   </ul>
                 )}
               </>
           }
         </article>
 
-        <article className="overview-panel">
-          <h3>Employees by Section</h3>
+        {/* Employees by Section */}
+        <article className="ov2-panel">
+          <div className="ov2-panel-hd">
+            <span className="ov2-panel-ttl">Employees by Section</span>
+            <span className="ov2-chip" style={{ background:'#ede9fe', color:'#6d28d9' }}>{deptCounts.length} sections</span>
+          </div>
           {deptCounts.length === 0
-            ? <p className="ov-empty">No department data yet.</p>
-            : <div className="ov-dept-bars">
+            ? <p className="ov-empty">No section data yet.</p>
+            : <div className="ov-dept-bars" style={{ marginTop:8 }}>
                 {deptCounts.map(([dept, count]) => (
                   <div className="dept-bar-item" key={dept}>
                     <span className="dept-bar-label">{dept}</span>
                     <div className="dept-bar-track">
-                      <div className="dept-bar-fill" style={{ width: `${Math.round((count / maxDeptCount) * 100)}%` }} />
+                      <div className="dept-bar-fill" style={{ width:`${Math.round((count/maxDeptCount)*100)}%` }} />
                     </div>
                     <span className="dept-bar-count">{count}</span>
                   </div>
@@ -1188,21 +1224,28 @@ function OverviewPage({ employees, leaveRequests, activeLeaves, leaveHistory }: 
           }
         </article>
 
-        <article className="overview-panel">
-          <h3>Recent Leave Requests</h3>
+        {/* Recent Leave */}
+        <article className="ov2-panel">
+          <div className="ov2-panel-hd">
+            <span className="ov2-panel-ttl">Recent Leave Requests</span>
+            <span className="ov2-chip" style={{ background:'#f0f9ff', color:'#0284c7' }}>{leaveRequests.length} total</span>
+          </div>
           {recentLeave.length === 0
             ? <p className="ov-empty">No leave requests yet.</p>
-            : <ul className="ov-list">
-                {recentLeave.map((record) => (
-                  <li key={record.id}>
-                    <span>{record.name}</span>
-                    <small>{record.department} · {leaveTypeLabel(record.leaveTypeCode)} · {formatDateDisplay(record.departureDate)}</small>
-                    <StatusBadge status={record.step} />
+            : <ul className="ov2-leave-list">
+                {recentLeave.map((r) => (
+                  <li key={r.id}>
+                    <div className="ov2-leave-info">
+                      <span>{r.name}</span>
+                      <small>{r.department} · {leaveTypeLabel(r.leaveTypeCode)} · {formatDateDisplay(r.departureDate)}</small>
+                    </div>
+                    <StatusBadge status={r.step} />
                   </li>
                 ))}
               </ul>
           }
         </article>
+
       </div>
     </section>
   )
