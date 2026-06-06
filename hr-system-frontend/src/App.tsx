@@ -6951,7 +6951,7 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
     const dt  = new Date(d + 'T12:00:00')
     const day = dt.getDate()
     const ord = (day===1||day===21||day===31)?'st':(day===2||day===22)?'nd':(day===3||day===23)?'rd':'th'
-    return `${day}${ord} ${months[dt.getMonth()]} ${dt.getFullYear()}, ${days[dt.getDay()]}`
+    return `${day}<sup style="font-size:0.65em;vertical-align:super;">${ord}</sup> ${months[dt.getMonth()]} ${dt.getFullYear()}, ${days[dt.getDay()]}`
   }
 
   const attended   = record.reps.filter(r => r.attendance === 'Attended' && r.name.trim())
@@ -7084,16 +7084,16 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
          style="max-width:100%;width:auto;height:auto;max-height:110pt;display:inline-block;vertical-align:top;mix-blend-mode:multiply;"
          onerror="this.style.display='none'"/>
   </div>
-  <div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:1.5pt solid #333;padding-bottom:5pt;margin-bottom:0;">
+  <div style="display:flex;justify-content:space-between;align-items:baseline;padding-bottom:5pt;margin-bottom:0;">
     <span style="font-size:11pt;font-weight:900;text-transform:uppercase;letter-spacing:0.5pt;">Briefing Meeting Minutes</span>
     <span style="font-size:10pt;font-weight:700;">Ref: ${esc(record.refNumber)}</span>
   </div>
   <table class="info-tbl">
-    <tr><td class="lbl">Date</td><td>${esc(fmtMeetingDate(record.date))}</td></tr>
-    <tr><td class="lbl">Time Started</td><td>${esc(record.timeStarted)} hrs.</td></tr>
-    <tr><td class="lbl">Time Ended</td><td>${esc(record.timeEnded ? record.timeEnded + ' hrs.' : '—')}</td></tr>
-    <tr><td class="lbl">Venue</td><td>${esc(record.venue)}</td></tr>
-    <tr><td class="lbl">Chairperson</td><td style="font-weight:600;">${esc(record.chairperson)}</td></tr>
+    <tr><td class="lbl">Date</td><td style="text-transform:uppercase;">${fmtMeetingDate(record.date)}</td></tr>
+    <tr><td class="lbl">Time Started</td><td style="text-transform:uppercase;">${esc(record.timeStarted)} hrs.</td></tr>
+    <tr><td class="lbl">Time Ended</td><td style="text-transform:uppercase;">${esc(record.timeEnded ? record.timeEnded + ' hrs.' : '—')}</td></tr>
+    <tr><td class="lbl">Venue</td><td style="text-transform:uppercase;">${esc(record.venue)}</td></tr>
+    <tr><td class="lbl">Chairperson</td><td style="font-weight:600;text-transform:uppercase;">${esc(record.chairperson)}</td></tr>
     <tr>
       <td class="lbl">Participants</td>
       <td style="padding:4pt 8pt;">
