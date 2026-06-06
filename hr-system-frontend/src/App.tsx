@@ -6334,35 +6334,32 @@ function ExitInterviewAnalyticsModal({ records, onClose }: { records: ExitInterv
 
   const SatisfactionBars = ({ src }: { src: ExitInterviewRecord[] }) => {
     const stats = buildQuestStats(src)
-    const fmt = (pct: number) => `${Math.round(pct)}%`.padStart(4, ' ')
+    const pctColors = ['#16a34a','#b45309','#dc2626']
     return (
       <div style={{ background:'#fff', border:'1px solid #e2e8f0', borderRadius:10, padding:'14px 16px', marginBottom:14 }}>
-        <div style={{ fontSize:'0.72rem', fontWeight:800, color:'#6366f1', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:12 }}>Satisfaction by Category</div>
-        {/* Legend header row */}
-        <div style={{ display:'grid', gridTemplateColumns:'160px 160px 1fr', gap:8, alignItems:'center', marginBottom:6 }}>
-          <div />
-          <div />
-          <div style={{ display:'flex', gap:0 }}>
-            {[['#16a34a','VS'],['#d97706','S'],['#dc2626','D']].map(([c,l])=>(
-              <span key={l} style={{ display:'inline-flex', alignItems:'center', gap:3, fontSize:'0.65rem', color:'#64748b', width:52, justifyContent:'center' }}>
-                <span style={{ width:8, height:8, borderRadius:2, background:c, display:'inline-block', flexShrink:0 }}/>{l}
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
+          <div style={{ fontSize:'0.72rem', fontWeight:800, color:'#6366f1', textTransform:'uppercase', letterSpacing:'0.07em' }}>Satisfaction by Category</div>
+          <div style={{ display:'flex', gap:12 }}>
+            {[['#16a34a','Very Satisfied'],['#d97706','Satisfied'],['#dc2626','Dissatisfied']].map(([c,l])=>(
+              <span key={l} style={{ display:'inline-flex', alignItems:'center', gap:4, fontSize:'0.67rem', color:'#64748b' }}>
+                <span style={{ width:9, height:9, borderRadius:2, background:c, display:'inline-block', flexShrink:0 }}/>{l}
               </span>
             ))}
           </div>
         </div>
         {stats.map(({ key, label, vsPct, sPct, dPct }) => (
-          <div key={key} style={{ display:'grid', gridTemplateColumns:'160px 160px 1fr', gap:8, alignItems:'center', marginBottom:7 }}>
-            <span style={{ fontSize:'0.75rem', color:'#475569', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{label}</span>
+          <div key={key} style={{ display:'grid', gridTemplateColumns:'minmax(120px,30%) 1fr 168px', gap:10, alignItems:'center', marginBottom:8 }}>
+            <span style={{ fontSize:'0.76rem', color:'#475569', lineHeight:1.3, wordBreak:'break-word' }}>{label}</span>
             <div style={{ height:10, borderRadius:5, overflow:'hidden', display:'flex', background:'#f1f5f9' }}>
-              <div style={{ width:`${vsPct}%`, background:'#16a34a', transition:'width 0.4s' }} title={`Very Satisfied ${Math.round(vsPct)}%`} />
-              <div style={{ width:`${sPct}%`,  background:'#d97706', transition:'width 0.4s' }} title={`Satisfied ${Math.round(sPct)}%`} />
-              <div style={{ width:`${dPct}%`,  background:'#dc2626', transition:'width 0.4s' }} title={`Dissatisfied ${Math.round(dPct)}%`} />
+              <div style={{ width:`${vsPct}%`, background:'#16a34a', transition:'width 0.4s', flexShrink:0 }} title={`Very Satisfied ${Math.round(vsPct)}%`} />
+              <div style={{ width:`${sPct}%`,  background:'#d97706', transition:'width 0.4s', flexShrink:0 }} title={`Satisfied ${Math.round(sPct)}%`} />
+              <div style={{ width:`${dPct}%`,  background:'#dc2626', transition:'width 0.4s', flexShrink:0 }} title={`Dissatisfied ${Math.round(dPct)}%`} />
             </div>
-            <div style={{ display:'flex', gap:0 }}>
+            <div style={{ display:'flex' }}>
               {[vsPct, sPct, dPct].map((pct, i) => (
-                <span key={i} style={{ width:52, textAlign:'center', fontSize:'0.68rem', fontWeight:600,
-                  color: pct > 0 ? (['#16a34a','#b45309','#dc2626'][i]) : '#cbd5e1' }}>
-                  {fmt(pct)}
+                <span key={i} style={{ flex:'0 0 56px', textAlign:'center', fontSize:'0.68rem', fontWeight:pct>0?700:400,
+                  color: pct > 0 ? pctColors[i] : '#cbd5e1' }}>
+                  {Math.round(pct)}%
                 </span>
               ))}
             </div>
@@ -8497,17 +8494,17 @@ function StaffRequestModal({ record, employees, onClose, onSave }: {
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'10px' }}>
               <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
-                <span className="trn-modal-field-lbl">Name {empFromDB && <span style={{ color:'#16a34a', fontSize:'0.68rem' }}>✓ auto-filled</span>}</span>
+                <span className="trn-modal-field-lbl">Name {empFromDB && <span style={{ color:'#16a34a', fontSize:'0.75rem' }}>✓</span>}</span>
                 <input value={employeeName} onChange={empFromDB ? undefined : (e) => setEmployeeName(e.target.value)}
                   readOnly={empFromDB} required placeholder="Full name" style={empFromDB ? roStyle : fieldStyle} />
               </label>
               <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
-                <span className="trn-modal-field-lbl">Section {empFromDB && <span style={{ color:'#16a34a', fontSize:'0.68rem' }}>✓ auto-filled</span>}</span>
-                <input value={section} onChange={(e) => setSection(e.target.value)}
-                  placeholder="Employee's section" style={fieldStyle} />
+                <span className="trn-modal-field-lbl">Section {empFromDB && <span style={{ color:'#16a34a', fontSize:'0.75rem' }}>✓</span>}</span>
+                <input value={section} onChange={empFromDB ? undefined : (e) => setSection(e.target.value)}
+                  readOnly={empFromDB} placeholder="Employee's section" style={empFromDB ? roStyle : fieldStyle} />
               </label>
               <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
-                <span className="trn-modal-field-lbl">Department {empFromDB && <span style={{ color:'#16a34a', fontSize:'0.68rem' }}>✓ auto-filled</span>}</span>
+                <span className="trn-modal-field-lbl">Department {empFromDB && <span style={{ color:'#16a34a', fontSize:'0.75rem' }}>✓</span>}</span>
                 <input value={department} onChange={empFromDB ? undefined : (e) => setDepartment(e.target.value)}
                   readOnly={empFromDB} placeholder="Organisation department" style={empFromDB ? roStyle : fieldStyle} />
               </label>
@@ -8608,8 +8605,6 @@ function VisitModal({ record, employees, onClose, onSave }: {
     const matched = empDir.get(val.trim().toUpperCase())
     if (matched) {
       setEmployeeName(matched.fullName)
-      setDepartment(matched.department)
-      setNicPassportNo(matched.nicPassportNo)
       setNationality(matched.nationality)
       setEmpFromDB(true)
     } else {
@@ -8636,36 +8631,36 @@ function VisitModal({ record, employees, onClose, onSave }: {
           <button className="icon-button" onClick={onClose} type="button">×</button>
         </div>
         <form onSubmit={save}>
-          {/* Employee ID — shown first; rest auto-fills */}
+          {/* Employee ID — shown first; Name & Nationality auto-fill */}
           <div className="trn-modal-card" style={{ marginBottom: '14px' }}>
             <div style={{ display:'flex', flexDirection:'column', gap:4, marginBottom:12 }}>
               <span className="trn-modal-field-lbl">Employee ID</span>
               <input value={employeeId} onChange={(e) => handleEmpIdChange(e.target.value)}
-                placeholder="Enter ID — auto-fills all details below"
+                placeholder="Enter ID — auto-fills name and nationality"
                 style={{ ...fieldStyle, maxWidth:240 }} />
             </div>
             <div className="trn-modal-detail-row" style={{ marginTop: '4px' }}>
               <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
-                <span className="trn-modal-field-lbl">Full Name {empFromDB && <span style={{ color:'#16a34a', fontSize:'0.68rem' }}>✓</span>}</span>
+                <span className="trn-modal-field-lbl">Full Name {empFromDB && <span style={{ color:'#16a34a', fontSize:'0.75rem' }}>✓</span>}</span>
                 <input value={employeeName} onChange={empFromDB ? undefined : (e) => setEmployeeName(e.target.value)}
                   readOnly={empFromDB} required placeholder="Name" style={empFromDB ? roStyle : fieldStyle} />
               </label>
               <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
-                <span className="trn-modal-field-lbl">NIC / PP No. {empFromDB && <span style={{ color:'#16a34a', fontSize:'0.68rem' }}>✓</span>}</span>
-                <input value={nicPassportNo} readOnly={empFromDB} onChange={empFromDB ? undefined : (e) => setNicPassportNo(e.target.value)}
-                  placeholder={empFromDB ? '' : 'Auto-filled from employee ID'} style={roStyle} />
+                <span className="trn-modal-field-lbl">NIC / PP No.</span>
+                <input value={nicPassportNo} onChange={(e) => setNicPassportNo(e.target.value)}
+                  placeholder="Passport or NIC number" style={fieldStyle} />
               </label>
               <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
-                <span className="trn-modal-field-lbl">Nationality {empFromDB && <span style={{ color:'#16a34a', fontSize:'0.68rem' }}>✓</span>}</span>
-                <input value={nationality} readOnly
-                  placeholder={empFromDB ? '' : 'Auto-filled from employee ID'} style={roStyle} />
+                <span className="trn-modal-field-lbl">Nationality {empFromDB && <span style={{ color:'#16a34a', fontSize:'0.75rem' }}>✓</span>}</span>
+                <input value={nationality} onChange={empFromDB ? undefined : (e) => setNationality(e.target.value)}
+                  readOnly={empFromDB} placeholder="Nationality" style={empFromDB ? roStyle : fieldStyle} />
               </label>
             </div>
             <div className="trn-modal-detail-row" style={{ gridTemplateColumns: '1fr', marginTop: '10px' }}>
               <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
-                <span className="trn-modal-field-lbl">Section {empFromDB && <span style={{ color:'#16a34a', fontSize:'0.68rem' }}>✓</span>}</span>
-                <input value={department} readOnly
-                  placeholder={empFromDB ? '' : 'Auto-filled from employee ID'} style={roStyle} />
+                <span className="trn-modal-field-lbl">Section</span>
+                <input value={department} onChange={(e) => setDepartment(e.target.value)}
+                  placeholder="Employee section" style={fieldStyle} />
               </label>
             </div>
           </div>
@@ -8748,7 +8743,7 @@ function IncidentModal({ record, employees, onClose, onSave }: { record: Inciden
     if (!matched) return
     setEmployeeName(matched.fullName)
     setSection(matched.department)
-    setDepartment('Thilafushi Industrial Complex')
+    setDepartment('THILAFUSHI INDUSTRIAL COMPLEX')
   }
 
   const handleReportedByIdChange = (value: string) => {
@@ -8822,14 +8817,16 @@ function IncidentModal({ record, employees, onClose, onSave }: { record: Inciden
                   </div>
                   <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px' }}>
                     <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
-                      <span className="trn-modal-field-lbl">Section <span style={{ color:'#16a34a', fontSize:'0.68rem' }}>(auto-filled)</span></span>
-                      <input value={section} readOnly placeholder="Auto-filled from Employee ID"
-                        style={{ padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#f8fafc', color:'#374151' }} />
+                      <span className="trn-modal-field-lbl">Section <span style={{ color:'#64748b', fontSize:'0.65rem' }}>(auto-filled or manual)</span></span>
+                      <input value={section} onChange={(e) => setSection(e.target.value)}
+                        placeholder="e.g. STORES, MECHANICAL"
+                        style={{ padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#fff' }} />
                     </label>
                     <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
-                      <span className="trn-modal-field-lbl">Department <span style={{ color:'#16a34a', fontSize:'0.68rem' }}>(auto-filled)</span></span>
-                      <input value={department} readOnly placeholder="Auto-filled from Employee ID"
-                        style={{ padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#f8fafc', color:'#374151' }} />
+                      <span className="trn-modal-field-lbl">Department <span style={{ color:'#64748b', fontSize:'0.65rem' }}>(auto-filled or manual)</span></span>
+                      <input value={department} onChange={(e) => setDepartment(e.target.value)}
+                        placeholder="e.g. THILAFUSHI INDUSTRIAL COMPLEX"
+                        style={{ padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#fff' }} />
                     </label>
                   </div>
                 </div>
@@ -9033,7 +9030,7 @@ function RequestsSection({ records, employees, onUpdate }: {
                       )}
                     </td>
                     <td style={{textAlign:'center',fontSize:'0.8rem',whiteSpace:'nowrap'}}>{r.completedDate ? formatDateDisplay(r.completedDate) : '—'}</td>
-                    <td style={{maxWidth:160, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', color:'#64748b'}}>{r.actionTaken || '—'}</td>
+                    <td style={{maxWidth:180, color:'#64748b', fontSize:'0.82rem'}}>{r.actionTaken || '—'}</td>
                     <td style={{textAlign:'center',whiteSpace:'nowrap'}}>
                       <div className="row-actions">
                         <button className="action-glyph edit" title="Edit" onClick={() => setEditing(r)} type="button">✎</button>
