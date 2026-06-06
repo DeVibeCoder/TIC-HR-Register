@@ -7640,8 +7640,7 @@ function MeetingCalendar({ records }: { records: MeetingRecord[] }) {
   const [viewDate, setViewDate] = useState(() => new Date())
   const [selected, setSelected] = useState<string | null>(null)
 
-  const isMeetingDay = (d: Date) => { const w = d.getDay(); return w === 0 || w === 4 } // Sun=0, Thu=4
-
+  const isMeetingDay = (d: Date) => { const w = d.getDay(); return w === 0 || w === 4 }
   const toStr = (d: Date) => d.toISOString().split('T')[0]
   const today = new Date(); today.setHours(0,0,0,0)
 
@@ -7660,70 +7659,143 @@ function MeetingCalendar({ records }: { records: MeetingRecord[] }) {
   const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
   const DOW    = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
 
+  // Monthly stats
+  const monthMtgDays = cells.filter(c => c.getMonth() === mo && isMeetingDay(c))
+  const conducted = monthMtgDays.filter(c => recMap.has(toStr(c))).length
+  const skipped   = monthMtgDays.filter(c => !recMap.has(toStr(c)) && c < today).length
+  const upcoming  = monthMtgDays.filter(c => !recMap.has(toStr(c)) && c >= today).length
+
+  const navBtn: React.CSSProperties = {
+    background:'rgba(255,255,255,0.15)', border:'none', color:'#fff',
+    width:32, height:32, borderRadius:8, cursor:'pointer',
+    fontSize:'1.1rem', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0,
+  }
+
   return (
-    <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-      {/* Month navigation */}
-      <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-        <button type="button" className="quiet-button" style={{ padding:'4px 10px', fontSize:'0.8rem' }}
-          onClick={() => setViewDate(d => new Date(d.getFullYear(), d.getMonth()-1, 1))}>← Prev</button>
-        <span style={{ fontWeight:800, fontSize:'0.9rem', color:'#1e1b4b', minWidth:140, textAlign:'center' }}>{MONTHS[mo]} {yr}</span>
-        <button type="button" className="quiet-button" style={{ padding:'4px 10px', fontSize:'0.8rem' }}
-          onClick={() => setViewDate(d => new Date(d.getFullYear(), d.getMonth()+1, 1))}>Next →</button>
-        <div style={{ marginLeft:'auto', display:'flex', gap:10, fontSize:'0.7rem', color:'#64748b' }}>
-          <span style={{ display:'flex', alignItems:'center', gap:4 }}><span style={{ width:10, height:10, borderRadius:3, background:'#dcfce7', border:'1px solid #16a34a', display:'inline-block' }}/>Conducted</span>
-          <span style={{ display:'flex', alignItems:'center', gap:4 }}><span style={{ width:10, height:10, borderRadius:3, background:'#fef3c7', border:'1px solid #d97706', display:'inline-block' }}/>Skipped</span>
-          <span style={{ display:'flex', alignItems:'center', gap:4 }}><span style={{ width:10, height:10, borderRadius:3, border:'1.5px dashed #6366f1', display:'inline-block' }}/>Scheduled</span>
+    <div style={{ display:'flex', flexDirection:'column', borderRadius:14, border:'1.5px solid #e0e7ff',
+      overflow:'hidden', boxShadow:'0 4px 18px rgba(30,27,75,0.09)' }}>
+
+      {/* ── Header ── */}
+      <div style={{ background:'linear-gradient(135deg,#1e1b4b 0%,#4338ca 100%)',
+        padding:'14px 18px', display:'flex', alignItems:'center', gap:10 }}>
+        <button type="button" style={navBtn}
+          onClick={() => setViewDate(d => new Date(d.getFullYear(), d.getMonth()-1, 1))}>‹</button>
+        <div style={{ flex:1, textAlign:'center' }}>
+          <div style={{ fontWeight:900, fontSize:'1.05rem', color:'#fff', letterSpacing:'0.03em' }}>{MONTHS[mo]}</div>
+          <div style={{ fontSize:'0.72rem', color:'rgba(199,210,254,0.8)', fontWeight:600, marginTop:1 }}>{yr}</div>
         </div>
+        <button type="button" style={navBtn}
+          onClick={() => setViewDate(d => new Date(d.getFullYear(), d.getMonth()+1, 1))}>›</button>
       </div>
 
-      {/* Day headers */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:3 }}>
-        {DOW.map(d => (
-          <div key={d} style={{ textAlign:'center', fontSize:'0.67rem', fontWeight:700, padding:'4px 0',
-            color: d==='Sun'||d==='Thu' ? '#4f46e5' : '#94a3b8' }}>{d}</div>
+      {/* ── Stats strip ── */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', background:'#f5f3ff',
+        borderBottom:'1.5px solid #e0e7ff' }}>
+        {[
+          { label:'Conducted', n:conducted, color:'#15803d', ring:'#86efac', bg:'#f0fdf4' },
+          { label:'Skipped',   n:skipped,   color:'#b45309', ring:'#fcd34d', bg:'#fffbeb' },
+          { label:'Upcoming',  n:upcoming,  color:'#4338ca', ring:'#a5b4fc', bg:'#eef2ff' },
+        ].map((s,i) => (
+          <div key={s.label} style={{ textAlign:'center', padding:'9px 0',
+            borderRight: i < 2 ? '1px solid #e0e7ff' : 'none' }}>
+            <div style={{ fontSize:'1.25rem', fontWeight:900, color:s.color, lineHeight:1 }}>{s.n}</div>
+            <div style={{ fontSize:'0.6rem', fontWeight:700, color:'#6b7280', textTransform:'uppercase',
+              letterSpacing:'0.07em', marginTop:2 }}>{s.label}</div>
+          </div>
         ))}
       </div>
 
-      {/* Calendar grid */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:3 }}>
-        {cells.map(cell => {
-          const ds       = toStr(cell)
-          const inMonth  = cell.getMonth() === mo
-          const isMtg    = isMeetingDay(cell)
-          const rec      = recMap.get(ds)
-          const isPast   = cell < today
-          const isToday  = cell.getTime() === today.getTime()
-          const isSel    = selected === ds
+      {/* ── Day-of-week header ── */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', background:'#f1f5f9',
+        borderBottom:'1px solid #e2e8f0' }}>
+        {DOW.map(d => (
+          <div key={d} style={{ textAlign:'center', padding:'7px 0', fontSize:'0.63rem', fontWeight:800,
+            letterSpacing:'0.06em', color: d==='Sun'||d==='Thu' ? '#4338ca' : '#94a3b8' }}>{d}</div>
+        ))}
+      </div>
 
-          let bg = 'transparent', border = '1.5px solid transparent'
+      {/* ── Calendar cells ── */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', background:'#fff' }}>
+        {cells.map((cell, idx) => {
+          const ds      = toStr(cell)
+          const inMonth = cell.getMonth() === mo
+          const isMtg   = isMeetingDay(cell)
+          const rec     = recMap.get(ds)
+          const isPast  = cell < today
+          const isToday = cell.getTime() === today.getTime()
+          const isSel   = selected === ds
+          const isLastCol = (idx % 7) === 6
+
+          // Accent colour for top bar
+          let accent = ''
           if (isMtg && inMonth) {
-            if (rec)           { bg = '#dcfce7'; border = '1.5px solid #16a34a' }
-            else if (isPast)   { bg = '#fef3c7'; border = '1.5px solid #d97706' }
-            else               { border = '1.5px dashed #6366f1' }
+            if (rec)      accent = isSel ? '#4338ca' : '#16a34a'
+            else if (isPast) accent = '#f59e0b'
+            else          accent = '#818cf8'
           }
-          if (isToday) border = '2px solid #4f46e5'
-          if (isSel)   bg = '#e0e7ff'
+          if (isToday)  accent = '#4338ca'
+
+          // Cell background
+          let cellBg = inMonth ? '#fff' : '#f8fafc'
+          if (isMtg && inMonth) {
+            if (isSel)       cellBg = '#e0e7ff'
+            else if (isToday) cellBg = '#eef2ff'
+            else if (rec)    cellBg = '#f0fdf4'
+            else if (isPast) cellBg = '#fffbeb'
+          } else if (isToday) cellBg = '#eef2ff'
 
           return (
             <div key={ds}
-              style={{ background:bg, border, borderRadius:6, padding:'4px 3px', textAlign:'center', minHeight:52,
-                cursor: isMtg && inMonth ? 'pointer' : 'default', opacity: inMonth ? 1 : 0.25 }}
-              onClick={() => isMtg && inMonth && setSelected(isSel ? null : ds)}>
-              <div style={{ fontSize:'0.8rem', fontWeight: isMtg && inMonth ? 700 : 400,
-                color: isToday ? '#4f46e5' : inMonth ? '#374151' : '#9ca3af' }}>
+              onClick={() => isMtg && inMonth && setSelected(isSel ? null : ds)}
+              style={{
+                background: cellBg,
+                borderRight: isLastCol ? 'none' : '1px solid #f0f4f8',
+                borderBottom: '1px solid #f0f4f8',
+                minHeight: 74,
+                cursor: isMtg && inMonth ? 'pointer' : 'default',
+                opacity: inMonth ? 1 : 0.35,
+                display: 'flex', flexDirection: 'column', alignItems: 'center',
+                paddingTop: 8, paddingBottom: 6,
+                position: 'relative',
+                transition: 'background 0.12s',
+              }}>
+              {/* Top accent bar */}
+              {accent && (
+                <div style={{ position:'absolute', top:0, left:0, right:0, height:3,
+                  background:accent, borderRadius:'0 0 2px 2px', opacity: inMonth ? 1 : 0.4 }} />
+              )}
+              {/* Date circle */}
+              <div style={{
+                width:26, height:26, borderRadius:'50%',
+                display:'flex', alignItems:'center', justifyContent:'center',
+                background: isToday ? '#4338ca' : isSel ? '#c7d2fe' : 'transparent',
+                color: isToday ? '#fff' : isMtg && inMonth ? '#1e1b4b' : '#94a3b8',
+                fontSize:'0.78rem', fontWeight: isMtg && inMonth ? 800 : 400,
+                marginTop: 2,
+              }}>
                 {cell.getDate()}
               </div>
+              {/* Status badge */}
               {isMtg && inMonth && (
-                <div style={{ marginTop:2 }}>
+                <div style={{ marginTop:5, display:'flex', flexDirection:'column', alignItems:'center', gap:2 }}>
                   {rec ? (
-                    <div style={{ fontSize:'0.55rem', color:'#15803d', fontWeight:700, lineHeight:1.2 }}>
-                      {rec.refNumber.split('/').pop()}
-                      <div style={{ color: rec.status==='Final' ? '#15803d' : '#b45309', fontWeight:600 }}>{rec.status}</div>
-                    </div>
+                    <>
+                      <div style={{ fontSize:'0.53rem', fontWeight:800, color:'#166534',
+                        letterSpacing:'0.02em', lineHeight:1 }}>
+                        #{rec.refNumber.split('/').pop()}
+                      </div>
+                      <div style={{ fontSize:'0.48rem', fontWeight:700, borderRadius:3, padding:'1px 5px',
+                        background: rec.status==='Final' ? '#dcfce7' : '#fef3c7',
+                        color:      rec.status==='Final' ? '#15803d' : '#b45309' }}>
+                        {rec.status.toUpperCase()}
+                      </div>
+                    </>
                   ) : isPast ? (
-                    <div style={{ fontSize:'0.58rem', color:'#92400e', fontWeight:700 }}>Skipped</div>
+                    <div style={{ fontSize:'0.5rem', fontWeight:800, color:'#b45309',
+                      background:'#fef3c7', borderRadius:4, padding:'2px 5px' }}>SKIPPED</div>
                   ) : (
-                    <div style={{ fontSize:'0.58rem', color:'#6366f1', fontWeight:600 }}>Sched.</div>
+                    <div style={{ fontSize:'0.5rem', fontWeight:700, color:'#4338ca',
+                      background:'#e0e7ff', borderRadius:4, padding:'2px 5px' }}>SCHED.</div>
                   )}
                 </div>
               )}
@@ -7732,50 +7804,91 @@ function MeetingCalendar({ records }: { records: MeetingRecord[] }) {
         })}
       </div>
 
-      {/* Selected day detail */}
-      {selected && (
-        <div style={{ background:'#f8fafc', border:'1.5px solid #e2e8f0', borderRadius:10, padding:'12px 16px' }}>
-          {(() => {
-            const d = new Date(selected + 'T12:00:00')
-            const dayName = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getDay()]
-            return (
+      {/* ── Legend ── */}
+      <div style={{ display:'flex', gap:14, padding:'8px 16px', borderTop:'1px solid #e2e8f0',
+        background:'#fafafa', justifyContent:'center', flexWrap:'wrap' }}>
+        {[
+          { label:'Conducted', dot:'#16a34a', bg:'#dcfce7' },
+          { label:'Skipped',   dot:'#d97706', bg:'#fef3c7' },
+          { label:'Scheduled', dot:'#818cf8', bg:'#e0e7ff' },
+          { label:'Today',     dot:'#4338ca', bg:'#eef2ff' },
+        ].map(l => (
+          <span key={l.label} style={{ display:'flex', alignItems:'center', gap:5,
+            fontSize:'0.63rem', color:'#64748b', fontWeight:600 }}>
+            <span style={{ width:9, height:9, borderRadius:2, background:l.bg,
+              border:`1.5px solid ${l.dot}`, display:'inline-block', flexShrink:0 }} />
+            {l.label}
+          </span>
+        ))}
+      </div>
+
+      {/* ── Detail panel ── */}
+      {selected && (() => {
+        const d = new Date(selected + 'T12:00:00')
+        const dayName = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getDay()]
+        return (
+          <div style={{ borderTop:'2.5px solid #4338ca', background:'linear-gradient(180deg,#f5f3ff 0%,#fff 100%)',
+            padding:'14px 18px' }}>
+            {/* Detail header */}
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10, flexWrap:'wrap' }}>
+              <div style={{ background:'#4338ca', color:'#fff', borderRadius:8, padding:'4px 12px',
+                fontSize:'0.75rem', fontWeight:800, letterSpacing:'0.02em' }}>
+                {d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})} · {dayName}
+              </div>
+              {selRec && (
+                <>
+                  <span style={{ fontSize:'0.78rem', fontWeight:800, color:'#1e1b4b' }}>{selRec.refNumber}</span>
+                  <span style={{ fontSize:'0.68rem', fontWeight:700, padding:'2px 9px', borderRadius:5,
+                    background: selRec.status==='Final'?'#dcfce7':'#fef3c7',
+                    color:      selRec.status==='Final'?'#15803d':'#92400e',
+                    border:     selRec.status==='Final'?'1px solid #86efac':'1px solid #fcd34d' }}>
+                    {selRec.status}
+                  </span>
+                </>
+              )}
+              <button type="button" onClick={() => setSelected(null)}
+                style={{ marginLeft:'auto', background:'transparent', border:'none', cursor:'pointer',
+                  color:'#94a3b8', fontSize:'1rem', lineHeight:1, padding:0 }}>✕</button>
+            </div>
+
+            {selRec ? (
               <>
-                <div style={{ fontWeight:800, fontSize:'0.84rem', color:'#1e1b4b', marginBottom:8 }}>
-                  {d.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})} — {dayName}
+                <div style={{ fontSize:'0.72rem', color:'#475569', marginBottom:10, fontWeight:600 }}>
+                  🪑&nbsp; {selRec.chairperson}
                 </div>
-                {selRec ? (
-                  <div>
-                    <div style={{ fontSize:'0.78rem', marginBottom:8, color:'#374151' }}>
-                      <strong>{selRec.refNumber}</strong>
-                      <span style={{ marginLeft:8, color:'#64748b' }}>Chair: {selRec.chairperson}</span>
-                      <span style={{ marginLeft:8, fontSize:'0.7rem', fontWeight:700, padding:'1px 7px', borderRadius:4,
-                        background: selRec.status==='Final'?'#dcfce7':'#fef3c7',
-                        color: selRec.status==='Final'?'#15803d':'#92400e' }}>{selRec.status}</span>
-                    </div>
-                    <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
-                      {selRec.reps.filter(r => r.name.trim()).map(rep => {
-                        const bg = rep.attendance==='Attended'?'#dcfce7':rep.attendance==='On Leave'?'#fef3c7':'#fee2e2'
-                        const tx = rep.attendance==='Attended'?'#15803d':rep.attendance==='On Leave'?'#92400e':'#b91c1c'
-                        const icon = rep.attendance==='Attended'?'✓':rep.attendance==='On Leave'?'~':'✗'
-                        return (
-                          <span key={rep.id} title={`${rep.name} — ${rep.meetingDept}`}
-                            style={{ fontSize:'0.68rem', fontWeight:700, borderRadius:4, padding:'2px 8px', background:bg, color:tx }}>
-                            {icon} {rep.deptCode || rep.meetingDept.slice(0,3)}
-                          </span>
-                        )
-                      })}
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ color:'#92400e', fontSize:'0.78rem' }}>
-                    No meeting record for this date — meeting was skipped or not yet recorded.
-                  </div>
-                )}
+                {/* Attendance badges */}
+                <div style={{ fontSize:'0.62rem', fontWeight:700, color:'#94a3b8', textTransform:'uppercase',
+                  letterSpacing:'0.08em', marginBottom:5 }}>Attendance</div>
+                <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
+                  {selRec.reps.filter(r => r.name.trim()).map(rep => {
+                    const isAtt   = rep.attendance === 'Attended'
+                    const isLeave = rep.attendance === 'On Leave'
+                    const bg   = isAtt ? '#f0fdf4' : isLeave ? '#fffbeb' : '#fef2f2'
+                    const tx   = isAtt ? '#15803d' : isLeave ? '#92400e' : '#b91c1c'
+                    const bd   = isAtt ? '#86efac' : isLeave ? '#fcd34d' : '#fca5a5'
+                    const icon = isAtt ? '✓' : isLeave ? '⊘' : '✗'
+                    return (
+                      <span key={rep.id} title={`${rep.name} — ${rep.meetingDept} — ${rep.attendance}`}
+                        style={{ fontSize:'0.68rem', fontWeight:700, borderRadius:6, padding:'4px 9px',
+                          background:bg, color:tx, border:`1px solid ${bd}`,
+                          display:'flex', alignItems:'center', gap:3 }}>
+                        <span style={{ fontSize:'0.65rem', fontWeight:900 }}>{icon}</span>
+                        {rep.deptCode || rep.meetingDept.slice(0,3)}
+                      </span>
+                    )
+                  })}
+                </div>
               </>
-            )
-          })()}
-        </div>
-      )}
+            ) : (
+              <div style={{ display:'flex', alignItems:'center', gap:10, color:'#92400e', fontSize:'0.78rem',
+                background:'#fffbeb', border:'1px solid #fde68a', borderRadius:8, padding:'10px 14px' }}>
+                <span style={{ fontSize:'1.1rem' }}>⚠️</span>
+                No meeting record for this date — meeting was skipped or not yet recorded.
+              </div>
+            )}
+          </div>
+        )
+      })()}
     </div>
   )
 }
