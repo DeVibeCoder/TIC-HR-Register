@@ -4699,91 +4699,81 @@ button.step-pill:hover { filter: brightness(0.98); }
 .ov2-leave-info span { font-size: 0.78rem; font-weight: 700; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ov2-leave-info small { font-size: 0.66rem; color: #64748b; }
 
-/* ── Insights 3-col grid ────────────────────────────────── */
-.ov2-grid3 {
+/* ── Zone 2: uniform 4-card mini-strip ──────────────────── */
+.ov-mini-strip {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 8px;
-  align-items: start;
-  margin-top: 0; /* already separated by ov2-wrap gap */
 }
-
-/* Insight row items */
-.ov3-row {
+.ov-mini-card {
+  background: var(--mc-bg, #f8fafc);
+  border: 1px solid rgba(148,163,184,0.25);
+  border-top: 3px solid var(--mc-accent, #94a3b8);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ov-mini-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ov-mini-icon { font-size: 1rem; line-height: 1; }
+.ov-mini-label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.ov-mini-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 4px 0 2px;
+}
+.ov-mini-val {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: var(--mc-accent, #475569);
+  line-height: 1;
+}
+.ov-mini-sub {
+  font-size: 0.68rem;
+  color: #94a3b8;
+}
+.ov-mini-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  padding: 6px 0;
-  border-bottom: 1px solid #f1f5f9;
-}
-.ov3-row:last-of-type { border-bottom: none; }
-.ov3-row-info {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  flex: 1;
-}
-.ov3-row-name {
-  font-size: 0.77rem;
-  font-weight: 700;
-  color: #0f172a;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.ov3-row-sub {
-  font-size: 0.67rem;
-  color: #64748b;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.ov3-stage-badge {
+  gap: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(148,163,184,0.2);
   font-size: 0.68rem;
+  color: #64748b;
+  flex-wrap: wrap;
+}
+.ov-mini-tag {
+  font-size: 0.65rem;
   font-weight: 700;
-  padding: 2px 7px;
+  padding: 1px 7px;
   border-radius: 20px;
   flex-shrink: 0;
   white-space: nowrap;
 }
-.ov3-footer-stat {
-  margin-top: 8px;
-  padding-top: 6px;
-  border-top: 1px solid #f1f5f9;
-  font-size: 0.68rem;
-  color: #64748b;
-}
-.ov3-stat-row {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 8px;
-}
-.ov3-stat-box {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 8px 4px 6px;
-}
 
 /* ── Overview responsive ───────────────────────────────── */
-@media (max-width: 960px) {
-  .ov2-grid3 { grid-template-columns: 1fr 1fr; }
-}
 @media (max-width: 840px) {
   .ov2-grid { grid-template-columns: 1fr; }
-  .ov2-grid3 { grid-template-columns: 1fr 1fr; }
+  .ov-mini-strip { grid-template-columns: 1fr 1fr; }
   .ov2-header-kpis { display: none; }
 }
 @media (max-width: 600px) {
   .ov2-card-val { font-size: 1.15rem; }
   .ov2-card-icon { font-size: 0.7rem; }
-  .ov2-grid3 { grid-template-columns: 1fr; }
+  .ov-mini-strip { grid-template-columns: 1fr 1fr; }
 }
 
 /* ── Registration modal extra-wide ──────────────────────── */
