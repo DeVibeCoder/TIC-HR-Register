@@ -95,6 +95,7 @@ type MeetingRep = {
   reason: string
   replacementName: string
   replacementDesignation: string
+  replacementId: string
 }
 type MeetingDeptUpdate = {
   dept: string
@@ -111,6 +112,8 @@ type MeetingRecord = {
   reps: MeetingRep[]
   prevMeetingDate: string   // date of previous meeting for agenda item 1
   deptUpdates: MeetingDeptUpdate[]
+  agendaType?: 'standard' | 'custom'
+  customAgenda?: string
   otherMatters: string
   preparedBy: string
   approvedBy: string
@@ -399,43 +402,52 @@ const pages: Array<{ id: Page; label: string }> = [
 
 const departmentsList = ['ADMINISTRATION', 'HUMAN RESOURCES', 'ACCOUNTS AND FINANCE', 'CAFE', 'STORES', 'HOUSEKEEPING', 'LPG PLANT', 'OXYGEN PLANT', 'CEMENT PLANT', 'FUEL FARM', 'ENGINEERING ADMINISTRATION', 'MECHANICAL', 'ELECTRICAL', 'MAINTENANCE', 'POWER HOUSE', 'PAINTING PROJECT', 'KITCHEN', 'STAFF MESS', 'LOSS PREVENTION', 'ROOFING FACTORY', 'BATCHING PLANT']
 
-// HOD briefing meeting — fixed 8 departments that attend
+// HOD briefing meeting — sections with their representatives
 const MEETING_DEPTS = [
-  { label: 'Accounts',        code: 'ACC', appDepts: ['ACCOUNTS AND FINANCE'] },
-  { label: 'Engineering',     code: 'ENG', appDepts: ['ENGINEERING ADMINISTRATION','MECHANICAL','ELECTRICAL','MAINTENANCE','POWER HOUSE','PAINTING PROJECT'] },
-  { label: 'Loss Prevention', code: 'LP',  appDepts: ['LOSS PREVENTION'] },
-  { label: 'Housekeeping',    code: 'HK',  appDepts: ['HOUSEKEEPING'] },
-  { label: 'Food & Beverage', code: 'F&B', appDepts: ['KITCHEN','STAFF MESS','CAFE'] },
-  { label: 'Stores',          code: 'STR', appDepts: ['STORES'] },
-  { label: 'LPG Plant',       code: 'LPG', appDepts: ['LPG PLANT','OXYGEN PLANT'] },
-  { label: 'Cement Plant',    code: 'CP',  appDepts: ['CEMENT PLANT'] },
+  { label: 'ACCOUNTS',          code: 'ACC', appDepts: ['ACCOUNTS AND FINANCE'] },
+  { label: 'ENGINEERING',       code: 'ENG', appDepts: ['ENGINEERING ADMINISTRATION','MECHANICAL','ELECTRICAL','MAINTENANCE','POWER HOUSE','POWERHOUSE','PAINTING PROJECT'] },
+  { label: 'LOSS PREVENTION',   code: 'LP',  appDepts: ['LOSS PREVENTION'] },
+  { label: 'HOUSEKEEPING',      code: 'HK',  appDepts: ['HOUSEKEEPING'] },
+  { label: 'FOOD & BEVERAGE',   code: 'F&B', appDepts: ['KITCHEN','STAFF MESS','CAFE'] },
+  { label: 'STORES',            code: 'STR', appDepts: ['STORES'] },
+  { label: 'LPG PLANT',         code: 'LPG', appDepts: ['LPG PLANT','OXYGEN PLANT'] },
+  { label: 'FUEL FARM',         code: 'FF',  appDepts: ['FUEL FARM'] },
+  { label: 'ADMINISTRATION',    code: 'ADM', appDepts: ['ADMINISTRATION'] },
+  { label: 'HUMAN RESOURCES',   code: 'HR',  appDepts: ['HUMAN RESOURCES'] },
+  { label: 'CEMENT PLANT',      code: 'CP',  appDepts: ['CEMENT PLANT','ROOFING FACTORY','BATCHING PLANT'] },
 ] as const
 
-// All departments shown in the headcount table (matches the PDF layout)
+// All sections shown in the headcount table (matches the PDF layout)
 const HEADCOUNT_DEPTS = [
   { label: 'Accounts & Finance',  appDepts: ['ACCOUNTS AND FINANCE','ACCOUNTS','FINANCE'] },
   { label: 'Administration',      appDepts: ['ADMINISTRATION','ADMIN'] },
   { label: 'Batching Plant',      appDepts: ['BATCHING PLANT'] },
   { label: 'Cement Plant',        appDepts: ['CEMENT PLANT'] },
-  { label: 'Engineering',         appDepts: ['ENGINEERING ADMINISTRATION','MECHANICAL','ELECTRICAL','MAINTENANCE','POWER HOUSE','PAINTING PROJECT','ENGINEERING'] },
+  { label: 'Engineering',         appDepts: ['ENGINEERING ADMINISTRATION','MECHANICAL','ELECTRICAL','MAINTENANCE','POWER HOUSE','POWERHOUSE','PAINTING PROJECT','ENGINEERING'] },
   { label: 'Fuel Farm',           appDepts: ['FUEL FARM'] },
   { label: 'Food & Beverage',     appDepts: ['KITCHEN','STAFF MESS','CAFE','FOOD AND BEVERAGE','FOOD & BEVERAGE'] },
   { label: 'Human Resource',      appDepts: ['HUMAN RESOURCE','HUMAN RESOURCES','HR'] },
   { label: 'Housekeeping',        appDepts: ['HOUSEKEEPING'] },
   { label: 'Loss Prevention',     appDepts: ['LOSS PREVENTION'] },
   { label: 'LPG & Oxygen Plant',  appDepts: ['LPG PLANT','OXYGEN PLANT','LPG'] },
-  { label: 'QMarine',             appDepts: ['QMARINE','Q MARINE','MARINE','Q-MARINE'] },
   { label: 'Roofing Factory',     appDepts: ['ROOFING FACTORY','ROOFING'] },
   { label: 'Stores',              appDepts: ['STORES','STORE'] },
 ] as const
 
-// Fixed HOD meeting participants — employee IDs of standing representatives
-const FIXED_PARTICIPANT_IDS = ['35494','56251','57360','40780','34846','58121','50223','29634','41966','50814']
+// Fixed HOD meeting participants — employee IDs of standing section representatives
+// 35494=Accounts, 56251=Engineering HOD, 57360=Loss Prevention, 40780=Housekeeping,
+// 58121=F&B HOD, 50223=Stores, 25237=LPG Plant, 34846=Fuel Farm,
+// 41966=Administration/CementPlant (Ahmed Ali), 50814=Human Resources
+const FIXED_PARTICIPANT_IDS = ['35494','56251','57360','40780','58121','50223','25237','34846','41966','50814']
 
-// Chairperson options — GM chairs, DGM chairs when GM is absent
+// GM and DGM employee IDs — handled dynamically based on who chairs
+const GM_ID  = '36693'  // Ali Didi — General Manager
+const DGM_ID = '47149'  // Hussain Shahid — Deputy General Manager
+
+// Chairperson options — GM chairs normally, DGM chairs when GM is absent
 const CHAIRPERSON_OPTIONS = [
-  { label: 'Ali Didi',       role: 'General Manager',         value: 'Ali Didi — General Manager' },
-  { label: 'Hussain Shahid', role: 'Deputy General Manager',  value: 'Hussain Shahid — Deputy General Manager' },
+  { label: 'Ali Didi',       role: 'General Manager',        value: 'Ali Didi — General Manager',               approvedBy: 'ALI DIDI' },
+  { label: 'Hussain Shahid', role: 'Deputy General Manager', value: 'Hussain Shahid — Deputy General Manager',  approvedBy: 'HUSSAIN SHAHID' },
 ]
 
 const nationalities = ['MALDIVES', 'INDIA', 'BANGLADESH', 'SRI LANKA', 'NEPAL', 'FINLAND', 'MALAYSIA', 'PHILIPPINES', 'MYANMAR', 'PAKISTAN']
@@ -482,6 +494,18 @@ const baseEmployees: Employee[] = [
   { employeeId: '60512', fullName: 'CHAMINDA WIJESINGHE', department: 'PAINTING PROJECT', designation: 'PAINTER', nationality: 'SRI LANKAN', nicPassportNo: 'N1987654', workPermitNo: 'WP-60512', dateOfJoin: '2024-05-20', mobileNo: '7778012', dateOfBirth: '1985-11-14', passportStatus: 'Valid', siteStatus: 'On Site', gender: 'Male' },
   { employeeId: '61033', fullName: 'MD ARIF HOSSAIN', department: 'STORES', designation: 'STORE ASSISTANT', nationality: 'BANGLADESH', nicPassportNo: 'BR3344556', workPermitNo: 'WP-61033', dateOfJoin: '2024-08-10', mobileNo: '7779123', dateOfBirth: '1995-02-28', passportStatus: 'Valid', siteStatus: 'On Site', gender: 'Male' },
   { employeeId: '61245', fullName: 'ARUSHULLA RASHID', department: 'HUMAN RESOURCES', designation: 'HR OFFICER', nationality: 'MALDIVES', nicPassportNo: 'A445566E', workPermitNo: '', dateOfJoin: '2024-09-01', mobileNo: '7770234', dateOfBirth: '1994-06-05', passportStatus: 'Valid', siteStatus: 'On Site', gender: 'Female' },
+  // Management
+  { employeeId: '36693', fullName: 'ALI DIDI', department: 'ADMINISTRATION', designation: 'GENERAL MANAGER', nationality: 'MALDIVES', nicPassportNo: 'A100001A', workPermitNo: '', dateOfJoin: '2018-01-01', mobileNo: '', dateOfBirth: '1972-06-15', passportStatus: 'Valid', siteStatus: 'On Site', gender: 'Male' },
+  { employeeId: '47149', fullName: 'HUSSAIN SHAHID', department: 'ADMINISTRATION', designation: 'DEPUTY GENERAL MANAGER', nationality: 'MALDIVES', nicPassportNo: 'A100002B', workPermitNo: '', dateOfJoin: '2019-03-01', mobileNo: '', dateOfBirth: '1978-09-20', passportStatus: 'Valid', siteStatus: 'On Site', gender: 'Male' },
+  { employeeId: '41966', fullName: 'AHMED ALI', department: 'ADMINISTRATION', designation: 'ADMINISTRATOR', nationality: 'MALDIVES', nicPassportNo: 'A100003C', workPermitNo: '', dateOfJoin: '2015-07-01', mobileNo: '', dateOfBirth: '1985-04-10', passportStatus: 'Valid', siteStatus: 'On Site', gender: 'Male' },
+  // Section heads
+  { employeeId: '56251', fullName: 'ENGINEERING SECTION HEAD', department: 'ENGINEERING ADMINISTRATION', designation: 'CHIEF ENGINEER', nationality: 'INDIA', nicPassportNo: 'T2000001', workPermitNo: 'WP-56251', dateOfJoin: '2021-06-01', mobileNo: '', dateOfBirth: '1982-01-01', passportStatus: 'Valid', siteStatus: 'On Site', gender: 'Male' },
+  { employeeId: '57360', fullName: 'LOSS PREVENTION SUPERVISOR', department: 'LOSS PREVENTION', designation: 'LOSS PREVENTION SUPERVISOR', nationality: 'INDIA', nicPassportNo: 'T2000002', workPermitNo: 'WP-57360', dateOfJoin: '2022-04-01', mobileNo: '', dateOfBirth: '1985-05-15', passportStatus: 'Valid', siteStatus: 'On Site', gender: 'Male' },
+  { employeeId: '40780', fullName: 'HOUSEKEEPING SUPERVISOR', department: 'HOUSEKEEPING', designation: 'HOUSEKEEPING SUPERVISOR', nationality: 'INDIA', nicPassportNo: 'T2000003', workPermitNo: 'WP-40780', dateOfJoin: '2012-02-01', mobileNo: '', dateOfBirth: '1980-08-22', passportStatus: 'Valid', siteStatus: 'On Site', gender: 'Male' },
+  { employeeId: '58121', fullName: 'FOOD AND BEVERAGE SUPERVISOR', department: 'KITCHEN', designation: 'FOOD & BEVERAGE SUPERVISOR', nationality: 'INDIA', nicPassportNo: 'T2000004', workPermitNo: 'WP-58121', dateOfJoin: '2023-01-15', mobileNo: '', dateOfBirth: '1986-11-05', passportStatus: 'Valid', siteStatus: 'On Site', gender: 'Male' },
+  { employeeId: '25237', fullName: 'LPG PLANT SUPERVISOR', department: 'LPG PLANT', designation: 'LPG PLANT SUPERVISOR', nationality: 'INDIA', nicPassportNo: 'T2000005', workPermitNo: 'WP-25237', dateOfJoin: '2009-05-01', mobileNo: '', dateOfBirth: '1979-03-18', passportStatus: 'Valid', siteStatus: 'On Site', gender: 'Male' },
+  { employeeId: '34846', fullName: 'FUEL FARM SUPERVISOR', department: 'FUEL FARM', designation: 'FUEL FARM SUPERVISOR', nationality: 'INDIA', nicPassportNo: 'T2000006', workPermitNo: 'WP-34846', dateOfJoin: '2007-09-01', mobileNo: '', dateOfBirth: '1977-07-12', passportStatus: 'Valid', siteStatus: 'On Site', gender: 'Male' },
+  { employeeId: '50814', fullName: 'HUMAN RESOURCES SUPERVISOR', department: 'HUMAN RESOURCES', designation: 'HR SUPERVISOR', nationality: 'MALDIVES', nicPassportNo: 'A100004D', workPermitNo: '', dateOfJoin: '2017-11-01', mobileNo: '', dateOfBirth: '1988-12-30', passportStatus: 'Valid', siteStatus: 'On Site', gender: 'Male' },
 ]
 
 function createEmployees(): Employee[] {
@@ -6941,24 +6965,19 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
 
   const allAttended = [...attended, ...replacements]
 
-  const pRows: string[] = []
-  for (let i = 0; i < allAttended.length; i += 2) {
-    const l = allAttended[i]; const r2 = allAttended[i+1]
-    pRows.push(`<tr>
-      <td style="width:43%;">${esc(l.name)}<span style="color:#555;font-size:8pt;"> &ndash; ${esc(l.designation)}</span></td>
-      <td class="code" style="width:7%;">${esc(l.deptCode)}</td>
-      ${r2
-        ? `<td style="width:43%;">${esc(r2.name)}<span style="color:#555;font-size:8pt;"> &ndash; ${esc(r2.designation)}</span></td><td class="code" style="width:7%;">${esc(r2.deptCode)}</td>`
-        : '<td colspan="2"></td>'}
-    </tr>`)
-  }
+  // Participants table — clean 3-column grid: Name | Designation | Section
+  const pTableRows = allAttended.map(r => `<tr>
+    <td style="padding:3pt 6pt;border:0.5pt solid #ddd;width:38%;font-size:8.5pt;">${esc(r.name)}</td>
+    <td style="padding:3pt 6pt;border:0.5pt solid #ddd;width:42%;font-size:8pt;color:#444;">${esc(r.designation)}</td>
+    <td style="padding:3pt 6pt;border:0.5pt solid #ddd;width:20%;text-align:center;font-weight:700;font-size:8pt;">${esc(r.deptCode)}</td>
+  </tr>`).join('')
 
   const repRows = (list: MeetingRep[], emptyRows = 2) => list.length === 0
-    ? Array(emptyRows).fill(`<tr><td colspan="4" style="padding:5pt;">&nbsp;</td></tr>`).join('')
+    ? Array(emptyRows).fill(`<tr><td colspan="3" style="padding:5pt;">&nbsp;</td></tr>`).join('')
     : list.map(r => `<tr>
-        <td style="width:43%;">${esc(r.name)}<span style="color:#555;font-size:8pt;"> &ndash; ${esc(r.designation)}</span></td>
-        <td class="code" style="width:7%;">${esc(r.deptCode)}</td>
-        <td class="reason" style="width:50%;">${esc(r.reason || (r.attendance === 'On Leave' ? 'Annual Leave' : ''))}${r.replacementName?.trim() ? ` <em style="color:#666;">(Replacement: ${esc(r.replacementName)})</em>` : ''}</td>
+        <td style="padding:3pt 6pt;border:0.5pt solid #ddd;width:38%;font-size:8.5pt;">${esc(r.name)}</td>
+        <td style="padding:3pt 6pt;border:0.5pt solid #ddd;width:42%;font-size:8pt;color:#444;">${esc(r.reason || (r.attendance === 'On Leave' ? 'Annual Leave' : ''))}${r.replacementName?.trim() ? ` <em style="color:#666;">(Replacement: ${esc(r.replacementName)})</em>` : ''}</td>
+        <td style="padding:3pt 6pt;border:0.5pt solid #ddd;width:20%;text-align:center;font-weight:700;font-size:8pt;">${esc(r.deptCode)}</td>
       </tr>`).join('')
 
   const hcRows = HEADCOUNT_DEPTS.map(dept => {
@@ -6969,7 +6988,6 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
       <td style="text-align:center;padding:4pt;font-size:9pt;border:0.5pt solid #bbb;">${pad2(notInSite)}</td>
       <td style="text-align:center;padding:4pt;font-size:9pt;border:0.5pt solid #bbb;">${pad2(sickLeave)}</td>
       <td style="text-align:center;padding:4pt;font-size:9pt;border:0.5pt solid #bbb;">${pad2(onLeave)}</td>
-      <td style="padding:4pt 6pt;font-size:9pt;border:0.5pt solid #bbb;"></td>
       <td style="text-align:center;padding:4pt;font-size:9pt;border:0.5pt solid #bbb;font-weight:700;">${pad2(total)}</td>
     </tr>`
   }).join('')
@@ -6979,7 +6997,7 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   const totOnLeave   = employees.filter(e => e.siteStatus === 'On Leave').length
   const grandTotal   = totOnDuty + totNotInSite + totOnLeave
 
-  // Always render all 8 departments — empty ones show a blank line
+  // Always render all MEETING_DEPTS sections — empty ones show Nil
   const deptHtml = MEETING_DEPTS.map(md => {
     const update = record.deptUpdates.find(d => d.dept === md.label)
     const bullets = (update?.points ?? '').split('\n').filter(p => p.trim())
@@ -6992,7 +7010,7 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
     </div>`
   }).join('')
 
-  // Fixed agenda — only the previous-meeting date changes
+  // Agenda — fixed or custom
   const fmtAgendaDate = (d: string) => {
     if (!d) return '[DATE]'
     const months = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER']
@@ -7002,12 +7020,22 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
     return `${months[dt.getMonth()]} ${day}${ord}, ${dt.getFullYear()}`
   }
 
-  // Letterhead image URL — file must be at public/letterhead.png in the project
-  const letterheadUrl = `${window.location.origin}/letterhead.png`
+  const agendaHtml = (record.agendaType ?? 'standard') === 'custom' && record.customAgenda?.trim()
+    ? `<ol style="margin:0 0 0 20pt;padding:0;">${record.customAgenda.trim().split('\n').filter(l=>l.trim()).map(l=>`<li style="margin-bottom:5pt;font-size:9pt;">${esc(l.trim())}</li>`).join('')}</ol>`
+    : `<ol style="margin:0 0 0 20pt;padding:0;">
+        <li style="margin-bottom:5pt;font-size:9pt;">REVIEW OF MINUTES FROM THE PREVIOUS MEETING HELD ON ${fmtAgendaDate(record.prevMeetingDate)}.</li>
+        <li style="margin-bottom:5pt;font-size:9pt;">DISCUSSION OF ISSUES, UPDATES AND CHALLENGES FACED BY EACH SECTION.</li>
+        <li style="margin-bottom:5pt;font-size:9pt;">ANY OTHER MATTERS THAT NEED TO BE ADDRESSED&hellip;</li>
+      </ol>`
 
+  // Letterhead image URL
+  const letterheadUrl = `${window.location.origin}/letterhead.png`
   const refSeq = record.refNumber.split('/').pop() || ''
 
-  // Footer: title on LEFT · page number in CENTRE · right side empty
+  // Dynamic approved-by role
+  const approvedByRole = record.chairperson === CHAIRPERSON_OPTIONS[1].value ? 'Deputy General Manager' : 'General Manager'
+
+  // Footer: title LEFT · page number CENTRE
   const pgFooter = (n: number) =>
     `<div style="display:flex;align-items:center;border-top:0.8pt solid #2f78c5;padding-top:5pt;margin-top:14pt;font-size:7.5pt;color:#2f78c5;">
       <span style="flex:1;letter-spacing:0.4pt;opacity:0.75;">BRIEFING MEETING MINUTES &mdash; ${esc(refSeq)}</span>
@@ -7028,17 +7056,14 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   .page { background:#fff; box-shadow:0 4px 24px rgba(0,0,0,0.16); padding:5mm 18mm 14mm; }
   .info-tbl { width:100%; border-collapse:collapse; margin-bottom:12pt; }
   .info-tbl td { border:0.8pt solid #999; padding:4pt 8pt; font-size:9pt; vertical-align:top; }
-  .info-tbl td.lbl { font-weight:700; white-space:nowrap; width:30mm; background:#f0f0f0; color:#111; font-size:8.5pt; }
-  .info-tbl .sub-tbl { width:100%; border-collapse:collapse; }
-  .info-tbl .sub-tbl td { padding:2pt 4pt; font-size:8.5pt; border-bottom:0.4pt solid #e0e0e0; vertical-align:top; }
-  .info-tbl .sub-tbl tr:last-child td { border-bottom:none; }
-  .info-tbl .sub-tbl .code { font-weight:700; font-size:8pt; white-space:nowrap; color:#333; }
-  .info-tbl .sub-tbl .reason { color:#555; font-size:8pt; }
+  .info-tbl td.lbl { font-weight:700; white-space:nowrap; width:28mm; background:#f0f0f0; color:#111; font-size:8.5pt; }
+  .p-tbl { width:100%; border-collapse:collapse; }
+  .p-tbl th { background:#f0f0f0; border:0.5pt solid #ccc; padding:3pt 6pt; font-size:8pt; font-weight:700; text-align:left; }
+  .p-tbl th.ctr { text-align:center; }
   .hc-tbl { width:100%; border-collapse:collapse; }
-  .hc-tbl th { background:#1e1b4b; color:#fff; font-size:8pt; font-weight:700; padding:5pt 4pt; border:0.5pt solid #333; text-align:center; }
+  .hc-tbl th { background:#4a7fb5; color:#fff; font-size:8pt; font-weight:700; padding:5pt 4pt; border:0.5pt solid #3a6f9f; text-align:center; }
   .hc-tbl th.lft { text-align:left; }
   .hc-tbl .tot td { font-weight:800; background:#f0f0f0; }
-  .footer { text-align:center; font-size:8pt; color:#999; margin-top:12pt; border-top:0.5pt solid #ddd; padding-top:4pt; }
   @media print {
     body { background:#fff; }
     .pbar { display:none !important; }
@@ -7054,17 +7079,11 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
 <div class="wrap">
 
 <div class="page">
-  <!-- ══ LETTERHEAD — official image ═══════════════════════════════
-       Displays the real Villa Hakatha letterhead image, centred at
-       the top of each printed page.  File: public/letterhead.png
-       ═══════════════════════════════════════════════════════════ -->
   <div style="text-align:center;margin-top:0;margin-bottom:8pt;padding-bottom:6pt;border-bottom:1pt solid #d0d8ee;">
-    <img src="${letterheadUrl}"
-         alt="Villa Hakatha Pvt. Ltd. Letterhead"
+    <img src="${letterheadUrl}" alt="Villa Hakatha Pvt. Ltd. Letterhead"
          style="max-width:100%;width:auto;height:auto;max-height:110pt;display:inline-block;vertical-align:top;mix-blend-mode:multiply;"
          onerror="this.style.display='none'"/>
   </div>
-  <!-- Document title -->
   <div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:1.5pt solid #333;padding-bottom:5pt;margin-bottom:0;">
     <span style="font-size:11pt;font-weight:900;text-transform:uppercase;letter-spacing:0.5pt;">Briefing Meeting Minutes</span>
     <span style="font-size:10pt;font-weight:700;">Ref: ${esc(record.refNumber)}</span>
@@ -7075,16 +7094,44 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
     <tr><td class="lbl">Time Ended</td><td>${esc(record.timeEnded ? record.timeEnded + ' hrs.' : '—')}</td></tr>
     <tr><td class="lbl">Venue</td><td>${esc(record.venue)}</td></tr>
     <tr><td class="lbl">Chairperson</td><td style="font-weight:600;">${esc(record.chairperson)}</td></tr>
-    <tr><td class="lbl">Participants</td><td style="padding:4pt 10pt;"><table class="sub-tbl">${pRows.join('')}</table></td></tr>
-    <tr><td class="lbl">On Leave</td><td style="padding:4pt 10pt;"><table class="sub-tbl">${repRows(onLeaveR)}</table></td></tr>
-    <tr><td class="lbl">Absentees</td><td style="padding:4pt 10pt;"><table class="sub-tbl">${repRows(absentR)}</table></td></tr>
+    <tr>
+      <td class="lbl">Participants</td>
+      <td style="padding:4pt 8pt;">
+        <table class="p-tbl">
+          <thead><tr>
+            <th style="width:38%;">NAME</th>
+            <th style="width:42%;">DESIGNATION</th>
+            <th class="ctr" style="width:20%;">SECTION</th>
+          </tr></thead>
+          <tbody>${pTableRows || '<tr><td colspan="3" style="padding:5pt;color:#aaa;">—</td></tr>'}</tbody>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td class="lbl">On Leave</td>
+      <td style="padding:4pt 8pt;">
+        <table class="p-tbl">
+          <thead><tr><th style="width:38%;">NAME</th><th style="width:42%;">REASON / REPLACEMENT</th><th class="ctr" style="width:20%;">SECTION</th></tr></thead>
+          <tbody>${repRows(onLeaveR)}</tbody>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td class="lbl">Absentees</td>
+      <td style="padding:4pt 8pt;">
+        <table class="p-tbl">
+          <thead><tr><th style="width:38%;">NAME</th><th style="width:42%;">REASON</th><th class="ctr" style="width:20%;">SECTION</th></tr></thead>
+          <tbody>${repRows(absentR)}</tbody>
+        </table>
+      </td>
+    </tr>
   </table>
-  <div style="font-size:10pt;font-weight:800;margin-bottom:7pt;">Daily Headcount of Departments</div>
+  <div style="font-size:10pt;font-weight:800;margin-bottom:7pt;">Daily Headcount of Sections</div>
   <table class="hc-tbl">
     <thead><tr>
-      <th class="lft">Department</th>
+      <th class="lft">Section</th>
       <th>On Duty</th><th>Not in Site</th><th>Sick Leave</th><th>On Leave</th>
-      <th>Details</th><th>Total +<br/>HOD</th>
+      <th>Total</th>
     </tr></thead>
     <tbody>${hcRows}</tbody>
     <tfoot><tr class="tot">
@@ -7093,7 +7140,6 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
       <td style="text-align:center;padding:4pt;font-size:9pt;border:0.5pt solid #bbb;">${pad2(totNotInSite)}</td>
       <td style="text-align:center;padding:4pt;font-size:9pt;border:0.5pt solid #bbb;">00</td>
       <td style="text-align:center;padding:4pt;font-size:9pt;border:0.5pt solid #bbb;">${pad2(totOnLeave)}</td>
-      <td style="padding:4pt;font-size:9pt;border:0.5pt solid #bbb;"></td>
       <td style="text-align:center;padding:4pt;font-size:9pt;border:0.5pt solid #bbb;font-weight:800;">${pad2(grandTotal)}</td>
     </tr></tfoot>
   </table>
@@ -7101,29 +7147,22 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
 </div>
 
 <div class="page pgbrk">
-  <div style="font-size:9pt;font-weight:700;margin-bottom:12pt;padding-bottom:8pt;border-bottom:0.5pt solid #ccc;">The discussions and actions points agreed during the meeting are as follows.</div>
+  <div style="font-size:9pt;font-weight:700;margin-bottom:12pt;padding-bottom:8pt;border-bottom:0.5pt solid #ccc;">The discussions and action points agreed during the meeting are as follows.</div>
 
-  <!-- AGENDA block 1: numbered list of all 3 items -->
   <div style="margin-bottom:14pt;">
     <div style="display:flex;align-items:baseline;gap:8pt;margin-bottom:6pt;">
       <span style="font-size:10pt;">&#9675;</span>
       <strong style="font-size:9pt;text-transform:uppercase;letter-spacing:0.3pt;">Agenda:</strong>
     </div>
-    <ol style="margin:0 0 0 20pt;padding:0;">
-      <li style="margin-bottom:5pt;font-size:9pt;">REVIEW OF MINUTES FROM THE PREVIOUS MEETING HELD ON ${fmtAgendaDate(record.prevMeetingDate)}.</li>
-      <li style="margin-bottom:5pt;font-size:9pt;">DISCUSSION OF ISSUES, UPDATES AND CHALLENGES FACED BY EACH DEPARTMENT.</li>
-      <li style="margin-bottom:5pt;font-size:9pt;">ANY OTHER MATTERS THAT NEED TO BE ADDRESSED&hellip;</li>
-    </ol>
+    ${agendaHtml}
   </div>
 
-  <!-- AGENDA block 2: detailed discussion of each item -->
   <div style="margin-bottom:14pt;">
     <div style="display:flex;align-items:baseline;gap:8pt;margin-bottom:10pt;">
       <span style="font-size:10pt;">&#9675;</span>
-      <strong style="font-size:9pt;text-transform:uppercase;letter-spacing:0.3pt;">Agenda:</strong>
+      <strong style="font-size:9pt;text-transform:uppercase;letter-spacing:0.3pt;">Discussion:</strong>
     </div>
 
-    <!-- Item 1 detail -->
     <div style="margin-bottom:14pt;padding-left:18pt;">
       <div style="font-size:9pt;font-weight:800;text-decoration:underline;text-transform:uppercase;margin-bottom:6pt;">
         1. Review of Minutes from the Previous Meeting Held on ${fmtAgendaDate(record.prevMeetingDate)}.
@@ -7131,15 +7170,13 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
       <div style="font-size:9pt;line-height:1.6;">Highlighted: The minutes from the previous meeting were reviewed and accepted without any changes.</div>
     </div>
 
-    <!-- Item 2 detail: 8 dept discussion sections -->
     <div style="margin-bottom:14pt;padding-left:18pt;">
       <div style="font-size:9pt;font-weight:800;text-decoration:underline;text-transform:uppercase;margin-bottom:10pt;">
-        2. Discussion of Issues, Updates and Challenges Faced by Each Department:
+        2. Discussion of Issues, Updates and Challenges Faced by Each Section:
       </div>
       ${deptHtml}
     </div>
 
-    <!-- Item 3 detail: other matters -->
     <div style="padding-left:18pt;">
       <div style="font-size:9pt;font-weight:800;text-decoration:underline;text-transform:uppercase;margin-bottom:8pt;">
         3. Any Other Matters That Need to Be Addressed:
@@ -7149,7 +7186,7 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   </div>
 
   <div style="page-break-inside:avoid;break-inside:avoid;">
-    <div style="text-align:center;border:0.8pt solid #888;padding:7pt;margin:18pt 0;font-size:9pt;color:#555;font-style:italic;">We'll end the meeting if there's nothing else to discuss.</div>
+    <div style="text-align:center;border:0.8pt solid #888;padding:7pt;margin:18pt 0;font-size:9pt;color:#555;font-style:italic;">We&rsquo;ll end the meeting if there&rsquo;s nothing else to discuss.</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:40pt;margin-top:12pt;">
       <div style="border:0.8pt solid #888;padding:12pt 14pt;">
         <div style="font-size:9pt;margin-bottom:22pt;">Prepared by:</div>
@@ -7161,7 +7198,7 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
         <div style="font-size:9pt;margin-bottom:22pt;">Approved by:</div>
         <div style="border-bottom:0.8pt solid #888;margin-bottom:6pt;height:16pt;"></div>
         <div style="font-size:9pt;font-weight:700;">${esc(record.approvedBy)}</div>
-        <div style="font-size:9pt;">General Manager</div>
+        <div style="font-size:9pt;">${approvedByRole}</div>
       </div>
     </div>
   </div>
@@ -7182,24 +7219,36 @@ function MeetingFormModal({ record, employees, activeLeaves, onClose, onSave }: 
   onSave: (r: MeetingRecord) => void
 }) {
   const isNew = record.id.includes('-new-')
-  const [tab, setTab] = useState<'details'|'attendance'|'minutes'|'other'>('details')
-  const [refNumber,   setRefNumber]   = useState(record.refNumber)
+  // Tab order: details → attendance → other (agenda) → minutes (section updates)
+  const [tab, setTab] = useState<'details'|'attendance'|'other'|'minutes'>('details')
   const [date,        setDate]        = useState(record.date)
   const [timeStarted, setTimeStarted] = useState(record.timeStarted)
   const [timeEnded,   setTimeEnded]   = useState(record.timeEnded)
-  const [venue,       setVenue]       = useState(record.venue)
   const [chairperson, setChairperson] = useState(record.chairperson)
   const [status,      setStatus]      = useState<'Draft'|'Final'>(record.status)
-  const [preparedBy,  setPreparedBy]  = useState(record.preparedBy)
   const [approvedBy,  setApprovedBy]  = useState(record.approvedBy)
   const [reps,        setReps]        = useState<MeetingRep[]>(record.reps)
-  const [deptUpdates,    setDeptUpdates]    = useState<MeetingDeptUpdate[]>(record.deptUpdates)
-  const [prevMeetingDate,setPrevMeetingDate] = useState(record.prevMeetingDate ?? '')
-  const [otherMatters,   setOtherMatters]   = useState(record.otherMatters)
+  const [deptUpdates,     setDeptUpdates]     = useState<MeetingDeptUpdate[]>(
+    // Ensure all current MEETING_DEPTS sections are present
+    MEETING_DEPTS.map(md => record.deptUpdates.find(d => d.dept === md.label) ?? { dept: md.label, points: '' })
+  )
+  const [prevMeetingDate, setPrevMeetingDate] = useState(record.prevMeetingDate ?? '')
+  const [agendaType,      setAgendaType]      = useState<'standard'|'custom'>(record.agendaType ?? 'standard')
+  const [customAgenda,    setCustomAgenda]    = useState(record.customAgenda ?? '')
+  const [otherMatters,    setOtherMatters]    = useState(record.otherMatters)
+  const [confirmFinal,    setConfirmFinal]    = useState(false)
 
-  const buildCurrent = (): MeetingRecord => ({
-    ...record, refNumber, date, timeStarted, timeEnded, venue, chairperson,
-    status, preparedBy, approvedBy, reps, deptUpdates, prevMeetingDate, otherMatters
+  // Fixed: venue and preparedBy are not editable
+  const FIXED_VENUE = 'Villa Hakatha Pvt Ltd, Thilafushi, Meeting Room'
+  const FIXED_PREPARED_BY = 'ARUSHULLA RASHID'
+
+  const buildCurrent = (overrideStatus?: 'Draft'|'Final'): MeetingRecord => ({
+    ...record, date, timeStarted, timeEnded,
+    venue: FIXED_VENUE,
+    chairperson, status: overrideStatus ?? status,
+    preparedBy: FIXED_PREPARED_BY,
+    approvedBy, reps, deptUpdates, prevMeetingDate,
+    agendaType, customAgenda, otherMatters
   })
 
   const updateRep = (id: string, field: keyof MeetingRep, value: string) =>
@@ -7208,14 +7257,87 @@ function MeetingFormModal({ record, employees, activeLeaves, onClose, onSave }: 
   const updateDeptPts = (dept: string, points: string) =>
     setDeptUpdates(prev => prev.map(d => d.dept === dept ? { ...d, points } : d))
 
-  const inp: React.CSSProperties = { padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.83rem', background:'#fff', width:'100%', boxSizing:'border-box' }
-  const ta:  React.CSSProperties = { ...inp, resize:'vertical', minHeight:'72px', fontFamily:'inherit', lineHeight:'1.5' }
+  // When chairperson changes: sync approvedBy + swap GM/DGM in reps
+  const buildGmDgmRep = (empId: string, meetingDept: string, deptCode: string, attendance: MeetingAttendance, reason: string): MeetingRep => {
+    const emp = employees.find(e => e.employeeId === empId)
+    return {
+      id: `rep-${deptCode.toLowerCase()}`,
+      name: emp?.fullName ?? (deptCode === 'GM' ? 'ALI DIDI' : 'HUSSAIN SHAHID'),
+      designation: emp?.designation ?? (deptCode === 'GM' ? 'GENERAL MANAGER' : 'DEPUTY GENERAL MANAGER'),
+      meetingDept, deptCode, attendance, reason,
+      replacementName: '', replacementDesignation: '', replacementId: '',
+    }
+  }
 
-  const tabLabels: Record<string, string> = { details:'Meeting Details', attendance:'Attendance', minutes:'Dept Minutes', other:'Agenda & Other' }
+  const handleChairpersonSelect = (opt: typeof CHAIRPERSON_OPTIONS[number]) => {
+    setChairperson(opt.value)
+    setApprovedBy(opt.approvedBy)
+    const isGMChair = opt.value === CHAIRPERSON_OPTIONS[0].value
+    setReps(prev => {
+      const base = prev.filter(r => r.id !== 'rep-gm' && r.id !== 'rep-dgm')
+      if (isGMChair) {
+        // GM chairs → DGM attends as participant
+        return [buildGmDgmRep(DGM_ID, 'DEPUTY GENERAL MANAGER', 'DGM', 'Attended', ''), ...base]
+      } else {
+        // DGM chairs → GM is absent (only chairs when GM unavailable)
+        return [buildGmDgmRep(GM_ID, 'GENERAL MANAGER', 'GM', 'Absent', 'Not Available'), ...base]
+      }
+    })
+  }
+
+  // Replacement by employee ID — auto-lookup name/designation
+  const handleReplacementId = (repId: string, empId: string) => {
+    updateRep(repId, 'replacementId', empId)
+    const emp = employees.find(e => e.employeeId === empId.trim())
+    if (emp) {
+      updateRep(repId, 'replacementName', emp.fullName)
+      updateRep(repId, 'replacementDesignation', emp.designation)
+    }
+  }
+
+  const inp:   React.CSSProperties = { padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.83rem', background:'#fff', width:'100%', boxSizing:'border-box' }
+  const inpRO: React.CSSProperties = { ...inp, background:'#f8fafc', color:'#64748b', cursor:'not-allowed' }
+  const ta:    React.CSSProperties = { ...inp, resize:'vertical', minHeight:'72px', fontFamily:'inherit', lineHeight:'1.5' }
+
+  const tabLabels: Record<string, string> = {
+    details: 'Meeting Details', attendance: 'Attendance',
+    other: 'Agenda & Other', minutes: 'Section Minutes',
+  }
+
+  const handleSave = (targetStatus?: 'Draft'|'Final') => {
+    onSave(buildCurrent(targetStatus))
+  }
+
+  const handleMarkFinal = () => {
+    if (record.status === 'Final' && !confirmFinal) {
+      // already final — just save
+      handleSave('Final'); return
+    }
+    setConfirmFinal(true)
+  }
 
   return (
     <div className="modal-backdrop" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div className="registration-modal" style={{ width:'94vw', maxWidth:'960px', height:'88vh', maxHeight:'88vh', display:'flex', flexDirection:'column', overflow:'hidden', padding:0, borderRadius:16 }}>
+
+        {/* Confirm Final popup */}
+        {confirmFinal && (
+          <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.45)', zIndex:20, display:'flex', alignItems:'center', justifyContent:'center', borderRadius:16 }}>
+            <div style={{ background:'#fff', borderRadius:14, padding:'28px 32px', maxWidth:380, textAlign:'center', boxShadow:'0 8px 40px rgba(0,0,0,0.2)' }}>
+              <div style={{ fontSize:'2rem', marginBottom:8 }}>📋</div>
+              <h3 style={{ margin:'0 0 10px', color:'#1e1b4b', fontSize:'1rem', fontWeight:800 }}>Confirm — Mark as Final</h3>
+              <p style={{ margin:'0 0 20px', fontSize:'0.84rem', color:'#64748b', lineHeight:1.5 }}>
+                This will mark the meeting record as <strong>Final</strong>. Once finalized, changes should only be made with caution.
+              </p>
+              <div style={{ display:'flex', gap:10, justifyContent:'center' }}>
+                <button type="button" className="primary-button" onClick={() => { setConfirmFinal(false); handleSave('Final') }}>
+                  ✓ Yes, Mark as Final
+                </button>
+                <button type="button" className="quiet-button" onClick={() => setConfirmFinal(false)}>Cancel</button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Header */}
         <div style={{ padding:'14px 20px', borderBottom:'1px solid #f1f5f9', flexShrink:0, display:'flex', alignItems:'center', gap:12 }}>
@@ -7234,11 +7356,10 @@ function MeetingFormModal({ record, employees, activeLeaves, onClose, onSave }: 
           </div>
         </div>
 
-        {/* Inner tab bar */}
+        {/* Tab bar */}
         <div style={{ display:'flex', gap:2, padding:'0 20px', borderBottom:'1px solid #f1f5f9', flexShrink:0, background:'#fafbff' }}>
-          {(['details','attendance','minutes','other'] as const).map(t => (
-            <button key={t} type="button"
-              onClick={() => setTab(t)}
+          {(['details','attendance','other','minutes'] as const).map(t => (
+            <button key={t} type="button" onClick={() => setTab(t)}
               style={{ padding:'9px 16px', fontSize:'0.78rem', fontWeight:tab===t?800:600, color:tab===t?'#4f46e5':'#64748b',
                 borderBottom: tab===t?'2px solid #4f46e5':'2px solid transparent', background:'transparent',
                 border:'none', borderRadius:0, cursor:'pointer', transition:'color 120ms' }}>
@@ -7247,22 +7368,32 @@ function MeetingFormModal({ record, employees, activeLeaves, onClose, onSave }: 
           ))}
         </div>
 
-        {/* Body — scrollable */}
+        {/* Body */}
         <div style={{ flex:1, minHeight:0, overflowY:'auto', padding:'18px 20px' }}>
 
-          {/* ── TAB 1: Meeting Details ── */}
+          {/* ── TAB: Meeting Details ── */}
           {tab === 'details' && (
             <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+              {/* Ref — read-only */}
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
                 <label style={{ display:'flex', flexDirection:'column', gap:4 }}>
-                  <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151' }}>Reference Number</span>
-                  <input style={inp} value={refNumber} onChange={e => setRefNumber(e.target.value)} placeholder="VHPL/MBM/26/033" />
+                  <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151' }}>Reference Number <span style={{ fontWeight:400, color:'#94a3b8' }}>(auto)</span></span>
+                  <input style={inpRO} value={record.refNumber} readOnly />
                 </label>
                 <label style={{ display:'flex', flexDirection:'column', gap:4 }}>
                   <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151' }}>Status</span>
-                  <select style={inp} value={status} onChange={e => setStatus(e.target.value as 'Draft'|'Final')}>
-                    <option>Draft</option><option>Final</option>
-                  </select>
+                  <div style={{ display:'flex', gap:6 }}>
+                    {(['Draft','Final'] as const).map(s => (
+                      <button key={s} type="button"
+                        onClick={() => s === 'Final' ? handleMarkFinal() : setStatus('Draft')}
+                        style={{ flex:1, padding:'7px 0', borderRadius:7, fontSize:'0.82rem', fontWeight:700, cursor:'pointer',
+                          background: status === s ? (s==='Final'?'#15803d':'#d97706') : '#f1f5f9',
+                          color:      status === s ? '#fff' : '#94a3b8',
+                          border:     status === s ? 'none' : '1.5px solid #e2e8f0' }}>
+                        {s === 'Final' ? '✓ Final' : '✏ Draft'}
+                      </button>
+                    ))}
+                  </div>
                 </label>
               </div>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10 }}>
@@ -7279,17 +7410,19 @@ function MeetingFormModal({ record, employees, activeLeaves, onClose, onSave }: 
                   <input type="time" style={inp} value={timeEnded} onChange={e => setTimeEnded(e.target.value)} />
                 </label>
               </div>
+              {/* Venue — fixed, read-only */}
               <label style={{ display:'flex', flexDirection:'column', gap:4 }}>
-                <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151' }}>Venue</span>
-                <input style={inp} value={venue} onChange={e => setVenue(e.target.value)} />
+                <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151' }}>Venue <span style={{ fontWeight:400, color:'#94a3b8' }}>(fixed)</span></span>
+                <input style={inpRO} value={FIXED_VENUE} readOnly />
               </label>
+              {/* Chairperson — quick-pick + approvedBy sync */}
               <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
                 <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151' }}>Chairperson</span>
-                <div style={{ display:'flex', gap:6, marginBottom:4 }}>
+                <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
                   {CHAIRPERSON_OPTIONS.map(opt => (
                     <button key={opt.value} type="button"
-                      onClick={() => setChairperson(opt.value)}
-                      style={{ fontSize:'0.72rem', padding:'4px 12px', borderRadius:6, cursor:'pointer', fontWeight:600,
+                      onClick={() => handleChairpersonSelect(opt)}
+                      style={{ fontSize:'0.72rem', padding:'5px 14px', borderRadius:7, cursor:'pointer', fontWeight:600,
                         background: chairperson === opt.value ? '#1e1b4b' : '#f1f5f9',
                         color:      chairperson === opt.value ? '#fff'    : '#374151',
                         border:     chairperson === opt.value ? '1.5px solid #1e1b4b' : '1.5px solid #e2e8f0' }}>
@@ -7297,12 +7430,13 @@ function MeetingFormModal({ record, employees, activeLeaves, onClose, onSave }: 
                     </button>
                   ))}
                 </div>
-                <input style={inp} value={chairperson} onChange={e => setChairperson(e.target.value)} placeholder="Or type custom chairperson…" />
+                <input style={{ ...inp, marginTop:4 }} value={chairperson} onChange={e => setChairperson(e.target.value)} placeholder="Or type custom chairperson…" />
               </div>
+              {/* Prepared By — fixed; Approved By — synced from chairperson */}
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
                 <label style={{ display:'flex', flexDirection:'column', gap:4 }}>
-                  <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151' }}>Prepared By</span>
-                  <input style={inp} value={preparedBy} onChange={e => setPreparedBy(e.target.value)} />
+                  <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151' }}>Prepared By <span style={{ fontWeight:400, color:'#94a3b8' }}>(fixed)</span></span>
+                  <input style={inpRO} value={FIXED_PREPARED_BY} readOnly />
                 </label>
                 <label style={{ display:'flex', flexDirection:'column', gap:4 }}>
                   <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151' }}>Approved By</span>
@@ -7312,52 +7446,50 @@ function MeetingFormModal({ record, employees, activeLeaves, onClose, onSave }: 
             </div>
           )}
 
-          {/* ── TAB 2: Attendance ── */}
+          {/* ── TAB: Attendance ── */}
           {tab === 'attendance' && (
             <div>
               <p style={{ margin:'0 0 12px', fontSize:'0.76rem', color:'#64748b' }}>
-                Enter each department representative&apos;s name and mark their attendance status.
-                The <strong>Participants / On Leave / Absentees</strong> sections in the printout are auto-generated from this.
+                Mark each section representative&rsquo;s attendance. <strong>Participants / On Leave / Absentees</strong> in the printout are auto-generated.
               </p>
               <div style={{ overflowX:'auto' }}>
                 <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'0.81rem', minWidth:700 }}>
                   <thead>
                     <tr style={{ background:'linear-gradient(135deg,#1e1b4b,#4338ca)', color:'#fff' }}>
-                      <th style={{ padding:'9px 12px', textAlign:'left', fontSize:'0.72rem', fontWeight:700, letterSpacing:'0.04em', width:150 }}>Department</th>
-                      <th style={{ padding:'9px 10px', textAlign:'left', fontSize:'0.72rem', fontWeight:700, letterSpacing:'0.04em' }}>Representative Name</th>
-                      <th style={{ padding:'9px 10px', textAlign:'left', fontSize:'0.72rem', fontWeight:700, letterSpacing:'0.04em' }}>Designation</th>
-                      <th style={{ padding:'9px 10px', textAlign:'center', fontSize:'0.72rem', fontWeight:700, letterSpacing:'0.04em', width:185 }}>Attendance</th>
-                      <th style={{ padding:'9px 10px', textAlign:'left', fontSize:'0.72rem', fontWeight:700, letterSpacing:'0.04em' }}>Reason / Replacement</th>
+                      <th style={{ padding:'9px 12px', textAlign:'left', fontSize:'0.72rem', fontWeight:700, letterSpacing:'0.04em', width:160 }}>SECTION</th>
+                      <th style={{ padding:'9px 10px', textAlign:'left', fontSize:'0.72rem', fontWeight:700, letterSpacing:'0.04em' }}>NAME</th>
+                      <th style={{ padding:'9px 10px', textAlign:'left', fontSize:'0.72rem', fontWeight:700, letterSpacing:'0.04em' }}>DESIGNATION</th>
+                      <th style={{ padding:'9px 10px', textAlign:'center', fontSize:'0.72rem', fontWeight:700, letterSpacing:'0.04em', width:190 }}>ATTENDANCE</th>
+                      <th style={{ padding:'9px 10px', textAlign:'left', fontSize:'0.72rem', fontWeight:700, letterSpacing:'0.04em' }}>REASON / REPLACEMENT</th>
                     </tr>
                   </thead>
                   <tbody>
                     {reps.map((rep, idx) => (
                       <tr key={rep.id} style={{ background: idx % 2 === 0 ? '#fafbff' : '#fff', borderBottom:'1px solid #e8eaf0', verticalAlign:'top' }}>
-                        <td style={{ padding:'8px 12px', fontWeight:700, fontSize:'0.78rem', color:'#1e1b4b', whiteSpace:'nowrap' }}>
+                        <td style={{ padding:'8px 12px', fontWeight:700, fontSize:'0.75rem', color:'#1e1b4b', whiteSpace:'nowrap' }}>
                           {rep.meetingDept}
                           {rep.deptCode && <span style={{ marginLeft:5, fontSize:'0.63rem', fontWeight:700, background:'#e0e7ff', color:'#4338ca', borderRadius:4, padding:'1px 5px' }}>{rep.deptCode}</span>}
                         </td>
                         <td style={{ padding:'6px 8px' }}>
-                          <input style={{ ...inp, minWidth:140 }} value={rep.name} onChange={e => updateRep(rep.id,'name',e.target.value)} placeholder="Full name" />
+                          <input style={{ ...inp, minWidth:130 }} value={rep.name} onChange={e => updateRep(rep.id,'name',e.target.value)} placeholder="Full name" />
                         </td>
                         <td style={{ padding:'6px 8px' }}>
                           <input style={{ ...inp, minWidth:120 }} value={rep.designation} onChange={e => updateRep(rep.id,'designation',e.target.value)} placeholder="Designation" />
                         </td>
                         <td style={{ padding:'6px 10px' }}>
-                          <div style={{ display:'flex', gap:4, justifyContent:'center' }}>
+                          <div style={{ display:'flex', gap:3, justifyContent:'center' }}>
                             {(['Attended','On Leave','Absent'] as MeetingAttendance[]).map(a => {
                               const active = rep.attendance === a
                               const colors: Record<MeetingAttendance,{bg:string;border:string;text:string}> = {
-                                'Attended':{'bg':'#dcfce7','border':'#16a34a','text':'#15803d'},
-                                'On Leave':{'bg':'#fef3c7','border':'#d97706','text':'#b45309'},
-                                'Absent':  {'bg':'#fee2e2','border':'#dc2626','text':'#b91c1c'}
+                                'Attended': {bg:'#dcfce7',border:'#16a34a',text:'#15803d'},
+                                'On Leave': {bg:'#fef3c7',border:'#d97706',text:'#b45309'},
+                                'Absent':   {bg:'#fee2e2',border:'#dc2626',text:'#b91c1c'},
                               }
                               const c = active ? colors[a] : {bg:'#f8fafc',border:'#e2e8f0',text:'#94a3b8'}
                               return (
-                                <button key={a} type="button"
-                                  onClick={() => updateRep(rep.id,'attendance',a)}
-                                  style={{ padding:'3px 7px', borderRadius:6, border:`1.5px solid ${c.border}`, fontSize:'0.67rem', fontWeight:700, cursor:'pointer', background:c.bg, color:c.text, transition:'all 100ms' }}>
-                                  {a === 'Attended' ? '✓ Attended' : a === 'On Leave' ? 'On Leave' : 'Absent'}
+                                <button key={a} type="button" onClick={() => updateRep(rep.id,'attendance',a)}
+                                  style={{ padding:'3px 6px', borderRadius:5, border:`1.5px solid ${c.border}`, fontSize:'0.63rem', fontWeight:700, cursor:'pointer', background:c.bg, color:c.text }}>
+                                  {a === 'Attended' ? '✓' : a === 'On Leave' ? 'Leave' : 'Absent'}
                                 </button>
                               )
                             })}
@@ -7365,17 +7497,20 @@ function MeetingFormModal({ record, employees, activeLeaves, onClose, onSave }: 
                         </td>
                         <td style={{ padding:'6px 8px' }}>
                           {rep.attendance !== 'Attended' ? (
-                            <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
-                              <input style={{ ...inp, minWidth:130 }} value={rep.reason}
+                            <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
+                              <input style={{ ...inp, minWidth:120 }} value={rep.reason}
                                 onChange={e => updateRep(rep.id,'reason',e.target.value)}
-                                placeholder={rep.attendance === 'On Leave' ? 'e.g. Annual Leave' : 'Reason for absence'} />
-                              <div style={{ fontSize:'0.68rem', fontWeight:700, color:'#6366f1', marginTop:2 }}>Replacement (optional):</div>
-                              <input style={{ ...inp, minWidth:130 }} value={rep.replacementName}
-                                onChange={e => updateRep(rep.id,'replacementName',e.target.value)}
-                                placeholder="Replacement name" />
-                              <input style={{ ...inp, minWidth:130 }} value={rep.replacementDesignation}
-                                onChange={e => updateRep(rep.id,'replacementDesignation',e.target.value)}
-                                placeholder="Replacement designation" />
+                                placeholder={rep.attendance === 'On Leave' ? 'e.g. Annual Leave' : 'Reason'} />
+                              <div style={{ fontSize:'0.67rem', fontWeight:700, color:'#6366f1', marginTop:2 }}>Replacement (optional):</div>
+                              <input style={{ ...inp, minWidth:120 }}
+                                value={rep.replacementId ?? ''}
+                                onChange={e => handleReplacementId(rep.id, e.target.value)}
+                                placeholder="Employee ID → auto-lookup" />
+                              {rep.replacementName.trim() && (
+                                <div style={{ fontSize:'0.69rem', color:'#15803d', fontWeight:600, background:'#f0fdf4', padding:'3px 7px', borderRadius:5 }}>
+                                  ✓ {rep.replacementName} — {rep.replacementDesignation}
+                                </div>
+                              )}
                             </div>
                           ) : (
                             <span style={{ fontSize:'0.72rem', color:'#cbd5e1' }}>—</span>
@@ -7389,78 +7524,246 @@ function MeetingFormModal({ record, employees, activeLeaves, onClose, onSave }: 
             </div>
           )}
 
-          {/* ── TAB 3: Department Minutes ── */}
+          {/* ── TAB: Agenda & Other ── */}
+          {tab === 'other' && (
+            <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+              {/* Previous meeting date */}
+              <label style={{ display:'flex', flexDirection:'column', gap:5 }}>
+                <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151' }}>Previous Meeting Date <span style={{ fontWeight:400, color:'#94a3b8' }}>(used in Agenda item 1)</span></span>
+                <input type="date" style={{ ...inp, maxWidth:220 }} value={prevMeetingDate} onChange={e => setPrevMeetingDate(e.target.value)} />
+              </label>
+
+              {/* Agenda type toggle */}
+              <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151' }}>Agenda Type</span>
+                <div style={{ display:'flex', gap:6 }}>
+                  {(['standard','custom'] as const).map(t => (
+                    <button key={t} type="button" onClick={() => setAgendaType(t)}
+                      style={{ padding:'5px 16px', borderRadius:7, fontSize:'0.78rem', fontWeight:700, cursor:'pointer',
+                        background: agendaType === t ? '#4f46e5' : '#f1f5f9',
+                        color:      agendaType === t ? '#fff'    : '#374151',
+                        border:     agendaType === t ? 'none' : '1.5px solid #e2e8f0' }}>
+                      {t === 'standard' ? '📋 Standard Agenda' : '✏ Custom Agenda'}
+                    </button>
+                  ))}
+                </div>
+
+                {agendaType === 'standard' ? (
+                  <div style={{ background:'#f8fafc', border:'1.5px solid #e0e7ff', borderRadius:10, padding:'12px 16px' }}>
+                    <div style={{ fontSize:'0.68rem', fontWeight:700, color:'#4338ca', marginBottom:8, textTransform:'uppercase', letterSpacing:'0.05em' }}>Standard Agenda (printed automatically)</div>
+                    <ol style={{ margin:0, paddingLeft:20, color:'#374151', fontSize:'0.82rem', lineHeight:1.8 }}>
+                      <li>REVIEW OF MINUTES FROM THE PREVIOUS MEETING HELD ON <strong style={{ color:'#7c3aed' }}>
+                        {prevMeetingDate ? (() => {
+                          const months = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER']
+                          const dt = new Date(prevMeetingDate + 'T12:00:00')
+                          const d = dt.getDate()
+                          const ord = (d===1||d===21||d===31)?'st':(d===2||d===22)?'nd':(d===3||d===23)?'rd':'th'
+                          return `${months[dt.getMonth()]} ${d}${ord}, ${dt.getFullYear()}`
+                        })() : '[select date above]'}
+                      </strong>.</li>
+                      <li>DISCUSSION OF ISSUES, UPDATES AND CHALLENGES FACED BY EACH SECTION.</li>
+                      <li>ANY OTHER MATTERS THAT NEED TO BE ADDRESSED…</li>
+                    </ol>
+                  </div>
+                ) : (
+                  <label style={{ display:'flex', flexDirection:'column', gap:4 }}>
+                    <span style={{ fontSize:'0.70rem', color:'#64748b' }}>One agenda item per line — each line becomes a numbered item in the print.</span>
+                    <textarea style={{ ...ta, minHeight:110 }} value={customAgenda} onChange={e => setCustomAgenda(e.target.value)}
+                      placeholder="1. Review of previous minutes...&#10;2. Department updates...&#10;3. Any other matters..." />
+                  </label>
+                )}
+              </div>
+
+              {/* Other matters */}
+              <label style={{ display:'flex', flexDirection:'column', gap:5 }}>
+                <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151' }}>Other Matters / AOB <span style={{ fontWeight:400, color:'#94a3b8' }}>(printed under section 3)</span></span>
+                <textarea style={{ ...ta, minHeight:160 }} value={otherMatters} onChange={e => setOtherMatters(e.target.value)} placeholder="Any other matters discussed…" />
+              </label>
+            </div>
+          )}
+
+          {/* ── TAB: Section Minutes ── */}
           {tab === 'minutes' && (
             <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
               <p style={{ margin:'0 0 8px', fontSize:'0.76rem', color:'#64748b' }}>
-                Enter updates for each department — <strong>one bullet point per line</strong>. Empty departments are skipped in the printout.
+                Enter updates for each section — <strong>one bullet point per line</strong>. Empty sections show &ldquo;Nil&rdquo; in the printout.
               </p>
               {deptUpdates.map(d => {
                 const pts = d.points.split('\n').filter(p => p.trim()).length
                 return (
                   <div key={d.dept} style={{ background:'#f8fafc', border:`1.5px solid ${d.points.trim() ? '#c7d2fe' : '#e8eaf0'}`, borderRadius:10, padding:'10px 14px' }}>
                     <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
-                      <span style={{ fontSize:'0.81rem', fontWeight:800, color:'#1e1b4b' }}>{d.dept}</span>
-                      {pts > 0 && <span style={{ fontSize:'0.64rem', fontWeight:700, background:'#e0e7ff', color:'#4338ca', borderRadius:5, padding:'2px 7px' }}>{pts} point{pts !== 1 ? 's' : ''}</span>}
+                      <span style={{ fontSize:'0.8rem', fontWeight:800, color:'#1e1b4b' }}>{d.dept}</span>
+                      {pts > 0 && <span style={{ fontSize:'0.64rem', fontWeight:700, background:'#e0e7ff', color:'#4338ca', borderRadius:5, padding:'2px 7px' }}>{pts} pt{pts !== 1 ? 's' : ''}</span>}
                     </div>
-                    <textarea
-                      style={ta}
-                      value={d.points}
-                      onChange={e => updateDeptPts(d.dept, e.target.value)}
-                      placeholder={`Updates for ${d.dept} (one item per line → becomes a bullet point)`}
-                    />
+                    <textarea style={ta} value={d.points} onChange={e => updateDeptPts(d.dept, e.target.value)}
+                      placeholder={`Updates for ${d.dept} (one item per line)`} />
                   </div>
                 )
               })}
-            </div>
-          )}
-
-          {/* ── TAB 4: Agenda & Other ── */}
-          {tab === 'other' && (
-            <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
-              {/* Previous meeting date — only editable part of agenda */}
-              <label style={{ display:'flex', flexDirection:'column', gap:5 }}>
-                <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151' }}>Previous Meeting Date <span style={{ fontWeight:400, color:'#94a3b8' }}>(used in Agenda item 1)</span></span>
-                <input type="date" style={{ ...inp, maxWidth:220 }} value={prevMeetingDate} onChange={e => setPrevMeetingDate(e.target.value)} />
-              </label>
-              {/* Fixed agenda preview */}
-              <div style={{ background:'#f8fafc', border:'1.5px solid #e0e7ff', borderRadius:10, padding:'12px 16px' }}>
-                <div style={{ fontSize:'0.72rem', fontWeight:700, color:'#4338ca', marginBottom:8, textTransform:'uppercase', letterSpacing:'0.05em' }}>
-                  Fixed Agenda (printed automatically)
-                </div>
-                <ol style={{ margin:0, paddingLeft:20, color:'#374151', fontSize:'0.82rem', lineHeight:1.8 }}>
-                  <li>REVIEW OF MINUTES FROM THE PREVIOUS MEETING HELD ON <strong style={{ color:'#7c3aed' }}>
-                    {prevMeetingDate ? (() => {
-                      const months = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER']
-                      const dt = new Date(prevMeetingDate + 'T12:00:00')
-                      const d = dt.getDate()
-                      const ord = (d===1||d===21||d===31)?'st':(d===2||d===22)?'nd':(d===3||d===23)?'rd':'th'
-                      return `${months[dt.getMonth()]} ${d}${ord}, ${dt.getFullYear()}`
-                    })() : '[select date above]'}
-                  </strong>.</li>
-                  <li>DISCUSSION OF ISSUES, UPDATES AND CHALLENGES FACED BY EACH DEPARTMENT.</li>
-                  <li>ANY OTHER MATTERS THAT NEED TO BE ADDRESSED…</li>
-                </ol>
-              </div>
-              {/* Other matters */}
-              <label style={{ display:'flex', flexDirection:'column', gap:5 }}>
-                <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151' }}>
-                  Other Matters / AOB <span style={{ fontWeight:400, color:'#94a3b8' }}>(free text — printed under section 3)</span>
-                </span>
-                <textarea style={{ ...ta, minHeight:180 }} value={otherMatters} onChange={e => setOtherMatters(e.target.value)} placeholder="Type any other matters discussed during the meeting..." />
-              </label>
             </div>
           )}
         </div>
 
         {/* Footer */}
         <div style={{ flexShrink:0, borderTop:'1px solid #f1f5f9', padding:'10px 20px', display:'flex', gap:8, justifyContent:'flex-end', background:'#fafbff' }}>
-          <button type="button" className="primary-button" onClick={() => onSave(buildCurrent())}>
+          {status === 'Draft' && !isNew && (
+            <button type="button" style={{ padding:'7px 16px', borderRadius:7, fontSize:'0.8rem', fontWeight:700, cursor:'pointer', background:'#15803d', color:'#fff', border:'none' }}
+              onClick={handleMarkFinal}>
+              ✓ Mark as Final
+            </button>
+          )}
+          <button type="button" className="primary-button" onClick={() => handleSave()}>
             {isNew ? 'Create Meeting Record' : 'Save Changes'}
           </button>
           <button type="button" className="quiet-button" onClick={onClose}>Cancel</button>
         </div>
       </div>
+    </div>
+  )
+}
+
+/* ─── MeetingCalendar ──────────────────────────────────────────── */
+function MeetingCalendar({ records }: { records: MeetingRecord[] }) {
+  const [viewDate, setViewDate] = useState(() => new Date())
+  const [selected, setSelected] = useState<string | null>(null)
+
+  const isMeetingDay = (d: Date) => { const w = d.getDay(); return w === 0 || w === 4 } // Sun=0, Thu=4
+
+  const toStr = (d: Date) => d.toISOString().split('T')[0]
+  const today = new Date(); today.setHours(0,0,0,0)
+
+  const yr = viewDate.getFullYear(); const mo = viewDate.getMonth()
+  const first = new Date(yr, mo, 1); const last = new Date(yr, mo + 1, 0)
+  const start = new Date(first); start.setDate(start.getDate() - start.getDay())
+  const end   = new Date(last);  end.setDate(end.getDate() + (6 - end.getDay()))
+
+  const cells: Date[] = []
+  const cur = new Date(start)
+  while (cur <= end) { cells.push(new Date(cur)); cur.setDate(cur.getDate() + 1) }
+
+  const recMap = new Map(records.map(r => [r.date, r]))
+  const selRec = selected ? recMap.get(selected) ?? null : null
+
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
+  const DOW    = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+      {/* Month navigation */}
+      <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+        <button type="button" className="quiet-button" style={{ padding:'4px 10px', fontSize:'0.8rem' }}
+          onClick={() => setViewDate(d => new Date(d.getFullYear(), d.getMonth()-1, 1))}>← Prev</button>
+        <span style={{ fontWeight:800, fontSize:'0.9rem', color:'#1e1b4b', minWidth:140, textAlign:'center' }}>{MONTHS[mo]} {yr}</span>
+        <button type="button" className="quiet-button" style={{ padding:'4px 10px', fontSize:'0.8rem' }}
+          onClick={() => setViewDate(d => new Date(d.getFullYear(), d.getMonth()+1, 1))}>Next →</button>
+        <div style={{ marginLeft:'auto', display:'flex', gap:10, fontSize:'0.7rem', color:'#64748b' }}>
+          <span style={{ display:'flex', alignItems:'center', gap:4 }}><span style={{ width:10, height:10, borderRadius:3, background:'#dcfce7', border:'1px solid #16a34a', display:'inline-block' }}/>Conducted</span>
+          <span style={{ display:'flex', alignItems:'center', gap:4 }}><span style={{ width:10, height:10, borderRadius:3, background:'#fef3c7', border:'1px solid #d97706', display:'inline-block' }}/>Skipped</span>
+          <span style={{ display:'flex', alignItems:'center', gap:4 }}><span style={{ width:10, height:10, borderRadius:3, border:'1.5px dashed #6366f1', display:'inline-block' }}/>Scheduled</span>
+        </div>
+      </div>
+
+      {/* Day headers */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:3 }}>
+        {DOW.map(d => (
+          <div key={d} style={{ textAlign:'center', fontSize:'0.67rem', fontWeight:700, padding:'4px 0',
+            color: d==='Sun'||d==='Thu' ? '#4f46e5' : '#94a3b8' }}>{d}</div>
+        ))}
+      </div>
+
+      {/* Calendar grid */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:3 }}>
+        {cells.map(cell => {
+          const ds       = toStr(cell)
+          const inMonth  = cell.getMonth() === mo
+          const isMtg    = isMeetingDay(cell)
+          const rec      = recMap.get(ds)
+          const isPast   = cell < today
+          const isToday  = cell.getTime() === today.getTime()
+          const isSel    = selected === ds
+
+          let bg = 'transparent', border = '1.5px solid transparent'
+          if (isMtg && inMonth) {
+            if (rec)           { bg = '#dcfce7'; border = '1.5px solid #16a34a' }
+            else if (isPast)   { bg = '#fef3c7'; border = '1.5px solid #d97706' }
+            else               { border = '1.5px dashed #6366f1' }
+          }
+          if (isToday) border = '2px solid #4f46e5'
+          if (isSel)   bg = '#e0e7ff'
+
+          return (
+            <div key={ds}
+              style={{ background:bg, border, borderRadius:6, padding:'4px 3px', textAlign:'center', minHeight:52,
+                cursor: isMtg && inMonth ? 'pointer' : 'default', opacity: inMonth ? 1 : 0.25 }}
+              onClick={() => isMtg && inMonth && setSelected(isSel ? null : ds)}>
+              <div style={{ fontSize:'0.8rem', fontWeight: isMtg && inMonth ? 700 : 400,
+                color: isToday ? '#4f46e5' : inMonth ? '#374151' : '#9ca3af' }}>
+                {cell.getDate()}
+              </div>
+              {isMtg && inMonth && (
+                <div style={{ marginTop:2 }}>
+                  {rec ? (
+                    <div style={{ fontSize:'0.55rem', color:'#15803d', fontWeight:700, lineHeight:1.2 }}>
+                      {rec.refNumber.split('/').pop()}
+                      <div style={{ color: rec.status==='Final' ? '#15803d' : '#b45309', fontWeight:600 }}>{rec.status}</div>
+                    </div>
+                  ) : isPast ? (
+                    <div style={{ fontSize:'0.58rem', color:'#92400e', fontWeight:700 }}>Skipped</div>
+                  ) : (
+                    <div style={{ fontSize:'0.58rem', color:'#6366f1', fontWeight:600 }}>Sched.</div>
+                  )}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Selected day detail */}
+      {selected && (
+        <div style={{ background:'#f8fafc', border:'1.5px solid #e2e8f0', borderRadius:10, padding:'12px 16px' }}>
+          {(() => {
+            const d = new Date(selected + 'T12:00:00')
+            const dayName = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getDay()]
+            return (
+              <>
+                <div style={{ fontWeight:800, fontSize:'0.84rem', color:'#1e1b4b', marginBottom:8 }}>
+                  {d.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})} — {dayName}
+                </div>
+                {selRec ? (
+                  <div>
+                    <div style={{ fontSize:'0.78rem', marginBottom:8, color:'#374151' }}>
+                      <strong>{selRec.refNumber}</strong>
+                      <span style={{ marginLeft:8, color:'#64748b' }}>Chair: {selRec.chairperson}</span>
+                      <span style={{ marginLeft:8, fontSize:'0.7rem', fontWeight:700, padding:'1px 7px', borderRadius:4,
+                        background: selRec.status==='Final'?'#dcfce7':'#fef3c7',
+                        color: selRec.status==='Final'?'#15803d':'#92400e' }}>{selRec.status}</span>
+                    </div>
+                    <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
+                      {selRec.reps.filter(r => r.name.trim()).map(rep => {
+                        const bg = rep.attendance==='Attended'?'#dcfce7':rep.attendance==='On Leave'?'#fef3c7':'#fee2e2'
+                        const tx = rep.attendance==='Attended'?'#15803d':rep.attendance==='On Leave'?'#92400e':'#b91c1c'
+                        const icon = rep.attendance==='Attended'?'✓':rep.attendance==='On Leave'?'~':'✗'
+                        return (
+                          <span key={rep.id} title={`${rep.name} — ${rep.meetingDept}`}
+                            style={{ fontSize:'0.68rem', fontWeight:700, borderRadius:4, padding:'2px 8px', background:bg, color:tx }}>
+                            {icon} {rep.deptCode || rep.meetingDept.slice(0,3)}
+                          </span>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ color:'#92400e', fontSize:'0.78rem' }}>
+                    No meeting record for this date — meeting was skipped or not yet recorded.
+                  </div>
+                )}
+              </>
+            )
+          })()}
+        </div>
+      )}
     </div>
   )
 }
@@ -7472,15 +7775,31 @@ function MeetingsSection({ records, onUpdate, employees, activeLeaves }: {
   employees: Employee[]
   activeLeaves: ActiveLeaveRecord[]
 }) {
-  const [editing, setEditing] = useState<MeetingRecord | null>(null)
-  const [search,  setSearch]  = useState('')
+  const [editing,   setEditing]   = useState<MeetingRecord | null>(null)
+  const [search,    setSearch]    = useState('')
+  const [view,      setView]      = useState<'list'|'calendar'>('list')
 
   const mkNew = (): MeetingRecord => {
-    const seq = String(records.length + 34).padStart(3,'0')
-    const yr  = new Date().getFullYear().toString().slice(-2)
-    // Build reps from fixed participant IDs — look up name/designation from employee list
+    const yr = new Date().getFullYear().toString().slice(-2)
+    // Auto-generate ref from last record's sequence
+    const sortedRecs = [...records].sort((a,b) => a.createdAt.localeCompare(b.createdAt))
+    const lastRef  = sortedRecs[sortedRecs.length - 1]?.refNumber ?? ''
+    const lastSeq  = parseInt(lastRef.split('/').pop() ?? '30', 10)
+    const nextSeq  = String(isNaN(lastSeq) ? records.length + 31 : lastSeq + 1).padStart(3, '0')
+
+    // DGM attends when Ali Didi (GM) chairs (default)
+    const dgmEmp = employees.find(e => e.employeeId === DGM_ID)
+    const dgmRep: MeetingRep = {
+      id: 'rep-dgm',
+      name:        dgmEmp?.fullName    ?? 'HUSSAIN SHAHID',
+      designation: dgmEmp?.designation ?? 'DEPUTY GENERAL MANAGER',
+      meetingDept: 'DEPUTY GENERAL MANAGER', deptCode: 'DGM',
+      attendance: 'Attended', reason: '',
+      replacementName: '', replacementDesignation: '', replacementId: '',
+    }
+
     const fixedReps: MeetingRep[] = FIXED_PARTICIPANT_IDS.map((empId, i) => {
-      const emp = employees.find(e => e.employeeId === empId)
+      const emp   = employees.find(e => e.employeeId === empId)
       const mDept = emp
         ? MEETING_DEPTS.find(d => d.appDepts.some(ad => ad.toLowerCase() === emp.department?.toLowerCase()))
         : undefined
@@ -7491,24 +7810,26 @@ function MeetingsSection({ records, onUpdate, employees, activeLeaves }: {
         meetingDept: mDept?.label     ?? emp?.department ?? '',
         deptCode:    mDept?.code      ?? '',
         attendance:  'Attended' as MeetingAttendance,
-        reason: '',
-        replacementName: '',
-        replacementDesignation: '',
+        reason: '', replacementName: '', replacementDesignation: '', replacementId: '',
       }
     })
+
+    const lastRecord = sortedRecs[sortedRecs.length - 1]
+
     return {
       id: `MTG-new-${Date.now()}`,
-      refNumber: `VHPL/MBM/${yr}/${seq}`,
+      refNumber: `VHPL/MBM/${yr}/${nextSeq}`,
       date: new Date().toISOString().split('T')[0],
       timeStarted: '10:00', timeEnded: '',
-      venue: 'Conference Room, Administration Building',
+      venue: 'Villa Hakatha Pvt Ltd, Thilafushi, Meeting Room',
       chairperson: CHAIRPERSON_OPTIONS[0].value,
-      reps: fixedReps,
-      prevMeetingDate: '',
+      reps: [dgmRep, ...fixedReps],
+      prevMeetingDate: lastRecord?.date ?? '',
       deptUpdates: MEETING_DEPTS.map(d => ({ dept: d.label, points: '' })),
+      agendaType: 'standard', customAgenda: '',
       otherMatters: '',
-      preparedBy: 'Mariyam Shifa',
-      approvedBy: 'Ali Didi',
+      preparedBy: 'ARUSHULLA RASHID',
+      approvedBy: 'ALI DIDI',
       status: 'Draft',
       createdAt: new Date().toISOString(),
     }
@@ -7528,32 +7849,53 @@ function MeetingsSection({ records, onUpdate, employees, activeLeaves }: {
   }
 
   const fmtD = (d: string) => {
-    if (!d) return '—'
+    if (!d) return null
     const [y,m,dd] = d.split('-')
     return { day: dd, rest: `${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(m,10)-1]} ${y}` }
   }
 
-  const filtered = search
-    ? records.filter(r => r.refNumber.toLowerCase().includes(search.toLowerCase()) || r.date.includes(search) || r.chairperson.toLowerCase().includes(search.toLowerCase()))
-    : records
+  // Descending by date (latest first)
+  const sortedDesc = [...records].sort((a,b) => b.date.localeCompare(a.date))
+  const filtered   = search
+    ? sortedDesc.filter(r =>
+        r.refNumber.toLowerCase().includes(search.toLowerCase()) ||
+        r.date.includes(search) ||
+        r.chairperson.toLowerCase().includes(search.toLowerCase()))
+    : sortedDesc
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:10, padding:'12px 14px 8px' }}>
       <div className="section-header">
         <div>
           <h2 style={{ margin:0, fontSize:'0.9rem', fontWeight:800, color:'#1e1b4b' }}>HOD Meeting Minutes</h2>
-          <p style={{ margin:'2px 0 0', fontSize:'0.73rem', color:'#64748b' }}>Briefing meeting records — daily headcount auto-calculated from employee database</p>
+          <p style={{ margin:'2px 0 0', fontSize:'0.73rem', color:'#64748b' }}>Briefing meeting records — headcount auto-calculated from employee database</p>
         </div>
         <div className="top-actions">
-          <label className="search-field">
-            <span>Search</span>
-            <input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Ref, date, chairperson…" />
-          </label>
+          {/* List / Calendar toggle */}
+          <div style={{ display:'flex', gap:3, background:'#f1f5f9', borderRadius:8, padding:3 }}>
+            {(['list','calendar'] as const).map(v => (
+              <button key={v} type="button" onClick={() => setView(v)}
+                style={{ padding:'4px 12px', borderRadius:6, fontSize:'0.74rem', fontWeight:700, cursor:'pointer', border:'none',
+                  background: view===v ? '#fff' : 'transparent',
+                  color: view===v ? '#1e1b4b' : '#64748b',
+                  boxShadow: view===v ? '0 1px 4px rgba(0,0,0,0.1)' : 'none' }}>
+                {v === 'list' ? '☰ List' : '📅 Calendar'}
+              </button>
+            ))}
+          </div>
+          {view === 'list' && (
+            <label className="search-field">
+              <span>Search</span>
+              <input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Ref, date, chairperson…" />
+            </label>
+          )}
           <button className="primary-button" onClick={() => setEditing(mkNew())} type="button">+ New Meeting</button>
         </div>
       </div>
 
-      {records.length === 0 ? (
+      {view === 'calendar' ? (
+        <MeetingCalendar records={records} />
+      ) : records.length === 0 ? (
         <div style={{ textAlign:'center', padding:'40px 20px', color:'#94a3b8', background:'#f8fafc', borderRadius:12, border:'1.5px dashed #e2e8f0', fontSize:'0.84rem' }}>
           No meeting records yet. Click <strong>&ldquo;+ New Meeting&rdquo;</strong> to create the first one.
         </div>
@@ -7566,23 +7908,21 @@ function MeetingsSection({ records, onUpdate, employees, activeLeaves }: {
             const nLeave    = rec.reps.filter(r => r.attendance === 'On Leave').length
             const nAbsent   = rec.reps.filter(r => r.attendance === 'Absent').length
             const deptNotes = rec.deptUpdates.filter(d => d.points.trim()).map(d => d.dept)
-            const dt = fmtD(rec.date)
+            const dt        = fmtD(rec.date)
             return (
               <div key={rec.id} className="mtg-card">
-                {typeof dt === 'object' && (
+                {dt && (
                   <div className="mtg-date-box">
                     <span className="mtg-day">{dt.day}</span>
                     <span className="mtg-month">{dt.rest}</span>
                   </div>
                 )}
                 <div className="mtg-card-body">
-                  {/* Row 1: ref + badge + chair all inline */}
                   <div className="mtg-top-row">
                     <span className="mtg-ref">{rec.refNumber}</span>
                     <span className={`mtg-badge ${rec.status === 'Final' ? 'final' : 'draft'}`}>{rec.status}</span>
-                    <span className="mtg-chair" style={{ marginLeft: 2 }}>{rec.chairperson}</span>
+                    <span className="mtg-chair" style={{ marginLeft:2 }}>{rec.chairperson}</span>
                   </div>
-                  {/* Row 2: chips + dept preview inline */}
                   <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
                     <div className="mtg-chips" style={{ margin:0 }}>
                       <span className="mtg-chip attended">{nAttended} attended</span>
@@ -7594,10 +7934,11 @@ function MeetingsSection({ records, onUpdate, employees, activeLeaves }: {
                     )}
                   </div>
                 </div>
+                {/* Icons only — no text labels */}
                 <div className="mtg-actions">
-                  <button className="quiet-button" type="button" onClick={() => setEditing(rec)} style={{ fontSize:'0.74rem', padding:'3px 10px' }}>✎ Edit</button>
-                  <button className="quiet-button" type="button" onClick={() => printMeetingMinutes(rec, employees, activeLeaves)} style={{ fontSize:'0.74rem', padding:'3px 10px' }}>🖨 Print</button>
-                  <button className="quiet-button" type="button" onClick={() => del(rec.id)} style={{ fontSize:'0.74rem', padding:'3px 8px', color:'#ef4444' }}>🗑</button>
+                  <button className="quiet-button" type="button" title="Edit" onClick={() => setEditing(rec)} style={{ fontSize:'0.9rem', padding:'3px 8px' }}>✎</button>
+                  <button className="quiet-button" type="button" title="Print" onClick={() => printMeetingMinutes(rec, employees, activeLeaves)} style={{ fontSize:'0.9rem', padding:'3px 8px' }}>🖨</button>
+                  <button className="quiet-button" type="button" title="Delete" onClick={() => del(rec.id)} style={{ fontSize:'0.9rem', padding:'3px 8px', color:'#ef4444' }}>🗑</button>
                 </div>
               </div>
             )
@@ -7619,146 +7960,146 @@ function MeetingsSection({ records, onUpdate, employees, activeLeaves }: {
 }
 
 /* ─── Sample meeting minutes ──────────────────────────────────── */
+const _sampleRep = (id:string, name:string, desig:string, dept:string, code:string, att:MeetingAttendance='Attended', reason='', repName='', repDesig=''): MeetingRep =>
+  ({ id, name, designation:desig, meetingDept:dept, deptCode:code, attendance:att, reason, replacementName:repName, replacementDesignation:repDesig, replacementId:'' })
 const initialMeetingRecords: MeetingRecord[] = [
   {
-    id: 'mtg-001',
-    refNumber: 'VHPL/MBM/26/031',
-    date: '2026-03-26',
-    timeStarted: '10:00',
-    timeEnded: '11:45',
-    venue: 'Conference Room, Administration Building',
-    chairperson: 'Ali Didi — General Manager',
-    prevMeetingDate: '2026-02-26',
+    id: 'mtg-001', refNumber: 'VHPL/MBM/26/031', date: '2026-03-26',
+    timeStarted: '10:00', timeEnded: '11:45',
+    venue: 'Villa Hakatha Pvt Ltd, Thilafushi, Meeting Room',
+    chairperson: 'Ali Didi — General Manager', prevMeetingDate: '2026-02-26',
     reps: [
-      { id: 'r01', name: 'Ibrahim Rasheed',  designation: 'Head of Accounts',        meetingDept: 'Accounts',        deptCode: 'ACC', attendance: 'Attended',  reason: '', replacementName: '', replacementDesignation: '' },
-      { id: 'r02', name: 'Mohamed Nizam',    designation: 'Chief Engineer',           meetingDept: 'Engineering',     deptCode: 'ENG', attendance: 'Attended',  reason: '', replacementName: '', replacementDesignation: '' },
-      { id: 'r03', name: 'Ali Shareef',      designation: 'LP Supervisor',            meetingDept: 'Loss Prevention', deptCode: 'LP',  attendance: 'Attended',  reason: '', replacementName: '', replacementDesignation: '' },
-      { id: 'r04', name: 'Fathimath Laila',  designation: 'Housekeeping Supervisor',  meetingDept: 'Housekeeping',    deptCode: 'HK',  attendance: 'Attended',  reason: '', replacementName: '', replacementDesignation: '' },
-      { id: 'r05', name: 'Hassan Niyaz',     designation: 'F&B Supervisor',           meetingDept: 'Food & Beverage', deptCode: 'F&B', attendance: 'On Leave',  reason: 'Annual Leave', replacementName: 'Ahmed Riyaz', replacementDesignation: 'F&B Assistant' },
-      { id: 'r06', name: 'Abdul Waheed',     designation: 'Store Keeper',             meetingDept: 'Stores',          deptCode: 'STR', attendance: 'Attended',  reason: '', replacementName: '', replacementDesignation: '' },
-      { id: 'r07', name: 'Moosa Shakir',     designation: 'LPG Plant Operator',       meetingDept: 'LPG Plant',       deptCode: 'LPG', attendance: 'Attended',  reason: '', replacementName: '', replacementDesignation: '' },
-      { id: 'r08', name: 'Ahmed Siraj',      designation: 'Cement Plant Supervisor',  meetingDept: 'Cement Plant',    deptCode: 'CP',  attendance: 'Attended',  reason: '', replacementName: '', replacementDesignation: '' },
+      _sampleRep('r-dgm','HUSSAIN SHAHID','DEPUTY GENERAL MANAGER','DEPUTY GENERAL MANAGER','DGM'),
+      _sampleRep('r01','Ibrahim Rasheed','Head of Accounts','ACCOUNTS','ACC'),
+      _sampleRep('r02','Mohamed Nizam','Chief Engineer','ENGINEERING','ENG'),
+      _sampleRep('r03','Ali Shareef','LP Supervisor','LOSS PREVENTION','LP'),
+      _sampleRep('r04','Fathimath Laila','Housekeeping Supervisor','HOUSEKEEPING','HK'),
+      _sampleRep('r05','Hassan Niyaz','F&B Supervisor','FOOD & BEVERAGE','F&B','On Leave','Annual Leave','Ahmed Riyaz','F&B Assistant'),
+      _sampleRep('r06','Abdul Waheed','Store Keeper','STORES','STR'),
+      _sampleRep('r07','Mohamed Hasan','LPG Plant Supervisor','LPG PLANT','LPG'),
+      _sampleRep('r08','Ibrahim Ali','Fuel Farm Supervisor','FUEL FARM','FF'),
+      _sampleRep('r09','Ahmed Ali','Administrator','ADMINISTRATION','ADM'),
+      _sampleRep('r10','Mariyam Shifa','HR Officer','HUMAN RESOURCES','HR'),
     ],
     deptUpdates: [
-      { dept: 'Accounts',        points: 'Monthly payroll processed on time.\nPetty cash reconciliation completed for February.' },
-      { dept: 'Engineering',     points: 'Generator 2 scheduled maintenance completed.\nElectrical panel inspection pending — scheduled for next week.' },
-      { dept: 'Loss Prevention', points: 'No major incidents reported this month.\nFire drill conducted on 20th March — all clear.' },
-      { dept: 'Housekeeping',    points: 'Deep cleaning of staff quarters completed.\nNew cleaning schedule implemented across all blocks.' },
-      { dept: 'Food & Beverage', points: 'Menu updated for Ramadan season.\nNew kitchen equipment installed and operational.' },
-      { dept: 'Stores',          points: 'Stock audit completed — report submitted to management.\nNew procurement requests for Q2 submitted.' },
-      { dept: 'LPG Plant',       points: 'LPG stock levels at 72% — refill scheduled end of month.\nAll safety valves tested and operational.' },
-      { dept: 'Cement Plant',    points: 'Production target met for February.\nConveyor belt replaced — downtime was 6 hours.' },
+      { dept:'ACCOUNTS',        points:'Monthly payroll processed on time.\nPetty cash reconciliation completed for February.' },
+      { dept:'ENGINEERING',     points:'Generator 2 scheduled maintenance completed.\nElectrical panel inspection pending — scheduled for next week.' },
+      { dept:'LOSS PREVENTION', points:'No major incidents reported this month.\nFire drill conducted on 20th March — all clear.' },
+      { dept:'HOUSEKEEPING',    points:'Deep cleaning of staff quarters completed.\nNew cleaning schedule implemented across all blocks.' },
+      { dept:'FOOD & BEVERAGE', points:'Menu updated for Ramadan season.\nNew kitchen equipment installed and operational.' },
+      { dept:'STORES',          points:'Stock audit completed — report submitted to management.\nNew procurement requests for Q2 submitted.' },
+      { dept:'LPG PLANT',       points:'LPG stock levels at 72% — refill scheduled end of month.\nAll safety valves tested and operational.' },
+      { dept:'FUEL FARM',       points:'Monthly fuel inventory check completed — all records updated.' },
+      { dept:'ADMINISTRATION',  points:'Staff welfare matters reviewed.\nNew attendance register system piloted.' },
+      { dept:'HUMAN RESOURCES', points:'Visa renewals for 3 staff processed.\nNew joiners induction scheduled for next week.' },
+      { dept:'CEMENT PLANT',    points:'Production target met for February.\nConveyor belt replaced — downtime was 6 hours.' },
     ],
-    otherMatters: 'Management reminded all HODs to submit Q1 performance reports by 31st March.\nNext meeting scheduled for 23rd April 2026.',
-    preparedBy: 'Mariyam Shifa',
-    approvedBy: 'Ali Didi',
-    status: 'Final',
-    createdAt: '2026-03-26T12:00:00.000Z',
+    otherMatters:'Management reminded all section heads to submit Q1 performance reports by 31st March.\nNext meeting scheduled for 23rd April 2026.',
+    preparedBy:'ARUSHULLA RASHID', approvedBy:'ALI DIDI',
+    status:'Final', agendaType:'standard', customAgenda:'',
+    createdAt:'2026-03-26T12:00:00.000Z',
   },
   {
-    id: 'mtg-002',
-    refNumber: 'VHPL/MBM/26/032',
-    date: '2026-04-23',
-    timeStarted: '10:00',
-    timeEnded: '12:10',
-    venue: 'Conference Room, Administration Building',
-    chairperson: 'Ali Didi — General Manager',
-    prevMeetingDate: '2026-03-26',
+    id: 'mtg-002', refNumber: 'VHPL/MBM/26/032', date: '2026-04-23',
+    timeStarted: '10:00', timeEnded: '12:10',
+    venue: 'Villa Hakatha Pvt Ltd, Thilafushi, Meeting Room',
+    chairperson: 'Ali Didi — General Manager', prevMeetingDate: '2026-03-26',
     reps: [
-      { id: 'r01', name: 'Ibrahim Rasheed',  designation: 'Head of Accounts',        meetingDept: 'Accounts',        deptCode: 'ACC', attendance: 'Attended',  reason: '', replacementName: '', replacementDesignation: '' },
-      { id: 'r02', name: 'Mohamed Nizam',    designation: 'Chief Engineer',           meetingDept: 'Engineering',     deptCode: 'ENG', attendance: 'Attended',  reason: '', replacementName: '', replacementDesignation: '' },
-      { id: 'r03', name: 'Ali Shareef',      designation: 'LP Supervisor',            meetingDept: 'Loss Prevention', deptCode: 'LP',  attendance: 'Attended',  reason: '', replacementName: '', replacementDesignation: '' },
-      { id: 'r04', name: 'Fathimath Laila',  designation: 'Housekeeping Supervisor',  meetingDept: 'Housekeeping',    deptCode: 'HK',  attendance: 'Absent',    reason: 'Medical Appointment', replacementName: '', replacementDesignation: '' },
-      { id: 'r05', name: 'Hassan Niyaz',     designation: 'F&B Supervisor',           meetingDept: 'Food & Beverage', deptCode: 'F&B', attendance: 'Attended',  reason: '', replacementName: '', replacementDesignation: '' },
-      { id: 'r06', name: 'Abdul Waheed',     designation: 'Store Keeper',             meetingDept: 'Stores',          deptCode: 'STR', attendance: 'Attended',  reason: '', replacementName: '', replacementDesignation: '' },
-      { id: 'r07', name: 'Moosa Shakir',     designation: 'LPG Plant Operator',       meetingDept: 'LPG Plant',       deptCode: 'LPG', attendance: 'Attended',  reason: '', replacementName: '', replacementDesignation: '' },
-      { id: 'r08', name: 'Ahmed Siraj',      designation: 'Cement Plant Supervisor',  meetingDept: 'Cement Plant',    deptCode: 'CP',  attendance: 'Attended',  reason: '', replacementName: '', replacementDesignation: '' },
+      _sampleRep('r-dgm','HUSSAIN SHAHID','DEPUTY GENERAL MANAGER','DEPUTY GENERAL MANAGER','DGM'),
+      _sampleRep('r01','Ibrahim Rasheed','Head of Accounts','ACCOUNTS','ACC'),
+      _sampleRep('r02','Mohamed Nizam','Chief Engineer','ENGINEERING','ENG'),
+      _sampleRep('r03','Ali Shareef','LP Supervisor','LOSS PREVENTION','LP'),
+      _sampleRep('r04','Fathimath Laila','Housekeeping Supervisor','HOUSEKEEPING','HK','Absent','Medical Appointment'),
+      _sampleRep('r05','Hassan Niyaz','F&B Supervisor','FOOD & BEVERAGE','F&B'),
+      _sampleRep('r06','Abdul Waheed','Store Keeper','STORES','STR'),
+      _sampleRep('r07','Mohamed Hasan','LPG Plant Supervisor','LPG PLANT','LPG'),
+      _sampleRep('r08','Ibrahim Ali','Fuel Farm Supervisor','FUEL FARM','FF'),
+      _sampleRep('r09','Ahmed Ali','Administrator','ADMINISTRATION','ADM'),
+      _sampleRep('r10','Mariyam Shifa','HR Officer','HUMAN RESOURCES','HR'),
     ],
     deptUpdates: [
-      { dept: 'Accounts',        points: 'Q1 financial summary presented — within budget.\nStaff loan deductions reconciled for all departments.' },
-      { dept: 'Engineering',     points: 'Power House fuel consumption report submitted — 8% reduction achieved.\nMaintenance log for April updated and shared.' },
-      { dept: 'Loss Prevention', points: 'CCTV system upgraded in Zone B.\nNew SOP for visitor access distributed to all departments.' },
-      { dept: 'Housekeeping',    points: 'Laundry machine breakdown — temporary arrangements in place, repair ETA 3 days.' },
-      { dept: 'Food & Beverage', points: 'Staff mess feedback survey conducted — 87% satisfaction rate.\nNew supplier for vegetables onboarded.' },
-      { dept: 'Stores',          points: 'Slow-moving inventory list submitted to GM for disposal approval.\nBarcode system implementation in progress.' },
-      { dept: 'LPG Plant',       points: 'Monthly safety inspection completed — no issues found.\nLPG stock replenished on 18th April.' },
-      { dept: 'Cement Plant',    points: 'Cement production up 12% compared to March.\nDust control measures improved following complaint.' },
+      { dept:'ACCOUNTS',        points:'Q1 financial summary presented — within budget.\nStaff loan deductions reconciled for all sections.' },
+      { dept:'ENGINEERING',     points:'Power House fuel consumption report submitted — 8% reduction achieved.\nMaintenance log for April updated and shared.' },
+      { dept:'LOSS PREVENTION', points:'CCTV system upgraded in Zone B.\nNew SOP for visitor access distributed to all sections.' },
+      { dept:'HOUSEKEEPING',    points:'Laundry machine breakdown — temporary arrangements in place, repair ETA 3 days.' },
+      { dept:'FOOD & BEVERAGE', points:'Staff mess feedback survey conducted — 87% satisfaction rate.\nNew supplier for vegetables onboarded.' },
+      { dept:'STORES',          points:'Slow-moving inventory list submitted to GM for disposal approval.\nBarcode system implementation in progress.' },
+      { dept:'LPG PLANT',       points:'Monthly safety inspection completed — no issues found.\nLPG stock replenished on 18th April.' },
+      { dept:'FUEL FARM',       points:'Fuel pump maintenance completed.\nStock levels reviewed and within safe limits.' },
+      { dept:'ADMINISTRATION',  points:'Q1 admin report submitted to management.' },
+      { dept:'HUMAN RESOURCES', points:'Work permit renewals for 5 employees in process.\nMonthly headcount report submitted.' },
+      { dept:'CEMENT PLANT',    points:'Cement production up 12% compared to March.\nDust control measures improved following complaint.' },
     ],
-    otherMatters: 'GM announced annual leave schedule for May–June will be released by 30th April.\nAll departments to submit manpower requirements for Q3 by 10th May.',
-    preparedBy: 'Mariyam Shifa',
-    approvedBy: 'Ali Didi',
-    status: 'Final',
-    createdAt: '2026-04-23T12:30:00.000Z',
+    otherMatters:'GM announced annual leave schedule for May–June will be released by 30th April.\nAll sections to submit manpower requirements for Q3 by 10th May.',
+    preparedBy:'ARUSHULLA RASHID', approvedBy:'ALI DIDI',
+    status:'Final', agendaType:'standard', customAgenda:'',
+    createdAt:'2026-04-23T12:30:00.000Z',
   },
   {
-    id: 'mtg-003',
-    refNumber: 'VHPL/MBM/26/033',
-    date: '2026-05-28',
-    timeStarted: '10:00',
-    timeEnded: '11:55',
-    venue: 'Conference Room, Administration Building',
-    chairperson: 'Hussain Shahid — Deputy General Manager',
-    prevMeetingDate: '2026-04-23',
+    id: 'mtg-003', refNumber: 'VHPL/MBM/26/033', date: '2026-05-28',
+    timeStarted: '10:00', timeEnded: '11:55',
+    venue: 'Villa Hakatha Pvt Ltd, Thilafushi, Meeting Room',
+    chairperson: 'Hussain Shahid — Deputy General Manager', prevMeetingDate: '2026-04-23',
     reps: [
-      { id: 'r01', name: 'Ibrahim Rasheed',  designation: 'Head of Accounts',        meetingDept: 'Accounts',        deptCode: 'ACC', attendance: 'Attended',  reason: '', replacementName: '', replacementDesignation: '' },
-      { id: 'r02', name: 'Mohamed Nizam',    designation: 'Chief Engineer',           meetingDept: 'Engineering',     deptCode: 'ENG', attendance: 'Attended',  reason: '', replacementName: '', replacementDesignation: '' },
-      { id: 'r03', name: 'Ali Shareef',      designation: 'LP Supervisor',            meetingDept: 'Loss Prevention', deptCode: 'LP',  attendance: 'On Leave',  reason: 'Annual Leave', replacementName: 'Hussain Rasheed', replacementDesignation: 'Acting LP Supervisor' },
-      { id: 'r04', name: 'Fathimath Laila',  designation: 'Housekeeping Supervisor',  meetingDept: 'Housekeeping',    deptCode: 'HK',  attendance: 'Attended',  reason: '', replacementName: '', replacementDesignation: '' },
-      { id: 'r05', name: 'Hassan Niyaz',     designation: 'F&B Supervisor',           meetingDept: 'Food & Beverage', deptCode: 'F&B', attendance: 'Attended',  reason: '', replacementName: '', replacementDesignation: '' },
-      { id: 'r06', name: 'Abdul Waheed',     designation: 'Store Keeper',             meetingDept: 'Stores',          deptCode: 'STR', attendance: 'Attended',  reason: '', replacementName: '', replacementDesignation: '' },
-      { id: 'r07', name: 'Moosa Shakir',     designation: 'LPG Plant Operator',       meetingDept: 'LPG Plant',       deptCode: 'LPG', attendance: 'Attended',  reason: '', replacementName: '', replacementDesignation: '' },
-      { id: 'r08', name: 'Ahmed Siraj',      designation: 'Cement Plant Supervisor',  meetingDept: 'Cement Plant',    deptCode: 'CP',  attendance: 'Attended',  reason: '', replacementName: '', replacementDesignation: '' },
+      _sampleRep('r-gm','ALI DIDI','GENERAL MANAGER','GENERAL MANAGER','GM','Absent','Not Available'),
+      _sampleRep('r01','Ibrahim Rasheed','Head of Accounts','ACCOUNTS','ACC'),
+      _sampleRep('r02','Mohamed Nizam','Chief Engineer','ENGINEERING','ENG'),
+      _sampleRep('r03','Ali Shareef','LP Supervisor','LOSS PREVENTION','LP','On Leave','Annual Leave','Hussain Rasheed','Acting LP Supervisor'),
+      _sampleRep('r04','Fathimath Laila','Housekeeping Supervisor','HOUSEKEEPING','HK'),
+      _sampleRep('r05','Hassan Niyaz','F&B Supervisor','FOOD & BEVERAGE','F&B'),
+      _sampleRep('r06','Abdul Waheed','Store Keeper','STORES','STR'),
+      _sampleRep('r07','Mohamed Hasan','LPG Plant Supervisor','LPG PLANT','LPG'),
+      _sampleRep('r08','Ibrahim Ali','Fuel Farm Supervisor','FUEL FARM','FF'),
+      _sampleRep('r09','Ahmed Ali','Administrator','ADMINISTRATION','ADM'),
+      _sampleRep('r10','Mariyam Shifa','HR Officer','HUMAN RESOURCES','HR'),
     ],
     deptUpdates: [
-      { dept: 'Accounts',        points: 'May payroll preparation in progress — to be processed by 29th.\nAnnual audit documentation being compiled.' },
-      { dept: 'Engineering',     points: 'Air conditioning units serviced in all office blocks.\nBackup generator fuel topped up — stock sufficient for 3 weeks.' },
-      { dept: 'Loss Prevention', points: 'Acting LP Supervisor Hussain Rasheed representing department.\nIncident report for 15th May submitted and closed.' },
-      { dept: 'Housekeeping',    points: 'Pest control treatment carried out on 22nd May — all clear.\nCleaning supplies stock replenished.' },
-      { dept: 'Food & Beverage', points: 'Ramadan meal schedule concluded — back to regular menu from 1st June.\nKitchen deep cleaning completed post-Ramadan.' },
-      { dept: 'Stores',          points: 'Barcode system fully operational across main stores.\nMonthly stock report submitted to GM on 25th May.' },
-      { dept: 'LPG Plant',       points: 'Quarterly safety audit conducted — passed with minor observations.\nObservations to be addressed by end of June.' },
-      { dept: 'Cement Plant',    points: 'New batch order received — production ramping up for June.\nOvertime approved for 12 workers for the coming 3 weeks.' },
+      { dept:'ACCOUNTS',        points:'May payroll preparation in progress — to be processed by 29th.\nAnnual audit documentation being compiled.' },
+      { dept:'ENGINEERING',     points:'Air conditioning units serviced in all office blocks.\nBackup generator fuel topped up — stock sufficient for 3 weeks.' },
+      { dept:'LOSS PREVENTION', points:'Acting LP Supervisor Hussain Rasheed representing section.\nIncident report for 15th May submitted and closed.' },
+      { dept:'HOUSEKEEPING',    points:'Pest control treatment carried out on 22nd May — all clear.\nCleaning supplies stock replenished.' },
+      { dept:'FOOD & BEVERAGE', points:'Ramadan meal schedule concluded — back to regular menu from 1st June.\nKitchen deep cleaning completed post-Ramadan.' },
+      { dept:'STORES',          points:'Barcode system fully operational across main stores.\nMonthly stock report submitted on 25th May.' },
+      { dept:'LPG PLANT',       points:'Quarterly safety audit conducted — passed with minor observations.\nObservations to be addressed by end of June.' },
+      { dept:'FUEL FARM',       points:'Fuel delivery received — stock at 85%.\nAll meters calibrated and certified.' },
+      { dept:'ADMINISTRATION',  points:'Staff ID card registrations completed for all sections.' },
+      { dept:'HUMAN RESOURCES', points:'Annual leave schedules for June–July circulated.\nNew employee joining formalities completed for 2 staff.' },
+      { dept:'CEMENT PLANT',    points:'New batch order received — production ramping up for June.\nOvertime approved for 12 workers for the coming 3 weeks.' },
     ],
-    otherMatters: 'DGM reminded all departments that new ID card system goes live on 1st June — all staff must register biometrics before 31st May.\nNext meeting tentatively scheduled for 25th June 2026.',
-    preparedBy: 'Mariyam Shifa',
-    approvedBy: 'Hussain Shahid',
-    status: 'Final',
-    createdAt: '2026-05-28T13:00:00.000Z',
+    otherMatters:'DGM reminded all sections that new ID card system goes live on 1st June — all staff must register biometrics before 31st May.\nNext meeting tentatively scheduled for 25th June 2026.',
+    preparedBy:'ARUSHULLA RASHID', approvedBy:'HUSSAIN SHAHID',
+    status:'Final', agendaType:'standard', customAgenda:'',
+    createdAt:'2026-05-28T13:00:00.000Z',
   },
   {
-    id: 'mtg-004',
-    refNumber: 'VHPL/MBM/26/034',
-    date: '2026-06-25',
-    timeStarted: '10:00',
-    timeEnded: '',
-    venue: 'Conference Room, Administration Building',
-    chairperson: 'Ali Didi — General Manager',
-    prevMeetingDate: '2026-05-28',
+    id: 'mtg-004', refNumber: 'VHPL/MBM/26/034', date: '2026-06-25',
+    timeStarted: '10:00', timeEnded: '',
+    venue: 'Villa Hakatha Pvt Ltd, Thilafushi, Meeting Room',
+    chairperson: 'Ali Didi — General Manager', prevMeetingDate: '2026-05-28',
     reps: [
-      { id: 'r01', name: 'Ibrahim Rasheed',  designation: 'Head of Accounts',        meetingDept: 'Accounts',        deptCode: 'ACC', attendance: 'Attended',  reason: '', replacementName: '', replacementDesignation: '' },
-      { id: 'r02', name: 'Mohamed Nizam',    designation: 'Chief Engineer',           meetingDept: 'Engineering',     deptCode: 'ENG', attendance: 'Attended',  reason: '', replacementName: '', replacementDesignation: '' },
-      { id: 'r03', name: 'Ali Shareef',      designation: 'LP Supervisor',            meetingDept: 'Loss Prevention', deptCode: 'LP',  attendance: 'Attended',  reason: '', replacementName: '', replacementDesignation: '' },
-      { id: 'r04', name: 'Fathimath Laila',  designation: 'Housekeeping Supervisor',  meetingDept: 'Housekeeping',    deptCode: 'HK',  attendance: 'Attended',  reason: '', replacementName: '', replacementDesignation: '' },
-      { id: 'r05', name: 'Hassan Niyaz',     designation: 'F&B Supervisor',           meetingDept: 'Food & Beverage', deptCode: 'F&B', attendance: 'Attended',  reason: '', replacementName: '', replacementDesignation: '' },
-      { id: 'r06', name: 'Abdul Waheed',     designation: 'Store Keeper',             meetingDept: 'Stores',          deptCode: 'STR', attendance: 'Attended',  reason: '', replacementName: '', replacementDesignation: '' },
-      { id: 'r07', name: 'Moosa Shakir',     designation: 'LPG Plant Operator',       meetingDept: 'LPG Plant',       deptCode: 'LPG', attendance: 'Attended',  reason: '', replacementName: '', replacementDesignation: '' },
-      { id: 'r08', name: 'Ahmed Siraj',      designation: 'Cement Plant Supervisor',  meetingDept: 'Cement Plant',    deptCode: 'CP',  attendance: 'Attended',  reason: '', replacementName: '', replacementDesignation: '' },
+      _sampleRep('r-dgm','HUSSAIN SHAHID','DEPUTY GENERAL MANAGER','DEPUTY GENERAL MANAGER','DGM'),
+      _sampleRep('r01','Ibrahim Rasheed','Head of Accounts','ACCOUNTS','ACC'),
+      _sampleRep('r02','Mohamed Nizam','Chief Engineer','ENGINEERING','ENG'),
+      _sampleRep('r03','Ali Shareef','LP Supervisor','LOSS PREVENTION','LP'),
+      _sampleRep('r04','Fathimath Laila','Housekeeping Supervisor','HOUSEKEEPING','HK'),
+      _sampleRep('r05','Hassan Niyaz','F&B Supervisor','FOOD & BEVERAGE','F&B'),
+      _sampleRep('r06','Abdul Waheed','Store Keeper','STORES','STR'),
+      _sampleRep('r07','Mohamed Hasan','LPG Plant Supervisor','LPG PLANT','LPG'),
+      _sampleRep('r08','Ibrahim Ali','Fuel Farm Supervisor','FUEL FARM','FF'),
+      _sampleRep('r09','Ahmed Ali','Administrator','ADMINISTRATION','ADM'),
+      _sampleRep('r10','Mariyam Shifa','HR Officer','HUMAN RESOURCES','HR'),
     ],
     deptUpdates: [
-      { dept: 'Accounts',        points: '' },
-      { dept: 'Engineering',     points: '' },
-      { dept: 'Loss Prevention', points: '' },
-      { dept: 'Housekeeping',    points: '' },
-      { dept: 'Food & Beverage', points: '' },
-      { dept: 'Stores',          points: '' },
-      { dept: 'LPG Plant',       points: '' },
-      { dept: 'Cement Plant',    points: '' },
+      { dept:'ACCOUNTS',        points:'' }, { dept:'ENGINEERING',     points:'' },
+      { dept:'LOSS PREVENTION', points:'' }, { dept:'HOUSEKEEPING',    points:'' },
+      { dept:'FOOD & BEVERAGE', points:'' }, { dept:'STORES',          points:'' },
+      { dept:'LPG PLANT',       points:'' }, { dept:'FUEL FARM',       points:'' },
+      { dept:'ADMINISTRATION',  points:'' }, { dept:'HUMAN RESOURCES', points:'' },
+      { dept:'CEMENT PLANT',    points:'' },
     ],
-    otherMatters: '',
-    preparedBy: 'Mariyam Shifa',
-    approvedBy: 'Ali Didi',
-    status: 'Draft',
-    createdAt: '2026-06-05T09:00:00.000Z',
+    otherMatters:'', preparedBy:'ARUSHULLA RASHID', approvedBy:'ALI DIDI',
+    status:'Draft', agendaType:'standard', customAgenda:'',
+    createdAt:'2026-06-05T09:00:00.000Z',
   },
 ]
 
@@ -7844,7 +8185,7 @@ function OperationsPage({ employees, completedTerminations, activeLeaves }: {
         <button className={activeSection === 'training' ? 'active' : ''} onClick={() => setActiveSection('training')} type="button">Training</button>
         <button className={activeSection === 'bank' ? 'active' : ''} onClick={() => setActiveSection('bank')} type="button">Bank Account</button>
         <button className={activeSection === 'meetings' ? 'active' : ''} onClick={() => setActiveSection('meetings')} type="button">
-          Meetings {meetingRecords.length > 0 && <span className="tab-count">{meetingRecords.length}</span>}
+          Minutes
         </button>
       </div>
       {activeSection === 'files'     && <PersonalFilesSection records={personalFiles} onUpdate={setPersonalFiles} onBack={() => {}} />}
