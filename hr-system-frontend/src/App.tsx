@@ -114,7 +114,8 @@ type MeetingRecord = {
   deptUpdates: MeetingDeptUpdate[]
   agendaType?: 'standard' | 'custom'
   customAgenda?: string
-  reviewNotes?: string    // discussion notes for agenda item 1 (optional, backward-compat)
+  reviewNotes?: string              // discussion notes for agenda item 1 (optional, backward-compat)
+  additionalSectionNotes?: string   // extra ad-hoc section notes for Section Minutes
   otherMatters: string
   preparedBy: string
   approvedBy: string
@@ -247,13 +248,13 @@ type StaffRequestRecord = {
   employeeId: string
   employeeName: string
   department: string
-  requestType: 'Accommodation' | 'Equipment' | 'Transfer' | 'Leave' | 'Documents' | 'Other'
+  requestType: 'Documents' | 'Villa Metrics' | 'Yono App' | 'Wifi' | 'IT' | 'Leave' | 'Transfer' | 'Meals & Stay' | 'Other'
   priority: RequestPriority
   description: string
   submittedDate: string
   completedDate: string
-  status: 'Open' | 'In Progress' | 'Resolved' | 'Rejected'
-  remarks: string
+  status: 'In Progress' | 'Resolved' | 'Rejected'
+  actionTaken: string
 }
 
 type VisitRecord = {
@@ -807,12 +808,12 @@ const initialTrainingRecords: TrainingRecord[] = [
   },
 ]
 const initialStaffRequests: StaffRequestRecord[] = [
-  { id: 'REQ-2026-001', employeeId: '53979', employeeName: 'NAVEEN SEKAR', department: 'STORES', requestType: 'Accommodation', priority: 'High', description: 'Room C-14 has a broken ceiling fan and leaking roof. Requested urgent repair before monsoon season.', submittedDate: '2026-05-10', completedDate: '', status: 'In Progress', remarks: 'Maintenance team scheduled for 30 May' },
-  { id: 'REQ-2026-002', employeeId: '50427', employeeName: 'MD SAIFUR RAHMAN', department: 'STORES', requestType: 'Documents', priority: 'High', description: 'Work permit renewal required. Current WP expires on 27 Jun 2026. Requesting HR to initiate renewal process with Immigration.', submittedDate: '2026-05-15', completedDate: '', status: 'Open', remarks: '' },
-  { id: 'REQ-2026-003', employeeId: '58692', employeeName: 'SHANTUMON PATHIYIL CHACKO', department: 'HUMAN RESOURCES', requestType: 'Equipment', priority: 'Medium', description: 'Laptop screen flickering intermittently. Affects HR system data entry. Requesting replacement or repair.', submittedDate: '2026-04-22', completedDate: '2026-04-30', status: 'Resolved', remarks: 'New laptop issued on 30 April' },
-  { id: 'REQ-2026-004', employeeId: '57637', employeeName: 'MUNI ACHARI GUNTI KOVALA', department: 'CAFE', requestType: 'Transfer', priority: 'Medium', description: 'Requesting department transfer to Kitchen. Have 8 years of culinary experience and believe skills are better utilised there.', submittedDate: '2026-05-08', completedDate: '2026-05-20', status: 'Rejected', remarks: 'Transfer declined — CAFE currently understaffed' },
-  { id: 'REQ-2026-005', employeeId: '59217', employeeName: 'RAJKUMAR GUPTA', department: 'MECHANICAL', requestType: 'Leave', priority: 'Low', description: 'Requesting 2 days emergency leave on 5-6 June 2026 to handle urgent banking matters in Male.', submittedDate: '2026-05-25', completedDate: '', status: 'Open', remarks: '' },
-  { id: 'REQ-2026-006', employeeId: '61245', employeeName: 'ARUSHULLA RASHID', department: 'HUMAN RESOURCES', requestType: 'Equipment', priority: 'Low', description: 'Requesting ergonomic chair for HR office workstation. Current chair causing back strain during extended working hours.', submittedDate: '2026-05-02', completedDate: '2026-05-14', status: 'Resolved', remarks: 'Ergonomic chair procured and delivered' },
+  { id: 'REQ-2026-001', employeeId: '53979', employeeName: 'NAVEEN SEKAR', department: 'STORES', requestType: 'Other', priority: 'High', description: 'Room C-14 has a broken ceiling fan and leaking roof. Requested urgent repair before monsoon season.', submittedDate: '2026-05-10', completedDate: '', status: 'In Progress', actionTaken: 'Maintenance team scheduled for 30 May' },
+  { id: 'REQ-2026-002', employeeId: '50427', employeeName: 'MD SAIFUR RAHMAN', department: 'STORES', requestType: 'Documents', priority: 'High', description: 'Work permit renewal required. Current WP expires on 27 Jun 2026. Requesting HR to initiate renewal process with Immigration.', submittedDate: '2026-05-15', completedDate: '', status: 'In Progress', actionTaken: '' },
+  { id: 'REQ-2026-003', employeeId: '58692', employeeName: 'SHANTUMON PATHIYIL CHACKO', department: 'HUMAN RESOURCES', requestType: 'IT', priority: 'Medium', description: 'Laptop screen flickering intermittently. Affects HR system data entry. Requesting replacement or repair.', submittedDate: '2026-04-22', completedDate: '2026-04-30', status: 'Resolved', actionTaken: 'New laptop issued on 30 April' },
+  { id: 'REQ-2026-004', employeeId: '57637', employeeName: 'MUNI ACHARI GUNTI KOVALA', department: 'CAFE', requestType: 'Transfer', priority: 'Medium', description: 'Requesting department transfer to Kitchen. Have 8 years of culinary experience and believe skills are better utilised there.', submittedDate: '2026-05-08', completedDate: '2026-05-20', status: 'Rejected', actionTaken: 'Transfer declined — CAFE currently understaffed' },
+  { id: 'REQ-2026-005', employeeId: '59217', employeeName: 'RAJKUMAR GUPTA', department: 'MECHANICAL', requestType: 'Leave', priority: 'Low', description: 'Requesting 2 days emergency leave on 5-6 June 2026 to handle urgent banking matters in Male.', submittedDate: '2026-05-25', completedDate: '', status: 'In Progress', actionTaken: '' },
+  { id: 'REQ-2026-006', employeeId: '61245', employeeName: 'ARUSHULLA RASHID', department: 'HUMAN RESOURCES', requestType: 'IT', priority: 'Low', description: 'Requesting ergonomic chair for HR office workstation. Current chair causing back strain during extended working hours.', submittedDate: '2026-05-02', completedDate: '2026-05-14', status: 'Resolved', actionTaken: 'Ergonomic chair procured and delivered' },
 ]
 
 const initialOffSiteRecords: OffSiteRecord[] = []
@@ -6010,8 +6011,8 @@ function ExitInterviewFormModal({ record, employees, onClose, onSave, viewOnly =
     <div className="modal-backdrop" role="presentation">
       <section className="registration-modal ei-form-modal" role="dialog" aria-modal="true">
         {/* Header */}
-        <div className="modal-header" style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4338ca 100%)', flexShrink: 0 }}>
-          <div>
+        <div className="modal-header" style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4338ca 100%)', flexShrink: 0, paddingLeft: 24 }}>
+          <div style={{ paddingLeft: 4 }}>
             <p className="eyebrow">Exit Interview</p>
             <h2>{record.name || 'New Exit Interview'}</h2>
             {record.department && <p style={{ margin: 0, fontSize: '0.78rem', color: 'rgba(255,255,255,0.7)' }}>{record.department} · {record.designation}</p>}
@@ -6304,15 +6305,13 @@ function ExitInterviewFormModal({ record, employees, onClose, onSave, viewOnly =
 
 function ExitInterviewAnalyticsModal({ records, onClose }: { records: ExitInterviewRecord[]; onClose: () => void }) {
   const [view, setView] = useState<'overall' | 'person'>('overall')
-  const [selectedEmpId, setSelectedEmpId] = useState<string>('')
+  const [personSearch, setPersonSearch] = useState('')
+  const [selectedRecord, setSelectedRecord] = useState<ExitInterviewRecord | null>(null)
 
-  const completed = records.filter(r => r.questionnaire && Object.values(r.questionnaire).some(v => v !== ''))
-  const skipped   = records.filter(r => r.skipped)
+  const completed   = records.filter(r => r.questionnaire && Object.values(r.questionnaire).some(v => v !== ''))
+  const skipped     = records.filter(r => r.skipped)
   const rehireCount = records.filter(r => r.rehireEligible).length
-  const total = records.length
-
-  // For per-person view
-  const personRecord = records.find(r => r.employeeId === selectedEmpId) ?? null
+  const total       = records.length
 
   const buildQuestStats = (src: ExitInterviewRecord[]) =>
     eiQuestionnaireCategories.map(({ key, label }) => {
@@ -6335,28 +6334,27 @@ function ExitInterviewAnalyticsModal({ records, onClose }: { records: ExitInterv
   const SatisfactionBars = ({ src }: { src: ExitInterviewRecord[] }) => {
     const stats = buildQuestStats(src)
     return (
-      <div className="ei-panel" style={{ marginBottom: 14 }}>
-        <h3 className="ei-panel-title">Satisfaction by Category</h3>
+      <div style={{ background:'#fff', border:'1px solid #e2e8f0', borderRadius:10, padding:'14px 16px', marginBottom:14 }}>
+        <div style={{ fontSize:'0.72rem', fontWeight:800, color:'#6366f1', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:12 }}>Satisfaction by Category</div>
         {stats.map(({ key, label, vsPct, sPct, dPct, n }) => (
-          <div key={key} style={{ display: 'grid', gridTemplateColumns: '160px 1fr 80px', gap: 8, alignItems: 'center', marginBottom: 8 }}>
-            <span style={{ fontSize: '0.78rem', color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
+          <div key={key} style={{ display:'grid', gridTemplateColumns:'150px 1fr 70px', gap:8, alignItems:'center', marginBottom:7 }}>
+            <span style={{ fontSize:'0.75rem', color:'#475569', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{label}</span>
             {n === 0
-              ? <span style={{ fontSize: '0.74rem', color: '#94a3b8' }}>No data</span>
-              : <div className="ei-an-stacked-bar" style={{ height: 16, borderRadius: 8 }}>
-                  {vsPct > 0 && <div className="ei-an-vs" style={{ width: `${vsPct}%` }} title={`Very Satisfied ${Math.round(vsPct)}%`} />}
-                  {sPct  > 0 && <div className="ei-an-s"  style={{ width: `${sPct}%`  }} title={`Satisfied ${Math.round(sPct)}%`} />}
-                  {dPct  > 0 && <div className="ei-an-d"  style={{ width: `${dPct}%`  }} title={`Dissatisfied ${Math.round(dPct)}%`} />}
-                </div>
-            }
-            <span style={{ fontSize: '0.70rem', color: '#64748b', textAlign: 'right' }}>
-              {n > 0 && <>{Math.round(vsPct)}% · {Math.round(sPct)}% · {Math.round(dPct)}%</>}
+              ? <div style={{ height:12, background:'#f1f5f9', borderRadius:6 }} />
+              : <div style={{ height:12, borderRadius:6, overflow:'hidden', display:'flex', background:'#f1f5f9' }}>
+                  {vsPct > 0 && <div style={{ width:`${vsPct}%`, background:'#16a34a', transition:'width 0.4s' }} title={`Very Satisfied ${Math.round(vsPct)}%`} />}
+                  {sPct  > 0 && <div style={{ width:`${sPct}%`,  background:'#d97706', transition:'width 0.4s' }} title={`Satisfied ${Math.round(sPct)}%`} />}
+                  {dPct  > 0 && <div style={{ width:`${dPct}%`,  background:'#dc2626', transition:'width 0.4s' }} title={`Dissatisfied ${Math.round(dPct)}%`} />}
+                </div>}
+            <span style={{ fontSize:'0.66rem', color:'#94a3b8', textAlign:'right' }}>
+              {n > 0 ? `${Math.round(vsPct)}% · ${Math.round(sPct)}% · ${Math.round(dPct)}%` : '—'}
             </span>
           </div>
         ))}
-        <div style={{ display: 'flex', gap: 14, marginTop: 6 }}>
+        <div style={{ display:'flex', gap:14, marginTop:10, paddingTop:8, borderTop:'1px solid #f1f5f9' }}>
           {[['#16a34a','Very Satisfied'],['#d97706','Satisfied'],['#dc2626','Dissatisfied']].map(([c,l])=>(
-            <span key={l} style={{ display:'flex', alignItems:'center', gap:4, fontSize:'0.72rem' }}>
-              <span style={{ width:10, height:10, borderRadius:2, background:c, display:'inline-block' }}/>{l}
+            <span key={l} style={{ display:'flex', alignItems:'center', gap:4, fontSize:'0.68rem', color:'#64748b' }}>
+              <span style={{ width:10, height:10, borderRadius:2, background:c, display:'inline-block', flexShrink:0 }}/>{l}
             </span>
           ))}
         </div>
@@ -6367,193 +6365,261 @@ function ExitInterviewAnalyticsModal({ records, onClose }: { records: ExitInterv
   const ReasonBars = ({ src, type }: { src: ExitInterviewRecord[]; type: 'inv'|'vol' }) => {
     const counts = buildReasonCounts(src, type)
     const max = counts[0]?.[1] ?? 1
-    if (counts.length === 0) return <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>None recorded</p>
+    if (counts.length === 0) return <p style={{ fontSize: '0.78rem', color: '#94a3b8', fontStyle:'italic' }}>None recorded</p>
     return (
-      <>
+      <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
         {counts.map(([reason, count]) => (
-          <div key={reason} className="ei-reason-row">
-            <span className="ei-reason-name">{reason}</span>
-            <div className="ei-reason-track"><div className="ei-reason-fill" style={{ width: `${(count/max)*100}%`, background: type==='inv' ? '#ef4444' : '#6366f1' }} /></div>
-            <span className="ei-reason-count">{count}</span>
+          <div key={reason} style={{ display:'grid', gridTemplateColumns:'1fr 80px 28px', gap:6, alignItems:'center' }}>
+            <span style={{ fontSize:'0.75rem', color:'#475569', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{reason}</span>
+            <div style={{ height:8, borderRadius:4, background:'#f1f5f9', overflow:'hidden' }}>
+              <div style={{ height:'100%', width:`${(count/max)*100}%`, background: type==='inv'?'#ef4444':'#6366f1', borderRadius:4, transition:'width 0.3s' }} />
+            </div>
+            <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#475569', textAlign:'right' }}>{count}</span>
           </div>
         ))}
-      </>
+      </div>
     )
   }
 
+  // Per-employee: list of filtered records
+  const filteredPersonRecords = useMemo(() => {
+    const q = personSearch.toLowerCase().trim()
+    if (!q) return records
+    return records.filter(r => r.name.toLowerCase().includes(q) || r.employeeId.toLowerCase().includes(q))
+  }, [records, personSearch])
+
   return (
     <div className="modal-backdrop" role="presentation">
-      <section className="registration-modal ei-analytics-modal" role="dialog" aria-modal="true">
-        <div className="modal-header">
+      <section className="registration-modal ei-analytics-modal" role="dialog" aria-modal="true"
+        style={{ display:'flex', flexDirection:'column', maxHeight:'90vh' }}>
+        {/* ── Header ── */}
+        <div className="modal-header" style={{ background:'linear-gradient(135deg,#4338ca 0%,#7c3aed 100%)', flexShrink:0 }}>
           <div>
-            <p className="eyebrow">Exit Interviews</p>
-            <h2>Analytics</h2>
-            <p style={{ fontSize: '0.82rem', color: '#64748b', marginTop: 2 }}>{total} interview{total !== 1 ? 's' : ''} recorded · {completed.length} completed · {skipped.length} skipped</p>
+            <p className="eyebrow" style={{ color:'rgba(199,210,254,0.85)' }}>Exit Interview Analytics</p>
+            <h2 style={{ color:'#fff' }}>{view === 'person' && selectedRecord ? selectedRecord.name : 'Analytics Dashboard'}</h2>
+            <p style={{ fontSize:'0.78rem', color:'rgba(199,210,254,0.75)', marginTop:2 }}>
+              {total} interview{total!==1?'s':''} · {completed.length} completed · {skipped.length} skipped · {rehireCount} rehire-eligible
+            </p>
           </div>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            {/* View toggle */}
-            <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: 8, padding: 3, gap: 2 }}>
-              <button type="button" onClick={() => setView('overall')} style={{ padding: '4px 12px', borderRadius: 6, border: 'none', fontSize: '0.76rem', fontWeight: 700, background: view==='overall' ? '#fff' : 'transparent', color: view==='overall' ? '#4338ca' : '#64748b', cursor: 'pointer', boxShadow: view==='overall' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}>Overall</button>
-              <button type="button" onClick={() => setView('person')} style={{ padding: '4px 12px', borderRadius: 6, border: 'none', fontSize: '0.76rem', fontWeight: 700, background: view==='person' ? '#fff' : 'transparent', color: view==='person' ? '#4338ca' : '#64748b', cursor: 'pointer', boxShadow: view==='person' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}>Per Employee</button>
-            </div>
-            <button className="icon-button" onClick={onClose} type="button">×</button>
+          <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+            {!(view === 'person' && selectedRecord) && (
+              <div style={{ display:'flex', background:'rgba(255,255,255,0.12)', borderRadius:8, padding:3, gap:2 }}>
+                {(['overall','person'] as const).map(v => (
+                  <button key={v} type="button" onClick={() => { setView(v); setSelectedRecord(null) }}
+                    style={{ padding:'4px 12px', borderRadius:6, border:'none', fontSize:'0.76rem', fontWeight:700, cursor:'pointer',
+                      background: view===v ? '#fff' : 'transparent',
+                      color:      view===v ? '#4338ca' : 'rgba(255,255,255,0.8)' }}>
+                    {v === 'overall' ? 'Overall' : 'Per Employee'}
+                  </button>
+                ))}
+              </div>
+            )}
+            {view === 'person' && selectedRecord && (
+              <button type="button" onClick={() => setSelectedRecord(null)}
+                style={{ padding:'5px 14px', borderRadius:8, border:'none', fontSize:'0.78rem', fontWeight:700, cursor:'pointer', background:'rgba(255,255,255,0.15)', color:'#fff' }}>
+                ← Back
+              </button>
+            )}
+            <button className="icon-button" onClick={onClose} type="button" style={{ color:'#fff', background:'rgba(255,255,255,0.15)' }}>×</button>
           </div>
         </div>
 
-        {total === 0
-          ? <p style={{ padding: '24px', color: '#94a3b8', textAlign: 'center' }}>No exit interview data to analyse.</p>
-          : (
-            <div style={{ padding: '0 20px 20px', overflowY: 'auto', maxHeight: 'calc(85vh - 120px)' }}>
-
-              {/* ── OVERALL VIEW ── */}
-              {view === 'overall' && (
-                <>
-                  <div className="ei-stat-row" style={{ margin: '14px 0' }}>
-                    <div className="ei-stat ei-stat-purple"><strong>{total}</strong><span>Total</span></div>
-                    <div className="ei-stat ei-stat-blue"><strong>{completed.length}</strong><span>Completed</span></div>
-                    <div className="ei-stat ei-stat-amber"><strong>{skipped.length}</strong><span>Skipped</span></div>
-                    <div className="ei-stat ei-stat-green"><strong>{rehireCount}</strong><span>Rehire Eligible</span></div>
-                  </div>
-
-                  <SatisfactionBars src={completed} />
-
-                  <div className="ei-dashboard-grid" style={{ marginBottom: 14 }}>
-                    <div className="ei-panel">
-                      <h3 className="ei-panel-title">Involuntary Exit Reasons</h3>
-                      <ReasonBars src={records} type="inv" />
-                    </div>
-                    <div className="ei-panel">
-                      <h3 className="ei-panel-title">Voluntary Exit Reasons</h3>
-                      <ReasonBars src={records} type="vol" />
-                    </div>
-                  </div>
-
-                  {/* Department breakdown */}
-                  {(() => {
-                    const deptMap: Record<string, number> = {}
-                    records.forEach(r => { if (r.department) deptMap[r.department] = (deptMap[r.department] ?? 0) + 1 })
-                    const sorted = Object.entries(deptMap).sort((a,b) => b[1]-a[1])
-                    const max = sorted[0]?.[1] ?? 1
-                    return sorted.length > 0 ? (
-                      <div className="ei-panel" style={{ marginBottom: 14 }}>
-                        <h3 className="ei-panel-title">Exits by Department</h3>
-                        {sorted.map(([dept, count]) => (
-                          <div key={dept} className="ei-reason-row">
-                            <span className="ei-reason-name">{dept}</span>
-                            <div className="ei-reason-track"><div className="ei-reason-fill" style={{ width: `${(count/max)*100}%`, background: '#6366f1' }} /></div>
-                            <span className="ei-reason-count">{count}</span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : null
-                  })()}
-
-                  {/* Rehire bar */}
-                  <div className="ei-panel">
-                    <h3 className="ei-panel-title">Rehire Eligibility</h3>
-                    <div style={{ display: 'flex', gap: 14 }}>
-                      <div className="ei-stat ei-stat-green" style={{ flex: 1 }}><strong>{rehireCount}</strong><span>Eligible</span></div>
-                      <div className="ei-stat" style={{ flex: 1, background: '#fee2e2' }}><strong style={{ color: '#dc2626' }}>{total - rehireCount}</strong><span style={{ color: '#991b1b' }}>Not Eligible</span></div>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* ── PER EMPLOYEE VIEW ── */}
-              {view === 'person' && (
-                <>
-                  <div style={{ margin: '14px 0 16px' }}>
-                    <label style={{ fontSize: '0.78rem', fontWeight: 700, color: '#374151', display: 'block', marginBottom: 6 }}>Select Employee</label>
-                    <select value={selectedEmpId} onChange={e => setSelectedEmpId(e.target.value)}
-                      style={{ padding: '8px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: '0.82rem', width: '100%', maxWidth: 400 }}>
-                      <option value="">— Select an employee —</option>
-                      {records.map(r => (
-                        <option key={r.id} value={r.employeeId}>{r.name} ({r.employeeId}) · {r.department}</option>
+        {/* ── Body — single scrollable area ── */}
+        <div style={{ flex:1, overflowY:'auto', padding:'16px 20px 20px' }}>
+          {total === 0
+            ? <div style={{ textAlign:'center', padding:'40px 0', color:'#94a3b8' }}>No exit interview data to analyse.</div>
+            : (
+              <>
+                {/* OVERALL VIEW */}
+                {view === 'overall' && (
+                  <>
+                    {/* KPI row */}
+                    <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10, marginBottom:16 }}>
+                      {[
+                        { label:'Total', n:total,            color:'#4338ca', bg:'#eef2ff', border:'#c7d2fe' },
+                        { label:'Completed', n:completed.length, color:'#15803d', bg:'#f0fdf4', border:'#86efac' },
+                        { label:'Skipped',   n:skipped.length,   color:'#b45309', bg:'#fffbeb', border:'#fde68a' },
+                        { label:'Rehire Eligible', n:rehireCount, color:'#0369a1', bg:'#f0f9ff', border:'#bae6fd' },
+                      ].map(k => (
+                        <div key={k.label} style={{ background:k.bg, border:`1.5px solid ${k.border}`, borderRadius:10, padding:'12px 14px', textAlign:'center' }}>
+                          <div style={{ fontSize:'1.6rem', fontWeight:900, color:k.color, lineHeight:1 }}>{k.n}</div>
+                          <div style={{ fontSize:'0.65rem', fontWeight:700, color:'#64748b', textTransform:'uppercase', letterSpacing:'0.07em', marginTop:4 }}>{k.label}</div>
+                        </div>
                       ))}
-                    </select>
-                  </div>
+                    </div>
 
-                  {!personRecord && (
-                    <p style={{ color: '#94a3b8', textAlign: 'center', padding: '24px 0' }}>Select an employee above to view their exit interview details.</p>
-                  )}
+                    <SatisfactionBars src={completed} />
 
-                  {personRecord && (
-                    <>
-                      {/* Employee header card */}
-                      <div style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4338ca 100%)', borderRadius: 12, padding: '14px 18px', color: '#fff', marginBottom: 14, display: 'flex', gap: 14, alignItems: 'center' }}>
-                        <div style={{ width: 46, height: 46, borderRadius: '50%', background: 'rgba(255,255,255,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', fontWeight: 900, flexShrink: 0 }}>
-                          {(personRecord.name[0] ?? '').toUpperCase()}
-                        </div>
-                        <div>
-                          <div style={{ fontWeight: 800, fontSize: '1rem' }}>{personRecord.name}</div>
-                          <div style={{ fontSize: '0.78rem', opacity: 0.8 }}>{personRecord.employeeId} · {personRecord.department} · {personRecord.designation}</div>
-                          <div style={{ fontSize: '0.74rem', opacity: 0.7, marginTop: 2 }}>
-                            Terminated: {formatDateDisplay(personRecord.departureDate)} · Service: {personRecord.periodOfService || '—'} · Rehire: {personRecord.rehireEligible ? '✓ Yes' : '✗ No'}
+                    {/* Reasons grid */}
+                    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:14 }}>
+                      <div style={{ background:'#fff', border:'1px solid #e2e8f0', borderRadius:10, padding:'14px 16px' }}>
+                        <div style={{ fontSize:'0.72rem', fontWeight:800, color:'#ef4444', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:10 }}>Involuntary Exits</div>
+                        <ReasonBars src={records} type="inv" />
+                      </div>
+                      <div style={{ background:'#fff', border:'1px solid #e2e8f0', borderRadius:10, padding:'14px 16px' }}>
+                        <div style={{ fontSize:'0.72rem', fontWeight:800, color:'#6366f1', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:10 }}>Voluntary Exits</div>
+                        <ReasonBars src={records} type="vol" />
+                      </div>
+                    </div>
+
+                    {/* Exits by department */}
+                    {(() => {
+                      const deptMap: Record<string, number> = {}
+                      records.forEach(r => { if (r.department) deptMap[r.department] = (deptMap[r.department] ?? 0) + 1 })
+                      const sorted = Object.entries(deptMap).sort((a,b) => b[1]-a[1])
+                      const max = sorted[0]?.[1] ?? 1
+                      return sorted.length > 0 ? (
+                        <div style={{ background:'#fff', border:'1px solid #e2e8f0', borderRadius:10, padding:'14px 16px', marginBottom:14 }}>
+                          <div style={{ fontSize:'0.72rem', fontWeight:800, color:'#475569', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:10 }}>Exits by Department</div>
+                          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                            {sorted.map(([dept, count]) => (
+                              <div key={dept} style={{ display:'grid', gridTemplateColumns:'1fr 80px 28px', gap:6, alignItems:'center' }}>
+                                <span style={{ fontSize:'0.75rem', color:'#475569', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{dept}</span>
+                                <div style={{ height:8, borderRadius:4, background:'#f1f5f9', overflow:'hidden' }}>
+                                  <div style={{ height:'100%', width:`${(count/max)*100}%`, background:'#6366f1', borderRadius:4 }} />
+                                </div>
+                                <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#475569', textAlign:'right' }}>{count}</span>
+                              </div>
+                            ))}
                           </div>
                         </div>
-                        <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-                          <span style={{ background: personRecord.skipped ? '#fef3c7' : 'rgba(255,255,255,0.2)', color: personRecord.skipped ? '#92400e' : '#fff', padding: '3px 10px', borderRadius: 8, fontSize: '0.74rem', fontWeight: 700 }}>
-                            {personRecord.skipped ? `Skipped: ${personRecord.skipReason}` : 'Completed'}
-                          </span>
+                      ) : null
+                    })()}
+
+                    {/* Rehire eligibility */}
+                    <div style={{ background:'#fff', border:'1px solid #e2e8f0', borderRadius:10, padding:'14px 16px' }}>
+                      <div style={{ fontSize:'0.72rem', fontWeight:800, color:'#475569', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:10 }}>Rehire Eligibility</div>
+                      <div style={{ display:'flex', gap:10 }}>
+                        <div style={{ flex:1, background:'#f0fdf4', border:'1.5px solid #86efac', borderRadius:8, padding:'10px', textAlign:'center' }}>
+                          <div style={{ fontSize:'1.3rem', fontWeight:900, color:'#15803d' }}>{rehireCount}</div>
+                          <div style={{ fontSize:'0.65rem', color:'#15803d', fontWeight:700, textTransform:'uppercase' }}>Eligible</div>
+                        </div>
+                        <div style={{ flex:1, background:'#fef2f2', border:'1.5px solid #fca5a5', borderRadius:8, padding:'10px', textAlign:'center' }}>
+                          <div style={{ fontSize:'1.3rem', fontWeight:900, color:'#dc2626' }}>{total - rehireCount}</div>
+                          <div style={{ fontSize:'0.65rem', color:'#dc2626', fontWeight:700, textTransform:'uppercase' }}>Not Eligible</div>
+                        </div>
+                        <div style={{ flex:2, background:'#f8fafc', borderRadius:8, padding:'10px', overflow:'hidden' }}>
+                          <div style={{ height:18, borderRadius:9, overflow:'hidden', background:'#fca5a5', marginBottom:6 }}>
+                            <div style={{ height:'100%', width: total>0?`${(rehireCount/total)*100}%`:'0%', background:'#16a34a', borderRadius:9, transition:'width 0.4s' }} />
+                          </div>
+                          <div style={{ fontSize:'0.68rem', color:'#64748b' }}>{total>0?Math.round((rehireCount/total)*100):0}% eligible</div>
                         </div>
                       </div>
+                    </div>
+                  </>
+                )}
 
-                      {!personRecord.skipped && (
-                        <>
-                          {/* Satisfaction */}
-                          <SatisfactionBars src={[personRecord]} />
-
-                          {/* Reasons */}
-                          <div className="ei-dashboard-grid" style={{ marginBottom: 14 }}>
-                            <div className="ei-panel">
-                              <h3 className="ei-panel-title">Exit Reasons — Involuntary</h3>
-                              <ReasonBars src={[personRecord]} type="inv" />
-                              {personRecord.invOther && <div style={{ fontSize: '0.80rem', marginTop: 6 }}>Other: {personRecord.invOther}</div>}
+                {/* PER EMPLOYEE VIEW — list */}
+                {view === 'person' && !selectedRecord && (
+                  <>
+                    <div style={{ marginBottom:12 }}>
+                      <label className="search-field" style={{ maxWidth:380 }}>
+                        <span>Search</span>
+                        <input type="search" value={personSearch} onChange={e => setPersonSearch(e.target.value)}
+                          placeholder="Name or employee ID…" />
+                      </label>
+                    </div>
+                    <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                      {filteredPersonRecords.length === 0
+                        ? <p style={{ textAlign:'center', color:'#94a3b8', padding:'24px 0' }}>No records match the search.</p>
+                        : filteredPersonRecords.map(r => (
+                          <div key={r.id} onClick={() => setSelectedRecord(r)}
+                            style={{ background:'#fff', border:'1.5px solid #e2e8f0', borderRadius:10, padding:'11px 14px',
+                              cursor:'pointer', display:'flex', alignItems:'center', gap:12,
+                              transition:'border-color 0.15s, box-shadow 0.15s' }}
+                            onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor='#a5b4fc'; (e.currentTarget as HTMLDivElement).style.boxShadow='0 2px 8px rgba(99,102,241,0.12)' }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor='#e2e8f0'; (e.currentTarget as HTMLDivElement).style.boxShadow='none' }}>
+                            <div style={{ width:36, height:36, borderRadius:'50%', background:'linear-gradient(135deg,#7c3aed,#4338ca)', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:900, fontSize:'1rem', flexShrink:0 }}>
+                              {(r.name[0] ?? '').toUpperCase()}
                             </div>
-                            <div className="ei-panel">
-                              <h3 className="ei-panel-title">Exit Reasons — Voluntary</h3>
-                              <ReasonBars src={[personRecord]} type="vol" />
-                              {personRecord.volOther && <div style={{ fontSize: '0.80rem', marginTop: 6 }}>Other: {personRecord.volOther}</div>}
+                            <div style={{ flex:1, minWidth:0 }}>
+                              <div style={{ fontWeight:700, fontSize:'0.85rem', color:'#1e1b4b', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{r.name}</div>
+                              <div style={{ fontSize:'0.72rem', color:'#64748b' }}>{r.employeeId} · {r.department} · {r.designation}</div>
                             </div>
+                            <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:4, flexShrink:0 }}>
+                              <span style={{ fontSize:'0.68rem', fontWeight:700, padding:'2px 8px', borderRadius:5,
+                                background: r.skipped ? '#fef3c7' : '#dcfce7',
+                                color:      r.skipped ? '#92400e' : '#15803d' }}>
+                                {r.skipped ? 'Skipped' : 'Completed'}
+                              </span>
+                              <span style={{ fontSize:'0.68rem', color:'#94a3b8' }}>{formatDateDisplay(r.departureDate)}</span>
+                            </div>
+                            <span style={{ color:'#94a3b8', fontSize:'0.9rem', flexShrink:0 }}>›</span>
                           </div>
+                        ))
+                      }
+                    </div>
+                  </>
+                )}
 
-                          {/* Short answers */}
-                          <div className="ei-panel" style={{ marginBottom: 14 }}>
-                            <h3 className="ei-panel-title">Interview Responses</h3>
-                            {eiShortQuestions.map((q, i) => {
-                              const ans = personRecord[`q${i+1}` as keyof ExitInterviewRecord] as string
-                              return ans ? (
-                                <div key={i} style={{ marginBottom: 10, borderBottom: '1px solid #f1f5f9', paddingBottom: 8 }}>
-                                  <div style={{ fontSize: '0.76rem', fontWeight: 700, color: '#6366f1', marginBottom: 2 }}>{i+1}. {q}</div>
-                                  <div style={{ fontSize: '0.82rem', color: '#374151', lineHeight: 1.5 }}>{ans}</div>
-                                </div>
-                              ) : null
-                            })}
-                            {personRecord.employeeComments && (
-                              <div style={{ marginTop: 8, background: '#f8fafc', borderRadius: 8, padding: '8px 12px' }}>
-                                <div style={{ fontSize: '0.74rem', fontWeight: 700, color: '#64748b', marginBottom: 4 }}>Employee Comments</div>
-                                <div style={{ fontSize: '0.82rem', color: '#374151' }}>{personRecord.employeeComments}</div>
+                {/* PER EMPLOYEE VIEW — detail */}
+                {view === 'person' && selectedRecord && (
+                  <>
+                    {/* Employee card */}
+                    <div style={{ background:'linear-gradient(135deg,#7c3aed 0%,#4338ca 100%)', borderRadius:12, padding:'14px 18px', color:'#fff', marginBottom:14, display:'flex', gap:14, alignItems:'center' }}>
+                      <div style={{ width:46, height:46, borderRadius:'50%', background:'rgba(255,255,255,0.22)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1.1rem', fontWeight:900, flexShrink:0 }}>
+                        {(selectedRecord.name[0] ?? '').toUpperCase()}
+                      </div>
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontWeight:800, fontSize:'1rem' }}>{selectedRecord.name}</div>
+                        <div style={{ fontSize:'0.78rem', opacity:0.8 }}>{selectedRecord.employeeId} · {selectedRecord.department} · {selectedRecord.designation}</div>
+                        <div style={{ fontSize:'0.73rem', opacity:0.7, marginTop:2 }}>
+                          Departed: {formatDateDisplay(selectedRecord.departureDate)} · Service: {selectedRecord.periodOfService || '—'} · Rehire: {selectedRecord.rehireEligible ? '✓ Yes' : '✗ No'}
+                        </div>
+                      </div>
+                      <span style={{ background: selectedRecord.skipped ? '#fef3c7' : 'rgba(255,255,255,0.2)', color: selectedRecord.skipped ? '#92400e' : '#fff', padding:'3px 10px', borderRadius:8, fontSize:'0.74rem', fontWeight:700, flexShrink:0 }}>
+                        {selectedRecord.skipped ? `Skipped: ${selectedRecord.skipReason}` : 'Completed'}
+                      </span>
+                    </div>
+
+                    {!selectedRecord.skipped && (
+                      <>
+                        <SatisfactionBars src={[selectedRecord]} />
+                        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:14 }}>
+                          <div style={{ background:'#fff', border:'1px solid #e2e8f0', borderRadius:10, padding:'14px 16px' }}>
+                            <div style={{ fontSize:'0.72rem', fontWeight:800, color:'#ef4444', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:10 }}>Involuntary Reasons</div>
+                            <ReasonBars src={[selectedRecord]} type="inv" />
+                            {selectedRecord.invOther && <div style={{ fontSize:'0.78rem', color:'#64748b', marginTop:6, fontStyle:'italic' }}>Other: {selectedRecord.invOther}</div>}
+                          </div>
+                          <div style={{ background:'#fff', border:'1px solid #e2e8f0', borderRadius:10, padding:'14px 16px' }}>
+                            <div style={{ fontSize:'0.72rem', fontWeight:800, color:'#6366f1', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:10 }}>Voluntary Reasons</div>
+                            <ReasonBars src={[selectedRecord]} type="vol" />
+                            {selectedRecord.volOther && <div style={{ fontSize:'0.78rem', color:'#64748b', marginTop:6, fontStyle:'italic' }}>Other: {selectedRecord.volOther}</div>}
+                          </div>
+                        </div>
+                        <div style={{ background:'#fff', border:'1px solid #e2e8f0', borderRadius:10, padding:'14px 16px', marginBottom:14 }}>
+                          <div style={{ fontSize:'0.72rem', fontWeight:800, color:'#475569', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:10 }}>Interview Responses</div>
+                          {eiShortQuestions.map((q, i) => {
+                            const ans = selectedRecord[`q${i+1}` as keyof ExitInterviewRecord] as string
+                            return ans ? (
+                              <div key={i} style={{ marginBottom:10, borderBottom:'1px solid #f1f5f9', paddingBottom:8 }}>
+                                <div style={{ fontSize:'0.73rem', fontWeight:700, color:'#6366f1', marginBottom:2 }}>{i+1}. {q}</div>
+                                <div style={{ fontSize:'0.82rem', color:'#374151', lineHeight:1.5 }}>{ans}</div>
                               </div>
-                            )}
-                          </div>
-
-                          {/* Areas to improve */}
-                          {personRecord.areasToImprove && (
-                            <div className="ei-panel">
-                              <h3 className="ei-panel-title">Areas to be Improved</h3>
-                              <p style={{ fontSize: '0.82rem', color: '#374151' }}>{personRecord.areasToImprove}</p>
+                            ) : null
+                          })}
+                          {selectedRecord.employeeComments && (
+                            <div style={{ marginTop:8, background:'#f8fafc', borderRadius:8, padding:'8px 12px' }}>
+                              <div style={{ fontSize:'0.72rem', fontWeight:700, color:'#64748b', marginBottom:4 }}>Employee Comments</div>
+                              <div style={{ fontSize:'0.82rem', color:'#374151' }}>{selectedRecord.employeeComments}</div>
                             </div>
                           )}
-                        </>
-                      )}
-                    </>
-                  )}
-                </>
-              )}
-            </div>
-          )}
+                        </div>
+                        {selectedRecord.areasToImprove && (
+                          <div style={{ background:'#fff', border:'1px solid #e2e8f0', borderRadius:10, padding:'14px 16px' }}>
+                            <div style={{ fontSize:'0.72rem', fontWeight:800, color:'#475569', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:8 }}>Areas to Improve</div>
+                            <p style={{ fontSize:'0.82rem', color:'#374151', margin:0 }}>{selectedRecord.areasToImprove}</p>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </>
+                )}
+              </>
+            )}
+        </div>
 
-        <div className="modal-actions">
+        <div className="modal-actions" style={{ flexShrink:0 }}>
           <button className="quiet-button light" onClick={onClose} type="button">Close</button>
         </div>
       </section>
@@ -6999,17 +7065,26 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   const grandTotal   = totOnDuty + totNotInSite + totOnLeave
 
   // Always render all MEETING_DEPTS sections — empty ones show Nil
-  const deptHtml = MEETING_DEPTS.map(md => {
-    const update = record.deptUpdates.find(d => d.dept === md.label)
-    const bullets = (update?.points ?? '').split('\n').filter(p => p.trim())
-      .map(p => `<li style="margin-bottom:4pt;font-size:9pt;">${esc(p.trim())}</li>`).join('')
-    return `<div style="margin-bottom:12pt;">
+  // Administration and Human Resources attend all meetings but don't have section-level updates in print
+  const PRINT_EXCLUDED_DEPTS = new Set(['ADMINISTRATION', 'HUMAN RESOURCES'])
+  const deptHtml = MEETING_DEPTS
+    .filter(md => !PRINT_EXCLUDED_DEPTS.has(md.label))
+    .map(md => {
+      const update = record.deptUpdates.find(d => d.dept === md.label)
+      const bullets = (update?.points ?? '').split('\n').filter(p => p.trim())
+        .map(p => `<li style="margin-bottom:4pt;font-size:9pt;">${esc(p.trim())}</li>`).join('')
+      return `<div style="margin-bottom:12pt;">
       <div style="font-size:9pt;font-weight:700;text-decoration:underline;margin-bottom:4pt;">${esc(md.label)}</div>
       ${bullets
         ? `<ul style="margin:0;padding-left:16pt;">${bullets}</ul>`
         : `<p style="margin:0;font-size:9pt;color:#888;">Nil</p>`}
     </div>`
-  }).join('')
+    }).join('')
+  // Additional ad-hoc section notes
+  const additionalHtml = record.additionalSectionNotes?.trim()
+    ? record.additionalSectionNotes.trim().split('\n').filter(l => l.trim())
+        .map(l => `<li style="margin-bottom:4pt;font-size:9pt;">${esc(l.trim())}</li>`).join('')
+    : ''
 
   // Agenda — fixed or custom
   const fmtAgendaDate = (d: string) => {
@@ -7176,6 +7251,7 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
         2. Discussion of Issues, Updates and Challenges Faced by Each Section:
       </div>
       ${deptHtml}
+      ${additionalHtml ? `<div style="margin-bottom:12pt;"><div style="font-size:9pt;font-weight:700;text-decoration:underline;margin-bottom:4pt;">ADDITIONAL</div><ul style="margin:0;padding-left:16pt;">${additionalHtml}</ul></div>` : ''}
     </div>
 
     <div style="padding-left:18pt;">
@@ -7236,8 +7312,9 @@ function MeetingFormModal({ record, employees, activeLeaves, onClose, onSave }: 
   const [prevMeetingDate, setPrevMeetingDate] = useState(record.prevMeetingDate ?? '')
   const [agendaType,      setAgendaType]      = useState<'standard'|'custom'>(record.agendaType ?? 'standard')
   const [customAgenda,    setCustomAgenda]    = useState(record.customAgenda ?? '')
-  const [reviewNotes,     setReviewNotes]     = useState(record.reviewNotes ?? '')
-  const [otherMatters,    setOtherMatters]    = useState(record.otherMatters)
+  const [reviewNotes,            setReviewNotes]            = useState(record.reviewNotes ?? '')
+  const [additionalSectionNotes, setAdditionalSectionNotes] = useState(record.additionalSectionNotes ?? '')
+  const [otherMatters,           setOtherMatters]           = useState(record.otherMatters)
   const [confirmFinal,    setConfirmFinal]    = useState(false)
 
   // Fixed: venue and preparedBy are not editable
@@ -7250,7 +7327,7 @@ function MeetingFormModal({ record, employees, activeLeaves, onClose, onSave }: 
     chairperson, status: overrideStatus ?? status,
     preparedBy: FIXED_PREPARED_BY,
     approvedBy, reps, deptUpdates, prevMeetingDate,
-    agendaType, customAgenda, reviewNotes, otherMatters
+    agendaType, customAgenda, reviewNotes, additionalSectionNotes, otherMatters
   })
 
   const updateRep = (id: string, field: keyof MeetingRep, value: string) =>
@@ -7602,10 +7679,14 @@ function MeetingFormModal({ record, employees, activeLeaves, onClose, onSave }: 
               </p>
               {deptUpdates.map(d => {
                 const pts = d.points.split('\n').filter(p => p.trim()).length
+                const isExcluded = d.dept === 'ADMINISTRATION' || d.dept === 'HUMAN RESOURCES'
                 return (
-                  <div key={d.dept} style={{ background:'#f8fafc', border:`1.5px solid ${d.points.trim() ? '#c7d2fe' : '#e8eaf0'}`, borderRadius:10, padding:'10px 14px' }}>
+                  <div key={d.dept} style={{ background:'#f8fafc', border:`1.5px solid ${d.points.trim() ? '#c7d2fe' : '#e8eaf0'}`, borderRadius:10, padding:'10px 14px', opacity: isExcluded ? 0.75 : 1 }}>
                     <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
-                      <span style={{ fontSize:'0.8rem', fontWeight:800, color:'#1e1b4b' }}>{d.dept}</span>
+                      <div style={{ display:'flex', alignItems:'center', gap:7 }}>
+                        <span style={{ fontSize:'0.8rem', fontWeight:800, color:'#1e1b4b' }}>{d.dept}</span>
+                        {isExcluded && <span style={{ fontSize:'0.6rem', fontWeight:600, color:'#94a3b8', background:'#f1f5f9', borderRadius:4, padding:'1px 6px' }}>print excluded</span>}
+                      </div>
                       {pts > 0 && <span style={{ fontSize:'0.64rem', fontWeight:700, background:'#e0e7ff', color:'#4338ca', borderRadius:5, padding:'2px 7px' }}>{pts} pt{pts !== 1 ? 's' : ''}</span>}
                     </div>
                     <textarea style={ta} value={d.points} onChange={e => updateDeptPts(d.dept, e.target.value)}
@@ -7613,6 +7694,14 @@ function MeetingFormModal({ record, employees, activeLeaves, onClose, onSave }: 
                   </div>
                 )
               })}
+              {/* Additional section notes — ad-hoc items not in standard list */}
+              <div style={{ background:'#f0fdf4', border:'1.5px solid #bbf7d0', borderRadius:10, padding:'10px 14px', marginTop:4 }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
+                  <span style={{ fontSize:'0.8rem', fontWeight:800, color:'#166534' }}>Additional Notes <span style={{ fontWeight:400, fontSize:'0.72rem', color:'#4ade80' }}>(optional — shown in print if filled)</span></span>
+                </div>
+                <textarea style={{ ...ta, minHeight:64 }} value={additionalSectionNotes} onChange={e => setAdditionalSectionNotes(e.target.value)}
+                  placeholder="Any additional section updates not in the standard list (one item per line)…" />
+              </div>
             </div>
           )}
         </div>
@@ -8332,27 +8421,36 @@ function StaffRequestModal({ record, employees, onClose, onSave }: {
   const [employeeId, setEmployeeId] = useState(record.employeeId)
   const [employeeName, setEmployeeName] = useState(record.employeeName)
   const [department, setDepartment] = useState(record.department)
+  const [empFromDB, setEmpFromDB] = useState(!!record.employeeId && !!record.employeeName)
   const [requestType, setRequestType] = useState<StaffRequestRecord['requestType']>(record.requestType)
   const [priority, setPriority] = useState<RequestPriority>(record.priority)
   const [description, setDescription] = useState(record.description)
   const [submittedDate, setSubmittedDate] = useState(record.submittedDate)
   const [completedDate, setCompletedDate] = useState(record.completedDate)
   const [status, setStatus] = useState<StaffRequestRecord['status']>(record.status)
-  const [remarks, setRemarks] = useState(record.remarks)
+  const [actionTaken, setActionTaken] = useState(record.actionTaken)
 
   const empDir = useMemo(() => new Map(employees.map((e) => [e.employeeId.trim().toUpperCase(), e])), [employees])
 
-  const handleEmpIdBlur = (val: string) => {
+  const handleEmpIdChange = (val: string) => {
+    setEmployeeId(val)
     const matched = empDir.get(val.trim().toUpperCase())
-    if (matched) { setEmployeeName(matched.fullName); setDepartment(matched.department) }
+    if (matched) {
+      setEmployeeName(matched.fullName)
+      setDepartment(matched.department)
+      setEmpFromDB(true)
+    } else {
+      setEmpFromDB(false)
+    }
   }
 
   const save = (e: FormEvent) => {
     e.preventDefault()
-    onSave({ ...record, id: isNew ? `REQ-${Date.now()}` : record.id, employeeId, employeeName, department, requestType, priority, description, submittedDate, completedDate: isNew ? '' : completedDate, status, remarks })
+    onSave({ ...record, id: isNew ? `REQ-${Date.now()}` : record.id, employeeId, employeeName, department, requestType, priority, description, submittedDate, completedDate: isNew ? '' : completedDate, status, actionTaken })
   }
 
   const fieldStyle = { padding: '7px 10px', borderRadius: '7px', border: '1.5px solid rgba(124,58,237,0.2)', fontSize: '0.85rem', background: '#fff', width: '100%' }
+  const roStyle    = { ...fieldStyle, background: '#f8fafc', color: '#374151' }
 
   return (
     <div className="modal-backdrop" role="presentation">
@@ -8367,21 +8465,25 @@ function StaffRequestModal({ record, employees, onClose, onSave }: {
         <form onSubmit={save}>
           {/* Employee card */}
           <div className="trn-modal-card" style={{ marginBottom: '14px' }}>
-            <div className="trn-modal-detail-row" style={{ gridTemplateColumns: '140px 1fr 1fr' }}>
+            <div style={{ display:'flex', flexDirection:'column', gap:4, marginBottom:10 }}>
+              <span className="trn-modal-field-lbl">Employee ID</span>
+              <input value={employeeId} onChange={(e) => handleEmpIdChange(e.target.value)}
+                placeholder="Enter ID to auto-fill name and section" style={{ ...fieldStyle, maxWidth:240 }} />
+            </div>
+            <div className="trn-modal-detail-row">
               <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
-                <span className="trn-modal-field-lbl">Emp ID</span>
-                <input value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} onBlur={(e) => handleEmpIdBlur(e.target.value)} placeholder="Optional" style={fieldStyle} />
+                <span className="trn-modal-field-lbl">Employee Name {empFromDB && <span style={{ color:'#16a34a', fontSize:'0.68rem' }}>✓ auto-filled</span>}</span>
+                <input value={employeeName} onChange={empFromDB ? undefined : (e) => setEmployeeName(e.target.value)}
+                  readOnly={empFromDB} required placeholder="Full name" style={empFromDB ? roStyle : fieldStyle} />
               </label>
               <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
-                <span className="trn-modal-field-lbl">Employee Name</span>
-                <input value={employeeName} onChange={(e) => setEmployeeName(e.target.value)} required placeholder="Full name" style={fieldStyle} />
-              </label>
-              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
-                <span className="trn-modal-field-lbl">Section</span>
-                <select value={department} onChange={(e) => setDepartment(e.target.value)} style={fieldStyle}>
-                  <option value="">— select section —</option>
-                  {departmentsList.map((d) => <option key={d}>{d}</option>)}
-                </select>
+                <span className="trn-modal-field-lbl">Section {empFromDB && <span style={{ color:'#16a34a', fontSize:'0.68rem' }}>✓ auto-filled</span>}</span>
+                {empFromDB
+                  ? <input value={department} readOnly style={roStyle} />
+                  : <select value={department} onChange={(e) => setDepartment(e.target.value)} style={fieldStyle}>
+                      <option value="">— select section —</option>
+                      {departmentsList.map((d) => <option key={d}>{d}</option>)}
+                    </select>}
               </label>
             </div>
           </div>
@@ -8392,16 +8494,15 @@ function StaffRequestModal({ record, employees, onClose, onSave }: {
               <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
                 <span className="trn-modal-field-lbl">Request Type</span>
                 <select value={requestType} onChange={(e) => setRequestType(e.target.value as StaffRequestRecord['requestType'])} style={fieldStyle}>
-                  <option>Accommodation</option><option>Equipment</option><option>Transfer</option>
-                  <option>Leave</option><option>Documents</option><option>Other</option>
+                  <option>Documents</option><option>Villa Metrics</option><option>Yono App</option>
+                  <option>Wifi</option><option>IT</option><option>Leave</option>
+                  <option>Transfer</option><option>Meals &amp; Stay</option><option>Other</option>
                 </select>
               </label>
               <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
                 <span className="trn-modal-field-lbl">Priority</span>
                 <select value={priority} onChange={(e) => setPriority(e.target.value as RequestPriority)} style={fieldStyle}>
-                  <option value="Low">Low</option>
-                  <option value="Medium">Medium</option>
-                  <option value="High">High</option>
+                  <option value="Low">Low</option><option value="Medium">Medium</option><option value="High">High</option>
                 </select>
               </label>
               <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
@@ -8413,7 +8514,7 @@ function StaffRequestModal({ record, employees, onClose, onSave }: {
               <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
                 <span className="trn-modal-field-lbl">Status</span>
                 <select value={status} onChange={(e) => setStatus(e.target.value as StaffRequestRecord['status'])} style={fieldStyle}>
-                  <option>Open</option><option>In Progress</option><option>Resolved</option><option>Rejected</option>
+                  <option>In Progress</option><option>Resolved</option><option>Rejected</option>
                 </select>
               </label>
               {!isNew && (
@@ -8425,15 +8526,17 @@ function StaffRequestModal({ record, employees, onClose, onSave }: {
             </div>
           </div>
 
-          {/* Description + Remarks */}
+          {/* Description + Action Taken */}
           <div className="trn-modal-card">
-            <div className="trn-modal-field-block">
-              <span className="trn-modal-field-lbl">Description</span>
-              <input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Brief description of the request" style={{ ...fieldStyle, marginTop: '4px' }} />
-            </div>
-            <div className="trn-modal-field-block" style={{ marginTop: '10px', marginBottom: 0 }}>
-              <span className="trn-modal-field-lbl">Remarks</span>
-              <input value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="Optional notes or resolution details" style={{ ...fieldStyle, marginTop: '4px' }} />
+            <div className="trn-modal-detail-row" style={{ gridTemplateColumns:'1fr 1fr' }}>
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                <span className="trn-modal-field-lbl">Description</span>
+                <input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Brief description of the request" style={{ ...fieldStyle, marginTop: '4px' }} />
+              </label>
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                <span className="trn-modal-field-lbl">Action Taken</span>
+                <input value={actionTaken} onChange={(e) => setActionTaken(e.target.value)} placeholder="Notes or resolution details" style={{ ...fieldStyle, marginTop: '4px' }} />
+              </label>
             </div>
           </div>
 
@@ -8459,6 +8562,7 @@ function VisitModal({ record, employees, onClose, onSave }: {
   const [department, setDepartment] = useState(record.department)
   const [nicPassportNo, setNicPassportNo] = useState(record.nicPassportNo)
   const [nationality, setNationality] = useState(record.nationality)
+  const [empFromDB, setEmpFromDB] = useState(!!record.employeeId && !!record.employeeName)
   const [visitType, setVisitType] = useState<VisitRecord['visitType']>(record.visitType)
   const [visitDate, setVisitDate] = useState(record.visitDate)
   const [status, setStatus] = useState<VisitRecord['status']>(record.status)
@@ -8466,13 +8570,17 @@ function VisitModal({ record, employees, onClose, onSave }: {
 
   const empDir = useMemo(() => new Map(employees.map((e) => [e.employeeId.trim().toUpperCase(), e])), [employees])
 
-  const handleEmpIdBlur = (val: string) => {
+  const handleEmpIdChange = (val: string) => {
+    setEmployeeId(val)
     const matched = empDir.get(val.trim().toUpperCase())
     if (matched) {
       setEmployeeName(matched.fullName)
       setDepartment(matched.department)
       setNicPassportNo(matched.nicPassportNo)
       setNationality(matched.nationality)
+      setEmpFromDB(true)
+    } else {
+      setEmpFromDB(false)
     }
   }
 
@@ -8482,6 +8590,7 @@ function VisitModal({ record, employees, onClose, onSave }: {
   }
 
   const fieldStyle = { padding: '7px 10px', borderRadius: '7px', border: '1.5px solid rgba(124,58,237,0.2)', fontSize: '0.85rem', background: '#fff', width: '100%' }
+  const roStyle    = { ...fieldStyle, background: '#f8fafc', color: '#374151' }
 
   return (
     <div className="modal-backdrop" role="presentation">
@@ -8494,48 +8603,50 @@ function VisitModal({ record, employees, onClose, onSave }: {
           <button className="icon-button" onClick={onClose} type="button">×</button>
         </div>
         <form onSubmit={save}>
-          {/* Employee identity card */}
+          {/* Employee ID — shown first; rest auto-fills */}
           <div className="trn-modal-card" style={{ marginBottom: '14px' }}>
-            <div className="trn-modal-field-block">
+            <div style={{ display:'flex', flexDirection:'column', gap:4, marginBottom:12 }}>
               <span className="trn-modal-field-lbl">Employee ID</span>
-              <input
-                value={employeeId}
-                onChange={(e) => setEmployeeId(e.target.value)}
-                onBlur={(e) => handleEmpIdBlur(e.target.value)}
-                placeholder="Enter ID — auto-fills details"
-                style={{ ...fieldStyle, marginTop: '4px' }}
-              />
+              <input value={employeeId} onChange={(e) => handleEmpIdChange(e.target.value)}
+                placeholder="Enter ID — auto-fills all details below"
+                style={{ ...fieldStyle, maxWidth:240 }} />
             </div>
-            <div className="trn-modal-detail-row" style={{ marginTop: '10px' }}>
+            <div className="trn-modal-detail-row" style={{ marginTop: '4px' }}>
               <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
-                <span className="trn-modal-field-lbl">Full Name</span>
-                <input value={employeeName} onChange={(e) => setEmployeeName(e.target.value)} required placeholder="Name" style={fieldStyle} />
+                <span className="trn-modal-field-lbl">Full Name {empFromDB && <span style={{ color:'#16a34a', fontSize:'0.68rem' }}>✓</span>}</span>
+                <input value={employeeName} onChange={empFromDB ? undefined : (e) => setEmployeeName(e.target.value)}
+                  readOnly={empFromDB} required placeholder="Name" style={empFromDB ? roStyle : fieldStyle} />
               </label>
               <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
-                <span className="trn-modal-field-lbl">NIC / PP No.</span>
-                <input value={nicPassportNo} onChange={(e) => setNicPassportNo(e.target.value)} placeholder="Passport or NIC number" style={fieldStyle} />
+                <span className="trn-modal-field-lbl">NIC / PP No. {empFromDB && <span style={{ color:'#16a34a', fontSize:'0.68rem' }}>✓</span>}</span>
+                <input value={nicPassportNo} onChange={empFromDB ? undefined : (e) => setNicPassportNo(e.target.value)}
+                  readOnly={empFromDB} placeholder="Passport or NIC number" style={empFromDB ? roStyle : fieldStyle} />
               </label>
               <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
-                <span className="trn-modal-field-lbl">Nationality</span>
-                <select value={nationality} onChange={(e) => setNationality(e.target.value)} style={fieldStyle}>
-                  {nationalities.map((n) => <option key={n}>{n}</option>)}
-                </select>
+                <span className="trn-modal-field-lbl">Nationality {empFromDB && <span style={{ color:'#16a34a', fontSize:'0.68rem' }}>✓</span>}</span>
+                {empFromDB
+                  ? <input value={nationality} readOnly style={roStyle} />
+                  : <select value={nationality} onChange={(e) => setNationality(e.target.value)} style={fieldStyle}>
+                      {nationalities.map((n) => <option key={n}>{n}</option>)}
+                    </select>}
               </label>
             </div>
             <div className="trn-modal-detail-row" style={{ gridTemplateColumns: '1fr', marginTop: '10px' }}>
               <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
-                <span className="trn-modal-field-lbl">Section</span>
-                <select value={department} onChange={(e) => setDepartment(e.target.value)} style={fieldStyle}>
-                  <option value="">— select section —</option>
-                  {departmentsList.map((d) => <option key={d}>{d}</option>)}
-                </select>
+                <span className="trn-modal-field-lbl">Section {empFromDB && <span style={{ color:'#16a34a', fontSize:'0.68rem' }}>✓</span>}</span>
+                {empFromDB
+                  ? <input value={department} readOnly style={roStyle} />
+                  : <select value={department} onChange={(e) => setDepartment(e.target.value)} style={fieldStyle}>
+                      <option value="">— select section —</option>
+                      {departmentsList.map((d) => <option key={d}>{d}</option>)}
+                    </select>}
               </label>
             </div>
           </div>
 
-          {/* Visit details card */}
+          {/* Visit details */}
           <div className="trn-modal-card">
-            <div className="trn-modal-detail-row">
+            <div className="trn-modal-detail-row" style={{ gridTemplateColumns:'2fr 1fr 1fr' }}>
               <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
                 <span className="trn-modal-field-lbl">Visit Type</span>
                 <select value={visitType} onChange={(e) => setVisitType(e.target.value as VisitRecord['visitType'])} style={fieldStyle}>
@@ -8796,6 +8907,11 @@ function RequestsSection({ records, employees, onUpdate }: {
   const [typeFilter, setTypeFilter] = useState('All')
   const [statusFilter, setStatusFilter] = useState('All')
   const [editing, setEditing] = useState<StaffRequestRecord | null>(null)
+  const [statusMenu, setStatusMenu] = useState<string | null>(null)
+  const [resolveModal, setResolveModal] = useState<StaffRequestRecord | null>(null)
+  const [resolveAction, setResolveAction] = useState('')
+
+  const deptAbbr = (dept: string) => dept.trim().split(/\s+/).map(w => w[0]?.toUpperCase() ?? '').join('')
 
   const filtered = useMemo(() => records.filter((r) =>
     `${r.employeeId} ${r.employeeName} ${r.department} ${r.requestType} ${r.description}`.toLowerCase().includes(search.toLowerCase())
@@ -8806,57 +8922,87 @@ function RequestsSection({ records, employees, onUpdate }: {
   const save = (r: StaffRequestRecord) => { onUpdate((prev) => { const idx = prev.findIndex((x) => x.id === r.id); return idx >= 0 ? prev.map((x) => x.id === r.id ? r : x) : [...prev, r] }); setEditing(null) }
   const del = (id: string) => onUpdate((prev) => prev.filter((x) => x.id !== id))
 
+  const changeStatus = (r: StaffRequestRecord, newStatus: StaffRequestRecord['status']) => {
+    if (newStatus === 'Resolved') { setResolveAction(r.actionTaken || ''); setResolveModal(r); setStatusMenu(null) }
+    else { save({ ...r, status: newStatus }); setStatusMenu(null) }
+  }
+
   const newReq = (): StaffRequestRecord => ({
-    id: 'REQ-new', employeeId: '', employeeName: '', department: '', requestType: 'Accommodation',
+    id: 'REQ-new', employeeId: '', employeeName: '', department: '', requestType: 'Documents',
     priority: 'Medium', description: '', submittedDate: new Date().toISOString().slice(0, 10),
-    completedDate: '', status: 'Open', remarks: '',
+    completedDate: '', status: 'In Progress', actionTaken: '',
   })
 
   return (
     <>
       <section className="employee-workspace">
         <div className="table-toolbar activities-toolbar">
-          <label className="search-field"><span>Search</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Emp ID, name, description" /></label>
+          <label className="search-field"><span>Search</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Emp ID, name, description…" /></label>
           <label><span>Type</span>
             <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
               <option value="All">All Types</option>
-              <option>Accommodation</option><option>Equipment</option><option>Transfer</option>
-              <option>Leave</option><option>Documents</option><option>Other</option>
+              <option>Documents</option><option>Villa Metrics</option><option>Yono App</option>
+              <option>Wifi</option><option>IT</option><option>Leave</option>
+              <option>Transfer</option><option>Meals &amp; Stay</option><option>Other</option>
             </select>
           </label>
-          <label><span>Status</span><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="All">All Statuses</option><option>Open</option><option>In Progress</option><option>Resolved</option><option>Rejected</option></select></label>
+          <label><span>Status</span><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="All">All Statuses</option><option>In Progress</option><option>Resolved</option><option>Rejected</option></select></label>
           <button className="primary-button" type="button" onClick={() => setEditing(newReq())}>+ Add Request</button>
         </div>
         <div className="employee-table-shell compact-scroll">
           <table className="data-table">
             <thead>
               <tr>
-                <th>ID</th><th>Emp ID</th><th>Employee</th><th>Section</th>
+                <th style={{textAlign:'center'}}>Submitted</th>
+                <th>Emp ID</th>
+                <th>Employee</th>
+                <th style={{textAlign:'center'}}>Dept</th>
                 <th style={{textAlign:'center'}}>Type</th>
                 <th style={{textAlign:'center'}}>Priority</th>
                 <th>Description</th>
-                <th style={{textAlign:'center'}}>Submitted</th>
                 <th style={{textAlign:'center'}}>Status</th>
-                <th>Remarks</th>
-                <th style={{textAlign:'center'}}>Actions</th>
+                <th>Action Taken</th>
+                <th style={{textAlign:'center'}}>ID / Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0
-                ? <tr><td colSpan={11} className="empty-row">No requests found</td></tr>
+                ? <tr><td colSpan={10} className="empty-row">No requests found</td></tr>
                 : filtered.map((r) => (
                   <tr key={r.id}>
-                    <td style={{fontSize:'0.75rem', color:'#6b7280'}}>{r.id}</td>
+                    <td style={{textAlign:'center',fontSize:'0.8rem'}}>{formatDateDisplay(r.submittedDate)}</td>
                     <td>{r.employeeId || '—'}</td>
                     <td>{r.employeeName}</td>
-                    <td>{r.department}</td>
+                    <td style={{textAlign:'center'}}>
+                      <span title={r.department} style={{ fontSize:'0.75rem', fontWeight:700, color:'#4338ca', background:'#eef2ff', borderRadius:4, padding:'2px 6px' }}>
+                        {r.department ? deptAbbr(r.department) : '—'}
+                      </span>
+                    </td>
                     <td style={{textAlign:'center'}}><span className="req-type-chip">{r.requestType}</span></td>
                     <td style={{textAlign:'center'}}><span className={`req-priority-badge ${priorityColors[r.priority]}`}>{r.priority}</span></td>
-                    <td>{r.description || '—'}</td>
-                    <td style={{textAlign:'center'}}>{formatDateDisplay(r.submittedDate)}</td>
-                    <td style={{textAlign:'center'}}><StatusBadge status={r.status} /></td>
-                    <td>{r.remarks || '—'}</td>
+                    <td style={{maxWidth:180, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{r.description || '—'}</td>
+                    <td style={{textAlign:'center', position:'relative'}}>
+                      <button type="button" onClick={() => setStatusMenu(statusMenu === r.id ? null : r.id)}
+                        style={{ background:'none', border:'none', cursor:'pointer', padding:0 }}>
+                        <StatusBadge status={r.status} />
+                      </button>
+                      {statusMenu === r.id && (
+                        <div style={{ position:'absolute', top:'100%', left:'50%', transform:'translateX(-50%)', zIndex:20,
+                          background:'#fff', border:'1.5px solid #e2e8f0', borderRadius:8,
+                          boxShadow:'0 4px 14px rgba(0,0,0,0.13)', padding:'4px 0', minWidth:140 }}
+                          onMouseLeave={() => setStatusMenu(null)}>
+                          {(['In Progress','Resolved','Rejected'] as const).map(s => (
+                            <button key={s} type="button" onClick={() => changeStatus(r, s)}
+                              style={{ display:'block', width:'100%', padding:'7px 14px', textAlign:'left', background: r.status===s?'#f1f5f9':'none', border:'none', cursor:'pointer', fontSize:'0.78rem', fontWeight: r.status===s?700:400 }}>
+                              {s}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </td>
+                    <td style={{maxWidth:160, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', color:'#64748b'}}>{r.actionTaken || '—'}</td>
                     <td style={{textAlign:'center'}}>
+                      <div style={{ fontSize:'0.65rem', color:'#9ca3af', marginBottom:2 }}>{r.id}</div>
                       <div className="row-actions">
                         <button className="action-glyph edit" title="Edit" onClick={() => setEditing(r)} type="button">✎</button>
                         <button className="action-glyph delete" title="Delete" onClick={() => del(r.id)} type="button">🗑</button>
@@ -8869,6 +9015,34 @@ function RequestsSection({ records, employees, onUpdate }: {
         </div>
       </section>
       {editing && <StaffRequestModal record={editing} employees={employees} onClose={() => setEditing(null)} onSave={save} />}
+      {resolveModal && (
+        <div className="modal-backdrop" role="presentation">
+          <section className="registration-modal" role="dialog" aria-modal="true" style={{ maxWidth:480 }}>
+            <div className="modal-header">
+              <div><p className="eyebrow">Resolve Request</p><h2>{resolveModal.requestType} — {resolveModal.id}</h2></div>
+              <button className="icon-button" onClick={() => setResolveModal(null)} type="button">×</button>
+            </div>
+            <div style={{ padding:'16px 20px' }}>
+              <p style={{ fontSize:'0.85rem', color:'#374151', marginBottom:12 }}>
+                Confirm marking <strong>{resolveModal.employeeName || resolveModal.employeeId}</strong>'s request as <strong>Resolved</strong>?
+              </p>
+              <label style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                <span style={{ fontSize:'0.78rem', fontWeight:700, color:'#374151' }}>Action Taken <span style={{ fontWeight:400, color:'#94a3b8' }}>(update if needed)</span></span>
+                <textarea value={resolveAction} onChange={e => setResolveAction(e.target.value)}
+                  placeholder="Describe what was done to resolve this request…"
+                  style={{ padding:'8px 10px', borderRadius:8, border:'1.5px solid #e2e8f0', fontSize:'0.85rem', minHeight:80, resize:'vertical', width:'100%', boxSizing:'border-box' }} />
+              </label>
+            </div>
+            <div className="modal-actions">
+              <button className="quiet-button light" onClick={() => setResolveModal(null)} type="button">Cancel</button>
+              <button className="primary-button" type="button" onClick={() => {
+                save({ ...resolveModal, status: 'Resolved', actionTaken: resolveAction, completedDate: new Date().toISOString().slice(0,10) })
+                setResolveModal(null)
+              }}>✓ Confirm Resolved</button>
+            </div>
+          </section>
+        </div>
+      )}
     </>
   )
 }
@@ -8920,15 +9094,16 @@ function VisitsSection({ records, employees, onUpdate }: {
               <tr>
                 <th>#</th><th>Emp ID</th><th>Name</th><th>Section</th>
                 <th>NIC / PP No.</th><th>Nationality</th>
-                <th style={{textAlign:'center'}}>Visit Type</th>
+                <th style={{textAlign:'center', minWidth:160}}>Visit Type</th>
                 <th style={{textAlign:'center'}}>Date</th>
                 <th style={{textAlign:'center'}}>Status</th>
+                <th>Remarks</th>
                 <th style={{textAlign:'center'}}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0
-                ? <tr><td colSpan={10} className="empty-row">No visits found</td></tr>
+                ? <tr><td colSpan={11} className="empty-row">No visits found</td></tr>
                 : filtered.map((r, i) => (
                   <tr key={r.id}>
                     <td style={{textAlign:'center'}}>{i + 1}</td>
@@ -8940,6 +9115,7 @@ function VisitsSection({ records, employees, onUpdate }: {
                     <td style={{textAlign:'center'}}><span className="req-type-chip">{r.visitType}</span></td>
                     <td style={{textAlign:'center'}}>{formatDateDisplay(r.visitDate)}</td>
                     <td style={{textAlign:'center'}}><StatusBadge status={r.status} /></td>
+                    <td style={{maxWidth:200, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', color:'#64748b', fontSize:'0.82rem'}}>{r.remarks || '—'}</td>
                     <td style={{textAlign:'center'}}>
                       <div className="row-actions">
                         <button className="action-glyph edit" title="Edit" onClick={() => setEditing(r)} type="button">✎</button>
@@ -8981,7 +9157,7 @@ function IncidentsSection({ records, employees, onUpdate }: { records: IncidentR
           <label><span>Status</span><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="All">All Statuses</option><option>Open</option><option>Under Review</option><option>Closed</option></select></label>
           <button className="primary-button" type="button" onClick={() => setEditing(newIncident())}>+ Log Incident</button>
         </div>
-        <div className="employee-table-shell compact-scroll"><table className="data-table"><thead><tr><th>Ref No.</th><th>Date</th><th>Time</th><th>Employee</th><th>Section</th><th>Department</th><th>Site / Location</th><th>Type</th><th>Injury</th><th>Statement</th><th>Disciplinary</th><th>Status</th><th>Actions</th></tr></thead>
+        <div className="employee-table-shell compact-scroll"><table className="data-table"><thead><tr><th>Ref No.</th><th>Date</th><th>Time</th><th>Employee</th><th>Section</th><th>Department</th><th>Site / Location</th><th>Type</th><th style={{textAlign:'center'}}>Injury</th><th style={{textAlign:'center'}}>Statement</th><th style={{textAlign:'center'}}>Disciplinary</th><th style={{textAlign:'center'}}>Status</th><th style={{textAlign:'center'}}>Actions</th></tr></thead>
           <tbody>{filtered.length === 0 ? <tr><td colSpan={13} className="empty-row">No incidents found</td></tr> : filtered.map((r) => (
             <tr key={r.id}>
               <td>{r.id}</td>
@@ -9015,11 +9191,7 @@ function IncidentsSection({ records, employees, onUpdate }: { records: IncidentR
               <div className="induction-detail-row"><span>Department</span><strong>{viewing.department || '—'}</strong></div>
               <div className="induction-detail-row"><span>Site / Location</span><strong>{viewing.siteLocation || '—'}</strong></div>
               <div className="induction-detail-row"><span>Summary</span><strong>{viewing.incidentSummary || '—'}</strong></div>
-              <div className="induction-detail-row"><span>Exact Spot</span><strong>{viewing.exactLocation || '—'}</strong></div>
               <div className="induction-detail-row"><span>Immediate Cause</span><strong>{viewing.immediateCause || '—'}</strong></div>
-              <div className="induction-detail-row"><span>Witness</span><strong>{viewing.witnessName || '—'} {viewing.witnessId ? `(${viewing.witnessId})` : ''}</strong></div>
-              <div className="induction-detail-row"><span>Corrective Owner</span><strong>{viewing.correctiveOwner || '—'}</strong></div>
-              <div className="induction-detail-row"><span>Follow-up Date</span><strong>{viewing.followUpDate ? formatDateDisplay(viewing.followUpDate) : '—'}</strong></div>
               <div className="induction-detail-row"><span>Injury Involved</span><strong>{viewing.injuryInvolved ? 'Yes' : 'No'}</strong></div>
               <div className="induction-detail-row"><span>Statement Taken</span><strong>{viewing.statementTaken ? 'Yes' : 'No'}</strong></div>
               <div className="induction-detail-row"><span>Disciplinary</span><strong>{viewing.disciplinaryAction ? 'Yes' : 'No'}</strong></div>
