@@ -4539,12 +4539,11 @@ button.step-pill:hover { filter: brightness(0.98); }
   white-space: nowrap;
 }
 
-/* ── Main 2-col panel grid ────────────────────────────── */
+/* ── Detail panel grid — panels paired by similar natural height ── */
 .ov2-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  align-items: start;
 }
 .ov2-panel {
   background: #fff;
