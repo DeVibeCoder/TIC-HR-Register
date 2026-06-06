@@ -114,6 +114,7 @@ type MeetingRecord = {
   deptUpdates: MeetingDeptUpdate[]
   agendaType?: 'standard' | 'custom'
   customAgenda?: string
+  reviewNotes?: string    // discussion notes for agenda item 1 (optional, backward-compat)
   otherMatters: string
   preparedBy: string
   approvedBy: string
@@ -7167,7 +7168,7 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
       <div style="font-size:9pt;font-weight:800;text-decoration:underline;text-transform:uppercase;margin-bottom:6pt;">
         1. Review of Minutes from the Previous Meeting Held on ${fmtAgendaDate(record.prevMeetingDate)}.
       </div>
-      <div style="font-size:9pt;line-height:1.6;">Highlighted: The minutes from the previous meeting were reviewed and accepted without any changes.</div>
+      <div style="font-size:9pt;line-height:1.6;">${record.reviewNotes?.trim() ? esc(record.reviewNotes.trim()) : 'Highlighted: The minutes from the previous meeting were reviewed and accepted without any changes.'}</div>
     </div>
 
     <div style="margin-bottom:14pt;padding-left:18pt;">
@@ -7235,6 +7236,7 @@ function MeetingFormModal({ record, employees, activeLeaves, onClose, onSave }: 
   const [prevMeetingDate, setPrevMeetingDate] = useState(record.prevMeetingDate ?? '')
   const [agendaType,      setAgendaType]      = useState<'standard'|'custom'>(record.agendaType ?? 'standard')
   const [customAgenda,    setCustomAgenda]    = useState(record.customAgenda ?? '')
+  const [reviewNotes,     setReviewNotes]     = useState(record.reviewNotes ?? '')
   const [otherMatters,    setOtherMatters]    = useState(record.otherMatters)
   const [confirmFinal,    setConfirmFinal]    = useState(false)
 
@@ -7248,7 +7250,7 @@ function MeetingFormModal({ record, employees, activeLeaves, onClose, onSave }: 
     chairperson, status: overrideStatus ?? status,
     preparedBy: FIXED_PREPARED_BY,
     approvedBy, reps, deptUpdates, prevMeetingDate,
-    agendaType, customAgenda, otherMatters
+    agendaType, customAgenda, reviewNotes, otherMatters
   })
 
   const updateRep = (id: string, field: keyof MeetingRep, value: string) =>
@@ -7549,21 +7551,31 @@ function MeetingFormModal({ record, employees, activeLeaves, onClose, onSave }: 
                 </div>
 
                 {agendaType === 'standard' ? (
-                  <div style={{ background:'#f8fafc', border:'1.5px solid #e0e7ff', borderRadius:10, padding:'12px 16px' }}>
-                    <div style={{ fontSize:'0.68rem', fontWeight:700, color:'#4338ca', marginBottom:8, textTransform:'uppercase', letterSpacing:'0.05em' }}>Standard Agenda (printed automatically)</div>
-                    <ol style={{ margin:0, paddingLeft:20, color:'#374151', fontSize:'0.82rem', lineHeight:1.8 }}>
-                      <li>REVIEW OF MINUTES FROM THE PREVIOUS MEETING HELD ON <strong style={{ color:'#7c3aed' }}>
-                        {prevMeetingDate ? (() => {
-                          const months = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER']
-                          const dt = new Date(prevMeetingDate + 'T12:00:00')
-                          const d = dt.getDate()
-                          const ord = (d===1||d===21||d===31)?'st':(d===2||d===22)?'nd':(d===3||d===23)?'rd':'th'
-                          return `${months[dt.getMonth()]} ${d}${ord}, ${dt.getFullYear()}`
-                        })() : '[select date above]'}
-                      </strong>.</li>
-                      <li>DISCUSSION OF ISSUES, UPDATES AND CHALLENGES FACED BY EACH SECTION.</li>
-                      <li>ANY OTHER MATTERS THAT NEED TO BE ADDRESSED…</li>
-                    </ol>
+                  <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+                    <div style={{ background:'#f8fafc', border:'1.5px solid #e0e7ff', borderRadius:10, padding:'12px 16px' }}>
+                      <div style={{ fontSize:'0.68rem', fontWeight:700, color:'#4338ca', marginBottom:8, textTransform:'uppercase', letterSpacing:'0.05em' }}>Standard Agenda (printed automatically)</div>
+                      <ol style={{ margin:0, paddingLeft:20, color:'#374151', fontSize:'0.82rem', lineHeight:1.8 }}>
+                        <li>REVIEW OF MINUTES FROM THE PREVIOUS MEETING HELD ON <strong style={{ color:'#7c3aed' }}>
+                          {prevMeetingDate ? (() => {
+                            const months = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER']
+                            const dt = new Date(prevMeetingDate + 'T12:00:00')
+                            const d = dt.getDate()
+                            const ord = (d===1||d===21||d===31)?'st':(d===2||d===22)?'nd':(d===3||d===23)?'rd':'th'
+                            return `${months[dt.getMonth()]} ${d}${ord}, ${dt.getFullYear()}`
+                          })() : '[select date above]'}
+                        </strong>.</li>
+                        <li>DISCUSSION OF ISSUES, UPDATES AND CHALLENGES FACED BY EACH SECTION.</li>
+                        <li>ANY OTHER MATTERS THAT NEED TO BE ADDRESSED…</li>
+                      </ol>
+                    </div>
+                    {/* Editable discussion notes for agenda item 1 */}
+                    <label style={{ display:'flex', flexDirection:'column', gap:4 }}>
+                      <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151' }}>
+                        Item 1 — Discussion Notes <span style={{ fontWeight:400, color:'#94a3b8' }}>(optional — leave blank for default text)</span>
+                      </span>
+                      <textarea style={{ ...ta, minHeight:72 }} value={reviewNotes} onChange={e => setReviewNotes(e.target.value)}
+                        placeholder="Highlighted: The minutes from the previous meeting were reviewed and accepted without any changes." />
+                    </label>
                   </div>
                 ) : (
                   <label style={{ display:'flex', flexDirection:'column', gap:4 }}>
