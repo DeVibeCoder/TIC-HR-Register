@@ -1140,367 +1140,388 @@ function OverviewPage({
   inventoryItems: InventoryItem[]
   passportHandovers: PassportHandoverRecord[]
 }) {
-  const pendingEmployees = employees.filter((employee) => recordStatus(employee) === 'Pending')
-  const onSite  = employees.filter((e) => e.siteStatus === 'On Site').length
-  const offSite = employees.filter((e) => e.siteStatus === 'Off Site').length
-  const onLeave = employees.filter((e) => e.siteStatus === 'On Leave').length
-  const onSitePct   = employees.length ? Math.round((onSite  / employees.length) * 100) : 0
-  const completePct = employees.length ? Math.round(((employees.length - pendingEmployees.length) / employees.length) * 100) : 0
+  // ── Derived values ───────────────────────────────────────────────────────
+  const onSite   = employees.filter(e => e.siteStatus === 'On Site').length
+  const offSite  = employees.filter(e => e.siteStatus === 'Off Site').length
+  const onLeave  = employees.filter(e => e.siteStatus === 'On Leave').length
+  const pending  = employees.filter(e => recordStatus(e) === 'Pending').length
+  const onSitePct = employees.length ? Math.round((onSite / employees.length) * 100) : 0
+
+  const passWithStaff = passportHandovers.filter(p => p.ppIssuedToStaff && !p.ppReturnedDate).length
+  const passReturned  = passportHandovers.filter(p => p.ppReturnedDate && !p.ppSentToHO).length
+  const passAtHO      = passportHandovers.filter(p => p.ppSentToHO && !p.ppReceivedByHO).length
+  const passComplete  = passportHandovers.filter(p => p.ppReceivedByHO).length
+
+  const lowStock  = inventoryItems.filter(i => i.quantity > 0 && i.quantity <= i.minQuantity).length
+  const outStock  = inventoryItems.filter(i => i.quantity === 0).length
+
+  const urgentMed = medicalCases.filter(m => m.isUrgent).length
+  const admitted  = medicalCases.filter(m => m.isAdmitted && !m.dischargedDate).length
+
+  const exitDone  = exitInterviews.filter(e => !e.skipped).length
+  const exitPct   = exitInterviews.length ? Math.round((exitDone / exitInterviews.length) * 100) : 0
 
   const deptCounts = useMemo(() => {
-    const counts: Record<string, number> = {}
-    employees.forEach((e) => { counts[e.department] = (counts[e.department] ?? 0) + 1 })
-    return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8)
+    const d: Record<string, number> = {}
+    employees.forEach(e => { d[e.department] = (d[e.department] ?? 0) + 1 })
+    return Object.entries(d).sort((a, b) => b[1] - a[1]).slice(0, 7)
   }, [employees])
-  const maxDeptCount = deptCounts[0]?.[1] ?? 1
+  const maxDept = deptCounts[0]?.[1] ?? 1
 
-  const recentLeave = [...leaveRequests].sort((a, b) => b.departureDate.localeCompare(a.departureDate)).slice(0, 5)
+  const recentLeave = [...leaveRequests]
+    .sort((a, b) => b.departureDate.localeCompare(a.departureDate))
+    .slice(0, 5)
 
-  const nationalityCounts = useMemo(() => {
-    const counts: Record<string, number> = {}
-    employees.forEach((e) => { counts[e.nationality] = (counts[e.nationality] ?? 0) + 1 })
-    return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 6)
-  }, [employees])
-  const maxNatCount = nationalityCounts[0]?.[1] ?? 1
-
-  const lowStockItems = inventoryItems.filter(i => i.quantity > 0 && i.quantity <= i.minQuantity)
-  const outOfStock    = inventoryItems.filter(i => i.quantity === 0).length
-  const passHeld      = passportHandovers.filter(p => p.ppIssuedToStaff && !p.ppReturnedDate).length
-  const passSentHO    = passportHandovers.filter(p => p.ppSentToHO && !p.ppReceivedByHO).length
-  const urgentCases   = medicalCases.filter(c => c.isUrgent).length
-  const admittedNow   = medicalCases.filter(c => c.isAdmitted && !c.dischargedDate).length
-  const exitDone      = exitInterviews.filter(e => !e.skipped).length
-  const exitDonePct   = exitInterviews.length ? Math.round((exitDone / exitInterviews.length) * 100) : 0
-
-  const todayStr = new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' })
-
-  const stats = [
-    { value: employees.length,       label: 'Total Staff',  color: '#7c3aed', bg: '#f5f3ff', accent: '#ede9fe', icon: '👥' },
-    { value: onSite,                  label: 'On Site',      color: '#059669', bg: '#f0fdf4', accent: '#bbf7d0', icon: '🟢' },
-    { value: onLeave,                 label: 'On Leave',     color: '#2563eb', bg: '#eff6ff', accent: '#bfdbfe', icon: '✈️' },
-    { value: offSite,                 label: 'Off Site',     color: '#d97706', bg: '#fffbeb', accent: '#fde68a', icon: '🔄' },
-    { value: pendingEmployees.length, label: 'Pending',      color: '#dc2626', bg: '#fef2f2', accent: '#fecaca', icon: '⚠️' },
-    { value: leaveRequests.length,    label: 'Leave Req.',   color: '#0891b2', bg: '#f0f9ff', accent: '#bae6fd', icon: '📋' },
-    { value: activeLeaves.length,     label: 'Active Leave', color: '#7c3aed', bg: '#faf5ff', accent: '#e9d5ff', icon: '🗓' },
-    { value: leaveHistory.length,     label: 'History',      color: '#475569', bg: '#f8fafc', accent: '#e2e8f0', icon: '📁' },
-  ]
+  const todayStr = new Date().toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })
 
   const stageColors: Record<string, string> = {
-    'Letter Submitted':  '#f59e0b',
-    'Exit Interview':    '#8b5cf6',
-    'Ticket':            '#3b82f6',
-    'Pending Departure': '#ef4444',
+    'Letter Submitted': '#f59e0b',
+    'Exit Interview':   '#8b5cf6',
+    'Ticket':           '#3b82f6',
+    'Pending Departure':'#ef4444',
   }
 
+  // ── Alerts: items that need attention ───────────────────────────────────
+  const alerts: { id: string; color: string; bg: string; icon: string; title: string; body: string }[] = []
+  if (outStock > 0)
+    alerts.push({ id:'out-stock', color:'#dc2626', bg:'#fef2f2', icon:'📦',
+      title: outStock + ' item' + (outStock > 1 ? 's' : '') + ' out of stock',
+      body:'Check inventory — reorder required.' })
+  if (lowStock > 0)
+    alerts.push({ id:'low-stock', color:'#d97706', bg:'#fffbeb', icon:'⚠️',
+      title: lowStock + ' item' + (lowStock > 1 ? 's' : '') + ' running low',
+      body:'Stock below reorder level.' })
+  if (urgentMed > 0)
+    alerts.push({ id:'med-urgent', color:'#dc2626', bg:'#fef2f2', icon:'🚨',
+      title: urgentMed + ' urgent medical case' + (urgentMed > 1 ? 's' : ''),
+      body: admitted > 0 ? admitted + ' currently admitted.' : 'Requires follow-up.' })
+  if (pending > 0)
+    alerts.push({ id:'pending', color:'#7c3aed', bg:'#f5f3ff', icon:'📋',
+      title: pending + ' employee record' + (pending > 1 ? 's' : '') + ' incomplete',
+      body:'Missing NIC, Work Permit or other details.' })
+  if (passAtHO > 0)
+    alerts.push({ id:'pass-ho', color:'#2563eb', bg:'#eff6ff', icon:'🛂',
+      title: passAtHO + ' passport' + (passAtHO > 1 ? 's' : '') + ' pending HO confirmation',
+      body:'Awaiting received-by confirmation from HQ.' })
+  if (noticeTerminations.length > 0)
+    alerts.push({ id:'term', color:'#f59e0b', bg:'#fffbeb', icon:'📤',
+      title: noticeTerminations.length + ' active termination' + (noticeTerminations.length > 1 ? 's' : ''),
+      body:'Notices in progress — follow up required.' })
+
   return (
-    <section className="nx-overview ov2-wrap">
+    <section className="dash-wrap">
 
-      {/* ── Header ── */}
-      <div className="ov2-header">
-        <div className="ov2-header-deco" />
-        <div className="ov2-header-deco2" />
-        <div className="ov2-header-left">
-          <p className="ov2-eyebrow">Thilafushi Industrial Complex · HR Operations</p>
-          <h1 className="ov2-title">HR Overview</h1>
-          <p className="ov2-date">{todayStr}</p>
+      {/* ── Hero bar ─────────────────────────────────────────────────── */}
+      <div className="dash-hero">
+        <div className="dash-hero-left">
+          <p className="dash-eyebrow">Thilafushi Industrial Complex</p>
+          <h1 className="dash-title">HR Dashboard</h1>
+          <p className="dash-date">{todayStr}</p>
         </div>
-        <div className="ov2-header-kpis">
-          <div className="ov2-kpi"><span className="ov2-kpi-val">{onSitePct}%</span><span className="ov2-kpi-lbl">On Site</span></div>
-          <div className="ov2-kpi-divider" />
-          <div className="ov2-kpi"><span className="ov2-kpi-val">{completePct}%</span><span className="ov2-kpi-lbl">Records Complete</span></div>
-          <div className="ov2-kpi-divider" />
-          <div className="ov2-kpi"><span className="ov2-kpi-val">{employees.length}</span><span className="ov2-kpi-lbl">Total Staff</span></div>
+        <div className="dash-kpis">
+          <div className="dash-kpi">
+            <span className="dash-kpi-val">{employees.length}</span>
+            <span className="dash-kpi-lbl">Total Staff</span>
+          </div>
+          <div className="dash-kpi-sep" />
+          <div className="dash-kpi">
+            <span className="dash-kpi-val" style={{ color:'#10b981' }}>{onSite}</span>
+            <span className="dash-kpi-lbl">On Site</span>
+          </div>
+          <div className="dash-kpi-sep" />
+          <div className="dash-kpi">
+            <span className="dash-kpi-val" style={{ color:'#3b82f6' }}>{onLeave}</span>
+            <span className="dash-kpi-lbl">On Leave</span>
+          </div>
+          <div className="dash-kpi-sep" />
+          <div className="dash-kpi">
+            <span className="dash-kpi-val" style={{ color: pending ? '#dc2626' : '#94a3b8' }}>{pending}</span>
+            <span className="dash-kpi-lbl">Pending</span>
+          </div>
         </div>
       </div>
 
-      {/* ── Stat strip ── */}
-      <div className="ov2-strip">
-        {stats.map(({ value, label, color, bg, accent, icon }) => (
-          <div key={label} className="ov2-card" style={{ '--ov-color': color, '--ov-bg': bg, '--ov-accent': accent } as React.CSSProperties}>
-            <div className="ov2-card-top">
-              <span className="ov2-card-icon">{icon}</span>
-              <strong className="ov2-card-val">{value}</strong>
+      {/* ── Alerts row ───────────────────────────────────────────────── */}
+      {alerts.length > 0 && (
+        <div className="dash-alerts">
+          {alerts.map(a => (
+            <div key={a.id} className="dash-alert-card" style={{ '--da-color': a.color, '--da-bg': a.bg } as React.CSSProperties}>
+              <span className="da-icon">{a.icon}</span>
+              <div className="da-text">
+                <span className="da-title">{a.title}</span>
+                <span className="da-body">{a.body}</span>
+              </div>
             </div>
-            <span className="ov2-card-lbl">{label}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* ── Mini-strip (4 uniform summary cards) ── */}
-      <div className="ov-mini-strip">
-
-        <div className="ov-mini-card" style={{ '--mc-accent':'#f59e0b', '--mc-bg':'#fffbeb' } as React.CSSProperties}>
-          <div className="ov-mini-header"><span className="ov-mini-icon">📤</span><span className="ov-mini-label">Terminations</span></div>
-          <div className="ov-mini-body"><strong className="ov-mini-val">{noticeTerminations.length}</strong><span className="ov-mini-sub">active notices</span></div>
-          <div className="ov-mini-footer">
-            <span>{completedTerminations.length} completed</span>
-            {noticeTerminations.length > 0 && <span className="ov-mini-tag" style={{ background:'#fef3c7', color:'#92400e' }}>{noticeTerminations[0]?.currentStage}</span>}
-          </div>
+          ))}
         </div>
+      )}
 
-        <div className="ov-mini-card" style={{ '--mc-accent': urgentCases ? '#ef4444' : '#0891b2', '--mc-bg': urgentCases ? '#fef2f2' : '#f0f9ff' } as React.CSSProperties}>
-          <div className="ov-mini-header"><span className="ov-mini-icon">🏥</span><span className="ov-mini-label">Medical Cases</span></div>
-          <div className="ov-mini-body"><strong className="ov-mini-val">{medicalCases.length}</strong><span className="ov-mini-sub">total recorded</span></div>
-          <div className="ov-mini-footer"><span>{urgentCases} urgent</span><span>{admittedNow} admitted</span></div>
-        </div>
+      {/* ── Main grid ────────────────────────────────────────────────── */}
+      <div className="dash-grid">
 
-        <div className="ov-mini-card" style={{ '--mc-accent':'#7c3aed', '--mc-bg':'#f5f3ff' } as React.CSSProperties}>
-          <div className="ov-mini-header"><span className="ov-mini-icon">🛂</span><span className="ov-mini-label">Passports</span></div>
-          <div className="ov-mini-body"><strong className="ov-mini-val">{passportHandovers.length}</strong><span className="ov-mini-sub">tracked</span></div>
-          <div className="ov-mini-footer"><span>{passHeld} with staff</span><span>{passSentHO} at HO</span></div>
-        </div>
+        {/* LEFT COLUMN */}
+        <div className="dash-col">
 
-        <div className="ov-mini-card" style={{ '--mc-accent':'#059669', '--mc-bg':'#f0fdf4' } as React.CSSProperties}>
-          <div className="ov-mini-header"><span className="ov-mini-icon">📝</span><span className="ov-mini-label">Exit Interviews</span></div>
-          <div className="ov-mini-body"><strong className="ov-mini-val">{exitDonePct}%</strong><span className="ov-mini-sub">completion rate</span></div>
-          <div className="ov-mini-footer"><span>{exitDone} done</span><span>{exitInterviews.filter(e=>e.skipped).length} skipped</span></div>
-        </div>
-
-      </div>
-
-      {/* ── Detail panels — one 2-col grid, panels paired by similar natural height ── */}
-      <div className="ov2-grid">
-
-        {/* ROW 1 — both are compact bar/chart panels ── */}
-
-        {/* Site Presence */}
-        <article className="ov2-panel">
-          <div className="ov2-panel-hd">
-            <span className="ov2-panel-ttl">Site Presence</span>
-            <span className="ov2-chip" style={{ background:'#ede9fe', color:'#6d28d9' }}>{onSitePct}% on site</span>
-          </div>
-          <div className="ov2-presence-bar">
-            <div style={{ width:`${onSitePct}%`, background:'#10b981', transition:'width 0.6s' }} title={`On Site: ${onSite}`} />
-            <div style={{ width:`${employees.length ? Math.round((onLeave/employees.length)*100) : 0}%`, background:'#3b82f6', transition:'width 0.6s' }} title={`On Leave: ${onLeave}`} />
-            <div style={{ width:`${employees.length ? Math.round((offSite/employees.length)*100) : 0}%`, background:'#f59e0b', transition:'width 0.6s' }} title={`Off Site: ${offSite}`} />
-          </div>
-          <div className="ov2-presence-legend">
-            {[['#10b981','On Site',onSite],['#3b82f6','On Leave',onLeave],['#f59e0b','Off Site',offSite]].map(([c,l,v])=>(
-              <div key={l as string} className="ov2-presence-item">
-                <span className="ov2-dot" style={{ background: c as string }} />
-                <div>
-                  <div className="ov2-presence-val">{v as number}</div>
-                  <div className="ov2-presence-lbl">{l as string}</div>
+          {/* Staff Presence */}
+          <article className="dash-panel">
+            <div className="dash-panel-hd">
+              <span className="dash-panel-ttl">Staff Presence</span>
+              <span className="dash-chip" style={{ background:'#f0fdf4', color:'#166534' }}>{onSitePct}% on site</span>
+            </div>
+            <div className="dash-presence-bar">
+              <div style={{ flex: onSite  || 0.01, background:'#10b981' }} title={'On Site: ' + onSite} />
+              <div style={{ flex: onLeave || 0.01, background:'#3b82f6' }} title={'On Leave: ' + onLeave} />
+              <div style={{ flex: offSite || 0.01, background:'#f59e0b' }} title={'Off Site: ' + offSite} />
+            </div>
+            <div className="dash-presence-legend">
+              {[['#10b981','On Site',onSite],['#3b82f6','On Leave',onLeave],['#f59e0b','Off Site',offSite]].map(([col,lbl,val]) => (
+                <div key={lbl as string} className="dash-legend-item">
+                  <span className="dash-dot" style={{ background: col as string }} />
+                  <span className="dash-legend-val">{val as number}</span>
+                  <span className="dash-legend-lbl">{lbl as string}</span>
                 </div>
-              </div>
-            ))}
-          </div>
-        </article>
+              ))}
+            </div>
+          </article>
 
-        {/* Nationality Snapshot — also compact bars, pairs well with Site Presence */}
-        <article className="ov2-panel">
-          <div className="ov2-panel-hd">
-            <span className="ov2-panel-ttl">Nationality Snapshot</span>
-            <span className="ov2-chip" style={{ background:'#f0fdf4', color:'#166534' }}>{nationalityCounts.length} nationalities</span>
-          </div>
-          {nationalityCounts.length === 0
-            ? <p className="ov-empty">No employees added yet.</p>
-            : <div style={{ marginTop:6 }}>
-                {nationalityCounts.map(([nat, cnt]) => (
-                  <div key={nat} style={{ display:'grid', gridTemplateColumns:'minmax(90px,1fr) 1fr 26px', alignItems:'center', gap:'5px 10px', marginBottom:7 }}>
-                    <span style={{ fontSize:'0.76rem', color:'#374151', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{nat}</span>
-                    <div style={{ height:8, borderRadius:4, background:'#f1f5f9', overflow:'hidden' }}>
-                      <div style={{ height:'100%', width:`${Math.round((cnt/maxNatCount)*100)}%`, background:'#6366f1', borderRadius:4, transition:'width 0.5s' }} />
-                    </div>
-                    <span style={{ fontSize:'0.76rem', fontWeight:700, color:'#4f46e5', textAlign:'right' }}>{cnt}</span>
-                  </div>
-                ))}
-              </div>
-          }
-        </article>
-
-        {/* ROW 2 — both are medium bar/list panels ── */}
-
-        {/* Employees by Section */}
-        <article className="ov2-panel">
-          <div className="ov2-panel-hd">
-            <span className="ov2-panel-ttl">Employees by Section</span>
-            <span className="ov2-chip" style={{ background:'#ede9fe', color:'#6d28d9' }}>{deptCounts.length} sections</span>
-          </div>
-          {deptCounts.length === 0
-            ? <p className="ov-empty">No section data yet.</p>
-            : <div className="ov-dept-bars" style={{ marginTop:8 }}>
-                {deptCounts.map(([dept, count]) => (
-                  <div className="dept-bar-item" key={dept}>
-                    <span className="dept-bar-label">{dept}</span>
-                    <div className="dept-bar-track"><div className="dept-bar-fill" style={{ width:`${Math.round((count/maxDeptCount)*100)}%` }} /></div>
-                    <span className="dept-bar-count">{count}</span>
-                  </div>
-                ))}
-              </div>
-          }
-        </article>
-
-        {/* Passport Tracking — stat boxes + list, similar medium height */}
-        <article className="ov2-panel">
-          <div className="ov2-panel-hd">
-            <span className="ov2-panel-ttl">Passport Tracking</span>
-            <span className="ov2-chip" style={{ background:'#f5f3ff', color:'#6d28d9' }}>{passportHandovers.length} tracked</span>
-          </div>
-          {passportHandovers.length === 0
-            ? <p className="ov-empty">No passports tracked yet.</p>
-            : <>
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:6, margin:'4px 0 10px' }}>
-                  {[
-                    { label:'With Staff', val: passHeld, c:'#2563eb', bg:'#eff6ff' },
-                    { label:'Returned',  val: passportHandovers.filter(p=>p.ppReturnedDate&&!p.ppSentToHO).length, c:'#d97706', bg:'#fffbeb' },
-                    { label:'At HO',     val: passSentHO,                                                        c:'#7c3aed', bg:'#f5f3ff' },
-                  ].map(s => (
-                    <div key={s.label} style={{ textAlign:'center', padding:'7px 4px', background:s.bg, borderRadius:8, border:`1px solid ${s.c}30` }}>
-                      <div style={{ fontSize:'1.15rem', fontWeight:800, color:s.c }}>{s.val}</div>
-                      <div style={{ fontSize:'0.64rem', color:'#64748b', marginTop:1 }}>{s.label}</div>
+          {/* Employees by Section */}
+          <article className="dash-panel">
+            <div className="dash-panel-hd">
+              <span className="dash-panel-ttl">Employees by Section</span>
+              <span className="dash-chip" style={{ background:'#ede9fe', color:'#6d28d9' }}>{deptCounts.length} sections</span>
+            </div>
+            {deptCounts.length === 0
+              ? <p className="dash-empty">No employees added yet.</p>
+              : <div className="dash-bars" style={{ marginTop: 6 }}>
+                  {deptCounts.map(([dept, cnt]) => (
+                    <div key={dept} className="dash-bar-row">
+                      <span className="dash-bar-lbl">{dept}</span>
+                      <div className="dash-bar-track">
+                        <div className="dash-bar-fill" style={{ width: Math.round((cnt/maxDept)*100) + '%' }} />
+                      </div>
+                      <span className="dash-bar-num">{cnt}</span>
                     </div>
                   ))}
                 </div>
-                {passportHandovers.slice(0, 5).map(p => (
-                  <div key={p.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'5px 0', borderBottom:'1px solid #f1f5f9', gap:8 }}>
-                    <div style={{ minWidth:0 }}>
-                      <div style={{ fontSize:'0.78rem', fontWeight:700, color:'#0f172a', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{p.name}</div>
-                      <div style={{ fontSize:'0.67rem', color:'#64748b' }}>{p.department}</div>
-                    </div>
-                    <span style={{ fontSize:'0.68rem', fontWeight:700, padding:'2px 8px', borderRadius:20, flexShrink:0,
-                      color:       p.ppReceivedByHO?'#16a34a':p.ppSentToHO?'#7c3aed':p.ppReturnedDate?'#d97706':'#2563eb',
-                      background:  p.ppReceivedByHO?'#dcfce7':p.ppSentToHO?'#f5f3ff':p.ppReturnedDate?'#fffbeb':'#eff6ff' }}>
-                      {p.ppReceivedByHO?'Complete':p.ppSentToHO?'Sent to HO':p.ppReturnedDate?'Returned':'With Staff'}
-                    </span>
-                  </div>
-                ))}
-                {passportHandovers.length > 5 && <p style={{ fontSize:'0.7rem', color:'#94a3b8', marginTop:6 }}>+{passportHandovers.length - 5} more</p>}
-              </>
-          }
-        </article>
+            }
+          </article>
 
-        {/* ROW 3 — both are variable-height list panels ── */}
-
-        {/* Record Completion */}
-        <article className="ov2-panel">
-          <div className="ov2-panel-hd">
-            <span className="ov2-panel-ttl">Record Completion</span>
-            {employees.length > 0 && (
-              <span className="ov2-chip" style={{ background: pendingEmployees.length?'#fee2e2':'#dcfce7', color: pendingEmployees.length?'#dc2626':'#15803d' }}>
-                {pendingEmployees.length} pending
-              </span>
-            )}
-          </div>
-          {employees.length === 0
-            ? <p className="ov-empty">No employees added yet.</p>
-            : <>
-                <div className="ov2-progress-row">
-                  <div className="ov2-progress-track"><div className="ov2-progress-fill" style={{ width:`${completePct}%` }} /></div>
-                  <span className="ov2-progress-pct">{completePct}%</span>
+          {/* Leave Activity */}
+          <article className="dash-panel">
+            <div className="dash-panel-hd">
+              <span className="dash-panel-ttl">Leave Activity</span>
+              <span className="dash-chip" style={{ background:'#f0f9ff', color:'#0284c7' }}>{leaveRequests.length} requests</span>
+            </div>
+            <div className="dash-leave-counts">
+              {[
+                { lbl:'Requests', val: leaveRequests.length,  c:'#0891b2', bg:'#f0f9ff' },
+                { lbl:'Active',   val: activeLeaves.length,   c:'#7c3aed', bg:'#f5f3ff' },
+                { lbl:'History',  val: leaveHistory.length,   c:'#475569', bg:'#f8fafc' },
+              ].map(s => (
+                <div key={s.lbl} className="dash-mini-stat" style={{ '--msc': s.c, '--msb': s.bg } as React.CSSProperties}>
+                  <span className="dms-val">{s.val}</span>
+                  <span className="dms-lbl">{s.lbl}</span>
                 </div>
-                <div className="ov2-progress-labels">
-                  <span>✓ {employees.length - pendingEmployees.length} complete</span>
-                  <span>{pendingEmployees.length} pending</span>
-                </div>
-                {pendingEmployees.length > 0 && (
-                  <ul className="ov2-pending-list">
-                    {pendingEmployees.slice(0, 5).map((e) => (
-                      <li key={e.employeeId}>
-                        <span>{e.fullName || 'Unnamed'}</span>
-                        <small>{getPendingTasks(e).slice(0, 2).join(', ')}</small>
-                      </li>
-                    ))}
-                    {pendingEmployees.length > 5 && <li className="ov2-more">+{pendingEmployees.length - 5} more</li>}
-                  </ul>
-                )}
-              </>
-          }
-        </article>
-
-        {/* Active Terminations — also a list panel, similar height to Record Completion */}
-        <article className="ov2-panel">
-          <div className="ov2-panel-hd">
-            <span className="ov2-panel-ttl">Active Terminations</span>
-            <span className="ov2-chip" style={{ background:'#fef3c7', color:'#92400e' }}>{noticeTerminations.length} in progress</span>
-          </div>
-          {noticeTerminations.length === 0
-            ? <p className="ov-empty">No active termination notices.</p>
-            : <div style={{ marginTop:4 }}>
-                {noticeTerminations.slice(0, 5).map(t => (
-                  <div key={t.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'6px 0', borderBottom:'1px solid #f1f5f9', gap:8 }}>
-                    <div style={{ minWidth:0 }}>
-                      <div style={{ fontSize:'0.78rem', fontWeight:700, color:'#0f172a', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{t.name}</div>
-                      <div style={{ fontSize:'0.67rem', color:'#64748b' }}>{t.department}</div>
-                    </div>
-                    <span style={{ fontSize:'0.68rem', fontWeight:700, padding:'2px 8px', borderRadius:20, flexShrink:0,
-                      background: (stageColors[t.currentStage] || '#94a3b8') + '20',
-                      color:      stageColors[t.currentStage] || '#64748b' }}>
-                      {t.currentStage}
-                    </span>
-                  </div>
-                ))}
-                {noticeTerminations.length > 5 && <p style={{ fontSize:'0.7rem', color:'#94a3b8', marginTop:6 }}>+{noticeTerminations.length - 5} more</p>}
-                <div style={{ marginTop:8, paddingTop:6, borderTop:'1px solid #f1f5f9', fontSize:'0.68rem', color:'#64748b' }}>
-                  ✓ {completedTerminations.length} completed all time
-                </div>
-              </div>
-          }
-        </article>
-
-        {/* ROW 4 — both are list panels ── */}
-
-        {/* Recent Leave */}
-        <article className="ov2-panel">
-          <div className="ov2-panel-hd">
-            <span className="ov2-panel-ttl">Recent Leave Requests</span>
-            <span className="ov2-chip" style={{ background:'#f0f9ff', color:'#0284c7' }}>{leaveRequests.length} total</span>
-          </div>
-          {recentLeave.length === 0
-            ? <p className="ov-empty">No leave requests yet.</p>
-            : <ul className="ov2-leave-list">
-                {recentLeave.map((r) => (
-                  <li key={r.id}>
-                    <div className="ov2-leave-info">
-                      <span>{r.name}</span>
-                      <small>{r.department} · {leaveTypeLabel(r.leaveTypeCode)} · {formatDateDisplay(r.departureDate)}</small>
+              ))}
+            </div>
+            {recentLeave.length > 0 && (
+              <div className="dash-leave-list">
+                {recentLeave.map(r => (
+                  <div key={r.id} className="dash-leave-row">
+                    <div className="dash-leave-info">
+                      <span className="dash-leave-name">{r.name}</span>
+                      <span className="dash-leave-meta">{leaveTypeLabel(r.leaveTypeCode)} · {formatDateDisplay(r.departureDate)}</span>
                     </div>
                     <StatusBadge status={r.step} />
-                  </li>
+                  </div>
                 ))}
-              </ul>
-          }
-        </article>
+              </div>
+            )}
+          </article>
 
-        {/* Inventory Status — also a list panel */}
-        <article className="ov2-panel">
-          <div className="ov2-panel-hd">
-            <span className="ov2-panel-ttl">Inventory Status</span>
-            <span className="ov2-chip" style={{
-              background: outOfStock ? '#fef2f2' : lowStockItems.length ? '#fffbeb' : '#f0fdf4',
-              color:       outOfStock ? '#dc2626' : lowStockItems.length ? '#92400e' : '#166534',
-            }}>
-              {outOfStock > 0 ? `${outOfStock} out of stock` : lowStockItems.length > 0 ? `${lowStockItems.length} low stock` : 'All stocked'}
-            </span>
-          </div>
-          {inventoryItems.length === 0
-            ? <p className="ov-empty">No inventory items added yet.</p>
-            : outOfStock === 0 && lowStockItems.length === 0
-              ? <p className="ov-empty" style={{ color:'#16a34a' }}>✓ All {inventoryItems.length} items are sufficiently stocked.</p>
-              : <div style={{ marginTop:4 }}>
-                  {inventoryItems.filter(i => i.quantity === 0).slice(0, 3).map(i => (
-                    <div key={i.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'6px 0', borderBottom:'1px solid #f1f5f9' }}>
-                      <div>
-                        <div style={{ fontSize:'0.78rem', fontWeight:700, color:'#dc2626' }}>{i.name}</div>
-                        <div style={{ fontSize:'0.67rem', color:'#94a3b8' }}>{i.category} · {i.location}</div>
-                      </div>
-                      <span style={{ fontSize:'0.7rem', fontWeight:800, color:'#dc2626', background:'#fef2f2', padding:'2px 8px', borderRadius:20 }}>OUT</span>
-                    </div>
-                  ))}
-                  {lowStockItems.slice(0, 5).map(i => (
-                    <div key={i.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'6px 0', borderBottom:'1px solid #f1f5f9' }}>
-                      <div>
-                        <div style={{ fontSize:'0.78rem', fontWeight:600, color:'#374151' }}>{i.name}</div>
-                        <div style={{ fontSize:'0.67rem', color:'#94a3b8' }}>{i.category} · min {i.minQuantity} {i.unit}</div>
-                      </div>
-                      <span style={{ fontSize:'0.7rem', fontWeight:700, color:'#d97706', background:'#fffbeb', padding:'2px 8px', borderRadius:20 }}>{i.quantity} {i.unit}</span>
-                    </div>
-                  ))}
+        </div>
+
+        {/* RIGHT COLUMN */}
+        <div className="dash-col">
+
+          {/* Passport Tracker */}
+          <article className="dash-panel">
+            <div className="dash-panel-hd">
+              <span className="dash-panel-ttl">Passport Tracker</span>
+              <span className="dash-chip" style={{ background:'#f5f3ff', color:'#6d28d9' }}>{passportHandovers.length} tracked</span>
+            </div>
+            <div className="dash-pp-stats">
+              {[
+                { lbl:'With Staff', val: passWithStaff, c:'#2563eb', bg:'#eff6ff' },
+                { lbl:'Returned',   val: passReturned,  c:'#d97706', bg:'#fffbeb' },
+                { lbl:'At HO',      val: passAtHO,      c:'#7c3aed', bg:'#f5f3ff' },
+                { lbl:'Complete',   val: passComplete,  c:'#16a34a', bg:'#dcfce7' },
+              ].map(s => (
+                <div key={s.lbl} className="dash-pp-stat" style={{ '--ppc': s.c, '--ppb': s.bg } as React.CSSProperties}>
+                  <span className="dpp-val">{s.val}</span>
+                  <span className="dpp-lbl">{s.lbl}</span>
                 </div>
-          }
-        </article>
+              ))}
+            </div>
+            {passportHandovers.length > 0 && (
+              <div className="dash-pp-list">
+                {passportHandovers.slice(0, 5).map(p => (
+                  <div key={p.id} className="dash-pp-row">
+                    <div className="dash-pp-info">
+                      <span className="dash-pp-name">{p.name}</span>
+                      <span className="dash-pp-dept">{p.department}</span>
+                    </div>
+                    <span className="dash-pp-badge" style={{
+                      color:      p.ppReceivedByHO ? '#16a34a' : p.ppSentToHO ? '#7c3aed' : p.ppReturnedDate ? '#d97706' : '#2563eb',
+                      background: p.ppReceivedByHO ? '#dcfce7' : p.ppSentToHO ? '#f5f3ff' : p.ppReturnedDate ? '#fffbeb' : '#eff6ff',
+                    }}>
+                      {p.ppReceivedByHO ? 'Complete' : p.ppSentToHO ? 'At HO' : p.ppReturnedDate ? 'Returned' : 'With Staff'}
+                    </span>
+                  </div>
+                ))}
+                {passportHandovers.length > 5 && <p className="dash-more">+{passportHandovers.length - 5} more</p>}
+              </div>
+            )}
+          </article>
 
+          {/* Inventory Health */}
+          <article className="dash-panel">
+            <div className="dash-panel-hd">
+              <span className="dash-panel-ttl">Inventory Health</span>
+              <span className="dash-chip" style={{
+                background: outStock ? '#fef2f2' : lowStock ? '#fffbeb' : '#f0fdf4',
+                color:       outStock ? '#dc2626' : lowStock ? '#92400e' : '#166534',
+              }}>
+                {outStock > 0 ? (outStock + ' out of stock') : lowStock > 0 ? (lowStock + ' low stock') : 'All stocked'}
+              </span>
+            </div>
+            <div className="dash-inv-counts">
+              {[
+                { lbl:'Total Items',  val: inventoryItems.length, c:'#475569', bg:'#f8fafc' },
+                { lbl:'Low Stock',    val: lowStock,  c: lowStock  ? '#d97706' : '#94a3b8', bg: lowStock  ? '#fffbeb' : '#f8fafc' },
+                { lbl:'Out of Stock', val: outStock,  c: outStock  ? '#dc2626' : '#94a3b8', bg: outStock  ? '#fef2f2' : '#f8fafc' },
+              ].map(s => (
+                <div key={s.lbl} className="dash-mini-stat" style={{ '--msc': s.c, '--msb': s.bg } as React.CSSProperties}>
+                  <span className="dms-val">{s.val}</span>
+                  <span className="dms-lbl">{s.lbl}</span>
+                </div>
+              ))}
+            </div>
+            {(outStock > 0 || lowStock > 0) && (
+              <div className="dash-inv-alerts">
+                {inventoryItems.filter(i => i.quantity === 0).slice(0, 2).map(i => (
+                  <div key={i.id} className="dash-inv-row">
+                    <span className="dash-inv-name">{i.name}</span>
+                    <span className="dash-inv-badge" style={{ color:'#dc2626', background:'#fef2f2' }}>OUT</span>
+                  </div>
+                ))}
+                {inventoryItems.filter(i => i.quantity > 0 && i.quantity <= i.minQuantity).slice(0, 3).map(i => (
+                  <div key={i.id} className="dash-inv-row">
+                    <span className="dash-inv-name">{i.name}</span>
+                    <span className="dash-inv-badge" style={{ color:'#d97706', background:'#fffbeb' }}>{i.quantity} {i.unit}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {outStock === 0 && lowStock === 0 && inventoryItems.length > 0 && (
+              <p className="dash-ok">{'✓ All ' + inventoryItems.length + ' items sufficiently stocked.'}</p>
+            )}
+          </article>
+
+          {/* Terminations + Medical */}
+          <div className="dash-row-pair">
+
+            <article className="dash-panel">
+              <div className="dash-panel-hd">
+                <span className="dash-panel-ttl">Terminations</span>
+                <span className="dash-chip" style={{ background:'#fef3c7', color:'#92400e' }}>{noticeTerminations.length} active</span>
+              </div>
+              {noticeTerminations.length === 0
+                ? <p className="dash-empty">No active notices.</p>
+                : <div className="dash-term-list">
+                    {noticeTerminations.slice(0, 4).map(t => (
+                      <div key={t.id} className="dash-term-row">
+                        <span className="dash-term-name">{t.name.split(' ')[0]}</span>
+                        <span className="dash-term-stage" style={{
+                          color:       stageColors[t.currentStage] || '#64748b',
+                          background: (stageColors[t.currentStage] || '#94a3b8') + '20',
+                        }}>{t.currentStage}</span>
+                      </div>
+                    ))}
+                  </div>
+              }
+              <div className="dash-term-footer">{'✓ ' + completedTerminations.length + ' completed'}</div>
+            </article>
+
+            <article className="dash-panel">
+              <div className="dash-panel-hd">
+                <span className="dash-panel-ttl">Medical Cases</span>
+                <span className="dash-chip" style={{ background: urgentMed ? '#fef2f2' : '#f0f9ff', color: urgentMed ? '#dc2626' : '#0284c7' }}>
+                  {urgentMed > 0 ? (urgentMed + ' urgent') : (medicalCases.length + ' total')}
+                </span>
+              </div>
+              <div className="dash-med-counts">
+                <div className="dash-mini-stat" style={{ '--msc':'#475569', '--msb':'#f8fafc' } as React.CSSProperties}>
+                  <span className="dms-val">{medicalCases.length}</span>
+                  <span className="dms-lbl">Total</span>
+                </div>
+                <div className="dash-mini-stat" style={{ '--msc': urgentMed ? '#dc2626' : '#94a3b8', '--msb': urgentMed ? '#fef2f2' : '#f8fafc' } as React.CSSProperties}>
+                  <span className="dms-val">{urgentMed}</span>
+                  <span className="dms-lbl">Urgent</span>
+                </div>
+                <div className="dash-mini-stat" style={{ '--msc': admitted ? '#7c3aed' : '#94a3b8', '--msb': admitted ? '#f5f3ff' : '#f8fafc' } as React.CSSProperties}>
+                  <span className="dms-val">{admitted}</span>
+                  <span className="dms-lbl">Admitted</span>
+                </div>
+              </div>
+            </article>
+
+          </div>
+
+          {/* Record Health + Exit Interviews */}
+          <div className="dash-row-pair">
+
+            <article className="dash-panel">
+              <div className="dash-panel-hd">
+                <span className="dash-panel-ttl">Record Health</span>
+                <span className="dash-chip" style={{ background: pending ? '#fef2f2' : '#dcfce7', color: pending ? '#dc2626' : '#166534' }}>
+                  {pending + ' pending'}
+                </span>
+              </div>
+              <div className="dash-rh-bar">
+                <div className="dash-rh-track">
+                  <div className="dash-rh-fill" style={{ width: employees.length ? ((employees.length - pending) / employees.length * 100) + '%' : '0%' }} />
+                </div>
+                <span className="dash-rh-pct">{employees.length ? Math.round((employees.length - pending) / employees.length * 100) : 0}%</span>
+              </div>
+              <div className="dash-rh-labels">
+                <span>{'✓ ' + (employees.length - pending) + ' complete'}</span>
+                <span>{pending + ' missing fields'}</span>
+              </div>
+            </article>
+
+            <article className="dash-panel">
+              <div className="dash-panel-hd">
+                <span className="dash-panel-ttl">Exit Interviews</span>
+                <span className="dash-chip" style={{ background:'#f0fdf4', color:'#166534' }}>{exitPct}% done</span>
+              </div>
+              <div className="dash-rh-bar">
+                <div className="dash-rh-track">
+                  <div className="dash-rh-fill" style={{ width: exitPct + '%', background:'#22c55e' }} />
+                </div>
+                <span className="dash-rh-pct">{exitPct}%</span>
+              </div>
+              <div className="dash-rh-labels">
+                <span>{'✓ ' + exitDone + ' done'}</span>
+                <span>{exitInterviews.filter(e => e.skipped).length + ' skipped'}</span>
+              </div>
+            </article>
+
+          </div>
+
+        </div>
       </div>
+
     </section>
   )
 }
