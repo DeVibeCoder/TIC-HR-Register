@@ -9,7 +9,6 @@ type PageSize = 50 | 100 | 'All'
 type LeaveTypeCode = 'AL' | 'FRL' | 'NP' | 'PT' | 'CC'
 type LeaveRequestStep = 'Letter Submitted' | 'Approved' | 'Dates Shared' | 'Ticket Booked' | 'Pending Departure'
 type HistoryConfirmation = 'Returned' | 'Not Returned'
-type PassportStep = 'Issued' | 'Collected' | 'Sent to HO'
 
 type Employee = {
   employeeId: string
@@ -74,13 +73,25 @@ type LeaveHistoryRecord = LeaveBase & {
   originalDays?: number
 }
 
-type PassportHandoverRecord = LeaveBase & {
-  passportStep: PassportStep
-  givenDate?: string
-  returnedDate?: string
-  sentToHoDate?: string
+type PassportRecord = {
+  id: string
+  date: string
+  employeeId: string
+  name: string
+  department: string
+  nationality: string
+  ppNo: string
+  receivedFromHO: string
+  purpose: string
+  ppIssuedToStaff: string
+  ppReturnedDate: string
+  receivedBy: string
+  ppSentToHO: string
+  ppHandoverPerson: string
+  ppReceivedByHO: string
   remarks: string
 }
+type PassportHandoverRecord = PassportRecord
 
 type OpsSection = 'files' | 'induction' | 'training' | 'bank' | 'meetings'
 
@@ -178,7 +189,7 @@ type TrainingRecord = {
 
 type ActivitiesSection = 'requests' | 'visits' | 'incidents' | 'passport' | 'inventory'
 
-type InventoryCategory = 'Stationery' | 'Medical'
+type InventoryCategory = 'Stationery' | 'Medical' | 'Refresher'
 
 type InventoryItem = {
   id: string
@@ -203,6 +214,20 @@ type InventoryUsageRecord = {
   department: string
   usedDate: string
   purpose: string
+  remarks: string
+}
+
+type StoreOrderItem = { itemId: string; itemName: string; quantity: number; unit: string }
+type StoreOrder = {
+  id: string
+  orderDate: string
+  orderedBy: string
+  orderType: 'Store Order' | 'Bulk Request'
+  category: InventoryCategory
+  items: StoreOrderItem[]
+  status: 'Pending' | 'Received' | 'Partial'
+  receivedDate: string
+  receivedBy: string
   remarks: string
 }
 
@@ -464,7 +489,6 @@ const leaveTypeOptions: Array<{ code: LeaveTypeCode; label: string }> = [
 ]
 
 const requestSteps: LeaveRequestStep[] = ['Letter Submitted', 'Approved', 'Dates Shared', 'Ticket Booked', 'Pending Departure']
-const passportSteps: PassportStep[] = ['Issued', 'Collected', 'Sent to HO']
 
 const baseEmployees: Employee[] = [
   { employeeId: '35494', fullName: 'GAMARALALAGE AJITH WIJESIRI', department: 'ACCOUNTS AND FINANCE', designation: 'SENIOR ACCOUNTANT', nationality: 'SRI LANKAN', nicPassportNo: 'N5521034', workPermitNo: 'WP-35494', dateOfJoin: '2007-06-01', mobileNo: '7771234', dateOfBirth: '1978-03-14', passportStatus: 'Valid', siteStatus: 'On Site', gender: 'Male' },
@@ -579,13 +603,22 @@ const initialLeaveHistory: LeaveHistoryRecord[] = [
   },
 ]
 
-const initialPassportHandovers: PassportHandoverRecord[] = [
-  { id: 'PP-2026-001', employeeId: '56646', name: 'CHANDRASHEKHER PURELLA', department: 'ACCOUNTS AND FINANCE', nationality: 'INDIA', leaveTypeCode: 'AL', departureDate: '2026-04-28', returnDate: '2026-05-28', days: 30, passportStep: 'Sent to HO', givenDate: '2026-04-20', returnedDate: '', sentToHoDate: '2026-04-25', remarks: 'Passport submitted to Head Office for visa stamping' },
-  { id: 'PP-2026-002', employeeId: '43407', name: 'MOHAMMAD DELOWAR HOSSAIN', department: 'STORES', nationality: 'BANGLADESH', leaveTypeCode: 'AL', departureDate: '2026-05-01', returnDate: '2026-06-01', days: 31, passportStep: 'Collected', givenDate: '2026-04-24', returnedDate: '2026-06-03', sentToHoDate: '', remarks: 'Collected on return from leave' },
-  { id: 'PP-2026-003', employeeId: '50427', name: 'MD SAIFUR RAHMAN', department: 'STORES', nationality: 'BANGLADESH', leaveTypeCode: 'AL', departureDate: '2026-06-20', returnDate: '2026-07-20', days: 30, passportStep: 'Issued', givenDate: '2026-06-15', returnedDate: '', sentToHoDate: '', remarks: 'Passport issued for upcoming leave' },
-  { id: 'PP-2025-001', employeeId: '57637', name: 'MUNI ACHARI GUNTI KOVALA', department: 'CAFE', nationality: 'INDIA', leaveTypeCode: 'AL', departureDate: '2025-11-01', returnDate: '2025-12-01', days: 30, passportStep: 'Collected', givenDate: '2025-10-25', returnedDate: '2025-12-04', sentToHoDate: '', remarks: '' },
+const initialPassportHandovers: PassportRecord[] = [
+  { id:'PP-2601-01', date:'2026-01-10', employeeId:'52527', name:'JAYASURYA SEKAR', department:'STORES', nationality:'INDIA', ppNo:'S9955670', receivedFromHO:'2026-01-10', purpose:'AL', ppIssuedToStaff:'2026-01-11', ppReturnedDate:'2026-02-20', receivedBy:'SHANTUMON', ppSentToHO:'2026-02-25', ppHandoverPerson:'MANOJ LAKSHITHA', ppReceivedByHO:'SONU', remarks:'' },
+  { id:'PP-2601-02', date:'2026-01-10', employeeId:'53979', name:'NAVEEN SEKAR', department:'STORES', nationality:'INDIA', ppNo:'U7007933', receivedFromHO:'2026-01-10', purpose:'AL', ppIssuedToStaff:'2026-01-11', ppReturnedDate:'2026-02-20', receivedBy:'SHANTUMON', ppSentToHO:'2026-02-25', ppHandoverPerson:'MANOJ LAKSHITHA', ppReceivedByHO:'SONU', remarks:'' },
+  { id:'PP-2601-03', date:'2026-01-10', employeeId:'34847', name:'ANOWAR', department:'STORES', nationality:'BANGLADESH', ppNo:'A12538258', receivedFromHO:'2026-01-10', purpose:'AL', ppIssuedToStaff:'2026-01-13', ppReturnedDate:'2026-02-21', receivedBy:'SHANTUMON', ppSentToHO:'2026-02-25', ppHandoverPerson:'MANOJ LAKSHITHA', ppReceivedByHO:'SONU', remarks:'' },
+  { id:'PP-2601-04', date:'2026-01-10', employeeId:'54368', name:'SASIKUMAR SUDALAIYANDI', department:'CEMENT PLANT', nationality:'INDIA', ppNo:'U5709386', receivedFromHO:'2026-01-10', purpose:'AL', ppIssuedToStaff:'2026-01-14', ppReturnedDate:'2026-02-23', receivedBy:'SHANTUMON', ppSentToHO:'2026-02-25', ppHandoverPerson:'MANOJ LAKSHITHA', ppReceivedByHO:'SONU', remarks:'' },
+  { id:'PP-2601-05', date:'2026-01-10', employeeId:'52807', name:'MD SHAKIL AHMED', department:'MAINTENANCE', nationality:'BANGLADESH', ppNo:'A03797308', receivedFromHO:'2026-01-10', purpose:'AL', ppIssuedToStaff:'2026-01-17', ppReturnedDate:'', receivedBy:'', ppSentToHO:'', ppHandoverPerson:'', ppReceivedByHO:'', remarks:'' },
+  { id:'PP-2601-06', date:'2026-01-10', employeeId:'55484', name:'SAHIL CHETTRI', department:'LOSS PREVENTION', nationality:'INDIA', ppNo:'X5707789', receivedFromHO:'2026-01-10', purpose:'AL', ppIssuedToStaff:'2026-01-17', ppReturnedDate:'2026-03-07', receivedBy:'SHANTUMON', ppSentToHO:'2026-03-26', ppHandoverPerson:'JOEL BURGAIN', ppReceivedByHO:'SONU', remarks:'' },
+  { id:'PP-2601-07', date:'2026-01-19', employeeId:'', name:'MD ALI', department:'ADMINISTRATION', nationality:'BANGLADESH', ppNo:'A19565772', receivedFromHO:'', purpose:'New Staff', ppIssuedToStaff:'', ppReturnedDate:'2026-01-19', receivedBy:'SHANTUMON', ppSentToHO:'2026-01-20', ppHandoverPerson:'SHANTUMON', ppReceivedByHO:'SONU', remarks:'' },
+  { id:'PP-2601-08', date:'2026-01-19', employeeId:'', name:'MD MARUF', department:'ADMINISTRATION', nationality:'BANGLADESH', ppNo:'A13578328', receivedFromHO:'', purpose:'New Staff', ppIssuedToStaff:'', ppReturnedDate:'2026-01-19', receivedBy:'SHANTUMON', ppSentToHO:'2026-01-20', ppHandoverPerson:'SHANTUMON', ppReceivedByHO:'SONU', remarks:'' },
+  { id:'PP-2601-09', date:'2026-01-19', employeeId:'', name:'SAYEM MOLLIK', department:'STORES', nationality:'BANGLADESH', ppNo:'A19033234', receivedFromHO:'', purpose:'New Staff', ppIssuedToStaff:'', ppReturnedDate:'2026-01-19', receivedBy:'SHANTUMON', ppSentToHO:'2026-01-20', ppHandoverPerson:'SHANTUMON', ppReceivedByHO:'SONU', remarks:'' },
+  { id:'PP-2601-10', date:'2026-01-19', employeeId:'', name:'EMON AHMED', department:'STORES', nationality:'BANGLADESH', ppNo:'A06396736', receivedFromHO:'', purpose:'New Staff', ppIssuedToStaff:'', ppReturnedDate:'2026-01-19', receivedBy:'SHANTUMON', ppSentToHO:'2026-01-20', ppHandoverPerson:'SHANTUMON', ppReceivedByHO:'SONU', remarks:'' },
+  { id:'PP-2601-11', date:'2026-01-19', employeeId:'', name:'LEWIS MARK ELISHA', department:'MAINTENANCE', nationality:'INDIA', ppNo:'N10584559', receivedFromHO:'', purpose:'New Staff', ppIssuedToStaff:'', ppReturnedDate:'2026-01-19', receivedBy:'SHANTUMON', ppSentToHO:'2026-01-20', ppHandoverPerson:'SHANTUMON', ppReceivedByHO:'SONU', remarks:'' },
+  { id:'PP-2601-12', date:'2026-01-20', employeeId:'', name:'RASHVIN VETRIVEL', department:'MAINTENANCE', nationality:'INDIA', ppNo:'W0825786', receivedFromHO:'', purpose:'New Staff', ppIssuedToStaff:'', ppReturnedDate:'', receivedBy:'SHANTUMON', ppSentToHO:'', ppHandoverPerson:'IRNAS', ppReceivedByHO:'', remarks:'' },
+  { id:'PP-2601-13', date:'2026-01-20', employeeId:'', name:'POLGAMPOLA RALALAGE NIMESH SUDARSHANA', department:'MAINTENANCE', nationality:'SRI LANKAN', ppNo:'N7037718', receivedFromHO:'', purpose:'New Staff', ppIssuedToStaff:'', ppReturnedDate:'2026-01-20', receivedBy:'SHANTUMON', ppSentToHO:'2026-01-20', ppHandoverPerson:'SHANTUMON', ppReceivedByHO:'SONU', remarks:'' },
+  { id:'PP-2602-01', date:'2026-02-10', employeeId:'57464', name:'JEGATHEESHWARAN CHIKKANNAN', department:'MECHANICAL', nationality:'INDIA', ppNo:'T6614920', receivedFromHO:'2026-02-15', purpose:'AL', ppIssuedToStaff:'2026-02-19', ppReturnedDate:'', receivedBy:'', ppSentToHO:'', ppHandoverPerson:'', ppReceivedByHO:'', remarks:'' },
 ]
-
 const initialNoticeTerminations: EnhancedTerminationRecord[] = [
   { id: 'TERM-2026-001', employeeId: '57637', name: 'MUNI ACHARI GUNTI KOVALA', department: 'CAFE', designation: 'COOK', nationality: 'INDIA', passportNo: 'T6678234', wpNo: 'WP-57637', dateOfJoin: '2022-09-10', dateSubmitted: '2026-05-01', lastWorkingDate: '2026-05-31', departureDate: '2026-06-05', currentStage: 'Exit Interview', reasonForLeaving: 'Resigned to pursue better opportunity back home', satisfactionRating: 3, rehireEligible: true, exitInterviewCompleted: false, comments: 'Good performance throughout tenure', terminationType: 'Resignation' },
   { id: 'TERM-2026-002', employeeId: '55427', name: 'SARAVANAN RAJENDRAN', department: 'STORES', designation: 'STOREKEEPER', nationality: 'INDIA', passportNo: 'T6678902', wpNo: 'WP-55427', dateOfJoin: '2021-04-20', dateSubmitted: '2026-05-10', lastWorkingDate: '2026-06-09', departureDate: '2026-06-12', currentStage: 'Letter Submitted', reasonForLeaving: 'Contract expired — not renewing', satisfactionRating: 0, rehireEligible: true, exitInterviewCompleted: false, comments: '', terminationType: 'Contract Expiry' },
@@ -820,30 +853,56 @@ const initialStaffRequests: StaffRequestRecord[] = [
 const initialOffSiteRecords: OffSiteRecord[] = []
 
 const initialInventoryItems: InventoryItem[] = [
-  // Stationery
-  { id: 'INV-001', name: 'A4 Paper (500 sheets)', category: 'Stationery', quantity: 25, unit: 'reams', minQuantity: 5, location: 'HR Storeroom', lastUpdated: '2026-05-20', remarks: '' },
-  { id: 'INV-006', name: 'Printer Cartridge (HP Black)', category: 'Stationery', quantity: 4, unit: 'pcs', minQuantity: 2, location: 'HR Office', lastUpdated: '2026-05-18', remarks: '' },
-  { id: 'INV-007', name: 'Ball Pen (Blue)', category: 'Stationery', quantity: 120, unit: 'pcs', minQuantity: 30, location: 'HR Storeroom', lastUpdated: '2026-04-25', remarks: '' },
-  { id: 'INV-010', name: 'Stapler', category: 'Stationery', quantity: 7, unit: 'pcs', minQuantity: 2, location: 'HR Office', lastUpdated: '2026-03-15', remarks: '' },
-  { id: 'INV-013', name: 'Stamp Pad & Ink', category: 'Stationery', quantity: 3, unit: 'pcs', minQuantity: 1, location: 'HR Office', lastUpdated: '2026-04-01', remarks: '' },
-  // Medical
-  { id: 'INV-005', name: 'First Aid Kit (Standard)', category: 'Medical', quantity: 8, unit: 'kits', minQuantity: 3, location: 'Various Departments', lastUpdated: '2026-05-10', remarks: 'Check expiry dates monthly' },
-  { id: 'INV-008', name: 'Disposable Gloves (Box 100)', category: 'Medical', quantity: 3, unit: 'boxes', minQuantity: 5, location: 'Safety Store', lastUpdated: '2026-05-22', remarks: 'LOW STOCK — reorder required' },
-  { id: 'INV-014', name: 'Bandages (Assorted)', category: 'Medical', quantity: 20, unit: 'rolls', minQuantity: 10, location: 'Loss Prevention Office', lastUpdated: '2026-05-01', remarks: 'For first aid boxes' },
-  { id: 'INV-015', name: 'Antiseptic Solution (500ml)', category: 'Medical', quantity: 6, unit: 'bottles', minQuantity: 3, location: 'Loss Prevention Office', lastUpdated: '2026-04-15', remarks: 'Dettol' },
-  { id: 'INV-016', name: 'Paracetamol Tablets (Strip)', category: 'Medical', quantity: 30, unit: 'strips', minQuantity: 10, location: 'HR Office', lastUpdated: '2026-05-05', remarks: 'For basic first aid only' },
+  // ─── Stationery ─────────────────────────────────────────────────────────
+  { id:'ST-001', name:'A4 Paper', category:'Stationery', quantity:20, unit:'reams', minQuantity:5, location:'HR Storeroom', lastUpdated:'2026-05-20', remarks:'500 sheets per ream' },
+  { id:'ST-002', name:'Printer Cartridge (HP Black)', category:'Stationery', quantity:3, unit:'pcs', minQuantity:2, location:'HR Office', lastUpdated:'2026-05-18', remarks:'' },
+  { id:'ST-003', name:'Ball Pen (Blue)', category:'Stationery', quantity:80, unit:'pcs', minQuantity:20, location:'HR Storeroom', lastUpdated:'2026-04-25', remarks:'' },
+  { id:'ST-004', name:'Staples', category:'Stationery', quantity:6, unit:'boxes', minQuantity:2, location:'HR Office', lastUpdated:'2026-04-10', remarks:'Standard 26/6 size' },
+  { id:'ST-005', name:'Tissue Box', category:'Stationery', quantity:4, unit:'boxes', minQuantity:2, location:'HR Office', lastUpdated:'2026-05-01', remarks:'' },
+  { id:'ST-006', name:'Face Mask', category:'Stationery', quantity:50, unit:'pcs', minQuantity:20, location:'HR Office', lastUpdated:'2026-05-15', remarks:'Surgical 3-ply' },
+  { id:'ST-007', name:'Stapler', category:'Stationery', quantity:5, unit:'pcs', minQuantity:2, location:'HR Office', lastUpdated:'2026-03-15', remarks:'Non-consumable' },
+  { id:'ST-008', name:'Paper Punch', category:'Stationery', quantity:3, unit:'pcs', minQuantity:1, location:'HR Office', lastUpdated:'2026-03-01', remarks:'Non-consumable' },
+  { id:'ST-009', name:'Stamp Pad & Ink', category:'Stationery', quantity:2, unit:'pcs', minQuantity:1, location:'HR Office', lastUpdated:'2026-04-01', remarks:'Non-consumable' },
+  { id:'ST-010', name:'Whiteboard Marker', category:'Stationery', quantity:8, unit:'pcs', minQuantity:4, location:'HR Office', lastUpdated:'2026-05-05', remarks:'' },
+  // ─── Medical ────────────────────────────────────────────────────────────
+  { id:'MD-001', name:'Panadol (500mg)', category:'Medical', quantity:60, unit:'tablets', minQuantity:20, location:'HR Office', lastUpdated:'2026-05-10', remarks:'For basic first aid. Do not dispense directly.' },
+  { id:'MD-002', name:'Dolo 650 (650mg)', category:'Medical', quantity:40, unit:'tablets', minQuantity:15, location:'HR Office', lastUpdated:'2026-05-10', remarks:'High-dose paracetamol' },
+  { id:'MD-003', name:'Penadine (Cough Syrup)', category:'Medical', quantity:8, unit:'bottles', minQuantity:3, location:'HR Office', lastUpdated:'2026-05-01', remarks:'100ml bottles' },
+  { id:'MD-004', name:'Pantaz (Pantoprazole 40mg)', category:'Medical', quantity:30, unit:'tablets', minQuantity:10, location:'HR Office', lastUpdated:'2026-05-01', remarks:'For acidity/gastric' },
+  { id:'MD-005', name:'Betadine (Antiseptic)', category:'Medical', quantity:5, unit:'bottles', minQuantity:2, location:'HR Office', lastUpdated:'2026-04-20', remarks:'100ml bottles' },
+  { id:'MD-006', name:'Dettol (Antiseptic Liquid)', category:'Medical', quantity:4, unit:'bottles', minQuantity:2, location:'HR Office', lastUpdated:'2026-04-20', remarks:'500ml bottles' },
+  { id:'MD-007', name:'Cotton (Absorbent)', category:'Medical', quantity:8, unit:'rolls', minQuantity:3, location:'HR Office', lastUpdated:'2026-04-15', remarks:'' },
+  { id:'MD-008', name:'Bandage', category:'Medical', quantity:15, unit:'rolls', minQuantity:5, location:'HR Office', lastUpdated:'2026-05-01', remarks:'Assorted sizes' },
+  { id:'MD-009', name:'Plaster (Band-Aid)', category:'Medical', quantity:3, unit:'boxes', minQuantity:1, location:'HR Office', lastUpdated:'2026-04-10', remarks:'Box of 100' },
+  { id:'MD-010', name:'Eno (Antacid Sachets)', category:'Medical', quantity:20, unit:'sachets', minQuantity:8, location:'HR Office', lastUpdated:'2026-05-05', remarks:'' },
+  { id:'MD-011', name:'Strepsils (Throat Lozenges)', category:'Medical', quantity:6, unit:'packs', minQuantity:2, location:'HR Office', lastUpdated:'2026-05-05', remarks:'16-lozenge packs' },
+  { id:'MD-012', name:'Sunlyte ORS Sachets', category:'Medical', quantity:25, unit:'sachets', minQuantity:10, location:'HR Office', lastUpdated:'2026-05-05', remarks:'Oral rehydration salts' },
+  // ─── Refresher ──────────────────────────────────────────────────────────
+  { id:'RF-001', name:'Coffee Powder', category:'Refresher', quantity:3, unit:'tins', minQuantity:1, location:'HR Office', lastUpdated:'2026-05-28', remarks:'200g tins' },
+  { id:'RF-002', name:'Tea Bags', category:'Refresher', quantity:2, unit:'boxes', minQuantity:1, location:'HR Office', lastUpdated:'2026-05-28', remarks:'Box of 100' },
+  { id:'RF-003', name:'Milo Powder', category:'Refresher', quantity:2, unit:'tins', minQuantity:1, location:'HR Office', lastUpdated:'2026-05-20', remarks:'400g tins' },
+  { id:'RF-004', name:'Powdered Milk', category:'Refresher', quantity:4, unit:'sachets', minQuantity:2, location:'HR Office', lastUpdated:'2026-05-20', remarks:'Coffeemate sachets' },
+  { id:'RF-005', name:'Sugar', category:'Refresher', quantity:2, unit:'kg', minQuantity:1, location:'HR Office', lastUpdated:'2026-05-25', remarks:'' },
+  { id:'RF-006', name:'Disposable Cups', category:'Refresher', quantity:80, unit:'pcs', minQuantity:30, location:'HR Office', lastUpdated:'2026-05-22', remarks:'' },
+  { id:'RF-007', name:'Plastic Spoons', category:'Refresher', quantity:50, unit:'pcs', minQuantity:20, location:'HR Office', lastUpdated:'2026-05-22', remarks:'' },
 ]
 const initialInventoryUsage: InventoryUsageRecord[] = [
-  { id: 'USG-001', itemId: 'INV-008', itemName: 'Disposable Gloves (Box 100)', quantityUsed: 2, unit: 'boxes', usedBy: 'ABHISHEK CHETRY', employeeId: '55426', department: 'LOSS PREVENTION', usedDate: '2026-05-20', purpose: 'First aid box restock — Loss Prevention', remarks: '' },
-  { id: 'USG-002', itemId: 'INV-001', itemName: 'A4 Paper (500 sheets)', quantityUsed: 3, unit: 'reams', usedBy: 'SHANTUMON PATHIYIL CHACKO', employeeId: '58692', department: 'HUMAN RESOURCES', usedDate: '2026-05-18', purpose: 'HR documentation printing', remarks: '' },
-  { id: 'USG-003', itemId: 'INV-005', itemName: 'First Aid Kit (Standard)', quantityUsed: 1, unit: 'kits', usedBy: 'ABHISHEK CHETRY', employeeId: '55426', department: 'LOSS PREVENTION', usedDate: '2026-05-27', purpose: 'Worksite injury response — replaced used kit', remarks: '' },
-  { id: 'USG-004', itemId: 'INV-016', itemName: 'Paracetamol Tablets (Strip)', quantityUsed: 5, unit: 'strips', usedBy: 'ARUSHULLA RASHID', employeeId: '61245', department: 'LOSS PREVENTION', usedDate: '2026-05-10', purpose: 'Distributed to security first aid boxes', remarks: '' },
-  { id: 'USG-005', itemId: 'INV-006', itemName: 'Printer Cartridge (HP Black)', quantityUsed: 1, unit: 'pcs', usedBy: 'ARUSHULLA RASHID', employeeId: '61245', department: 'HUMAN RESOURCES', usedDate: '2026-05-10', purpose: 'HR printer replacement', remarks: '' },
-  { id: 'USG-006', itemId: 'INV-014', itemName: 'Bandages (Assorted)', quantityUsed: 4, unit: 'rolls', usedBy: 'SURESH BAHADUR THAPA', employeeId: '60104', department: 'LOSS PREVENTION', usedDate: '2026-05-27', purpose: 'Knee injury dressing — worksite injury', remarks: '' },
-  { id: 'USG-007', itemId: 'INV-015', itemName: 'Antiseptic Solution (500ml)', quantityUsed: 1, unit: 'bottles', usedBy: 'ABHISHEK CHETRY', employeeId: '55426', department: 'LOSS PREVENTION', usedDate: '2026-04-30', purpose: 'First aid box refill', remarks: '' },
-  { id: 'USG-008', itemId: 'INV-007', itemName: 'Ball Pen (Blue)', quantityUsed: 20, unit: 'pcs', usedBy: 'SHANTUMON PATHIYIL CHACKO', employeeId: '58692', department: 'HUMAN RESOURCES', usedDate: '2026-04-25', purpose: 'Office stationery distribution', remarks: '' },
+  { id:'USG-001', itemId:'ST-001', itemName:'A4 Paper', quantityUsed:3, unit:'reams', usedBy:'SHANTUMON PATHIYIL CHACKO', employeeId:'58692', department:'HUMAN RESOURCES', usedDate:'2026-05-18', purpose:'HR documentation printing', remarks:'' },
+  { id:'USG-002', itemId:'ST-002', itemName:'Printer Cartridge (HP Black)', quantityUsed:1, unit:'pcs', usedBy:'SHANTUMON PATHIYIL CHACKO', employeeId:'58692', department:'HUMAN RESOURCES', usedDate:'2026-05-10', purpose:'HR printer replacement', remarks:'' },
+  { id:'USG-003', itemId:'ST-003', itemName:'Ball Pen (Blue)', quantityUsed:20, unit:'pcs', usedBy:'SHANTUMON PATHIYIL CHACKO', employeeId:'58692', department:'HUMAN RESOURCES', usedDate:'2026-04-25', purpose:'Office stationery distribution', remarks:'' },
+  { id:'USG-004', itemId:'MD-007', itemName:'Cotton (Absorbent)', quantityUsed:2, unit:'rolls', usedBy:'ABHISHEK CHETRY', employeeId:'55426', department:'LOSS PREVENTION', usedDate:'2026-05-27', purpose:'First aid box restock — Loss Prevention', remarks:'Issued to LP first aid box' },
+  { id:'USG-005', itemId:'MD-008', itemName:'Bandage', quantityUsed:3, unit:'rolls', usedBy:'ABHISHEK CHETRY', employeeId:'55426', department:'LOSS PREVENTION', usedDate:'2026-05-27', purpose:'Knee injury dressing — worksite', remarks:'Issued to LP first aid box' },
+  { id:'USG-006', itemId:'MD-005', itemName:'Betadine (Antiseptic)', quantityUsed:1, unit:'bottles', usedBy:'ABHISHEK CHETRY', employeeId:'55426', department:'LOSS PREVENTION', usedDate:'2026-04-30', purpose:'First aid box refill', remarks:'Issued to LP first aid box' },
+  { id:'USG-007', itemId:'MD-001', itemName:'Panadol (500mg)', quantityUsed:10, unit:'tablets', usedBy:'ABHISHEK CHETRY', employeeId:'55426', department:'LOSS PREVENTION', usedDate:'2026-05-10', purpose:'Distributed to security first aid boxes', remarks:'Issued to LP first aid box' },
+  { id:'USG-008', itemId:'RF-001', itemName:'Coffee Powder', quantityUsed:1, unit:'tins', usedBy:'SHANTUMON PATHIYIL CHACKO', employeeId:'58692', department:'HUMAN RESOURCES', usedDate:'2026-05-15', purpose:'Office refreshment', remarks:'' },
+  { id:'USG-009', itemId:'RF-006', itemName:'Disposable Cups', quantityUsed:20, unit:'pcs', usedBy:'SHANTUMON PATHIYIL CHACKO', employeeId:'58692', department:'HUMAN RESOURCES', usedDate:'2026-05-22', purpose:'Office use', remarks:'' },
 ]
-
+const initialStoreOrders: StoreOrder[] = [
+  { id:'ORD-001', orderDate:'2026-05-05', orderedBy:'SHANTUMON PATHIYIL CHACKO', orderType:'Store Order', category:'Medical', items:[{ itemId:'MD-007', itemName:'Cotton (Absorbent)', quantity:10, unit:'rolls' }, { itemId:'MD-008', itemName:'Bandage', quantity:20, unit:'rolls' }, { itemId:'MD-009', itemName:'Plaster (Band-Aid)', quantity:5, unit:'boxes' }], status:'Received', receivedDate:'2026-05-07', receivedBy:'SHANTUMON PATHIYIL CHACKO', remarks:'Monthly medical restock' },
+  { id:'ORD-002', orderDate:'2026-05-20', orderedBy:'SHANTUMON PATHIYIL CHACKO', orderType:'Store Order', category:'Stationery', items:[{ itemId:'ST-001', itemName:'A4 Paper', quantity:20, unit:'reams' }, { itemId:'ST-003', itemName:'Ball Pen (Blue)', quantity:100, unit:'pcs' }], status:'Received', receivedDate:'2026-05-22', receivedBy:'SHANTUMON PATHIYIL CHACKO', remarks:'' },
+  { id:'ORD-003', orderDate:'2026-06-02', orderedBy:'SHANTUMON PATHIYIL CHACKO', orderType:'Store Order', category:'Medical', items:[{ itemId:'MD-001', itemName:'Panadol (500mg)', quantity:100, unit:'tablets' }, { itemId:'MD-012', itemName:'Sunlyte ORS Sachets', quantity:30, unit:'sachets' }], status:'Pending', receivedDate:'', receivedBy:'', remarks:'Low stock reorder' },
+  { id:'ORD-004', orderDate:'2026-06-05', orderedBy:'SHANTUMON PATHIYIL CHACKO', orderType:'Bulk Request', category:'Refresher', items:[{ itemId:'RF-001', itemName:'Coffee Powder', quantity:6, unit:'tins' }, { itemId:'RF-002', itemName:'Tea Bags', quantity:4, unit:'boxes' }, { itemId:'RF-003', itemName:'Milo Powder', quantity:4, unit:'tins' }], status:'Pending', receivedDate:'', receivedBy:'', remarks:'Not available at main store — bulk purchase request' },
+]
 const initialVisitRecords: VisitRecord[] = [
   { id: 'VIS-2026-001', employeeId: '56646', employeeName: 'CHANDRASHEKHER PURELLA', department: 'ACCOUNTS AND FINANCE', nicPassportNo: 'T8890124', nationality: 'INDIA', visitType: 'Visa Medical', visitDate: '2026-04-10', status: 'Completed', remarks: 'Pre-visa medical for India embassy — passed' },
   { id: 'VIS-2026-002', employeeId: '50427', employeeName: 'MD SAIFUR RAHMAN', department: 'STORES', nicPassportNo: 'BP2233445', nationality: 'BANGLADESH', visitType: 'Passport Renewal', visitDate: '2026-06-18', status: 'Scheduled', remarks: 'Passport expires Aug 2026 — renewal booked at Bangladesh Embassy' },
@@ -1106,8 +1165,8 @@ function OverviewPage({
 
   const lowStockItems = inventoryItems.filter(i => i.quantity > 0 && i.quantity <= i.minQuantity)
   const outOfStock    = inventoryItems.filter(i => i.quantity === 0).length
-  const passHeld      = passportHandovers.filter(p => p.passportStep === 'Collected').length
-  const passSentHO    = passportHandovers.filter(p => p.passportStep === 'Sent to HO').length
+  const passHeld      = passportHandovers.filter(p => p.ppIssuedToStaff && !p.ppReturnedDate).length
+  const passSentHO    = passportHandovers.filter(p => p.ppSentToHO && !p.ppReceivedByHO).length
   const urgentCases   = medicalCases.filter(c => c.isUrgent).length
   const admittedNow   = medicalCases.filter(c => c.isAdmitted && !c.dischargedDate).length
   const exitDone      = exitInterviews.filter(e => !e.skipped).length
@@ -1188,7 +1247,7 @@ function OverviewPage({
         <div className="ov-mini-card" style={{ '--mc-accent':'#7c3aed', '--mc-bg':'#f5f3ff' } as React.CSSProperties}>
           <div className="ov-mini-header"><span className="ov-mini-icon">🛂</span><span className="ov-mini-label">Passports</span></div>
           <div className="ov-mini-body"><strong className="ov-mini-val">{passportHandovers.length}</strong><span className="ov-mini-sub">tracked</span></div>
-          <div className="ov-mini-footer"><span>{passHeld} held</span><span>{passSentHO} at HO</span></div>
+          <div className="ov-mini-footer"><span>{passHeld} with staff</span><span>{passSentHO} at HO</span></div>
         </div>
 
         <div className="ov-mini-card" style={{ '--mc-accent':'#059669', '--mc-bg':'#f0fdf4' } as React.CSSProperties}>
@@ -1283,8 +1342,8 @@ function OverviewPage({
             : <>
                 <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:6, margin:'4px 0 10px' }}>
                   {[
-                    { label:'Issued',    val: passportHandovers.filter(p=>p.passportStep==='Issued').length,    c:'#2563eb', bg:'#eff6ff' },
-                    { label:'Collected', val: passHeld,                                                          c:'#d97706', bg:'#fffbeb' },
+                    { label:'With Staff', val: passHeld, c:'#2563eb', bg:'#eff6ff' },
+                    { label:'Returned',  val: passportHandovers.filter(p=>p.ppReturnedDate&&!p.ppSentToHO).length, c:'#d97706', bg:'#fffbeb' },
                     { label:'At HO',     val: passSentHO,                                                        c:'#7c3aed', bg:'#f5f3ff' },
                   ].map(s => (
                     <div key={s.label} style={{ textAlign:'center', padding:'7px 4px', background:s.bg, borderRadius:8, border:`1px solid ${s.c}30` }}>
@@ -1300,9 +1359,9 @@ function OverviewPage({
                       <div style={{ fontSize:'0.67rem', color:'#64748b' }}>{p.department}</div>
                     </div>
                     <span style={{ fontSize:'0.68rem', fontWeight:700, padding:'2px 8px', borderRadius:20, flexShrink:0,
-                      color:       p.passportStep==='Issued'?'#2563eb':p.passportStep==='Collected'?'#d97706':'#7c3aed',
-                      background:  p.passportStep==='Issued'?'#eff6ff':p.passportStep==='Collected'?'#fffbeb':'#f5f3ff' }}>
-                      {p.passportStep}
+                      color:       p.ppReceivedByHO?'#16a34a':p.ppSentToHO?'#7c3aed':p.ppReturnedDate?'#d97706':'#2563eb',
+                      background:  p.ppReceivedByHO?'#dcfce7':p.ppSentToHO?'#f5f3ff':p.ppReturnedDate?'#fffbeb':'#eff6ff' }}>
+                      {p.ppReceivedByHO?'Complete':p.ppSentToHO?'Sent to HO':p.ppReturnedDate?'Returned':'With Staff'}
                     </span>
                   </div>
                 ))}
@@ -2254,142 +2313,259 @@ function LeaveFormModal({
 }
 
 function PassportHandoverModal({
-  record,
-  employees,
-  onClose,
-  onSave,
+  record, employees, onClose, onSave,
 }: {
-  record: PassportHandoverRecord
+  record: PassportRecord
   employees: Employee[]
   onClose: () => void
-  onSave: (record: PassportHandoverRecord) => void
+  onSave: (r: PassportRecord) => void
 }) {
-  const [employeeId, setEmployeeId] = useState(record.employeeId)
-  const [leaveTypeCode, setLeaveTypeCode] = useState<LeaveTypeCode>(record.leaveTypeCode)
-  const [departureDate, setDepartureDate] = useState(record.departureDate)
-  const [returnDate, setReturnDate] = useState(record.returnDate)
-  const [passportStep, setPassportStep] = useState<PassportStep>(record.passportStep)
-  const [givenDate, setGivenDate] = useState(record.givenDate ?? '')
-  const [returnedDate, setReturnedDate] = useState(record.returnedDate ?? '')
-  const [sentToHoDate, setSentToHoDate] = useState(record.sentToHoDate ?? '')
-  const [remarks, setRemarks] = useState(record.remarks ?? '')
+  const isNew = record.id.startsWith('PP-new')
+  const [empSearch, setEmpSearch] = useState(record.name ? (record.employeeId ? `${record.name} (${record.employeeId})` : record.name) : '')
+  const [showEmpDrop, setShowEmpDrop] = useState(false)
+  const [empId,          setEmpId]          = useState(record.employeeId)
+  const [name,           setName]           = useState(record.name)
+  const [dept,           setDept]           = useState(record.department)
+  const [nat,            setNat]            = useState(record.nationality)
+  const [ppNo,           setPpNo]           = useState(record.ppNo)
+  const [date,           setDate]           = useState(record.date || new Date().toISOString().slice(0,10))
+  const [purpose,        setPurpose]        = useState(record.purpose || 'AL')
+  const [recvFromHO,     setRecvFromHO]     = useState(record.receivedFromHO)
+  const [issuedToStaff,  setIssuedToStaff]  = useState(record.ppIssuedToStaff)
+  const [returnedDate,   setReturnedDate]   = useState(record.ppReturnedDate)
+  const [receivedBy,     setReceivedBy]     = useState(record.receivedBy)
+  const [sentToHO,       setSentToHO]       = useState(record.ppSentToHO)
+  const [handoverPerson, setHandoverPerson] = useState(record.ppHandoverPerson)
+  const [recvByHO,       setRecvByHO]       = useState(record.ppReceivedByHO)
+  const [remarks,        setRemarks]        = useState(record.remarks)
 
-  const employee = employees.find((item) => item.employeeId === employeeId) ?? employees[0]
+  const empResults = useMemo(() => {
+    const q = empSearch.trim().toLowerCase()
+    if (!q || q.includes('(')) return []
+    return employees.filter(e => e.fullName.toLowerCase().includes(q) || e.employeeId.includes(q)).slice(0, 8)
+  }, [empSearch, employees])
+
+  const pickEmp = (e: Employee) => {
+    setEmpId(e.employeeId); setName(e.fullName); setDept(e.department); setNat(e.nationality)
+    setPpNo(e.nicPassportNo)
+    setEmpSearch(`${e.fullName} (${e.employeeId})`)
+    setShowEmpDrop(false)
+  }
+
+  const save = () => onSave({ ...record,
+    id: isNew ? `PP-${Date.now()}` : record.id,
+    date, employeeId: empId, name, department: dept, nationality: nat, ppNo,
+    receivedFromHO: recvFromHO, purpose, ppIssuedToStaff: issuedToStaff,
+    ppReturnedDate: returnedDate, receivedBy, ppSentToHO: sentToHO,
+    ppHandoverPerson: handoverPerson, ppReceivedByHO: recvByHO, remarks,
+  })
 
   return (
     <div className="modal-backdrop" role="presentation">
-      <section className="registration-modal" role="dialog" aria-modal="true">
-        <div className="modal-header"><div><p className="eyebrow">Passport handover</p><h2>{record.name ? 'Edit Passport Workflow' : 'Add Passport Workflow'}</h2><p>{employee?.employeeId ?? '-'} - {employee?.fullName ?? '-'}</p></div><button className="icon-button" onClick={onClose} type="button">x</button></div>
-        <div className="form-grid">
-          <label><span>Employee</span><select value={employeeId} onChange={(event) => setEmployeeId(event.target.value)}>{employees.slice(0, 120).map((item) => <option key={item.employeeId} value={item.employeeId}>{item.employeeId} - {item.fullName}</option>)}</select></label>
-          <label><span>Leave Type</span><select value={leaveTypeCode} onChange={(event) => setLeaveTypeCode(event.target.value as LeaveTypeCode)}>{leaveTypeOptions.map((item) => <option key={item.code} value={item.code}>{item.label} ({item.code})</option>)}</select></label>
-          <label><span>Departure Date</span><input type="date" value={departureDate} onChange={(event) => setDepartureDate(event.target.value)} /></label>
-          <label><span>Return Date</span><input type="date" value={returnDate} onChange={(event) => setReturnDate(event.target.value)} /></label>
-          <label><span>Status</span><select value={passportStep} onChange={(event) => setPassportStep(event.target.value as PassportStep)}>{passportSteps.map((step) => <option key={step}>{step}</option>)}</select></label>
-          <label><span>Issued Date</span><input type="date" value={givenDate} onChange={(event) => setGivenDate(event.target.value)} /></label>
-          <label><span>Returned Date</span><input type="date" value={returnedDate} onChange={(event) => setReturnedDate(event.target.value)} /></label>
-          <label><span>Sent to HO Date</span><input type="date" value={sentToHoDate} onChange={(event) => setSentToHoDate(event.target.value)} /></label>
-          <label className="full-field"><span>Remarks</span><input value={remarks} onChange={(event) => setRemarks(event.target.value)} /></label>
+      <section className="registration-modal pp-modal" role="dialog" aria-modal="true">
+        <div className="modal-header">
+          <div><p className="eyebrow">Passport Record</p><h2>{isNew ? 'Add Passport Record' : 'Edit Passport Record'}</h2></div>
+          <button className="icon-button" onClick={onClose} type="button">✕</button>
         </div>
-        <div className="modal-actions"><button className="quiet-button light" onClick={onClose} type="button">Cancel</button><button className="primary-button" onClick={() => onSave({
-          ...record,
-          employeeId: employee?.employeeId ?? '',
-          name: employee?.fullName ?? '',
-          department: employee?.department ?? departmentsList[0],
-          nationality: employee?.nationality ?? 'MALDIVES',
-          leaveTypeCode,
-          departureDate,
-          returnDate,
-          days: dayCount(departureDate, returnDate),
-          passportStep,
-          givenDate,
-          returnedDate,
-          sentToHoDate,
-          remarks,
-        })} type="button">Save Passport</button></div>
+
+        {/* Employee */}
+        <div className="pp-modal-section">
+          <div className="pp-modal-section-label">Employee Details</div>
+          <div className="pp-modal-grid">
+            <label className="ef-span2" style={{ position:'relative' }}>
+              <span>Search Employee (optional for new staff)</span>
+              <input value={empSearch} onChange={e => { setEmpSearch(e.target.value); setEmpId(''); setShowEmpDrop(true) }}
+                onFocus={() => setShowEmpDrop(true)} onBlur={() => setTimeout(()=>setShowEmpDrop(false),150)}
+                placeholder="Type name or employee ID…" autoComplete="off" />
+              {showEmpDrop && empResults.length > 0 && (
+                <div className="ei-emp-dropdown">
+                  {empResults.map(e => (
+                    <div key={e.employeeId} className="ei-emp-option" onMouseDown={() => pickEmp(e)}>
+                      <strong>{e.fullName}</strong><span>{e.employeeId} · {e.department}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </label>
+            <label><span>Entry Date</span><input type="date" value={date} onChange={e=>setDate(e.target.value)} /></label>
+            <label><span>Passport / PP No</span><input value={ppNo} onChange={e=>setPpNo(e.target.value)} placeholder="Passport number" /></label>
+            <label><span>Purpose</span>
+              <select value={purpose} onChange={e=>setPurpose(e.target.value)}>
+                {['AL','New Staff','Embassy','Other'].map(p=><option key={p}>{p}</option>)}
+              </select>
+            </label>
+            {!empId && <label><span>Full Name</span><input value={name} onChange={e=>setName(e.target.value)} placeholder="Enter manually if not in system" /></label>}
+          </div>
+        </div>
+
+        {/* Phase 1 */}
+        <div className="pp-modal-section pp-recv-section">
+          <div className="pp-modal-section-label pp-recv-label">📥 Receiving Passport from HO</div>
+          <div className="pp-modal-grid">
+            <label><span>Received From HO</span><input type="date" value={recvFromHO} onChange={e=>setRecvFromHO(e.target.value)} /></label>
+            <label><span>PP Issued to Staff</span><input type="date" value={issuedToStaff} onChange={e=>setIssuedToStaff(e.target.value)} /></label>
+          </div>
+        </div>
+
+        {/* Phase 2 */}
+        <div className="pp-modal-section pp-send-section">
+          <div className="pp-modal-section-label pp-send-label">📤 Sending Passport to HO</div>
+          <div className="pp-modal-grid">
+            <label><span>PP Returned by Staff</span><input type="date" value={returnedDate} onChange={e=>setReturnedDate(e.target.value)} /></label>
+            <label><span>Received By (HR)</span><input value={receivedBy} onChange={e=>setReceivedBy(e.target.value)} placeholder="HR staff name" /></label>
+            <label><span>PP Sent to HO</span><input type="date" value={sentToHO} onChange={e=>setSentToHO(e.target.value)} /></label>
+            <label><span>Handover Person (HO)</span><input value={handoverPerson} onChange={e=>setHandoverPerson(e.target.value)} placeholder="Name at HO" /></label>
+            <label><span>PP Received by (HO)</span><input value={recvByHO} onChange={e=>setRecvByHO(e.target.value)} placeholder="HO receiver name" /></label>
+            <label><span>Remarks</span><input value={remarks} onChange={e=>setRemarks(e.target.value)} placeholder="Optional" /></label>
+          </div>
+        </div>
+
+        <div className="modal-actions">
+          <button className="quiet-button light" onClick={onClose} type="button">Cancel</button>
+          <button className="primary-button" onClick={save} type="button">{isNew ? 'Add Record' : 'Save Changes'}</button>
+        </div>
       </section>
     </div>
   )
 }
-
 function PassportTrackingSection({ records, employees, onUpdate }: {
-  records: PassportHandoverRecord[]
+  records: PassportRecord[]
   employees: Employee[]
-  onUpdate: (fn: (prev: PassportHandoverRecord[]) => PassportHandoverRecord[]) => void
+  onUpdate: (fn: (prev: PassportRecord[]) => PassportRecord[]) => void
 }) {
-  const [search, setSearch] = useState('')
-  const [deptFilter, setDeptFilter] = useState('All Departments')
-  const [editing, setEditing] = useState<PassportHandoverRecord | null>(null)
+  const [search,  setSearch]  = useState('')
+  const [purpose, setPurpose] = useState('All')
+  const [editing, setEditing] = useState<PassportRecord | null>(null)
 
-  const empMap = useMemo(() => new Map(employees.map((e) => [e.employeeId, e])), [employees])
-  const getNic = (id: string) => empMap.get(id)?.nicPassportNo ?? '—'
+  const passStatus = (r: PassportRecord) => {
+    if (r.ppReceivedByHO)                                    return { label:'Complete',    color:'#16a34a', bg:'#dcfce7' }
+    if (r.ppSentToHO)                                        return { label:'Sent to HO',  color:'#7c3aed', bg:'#f5f3ff' }
+    if (r.ppReturnedDate)                                    return { label:'Returned',     color:'#d97706', bg:'#fef3c7' }
+    if (r.ppIssuedToStaff || (r.purpose==='AL'&&r.receivedFromHO)) return { label:'With Staff', color:'#2563eb', bg:'#eff6ff' }
+    return { label:'Pending', color:'#94a3b8', bg:'#f8fafc' }
+  }
 
-  const filtered = useMemo(() => records.filter((r) => {
-    const text = [r.employeeId, r.name, r.department, r.nationality].join(' ').toLowerCase()
-    return text.includes(search.trim().toLowerCase()) && (deptFilter === 'All Departments' || r.department === deptFilter)
-  }).sort((a, b) => a.departureDate.localeCompare(b.departureDate)), [records, search, deptFilter])
+  const filtered = useMemo(() => records.filter(r => {
+    const txt = [r.employeeId, r.name, r.department, r.ppNo, r.purpose].join(' ').toLowerCase()
+    return txt.includes(search.trim().toLowerCase()) && (purpose === 'All' || r.purpose === purpose)
+  }).sort((a,b) => b.date.localeCompare(a.date)), [records, search, purpose])
 
-  const save = (record: PassportHandoverRecord) => {
-    onUpdate((prev) => {
-      const exists = prev.some((r) => r.id === record.id)
-      return exists ? prev.map((r) => r.id === record.id ? record : r) : [record, ...prev]
-    })
+  const save = (r: PassportRecord) => {
+    onUpdate(prev => prev.some(x=>x.id===r.id) ? prev.map(x=>x.id===r.id?r:x) : [r,...prev])
     setEditing(null)
   }
-  const del = (id: string) => onUpdate((prev) => prev.filter((r) => r.id !== id))
+  const del = (id: string) => { if(window.confirm('Delete this passport record?')) onUpdate(prev=>prev.filter(r=>r.id!==id)) }
 
-  const newRecord = (): PassportHandoverRecord => ({
-    id: `PP-${Date.now()}`,
-    employeeId: employees[0]?.employeeId ?? '',
-    name: employees[0]?.fullName ?? '',
-    department: employees[0]?.department ?? departmentsList[0],
-    nationality: employees[0]?.nationality ?? 'MALDIVES',
-    leaveTypeCode: 'AL',
-    departureDate: new Date().toISOString().slice(0, 10),
-    returnDate: new Date().toISOString().slice(0, 10),
-    days: 1,
-    passportStep: 'Issued',
-    givenDate: '',
-    returnedDate: '',
-    sentToHoDate: '',
-    remarks: '',
+  const newRec = (): PassportRecord => ({
+    id:'PP-new', date:new Date().toISOString().slice(0,10),
+    employeeId:'', name:'', department:'', nationality:'', ppNo:'',
+    receivedFromHO:'', purpose:'AL', ppIssuedToStaff:'',
+    ppReturnedDate:'', receivedBy:'', ppSentToHO:'',
+    ppHandoverPerson:'', ppReceivedByHO:'', remarks:'',
   })
 
+  const statCards = [
+    { label:'Total',      val: records.length,                                                                   c:'#475569', bg:'#f8fafc' },
+    { label:'With Staff', val: records.filter(r => r.ppIssuedToStaff && !r.ppReturnedDate).length,              c:'#2563eb', bg:'#eff6ff' },
+    { label:'Returned',   val: records.filter(r => r.ppReturnedDate && !r.ppSentToHO).length,                   c:'#d97706', bg:'#fef3c7' },
+    { label:'Sent to HO', val: records.filter(r => r.ppSentToHO && !r.ppReceivedByHO).length,                   c:'#7c3aed', bg:'#f5f3ff' },
+    { label:'Complete',   val: records.filter(r => r.ppReceivedByHO).length,                                    c:'#16a34a', bg:'#dcfce7' },
+  ]
+
   return (
-    <section className="employee-workspace">
-      <div className="table-toolbar leave-toolbar leave-toolbar-3 leave-toolbar-has-btn">
-        <label className="search-field"><span>Search</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Employee, ID" /></label>
-        <label><span>Section</span><select value={deptFilter} onChange={(e) => setDeptFilter(e.target.value)}><option>All Departments</option>{departmentsList.map((d) => <option key={d}>{d}</option>)}</select></label>
-        <button className="primary-button toolbar-add-btn" onClick={() => setEditing(newRecord())} type="button">+ Add Passport</button>
+    <section className="employee-workspace pp-workspace">
+
+      <div className="pp-stat-strip">
+        {statCards.map(s => (
+          <div key={s.label} className="pp-stat-card" style={{ background:s.bg }}>
+            <span style={{ fontSize:'1.4rem', fontWeight:800, color:s.c, lineHeight:1 }}>{s.val}</span>
+            <span style={{ fontSize:'0.67rem', color:'#64748b', marginTop:2 }}>{s.label}</span>
+          </div>
+        ))}
       </div>
+
+      <div className="table-toolbar leave-toolbar leave-toolbar-has-btn" style={{ flexWrap:'wrap', gap:'6px 10px' }}>
+        <label className="search-field" style={{ flex:'1 1 200px' }}>
+          <span>Search</span>
+          <input type="search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Name, Emp ID, PP No" />
+        </label>
+        <label style={{ flex:'0 0 auto' }}>
+          <span>Purpose</span>
+          <select value={purpose} onChange={e=>setPurpose(e.target.value)}>
+            {['All','AL','New Staff','Embassy','Other'].map(p=><option key={p}>{p}</option>)}
+          </select>
+        </label>
+        <button className="pp-add-btn" onClick={()=>setEditing(newRec())} type="button">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Record
+        </button>
+      </div>
+
       <div className="employee-table-shell compact-scroll">
-        <table className="data-table leave-table">
-          <thead><tr><th>Emp ID</th><th>Name</th><th>Section</th><th>NIC / PP No</th><th>Leave Type</th><th>Status</th><th>Issued Date</th><th>Returned Date</th><th>Sent to HO</th><th>Remarks</th><th>Action</th></tr></thead>
+        <table className="data-table pp-table">
+          <thead>
+            <tr className="pp-thead-group">
+              <th colSpan={8} className="pp-th-recv">📥 RECEIVING PASSPORT FROM HO</th>
+              <th colSpan={6} className="pp-th-send">📤 SENDING PASSPORT TO HO</th>
+              <th className="pp-th-action" style={{ verticalAlign:'middle' }}>Actions</th>
+            </tr>
+            <tr>
+              <th>Date</th><th>Emp ID</th><th style={{ minWidth:140 }}>Name</th><th>Section</th>
+              <th>PP No</th><th style={{ whiteSpace:'nowrap' }}>From HO</th><th>Purpose</th><th style={{ whiteSpace:'nowrap' }}>Issued to Staff</th>
+              <th>Status</th>
+              <th style={{ whiteSpace:'nowrap' }}>Returned</th><th style={{ whiteSpace:'nowrap' }}>Recv By</th>
+              <th style={{ whiteSpace:'nowrap' }}>Sent to HO</th><th>Handover</th><th style={{ whiteSpace:'nowrap' }}>HO Confirm</th>
+              <th></th>
+            </tr>
+          </thead>
           <tbody>
-            {filtered.map((r) => (
-              <tr key={r.id}>
-                <td>{r.employeeId}</td><td>{r.name}</td><td>{r.department}</td><td>{getNic(r.employeeId)}</td>
-                <td>{r.leaveTypeCode}</td>
-                <td className="passport-status-cell"><StatusBadge status={r.passportStep} /></td>
-                <td>{r.givenDate ? formatDateDisplay(r.givenDate) : '—'}</td>
-                <td>{r.returnedDate ? formatDateDisplay(r.returnedDate) : '—'}</td>
-                <td>{r.sentToHoDate ? formatDateDisplay(r.sentToHoDate) : '—'}</td>
-                <td>{r.remarks || '—'}</td>
-                <td><div className="row-actions request-inline-actions">
-                  <button className="action-glyph edit" onClick={() => setEditing(r)} type="button" title="Edit">✎</button>
-                  <button className="action-glyph delete" onClick={() => del(r.id)} type="button" title="Delete">🗑</button>
-                </div></td>
-              </tr>
-            ))}
+            {filtered.map(r => {
+              const st = passStatus(r)
+              return (
+                <tr key={r.id}>
+                  <td style={{ whiteSpace:'nowrap', color:'#475569', fontSize:'0.77rem' }}>{r.date ? formatDateDisplay(r.date) : '—'}</td>
+                  <td style={{ fontWeight:600, color:'#1e40af', fontSize:'0.77rem' }}>{r.employeeId || '—'}</td>
+                  <td style={{ fontWeight:600, color:'#0f172a', fontSize:'0.82rem' }}>{r.name}</td>
+                  <td style={{ color:'#64748b', fontSize:'0.75rem' }}>{r.department || '—'}</td>
+                  <td style={{ fontFamily:'monospace', fontSize:'0.8rem', color:'#0f172a', fontWeight:700 }}>{r.ppNo || '—'}</td>
+                  <td style={{ whiteSpace:'nowrap', color:'#475569', fontSize:'0.77rem' }}>{r.receivedFromHO ? formatDateDisplay(r.receivedFromHO) : '—'}</td>
+                  <td>
+                    <span style={{ fontSize:'0.71rem', fontWeight:700, padding:'2px 8px', borderRadius:20,
+                      background: r.purpose==='AL'?'#eff6ff':r.purpose==='New Staff'?'#f0fdf4':'#f8fafc',
+                      color:      r.purpose==='AL'?'#1d4ed8':r.purpose==='New Staff'?'#15803d':'#64748b' }}>
+                      {r.purpose||'—'}
+                    </span>
+                  </td>
+                  <td style={{ whiteSpace:'nowrap', color:'#475569', fontSize:'0.77rem' }}>{r.ppIssuedToStaff ? formatDateDisplay(r.ppIssuedToStaff) : '—'}</td>
+                  <td>
+                    <span style={{ fontSize:'0.71rem', fontWeight:700, padding:'2px 8px', borderRadius:20, background:st.bg, color:st.color, whiteSpace:'nowrap' }}>
+                      {st.label}
+                    </span>
+                  </td>
+                  <td style={{ whiteSpace:'nowrap', color:'#475569', fontSize:'0.77rem' }}>{r.ppReturnedDate ? formatDateDisplay(r.ppReturnedDate) : '—'}</td>
+                  <td style={{ color:'#64748b', fontSize:'0.75rem' }}>{r.receivedBy || '—'}</td>
+                  <td style={{ whiteSpace:'nowrap', color:'#475569', fontSize:'0.77rem' }}>{r.ppSentToHO ? formatDateDisplay(r.ppSentToHO) : '—'}</td>
+                  <td style={{ color:'#64748b', fontSize:'0.75rem' }}>{r.ppHandoverPerson || '—'}</td>
+                  <td style={{ color: r.ppReceivedByHO ? '#16a34a' : '#94a3b8', fontWeight: r.ppReceivedByHO ? 700 : 400, fontSize:'0.75rem' }}>
+                    {r.ppReceivedByHO || '—'}
+                  </td>
+                  <td>
+                    <div className="row-actions request-inline-actions">
+                      <button className="action-glyph edit"   onClick={()=>setEditing(r)}  type="button" title="Edit">✎</button>
+                      <button className="action-glyph delete" onClick={()=>del(r.id)}      type="button" title="Delete">🗑</button>
+                    </div>
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>
-      {filtered.length === 0 && <div className="leave-empty-zone">No passport records yet. Click "+ Add Passport" to get started.</div>}
-      {editing && <PassportHandoverModal record={editing} employees={employees} onClose={() => setEditing(null)} onSave={save} />}
+      {filtered.length === 0 && <div className="leave-empty-zone">No passport records found. Click "+ Add Record" to get started.</div>}
+      {editing && <PassportHandoverModal record={editing} employees={employees} onClose={()=>setEditing(null)} onSave={save} />}
     </section>
   )
 }
-
 function MedicalCaseModal({ record, employees, onClose, onSave }: {
   record: MedicalCaseRecord
   employees: Employee[]
@@ -9817,14 +9993,185 @@ function InventoryCategoryTab({ cat, items, usage, onUpdateItems, onUpdateUsage,
   )
 }
 
-function InventorySection({ items, usage, onUpdateItems, onUpdateUsage, employees }: {
+function OrdersTab({ orders, items, onUpdateOrders }: {
+  orders: StoreOrder[]
+  items: InventoryItem[]
+  onUpdateOrders: (fn: (prev: StoreOrder[]) => StoreOrder[]) => void
+}) {
+  const [editing, setEditing] = useState<StoreOrder | null>(null)
+  const [catFilter, setCatFilter] = useState<InventoryCategory | 'All'>('All')
+  const [typeFilter, setTypeFilter] = useState<'All' | 'Store Order' | 'Bulk Request'>('All')
+
+  const filtered = orders.filter(o =>
+    (catFilter === 'All' || o.category === catFilter) &&
+    (typeFilter === 'All' || o.orderType === typeFilter)
+  ).sort((a,b) => b.orderDate.localeCompare(a.orderDate))
+
+  const save = (o: StoreOrder) => {
+    onUpdateOrders(prev => prev.some(x=>x.id===o.id) ? prev.map(x=>x.id===o.id?o:x) : [o,...prev])
+    setEditing(null)
+  }
+  const del = (id: string) => { if(window.confirm('Delete this order?')) onUpdateOrders(prev=>prev.filter(o=>o.id!==id)) }
+  const markReceived = (o: StoreOrder) => {
+    const updated = { ...o, status: 'Received' as const, receivedDate: new Date().toISOString().slice(0,10) }
+    onUpdateOrders(prev => prev.map(x=>x.id===o.id?updated:x))
+  }
+
+  const newOrder = (): StoreOrder => ({
+    id: 'ORD-new', orderDate: new Date().toISOString().slice(0,10),
+    orderedBy: '', orderType: 'Store Order', category: 'Stationery',
+    items: [{ itemId:'', itemName:'', quantity:1, unit:'pcs' }],
+    status: 'Pending', receivedDate: '', receivedBy: '', remarks: '',
+  })
+
+  const statusStyle = (s: string) => s === 'Received' ? { color:'#16a34a', bg:'#dcfce7' }
+    : s === 'Partial' ? { color:'#d97706', bg:'#fef3c7' } : { color:'#2563eb', bg:'#eff6ff' }
+
+  return (
+    <div style={{ padding:'0 0 16px' }}>
+      <div className="table-toolbar leave-toolbar leave-toolbar-has-btn" style={{ flexWrap:'wrap', gap:'6px 10px' }}>
+        <label style={{ flex:'0 0 auto' }}><span>Category</span>
+          <select value={catFilter} onChange={e=>setCatFilter(e.target.value as InventoryCategory|'All')}>
+            {['All','Stationery','Medical','Refresher'].map(c=><option key={c}>{c}</option>)}
+          </select>
+        </label>
+        <label style={{ flex:'0 0 auto' }}><span>Type</span>
+          <select value={typeFilter} onChange={e=>setTypeFilter(e.target.value as 'All'|'Store Order'|'Bulk Request')}>
+            {['All','Store Order','Bulk Request'].map(t=><option key={t}>{t}</option>)}
+          </select>
+        </label>
+        <button className="primary-button toolbar-add-btn" onClick={()=>setEditing(newOrder())} type="button">+ New Order</button>
+      </div>
+
+      <div className="employee-table-shell compact-scroll">
+        <table className="data-table">
+          <thead><tr>
+            <th>Date</th><th>Type</th><th>Category</th><th>Items Ordered</th>
+            <th style={{textAlign:'center'}}>Status</th><th>Received</th><th>Ordered By</th><th>Remarks</th><th style={{textAlign:'center'}}>Actions</th>
+          </tr></thead>
+          <tbody>
+            {filtered.length === 0 && <tr><td colSpan={9} style={{textAlign:'center',padding:'24px',color:'#94a3b8',fontSize:'0.82rem'}}>No orders yet.</td></tr>}
+            {filtered.map(o => {
+              const ss = statusStyle(o.status)
+              return (
+                <tr key={o.id}>
+                  <td style={{fontSize:'0.78rem',whiteSpace:'nowrap'}}>{formatDateDisplay(o.orderDate)}</td>
+                  <td><span style={{fontSize:'0.72rem',fontWeight:700,padding:'2px 8px',borderRadius:20,background:o.orderType==='Store Order'?'#eff6ff':'#fef3c7',color:o.orderType==='Store Order'?'#1d4ed8':'#92400e'}}>{o.orderType}</span></td>
+                  <td style={{fontSize:'0.78rem'}}>{o.category}</td>
+                  <td style={{fontSize:'0.76rem',color:'#374151',maxWidth:220}}>
+                    {o.items.map((it,i) => <div key={i}>{it.itemName} — {it.quantity} {it.unit}</div>)}
+                  </td>
+                  <td style={{textAlign:'center'}}>
+                    <span style={{fontSize:'0.72rem',fontWeight:700,padding:'2px 8px',borderRadius:20,background:ss.bg,color:ss.color}}>{o.status}</span>
+                  </td>
+                  <td style={{fontSize:'0.78rem',whiteSpace:'nowrap',color:'#64748b'}}>{o.receivedDate ? formatDateDisplay(o.receivedDate) : '—'}</td>
+                  <td style={{fontSize:'0.75rem',color:'#64748b'}}>{o.orderedBy || '—'}</td>
+                  <td style={{fontSize:'0.75rem',color:'#64748b',maxWidth:160}}>{o.remarks || '—'}</td>
+                  <td>
+                    <div className="row-actions request-inline-actions">
+                      {o.status === 'Pending' && <button className="action-glyph" style={{color:'#16a34a',fontSize:'0.75rem',fontWeight:700,padding:'2px 7px',background:'#dcfce7',borderRadius:6,border:'none',cursor:'pointer'}} onClick={()=>markReceived(o)} type="button" title="Mark received">✓ Received</button>}
+                      <button className="action-glyph edit"   onClick={()=>setEditing(o)} type="button" title="Edit">✎</button>
+                      <button className="action-glyph delete" onClick={()=>del(o.id)}    type="button" title="Delete">🗑</button>
+                    </div>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+      {editing && <OrderModal order={editing} items={items} onClose={()=>setEditing(null)} onSave={save} />}
+    </div>
+  )
+}
+
+function OrderModal({ order, items, onClose, onSave }: {
+  order: StoreOrder; items: InventoryItem[]
+  onClose: () => void; onSave: (o: StoreOrder) => void
+}) {
+  const isNew = order.id === 'ORD-new'
+  const [form, setForm] = useState<StoreOrder>(order)
+  const setF = (f: Partial<StoreOrder>) => setForm(p=>({...p,...f}))
+  const catItems = items.filter(i => i.category === form.category)
+
+  const addItem = () => setF({ items: [...form.items, { itemId:'', itemName:'', quantity:1, unit:'pcs' }] })
+  const removeItem = (idx: number) => setF({ items: form.items.filter((_,i)=>i!==idx) })
+  const updateItem = (idx: number, field: keyof StoreOrderItem, val: string|number) =>
+    setF({ items: form.items.map((it,i) => i===idx ? {...it,[field]:val} : it) })
+  const pickCatItem = (idx: number, itemId: string) => {
+    const found = catItems.find(i=>i.id===itemId)
+    if (found) setF({ items: form.items.map((it,i) => i===idx ? {...it,itemId,itemName:found.name,unit:found.unit} : it) })
+  }
+
+  return (
+    <div className="modal-backdrop" role="presentation">
+      <section className="registration-modal" role="dialog" aria-modal="true">
+        <div className="modal-header">
+          <div><p className="eyebrow">Inventory Order</p><h2>{isNew ? 'New Order' : 'Edit Order'}</h2></div>
+          <button className="icon-button" onClick={onClose} type="button">✕</button>
+        </div>
+        <div className="form-grid">
+          <label><span>Order Date</span><input type="date" value={form.orderDate} onChange={e=>setF({orderDate:e.target.value})} /></label>
+          <label><span>Order Type</span>
+            <select value={form.orderType} onChange={e=>setF({orderType:e.target.value as StoreOrder['orderType']})}>
+              <option>Store Order</option><option>Bulk Request</option>
+            </select>
+          </label>
+          <label><span>Category</span>
+            <select value={form.category} onChange={e=>setF({category:e.target.value as InventoryCategory,items:[{itemId:'',itemName:'',quantity:1,unit:'pcs'}]})}>
+              <option>Stationery</option><option>Medical</option><option>Refresher</option>
+            </select>
+          </label>
+          <label><span>Ordered By</span><input value={form.orderedBy} onChange={e=>setF({orderedBy:e.target.value})} placeholder="Name" /></label>
+          <label><span>Status</span>
+            <select value={form.status} onChange={e=>setF({status:e.target.value as StoreOrder['status']})}>
+              <option>Pending</option><option>Received</option><option>Partial</option>
+            </select>
+          </label>
+          {form.status !== 'Pending' && <>
+            <label><span>Received Date</span><input type="date" value={form.receivedDate} onChange={e=>setF({receivedDate:e.target.value})} /></label>
+            <label><span>Received By</span><input value={form.receivedBy} onChange={e=>setF({receivedBy:e.target.value})} /></label>
+          </>}
+          <label className="full-field"><span>Remarks</span><input value={form.remarks} onChange={e=>setF({remarks:e.target.value})} /></label>
+        </div>
+        <div style={{marginTop:12}}>
+          <div style={{fontSize:'0.72rem',fontWeight:800,color:'#475569',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:8}}>Items</div>
+          {form.items.map((it,idx) => (
+            <div key={idx} style={{display:'grid',gridTemplateColumns:'1fr 80px 80px auto',gap:6,marginBottom:6,alignItems:'end'}}>
+              <label><span>Item</span>
+                <select value={it.itemId} onChange={e=>pickCatItem(idx,e.target.value)}>
+                  <option value="">— Select —</option>
+                  {catItems.map(ci=><option key={ci.id} value={ci.id}>{ci.name}</option>)}
+                  <option value="custom">Other (type below)</option>
+                </select>
+              </label>
+              {it.itemId === 'custom' && <label style={{gridColumn:'1/-2'}}><span>Item Name</span><input value={it.itemName} onChange={e=>updateItem(idx,'itemName',e.target.value)} /></label>}
+              <label><span>Qty</span><input type="number" min={1} value={it.quantity} onChange={e=>updateItem(idx,'quantity',Number(e.target.value))} /></label>
+              <label><span>Unit</span><input value={it.unit} onChange={e=>updateItem(idx,'unit',e.target.value)} /></label>
+              <button type="button" onClick={()=>removeItem(idx)} style={{background:'none',border:'none',color:'#ef4444',cursor:'pointer',fontSize:'1.1rem',paddingBottom:4}}>✕</button>
+            </div>
+          ))}
+          <button type="button" onClick={addItem} style={{fontSize:'0.8rem',color:'#2563eb',background:'#eff6ff',border:'1px solid #bfdbfe',borderRadius:6,padding:'4px 12px',cursor:'pointer'}}>+ Add Item</button>
+        </div>
+        <div className="modal-actions">
+          <button className="quiet-button light" onClick={onClose} type="button">Cancel</button>
+          <button className="primary-button" onClick={()=>onSave({...form,id:isNew?('ORD-'+Date.now()):form.id})} type="button">{isNew?'Create Order':'Save Changes'}</button>
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function InventorySection({ items, usage, orders, onUpdateItems, onUpdateUsage, onUpdateOrders, employees }: {
   items: InventoryItem[]
   usage: InventoryUsageRecord[]
+  orders: StoreOrder[]
   onUpdateItems: (fn: (prev: InventoryItem[]) => InventoryItem[]) => void
   onUpdateUsage: (fn: (prev: InventoryUsageRecord[]) => InventoryUsageRecord[]) => void
+  onUpdateOrders: (fn: (prev: StoreOrder[]) => StoreOrder[]) => void
   employees: Employee[]
 }) {
-  const [subTab, setSubTab] = useState<'stationery' | 'medical' | 'history'>('stationery')
+  const [subTab, setSubTab] = useState<'stationery' | 'medical' | 'refresher' | 'orders' | 'history'>('stationery')
   const [histSearch, setHistSearch] = useState('')
   const [histDeptFilter, setHistDeptFilter] = useState('All')
 
@@ -9837,8 +10184,9 @@ function InventorySection({ items, usage, onUpdateItems, onUpdateUsage, employee
   }, [usage, histSearch, histDeptFilter])
 
   const histDepts = useMemo(() => ['All', ...Array.from(new Set(usage.map(u => u.department))).sort()], [usage])
-  const totalLow = items.filter(i => i.quantity <= i.minQuantity).length
-  const medLow   = items.filter(i => i.category === 'Medical' && i.quantity <= i.minQuantity).length
+  const totalLow    = items.filter(i => i.quantity <= i.minQuantity).length
+  const medLow      = items.filter(i => i.category === 'Medical' && i.quantity <= i.minQuantity).length
+  const ordPending  = orders.filter(o => o.status === 'Pending').length
 
   return (
     <section className="employee-workspace inv-workspace">
@@ -9855,6 +10203,16 @@ function InventorySection({ items, usage, onUpdateItems, onUpdateUsage, employee
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
           Medical
           {medLow > 0 && <span className="inv-tab-count inv-tab-count-warn">{medLow}</span>}
+        </button>
+        <button className={`inv-tab-btn${subTab === 'refresher' ? ' inv-tab-active inv-tab-orange' : ''}`} onClick={() => setSubTab('refresher')} type="button">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+          Refresher
+          {items.filter(i=>i.category==='Refresher').length > 0 && <span className="inv-tab-count">{items.filter(i=>i.category==='Refresher').length}</span>}
+        </button>
+        <button className={`inv-tab-btn${subTab === 'orders' ? ' inv-tab-active inv-tab-teal' : ''}`} onClick={() => setSubTab('orders')} type="button">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="12" y2="16"/></svg>
+          Orders
+          {ordPending > 0 && <span className="inv-tab-count inv-tab-count-warn">{ordPending}</span>}
         </button>
         <button className={`inv-tab-btn${subTab === 'history' ? ' inv-tab-active inv-tab-purple' : ''}`} onClick={() => setSubTab('history')} type="button">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -9875,6 +10233,14 @@ function InventorySection({ items, usage, onUpdateItems, onUpdateUsage, employee
 
       {subTab === 'medical' && (
         <InventoryCategoryTab cat="Medical" items={items} usage={usage} onUpdateItems={onUpdateItems} onUpdateUsage={onUpdateUsage} employees={employees} />
+      )}
+
+      {subTab === 'refresher' && (
+        <InventoryCategoryTab cat="Refresher" items={items} usage={usage} onUpdateItems={onUpdateItems} onUpdateUsage={onUpdateUsage} employees={employees} />
+      )}
+
+      {subTab === 'orders' && (
+        <OrdersTab orders={orders} items={items} onUpdateOrders={onUpdateOrders} />
       )}
 
       {subTab === 'history' && (
@@ -9932,16 +10298,20 @@ function ActivitiesPage({
   onUpdatePassport,
   inventoryItems,
   inventoryUsage,
+  inventoryOrders,
   onUpdateInventoryItems,
   onUpdateInventoryUsage,
+  onUpdateInventoryOrders,
 }: {
   employees: Employee[]
-  passportHandovers: PassportHandoverRecord[]
-  onUpdatePassport: (fn: (prev: PassportHandoverRecord[]) => PassportHandoverRecord[]) => void
+  passportHandovers: PassportRecord[]
+  onUpdatePassport: (fn: (prev: PassportRecord[]) => PassportRecord[]) => void
   inventoryItems: InventoryItem[]
   inventoryUsage: InventoryUsageRecord[]
+  inventoryOrders: StoreOrder[]
   onUpdateInventoryItems: (fn: (prev: InventoryItem[]) => InventoryItem[]) => void
   onUpdateInventoryUsage: (fn: (prev: InventoryUsageRecord[]) => InventoryUsageRecord[]) => void
+  onUpdateInventoryOrders: (fn: (prev: StoreOrder[]) => StoreOrder[]) => void
 }) {
   const [activeSection, setActiveSection] = useState<ActivitiesSection>('requests')
   const [staffRequests, setStaffRequests] = useState<StaffRequestRecord[]>(initialStaffRequests)
@@ -9961,7 +10331,7 @@ function ActivitiesPage({
       {activeSection === 'visits' && <VisitsSection records={visitRecords} employees={employees} onUpdate={setVisitRecords} onBack={() => {}} />}
       {activeSection === 'incidents' && <IncidentsSection records={incidentRecords} employees={employees} onUpdate={setIncidentRecords} onBack={() => {}} />}
       {activeSection === 'passport' && <PassportTrackingSection records={passportHandovers} employees={employees} onUpdate={onUpdatePassport} />}
-      {activeSection === 'inventory' && <InventorySection items={inventoryItems} usage={inventoryUsage} onUpdateItems={onUpdateInventoryItems} onUpdateUsage={onUpdateInventoryUsage} employees={employees} />}
+      {activeSection === 'inventory' && <InventorySection items={inventoryItems} usage={inventoryUsage} orders={inventoryOrders} onUpdateItems={onUpdateInventoryItems} onUpdateUsage={onUpdateInventoryUsage} onUpdateOrders={onUpdateInventoryOrders} employees={employees} />}
     </>
   )
 }
@@ -10483,12 +10853,13 @@ function App() {
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequestRecord[]>(() => loadStore('tic_leave_req', initialLeaveRequests))
   const [activeLeaves, setActiveLeaves] = useState<ActiveLeaveRecord[]>(() => loadStore('tic_leave_active', initialActiveLeaves))
   const [leaveHistory, setLeaveHistory] = useState<LeaveHistoryRecord[]>(() => loadStore('tic_leave_history_v2', initialLeaveHistory))
-  const [passportHandovers, setPassportHandovers] = useState<PassportHandoverRecord[]>(() => loadStore('tic_passport', initialPassportHandovers))
+  const [passportHandovers, setPassportHandovers] = useState<PassportRecord[]>(() => loadStore('tic_passport', initialPassportHandovers))
   const [noticeTerminations, setNoticeTerminations] = useState<EnhancedTerminationRecord[]>(() => loadStore('tic_term_notice', initialNoticeTerminations))
   const [completedTerminations, setCompletedTerminations] = useState<CompletedTerminationRecord[]>(() => loadStore('tic_term_done', initialCompletedTerminations))
   const [exitInterviews, setExitInterviews] = useState<ExitInterviewRecord[]>(() => loadStore('tic_exit_interviews_v2', initialExitInterviews))
   const [medicalCases, setMedicalCases] = useState<MedicalCaseRecord[]>(() => loadStore('tic_medical_cases', initialMedicalCases))
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>(() => loadStore('tic_inventory_items', initialInventoryItems))
+  const [inventoryOrders, setInventoryOrders] = useState<StoreOrder[]>(() => loadStore('tic_inv_orders', initialStoreOrders))
   const [inventoryUsage, setInventoryUsage] = useState<InventoryUsageRecord[]>(() => loadStore('tic_inventory_usage', initialInventoryUsage))
   const [offSiteRecords, setOffSiteRecords] = useState<OffSiteRecord[]>(() => loadStore('tic_offsite', initialOffSiteRecords))
   const [showEmployeeForm, setShowEmployeeForm] = useState(false)
@@ -10528,6 +10899,7 @@ function App() {
   useEffect(() => { localStorage.setItem('tic_exit_interviews_v2', JSON.stringify(exitInterviews)) }, [exitInterviews])
   useEffect(() => { localStorage.setItem('tic_medical_cases', JSON.stringify(medicalCases)) }, [medicalCases])
   useEffect(() => { localStorage.setItem('tic_inventory_items', JSON.stringify(inventoryItems)) }, [inventoryItems])
+  useEffect(() => { localStorage.setItem('tic_inv_orders', JSON.stringify(inventoryOrders)) }, [inventoryOrders])
   useEffect(() => { localStorage.setItem('tic_inventory_usage', JSON.stringify(inventoryUsage)) }, [inventoryUsage])
   useEffect(() => { localStorage.setItem('tic_offsite', JSON.stringify(offSiteRecords)) }, [offSiteRecords])
 
@@ -11016,7 +11388,7 @@ function App() {
           {activePage === 'employees' && <EmployeesPage employees={employees} medicalCases={medicalCases} noticeTerminations={noticeTerminations} offSiteRecords={offSiteRecords} onUpdateOffSite={(fn) => setOffSiteRecords(fn)} onAdd={() => { setEmployeeMode('add'); setEmployeeForm(emptyEmployee); setShowEmployeeForm(true) }} onEdit={openEditEmployee} onExport={exportCsv} onImport={importCsv} onTemplate={downloadTemplate} onShowTasks={() => setShowPendingTasks(true)} />}
           {activePage === 'leave' && <LeavePage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} medicalCases={medicalCases} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onSetRequestStep={setLeaveRequestStep} onExtendLeave={extendActiveLeave} onEditActiveLeave={editActiveLeave} onHistoryConfirm={updateHistoryConfirmation} onUpdateMedical={(fn) => setMedicalCases(fn)} />}
           {activePage === 'operations' && <OperationsPage employees={employees} completedTerminations={completedTerminations} activeLeaves={activeLeaves} />}
-          {activePage === 'activities' && <ActivitiesPage employees={employees} passportHandovers={passportHandovers} onUpdatePassport={(fn) => setPassportHandovers(fn)} inventoryItems={inventoryItems} inventoryUsage={inventoryUsage} onUpdateInventoryItems={(fn) => setInventoryItems(fn)} onUpdateInventoryUsage={(fn) => setInventoryUsage(fn)} />}
+          {activePage === 'activities' && <ActivitiesPage employees={employees} passportHandovers={passportHandovers} onUpdatePassport={(fn) => setPassportHandovers(fn)} inventoryItems={inventoryItems} inventoryUsage={inventoryUsage} inventoryOrders={inventoryOrders} onUpdateInventoryItems={(fn) => setInventoryItems(fn)} onUpdateInventoryUsage={(fn) => setInventoryUsage(fn)} onUpdateInventoryOrders={(fn) => setInventoryOrders(fn)} />}
           {activePage === 'termination' && <TerminationPage noticeTerminations={noticeTerminations} completedTerminations={completedTerminations} exitInterviews={exitInterviews} employees={employees} onAdd={openAddTermination} onEdit={openEditTermination} onSetStage={setTerminationStage} onDelete={deleteTermination} onViewDetails={(record) => setTerminationDetails(record)} onUpdateExitInterviews={(fn) => setExitInterviews(fn)} />}
           {activePage === 'settings' && <SettingsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} onReset={resetAllData} currentUserName={currentUserName} />}
         </main>
