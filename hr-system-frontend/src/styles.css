@@ -334,14 +334,36 @@ button:disabled { cursor: not-allowed; opacity: 0.5; }
 }
 
 .sidebar-user-name {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
   overflow: hidden;
+  transition: opacity var(--sidebar-anim), max-width var(--sidebar-anim);
+  max-width: 140px;
+}
+
+.sidebar-user-name-text {
   font-size: 0.76rem;
   font-weight: 700;
   color: rgba(255,255,255,0.65);
   text-overflow: ellipsis;
   white-space: nowrap;
-  transition: opacity var(--sidebar-anim), max-width var(--sidebar-anim);
-  max-width: 140px;
+  overflow: hidden;
+  max-width: 100%;
+}
+
+.sidebar-view-only-badge {
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.15);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  padding: 1px 6px;
+  border-radius: 999px;
+  white-space: nowrap;
 }
 
 .sidebar--collapsed .sidebar-user-name {
@@ -9407,3 +9429,13 @@ html { overflow-x: hidden; }
 .dash-rh-fill  { height: 100%; background: #6366f1; border-radius: 4px; transition: width 0.5s; }
 .dash-rh-pct   { font-size: 0.75rem; font-weight: 800; color: #4f46e5; flex-shrink: 0; }
 .dash-rh-labels { display: flex; justify-content: space-between; font-size: 0.67rem; color: #94a3b8; }
+
+/* ════════════════════════════════════════════════════════
+   VIEW-ONLY MODE — hides every add/edit/delete/import/reset
+   control for users logged in with the "Viewer" role.
+   Buttons & glyphs that mutate data are tagged with the
+   "vwh" (view-write-hide) class in App.tsx.
+   ════════════════════════════════════════════════════════ */
+.view-only-mode .vwh {
+  display: none !important;
+}

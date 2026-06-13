@@ -1856,7 +1856,7 @@ function OffSiteModal({ records, employees, onUpdate, onClose }: {
               </button>
             </div>
             {!showAdd && editingId === null && (
-              <button className="primary-button" onClick={() => setShowAdd(true)} type="button">+ Add Off Site</button>
+              <button className="primary-button vwh" onClick={() => setShowAdd(true)} type="button">+ Add Off Site</button>
             )}
           </div>
 
@@ -1900,9 +1900,9 @@ function OffSiteModal({ records, employees, onUpdate, onClose }: {
                           <td>{r.recordedBy || '—'}</td>
                           <td>
                             <div className="row-actions request-inline-actions" style={{ gap: 4 }}>
-                              <button className="os-return-btn" onClick={() => markReturned(r.id)} type="button" title="Mark returned today">↩ Return</button>
-                              <button className="action-glyph edit" onClick={() => editingId === r.id ? setEditingId(null) : openEdit(r)} type="button" title="Edit">✎</button>
-                              <button className="action-glyph delete" onClick={() => del(r.id)} type="button" title="Delete">🗑</button>
+                              <button className="os-return-btn vwh" onClick={() => markReturned(r.id)} type="button" title="Mark returned today">↩ Return</button>
+                              <button className="action-glyph edit vwh" onClick={() => editingId === r.id ? setEditingId(null) : openEdit(r)} type="button" title="Edit">✎</button>
+                              <button className="action-glyph delete vwh" onClick={() => del(r.id)} type="button" title="Delete">🗑</button>
                             </div>
                           </td>
                         </tr>
@@ -1959,8 +1959,8 @@ function OffSiteModal({ records, employees, onUpdate, onClose }: {
                             <td>{r.recordedBy || '—'}</td>
                             <td>
                               <div className="row-actions request-inline-actions" style={{ gap: 4 }}>
-                                <button className="action-glyph edit" onClick={() => editingId === r.id ? setEditingId(null) : openEdit(r)} type="button" title="Edit">✎</button>
-                                <button className="action-glyph delete" onClick={() => del(r.id)} type="button" title="Delete">🗑</button>
+                                <button className="action-glyph edit vwh" onClick={() => editingId === r.id ? setEditingId(null) : openEdit(r)} type="button" title="Edit">✎</button>
+                                <button className="action-glyph delete vwh" onClick={() => del(r.id)} type="button" title="Delete">🗑</button>
                               </div>
                             </td>
                           </tr>
@@ -2074,7 +2074,7 @@ function EmployeesPage({ employees, onAdd, onEdit, onExport, onImport, onTemplat
         <div className="table-actions">
           <div className="table-actions-left">
             <button className="primary-button" onClick={onTemplate} type="button">Template</button>
-            <button className="primary-button" onClick={onImport} type="button">Import</button>
+            <button className="primary-button vwh" onClick={onImport} type="button">Import</button>
           </div>
           <div className="table-actions-right">
             <button className="primary-button" onClick={onShowTasks} type="button">
@@ -2084,7 +2084,7 @@ function EmployeesPage({ employees, onAdd, onEdit, onExport, onImport, onTemplat
               Off Site{offSiteRecords.filter(r => r.status === 'Out').length > 0 && <span className="pending-count-badge" style={{ marginLeft: '6px' }}>{offSiteRecords.filter(r => r.status === 'Out').length}</span>}
             </button>
             <button className="primary-button" onClick={onExport} type="button">Export</button>
-            <button className="primary-button" onClick={onAdd} type="button">Add Employee</button>
+            <button className="primary-button vwh" onClick={onAdd} type="button">Add Employee</button>
           </div>
         </div>
         <div className="table-toolbar employee-toolbar">
@@ -2130,7 +2130,7 @@ function EmployeesPage({ employees, onAdd, onEdit, onExport, onImport, onTemplat
                   <td>{employee.dateOfBirth ? formatDateDisplay(employee.dateOfBirth) : '—'}</td>
                   <td>{calculateAge(employee.dateOfBirth)}</td>
                   <td><StatusBadge status={employee.siteStatus} /></td>
-                  <td><button className="action-glyph edit" onClick={() => onEdit(employee)} type="button" title="Edit" aria-label="Edit employee">✎</button></td>
+                  <td><button className="action-glyph edit vwh" onClick={() => onEdit(employee)} type="button" title="Edit" aria-label="Edit employee">✎</button></td>
                 </tr>
               ))}
             </tbody>
@@ -2516,7 +2516,7 @@ function PassportTrackingSection({ records, employees, onUpdate }: {
             {['All','AL','New Staff','Embassy','Other'].map(p=><option key={p}>{p}</option>)}
           </select>
         </label>
-        <button className="pp-add-btn" onClick={()=>setEditing(newRec())} type="button">
+        <button className="pp-add-btn vwh" onClick={()=>setEditing(newRec())} type="button">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Add Record
         </button>
@@ -2572,8 +2572,8 @@ function PassportTrackingSection({ records, employees, onUpdate }: {
                   </td>
                   <td>
                     <div className="row-actions request-inline-actions">
-                      <button className="action-glyph edit"   onClick={()=>setEditing(r)}  type="button" title="Edit">✎</button>
-                      <button className="action-glyph delete" onClick={()=>del(r.id)}      type="button" title="Delete">🗑</button>
+                      <button className="action-glyph edit vwh"   onClick={()=>setEditing(r)}  type="button" title="Edit">✎</button>
+                      <button className="action-glyph delete vwh" onClick={()=>del(r.id)}      type="button" title="Delete">🗑</button>
                     </div>
                   </td>
                 </tr>
@@ -2822,7 +2822,7 @@ function MedicalCaseModal({ record, employees, onClose, onSave }: {
           {/* Footer */}
           <div className="mc-modal-footer">
             <button type="button" className="quiet-button light" onClick={onClose}>Cancel</button>
-            <button className="mc-submit-btn" type="submit">
+            <button className="mc-submit-btn vwh" type="submit">
               {isNew
                 ? <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Medical Case</>
                 : <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>Save Changes</>
@@ -3116,7 +3116,7 @@ function MedicalLeaveSection({ records, employees, onUpdate }: {
             {months.map((key) => <option key={key} value={key}>{formatMonthLabel(key)}</option>)}
           </select>
         </label>
-        <button className="primary-button toolbar-add-btn" onClick={() => setEditing(newCase())} type="button">+ Add Medical Case</button>
+        <button className="primary-button toolbar-add-btn vwh" onClick={() => setEditing(newCase())} type="button">+ Add Medical Case</button>
       </div>
 
       {/* Table */}
@@ -3157,8 +3157,8 @@ function MedicalLeaveSection({ records, employees, onUpdate }: {
                     <td style={{ textAlign: 'center' }}><strong>{r.sickLeaveDays || '—'}</strong></td>
                     <td style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
                       <div className="row-actions request-inline-actions" style={{ justifyContent: 'center' }}>
-                        <button className="action-glyph edit" onClick={() => setEditing(r)} type="button" title="Edit">✎</button>
-                        <button className="action-glyph delete" onClick={() => del(r.id)} type="button" title="Delete">🗑</button>
+                        <button className="action-glyph edit vwh" onClick={() => setEditing(r)} type="button" title="Edit">✎</button>
+                        <button className="action-glyph delete vwh" onClick={() => del(r.id)} type="button" title="Delete">🗑</button>
                       </div>
                     </td>
                   </tr>
@@ -3542,7 +3542,7 @@ function LeavePage({
               <label className="search-field"><span>Search</span><input type="search" value={requestSearch} onChange={(event) => setRequestSearch(event.target.value)} placeholder="Employee, ID, purpose" /></label>
               <label><span>Leave Type</span><select value={requestTypeFilter} onChange={(event) => setRequestTypeFilter(event.target.value as 'All' | LeaveTypeCode)}><option value="All">All Types</option>{leaveTypeOptions.map((item) => <option key={item.code} value={item.code}>{item.label} ({item.code})</option>)}</select></label>
               <label><span>Section</span><select value={requestDepartmentFilter} onChange={(event) => setRequestDepartmentFilter(event.target.value)}><option>All Departments</option>{departmentsList.map((item) => <option key={item}>{item}</option>)}</select></label>
-              <button className="primary-button toolbar-add-btn" onClick={onAddRequest} type="button">Add Leave Request</button>
+              <button className="primary-button toolbar-add-btn vwh" onClick={onAddRequest} type="button">Add Leave Request</button>
             </div>
             <div className="employee-table-shell compact-scroll">
               <table className="data-table leave-table">
@@ -3587,8 +3587,8 @@ function LeavePage({
                           </td>
                           <td onClick={(e) => e.stopPropagation()}>
                             <div className="row-actions request-inline-actions">
-                              <button className="action-glyph edit" onClick={() => onEditRequest(record)} type="button" title="Edit">✎</button>
-                              <button className="action-glyph delete" onClick={() => onDeleteRequest(record.id)} type="button" title="Delete">🗑</button>
+                              <button className="action-glyph edit vwh" onClick={() => onEditRequest(record)} type="button" title="Edit">✎</button>
+                              <button className="action-glyph delete vwh" onClick={() => onDeleteRequest(record.id)} type="button" title="Delete">🗑</button>
                             </div>
                           </td>
                         </tr>
@@ -3794,7 +3794,7 @@ function LeavePage({
                         {histExt && <div style={{ fontSize: '0.66rem', color: '#64748b' }}>{record.originalDays} + {histExt.additionalDays}</div>}
                       </td>
                       <td className="leave-remarks-cell">{record.remarks || <span className="muted-dash">—</span>}</td>
-                      <td className="leave-status-cell-sm">{record.confirmation ? <StatusBadge status={record.confirmation} /> : <div className="row-actions history-confirm-actions"><button className="mini-button" onClick={() => onHistoryConfirm(record.id, 'Returned')} type="button">Returned</button><button className="mini-button danger" onClick={() => onHistoryConfirm(record.id, 'Not Returned')} type="button">Not Returned</button></div>}</td>
+                      <td className="leave-status-cell-sm">{record.confirmation ? <StatusBadge status={record.confirmation} /> : <div className="row-actions history-confirm-actions"><button className="mini-button vwh" onClick={() => onHistoryConfirm(record.id, 'Returned')} type="button">Returned</button><button className="mini-button danger vwh" onClick={() => onHistoryConfirm(record.id, 'Not Returned')} type="button">Not Returned</button></div>}</td>
                       <td><button className="action-glyph" onClick={() => setViewingProgress(record)} type="button" title="View Progress" style={{ fontSize: '1rem' }}>👁</button></td>
                     </tr>
                   )
@@ -3959,7 +3959,7 @@ function InductionModal({ employees, record, onClose, onSave }: {
               <span className="ind-participants-count">{participants.filter(p => p.name.trim()).length}</span>
             </h3>
             <p className="ind-participants-hint">Enter details manually — staff may not yet be in the system</p>
-            <button className="ind-add-row-btn" onClick={addRow} type="button">+ Add Row</button>
+            <button className="ind-add-row-btn vwh" onClick={addRow} type="button">+ Add Row</button>
           </div>
           <div className="ind-table-scroll">
             <table className="data-table ind-edit-table">
@@ -3984,7 +3984,7 @@ function InductionModal({ employees, record, onClose, onSave }: {
                     <td><input className="cell-input" value={p.section} onChange={(e) => updateRow(i, 'section', e.target.value)} placeholder="e.g. HR, Stores" /></td>
                     <td><input className="cell-input" value={p.department} onChange={(e) => updateRow(i, 'department', e.target.value)} placeholder="e.g. Thilafushi Industrial Complex" /></td>
                     <td>
-                      <button className="action-glyph delete ind-remove-row" onClick={() => removeRow(i)} type="button" title="Remove row">×</button>
+                      <button className="action-glyph delete ind-remove-row vwh" onClick={() => removeRow(i)} type="button" title="Remove row">×</button>
                     </td>
                   </tr>
                 ))}
@@ -4590,7 +4590,7 @@ function TrainingModal({ record, employees, onClose, onSave }: {
               <span className="ind-participants-count">{participants.filter((p) => p.name.trim() || p.employeeId.trim()).length}</span>
             </h3>
             <p className="ind-participants-hint">Enter Emp ID and press Tab — name &amp; section auto-fill if found in records</p>
-            <button className="ind-add-row-btn" onClick={addRow} type="button">+ Add Row</button>
+            <button className="ind-add-row-btn vwh" onClick={addRow} type="button">+ Add Row</button>
           </div>
           <div className="ind-table-scroll">
             <table className="data-table ind-edit-table">
@@ -4633,7 +4633,7 @@ function TrainingModal({ record, employees, onClose, onSave }: {
                       />
                     </td>
                     <td>
-                      <button className="ind-remove-row-btn" onClick={() => removeRow(i)} type="button" title="Remove row" aria-label="Remove row">×</button>
+                      <button className="ind-remove-row-btn vwh" onClick={() => removeRow(i)} type="button" title="Remove row" aria-label="Remove row">×</button>
                     </td>
                   </tr>
                 ))}
@@ -5158,7 +5158,7 @@ function PersonalFilesSection({ records, onUpdate }: {
                   <td style={{ textAlign: 'center' }}>{file.eaExpiryDate ? formatDateDisplay(file.eaExpiryDate) : '—'}</td>
                   <td style={{ textAlign: 'center' }}><StaffStatusBadge status={file.staffStatus} /></td>
                   <td style={{ textAlign: 'center' }}>
-                    <button className="action-glyph edit" onClick={() => setEditingFileNo(file.fileNo)} type="button" title="Edit" aria-label="Edit file">✎</button>
+                    <button className="action-glyph edit vwh" onClick={() => setEditingFileNo(file.fileNo)} type="button" title="Edit" aria-label="Edit file">✎</button>
                   </td>
                 </tr>
               ))}
@@ -5241,7 +5241,7 @@ function InductionSection({ employees, records, onUpdate }: {
             <span>Search</span>
             <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Ref no, conducted by, participant name" />
           </label>
-          <button className="primary-button" onClick={() => setEditing(newRecord())} type="button">Add Session</button>
+          <button className="primary-button vwh" onClick={() => setEditing(newRecord())} type="button">Add Session</button>
         </div>
         <div className="employee-table-shell compact-scroll">
           <table className="data-table induction-table">
@@ -5281,8 +5281,8 @@ function InductionSection({ employees, records, onUpdate }: {
                     <div className="row-actions ind-actions">
                       <button className="action-glyph" onClick={() => setViewing(record)} type="button" title="View participants" aria-label="View participants">👁</button>
                       <button className="action-glyph" onClick={() => printInductionRecord(record, employees)} type="button" title="Print" aria-label="Print induction">🖨</button>
-                      <button className="action-glyph edit" onClick={() => setEditing(record)} type="button" title="Edit" aria-label="Edit">✎</button>
-                      <button className="action-glyph delete" onClick={() => deleteRecord(record.id)} type="button" title="Delete" aria-label="Delete">🗑</button>
+                      <button className="action-glyph edit vwh" onClick={() => setEditing(record)} type="button" title="Edit" aria-label="Edit">✎</button>
+                      <button className="action-glyph delete vwh" onClick={() => deleteRecord(record.id)} type="button" title="Delete" aria-label="Delete">🗑</button>
                     </div>
                   </td>
                 </tr>
@@ -5334,7 +5334,7 @@ function TrainingSection({ records, onUpdate, employees }: {
         <div className="table-toolbar ops-section-toolbar">
           <label className="search-field"><span>Search</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Training title, trainer" /></label>
           <label><span>Type</span><select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as typeof typeFilter)}><option value="All">All Types</option><option value="Internal">Internal</option><option value="External">External</option></select></label>
-          <button className="primary-button" onClick={() => setEditing(newRecord())} type="button">Add</button>
+          <button className="primary-button vwh" onClick={() => setEditing(newRecord())} type="button">Add</button>
         </div>
         <div className="employee-table-shell compact-scroll">
           <table className="data-table training-table">
@@ -5366,8 +5366,8 @@ function TrainingSection({ records, onUpdate, employees }: {
                     <div className="row-actions ind-actions" style={{ justifyContent: 'center' }}>
                       <button className="action-glyph" onClick={() => setViewing(record)} type="button" title="View" aria-label="View">👁</button>
                       <button className="action-glyph" onClick={() => printTrainingRecord(record)} type="button" title="Print" aria-label="Print">🖨</button>
-                      <button className="action-glyph edit" onClick={() => setEditing(record)} type="button" title="Edit" aria-label="Edit">✎</button>
-                      <button className="action-glyph delete" onClick={() => deleteRecord(record.id)} type="button" title="Delete" aria-label="Delete">🗑</button>
+                      <button className="action-glyph edit vwh" onClick={() => setEditing(record)} type="button" title="Edit" aria-label="Edit">✎</button>
+                      <button className="action-glyph delete vwh" onClick={() => deleteRecord(record.id)} type="button" title="Delete" aria-label="Delete">🗑</button>
                     </div>
                   </td>
                 </tr>
@@ -5684,8 +5684,8 @@ function BankAccountSection({ employees, records, onUpdate }: {
                 {showEdit && (
                   <td style={{ textAlign: 'center' }}>
                     <div className="row-actions request-inline-actions" style={{ justifyContent: 'center' }}>
-                      <button className="action-glyph edit" onClick={() => setEditing(r)} type="button" title="Edit" aria-label="Edit">✎</button>
-                      <button className="action-glyph delete" onClick={() => deleteRecord(r.id)} type="button" title="Delete" aria-label="Delete">🗑</button>
+                      <button className="action-glyph edit vwh" onClick={() => setEditing(r)} type="button" title="Edit" aria-label="Edit">✎</button>
+                      <button className="action-glyph delete vwh" onClick={() => deleteRecord(r.id)} type="button" title="Delete" aria-label="Delete">🗑</button>
                     </div>
                   </td>
                 )}
@@ -5722,7 +5722,7 @@ function BankAccountSection({ employees, records, onUpdate }: {
               {departmentsList.map((d) => <option key={d}>{d}</option>)}
             </select>
           </label>
-          <button className="primary-button" onClick={() => setEditing(newRecord())} type="button">Add</button>
+          <button className="primary-button vwh" onClick={() => setEditing(newRecord())} type="button">Add</button>
         </div>
 
         {/* Tabs */}
@@ -7180,13 +7180,13 @@ function ExitInterviewSection({ records, onUpdate, employees }: {
                     </td>
                     <td>
                       <div className="row-actions">
-                        <button className="action-glyph" title="Open Form" onClick={() => setEditing(r)} type="button">
+                        <button className="action-glyph vwh" title="Open Form" onClick={() => setEditing(r)} type="button">
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
                             <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
                           </svg>
                         </button>
-                        <button className="action-glyph delete" title="Delete" onClick={() => del(r.id)} type="button">🗑</button>
+                        <button className="action-glyph delete vwh" title="Delete" onClick={() => del(r.id)} type="button">🗑</button>
                       </div>
                     </td>
                   </tr>
@@ -7283,7 +7283,7 @@ function TerminationPage({
               <label className="search-field"><span>Search</span><input onChange={(e) => setNoticeSearch(e.target.value)} placeholder="Employee, ID, department…" type="search" value={noticeSearch} /></label>
               <label><span>Section</span><select onChange={(e) => setNoticeDepartmentFilter(e.target.value)} value={noticeDepartmentFilter}>{noticeDepartments.map((d) => <option key={d}>{d}</option>)}</select></label>
               <label><span>Stage</span><select onChange={(e) => setNoticeStageFilter(e.target.value === 'All' ? 'All' : e.target.value as TerminationStage)} value={noticeStageFilter}><option value="All">All Stages</option>{allTerminationStages.map((s) => <option key={s}>{s}</option>)}</select></label>
-              <button className="primary-button toolbar-add-btn" onClick={onAdd} type="button">+ Add</button>
+              <button className="primary-button toolbar-add-btn vwh" onClick={onAdd} type="button">+ Add</button>
             </div>
             <div className="employee-table-shell compact-scroll termination-table-shell">
               <table className="data-table termination-table compact">
@@ -7329,8 +7329,8 @@ function TerminationPage({
                             <td className="termination-actions" onClick={(e) => e.stopPropagation()}>
                               <div className="row-actions">
                                 <button className="action-glyph" onClick={() => onViewDetails(r)} type="button" title="View">👁</button>
-                                <button className="action-glyph edit" onClick={() => onEdit(r)} type="button" title="Edit">✎</button>
-                                <button className="action-glyph delete" onClick={() => onDelete(r.id)} type="button" title="Delete">🗑</button>
+                                <button className="action-glyph edit vwh" onClick={() => onEdit(r)} type="button" title="Edit">✎</button>
+                                <button className="action-glyph delete vwh" onClick={() => onDelete(r.id)} type="button" title="Delete">🗑</button>
                               </div>
                             </td>
                           </tr>
@@ -8558,7 +8558,7 @@ function MeetingsSection({ records, onUpdate, employees, activeLeaves }: {
               <input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Ref, date, chairperson…" />
             </label>
           )}
-          <button className="primary-button" onClick={() => setEditing(mkNew())} type="button">+ New Meeting</button>
+          <button className="primary-button vwh" onClick={() => setEditing(mkNew())} type="button">+ New Meeting</button>
         </div>
       </div>
 
@@ -8605,9 +8605,9 @@ function MeetingsSection({ records, onUpdate, employees, activeLeaves }: {
                 </div>
                 {/* Icons only — no text labels */}
                 <div className="mtg-actions">
-                  <button className="quiet-button" type="button" title="Edit" onClick={() => setEditing(rec)} style={{ fontSize:'0.9rem', padding:'3px 8px' }}>✎</button>
+                  <button className="quiet-button vwh" type="button" title="Edit" onClick={() => setEditing(rec)} style={{ fontSize:'0.9rem', padding:'3px 8px' }}>✎</button>
                   <button className="quiet-button" type="button" title="Print" onClick={() => printMeetingMinutes(rec, employees, activeLeaves)} style={{ fontSize:'0.9rem', padding:'3px 8px' }}>🖨</button>
-                  <button className="quiet-button" type="button" title="Delete" onClick={() => del(rec.id)} style={{ fontSize:'0.9rem', padding:'3px 8px', color:'#ef4444' }}>🗑</button>
+                  <button className="quiet-button vwh" type="button" title="Delete" onClick={() => del(rec.id)} style={{ fontSize:'0.9rem', padding:'3px 8px', color:'#ef4444' }}>🗑</button>
                 </div>
               </div>
             )
@@ -9406,7 +9406,7 @@ function RequestsSection({ records, employees, onUpdate }: {
             </select>
           </label>
           <label><span>Status</span><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="All">All Statuses</option><option>Open</option><option>In Progress</option><option>Resolved</option><option>Rejected</option></select></label>
-          <button className="primary-button" type="button" onClick={() => setEditing(newReq())}>+ Add Request</button>
+          <button className="primary-button vwh" type="button" onClick={() => setEditing(newReq())}>+ Add Request</button>
         </div>
         <div className="employee-table-shell compact-scroll">
           <table className="data-table">
@@ -9468,8 +9468,8 @@ function RequestsSection({ records, employees, onUpdate }: {
                     <td style={{maxWidth:180, color:'#64748b', fontSize:'0.82rem'}}>{r.actionTaken || '—'}</td>
                     <td style={{textAlign:'center',whiteSpace:'nowrap'}}>
                       <div className="row-actions">
-                        <button className="action-glyph edit" title="Edit" onClick={() => setEditing(r)} type="button">✎</button>
-                        <button className="action-glyph delete" title="Delete" onClick={() => del(r.id)} type="button">🗑</button>
+                        <button className="action-glyph edit vwh" title="Edit" onClick={() => setEditing(r)} type="button">✎</button>
+                        <button className="action-glyph delete vwh" title="Delete" onClick={() => del(r.id)} type="button">🗑</button>
                       </div>
                     </td>
                   </tr>
@@ -9550,7 +9550,7 @@ function VisitsSection({ records, employees, onUpdate }: {
             </select>
           </label>
           <label><span>Status</span><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="All">All Statuses</option><option>Scheduled</option><option>Completed</option><option>Cancelled</option></select></label>
-          <button className="primary-button" type="button" onClick={() => setEditing(newVisit())}>+ Add Visit</button>
+          <button className="primary-button vwh" type="button" onClick={() => setEditing(newVisit())}>+ Add Visit</button>
         </div>
         <div className="employee-table-shell compact-scroll">
           <table className="data-table">
@@ -9583,8 +9583,8 @@ function VisitsSection({ records, employees, onUpdate }: {
                     <td style={{maxWidth:200, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', color:'#64748b', fontSize:'0.82rem'}}>{r.remarks || '—'}</td>
                     <td style={{textAlign:'center'}}>
                       <div className="row-actions">
-                        <button className="action-glyph edit" title="Edit" onClick={() => setEditing(r)} type="button">✎</button>
-                        <button className="action-glyph delete" title="Delete" onClick={() => del(r.id)} type="button">🗑</button>
+                        <button className="action-glyph edit vwh" title="Edit" onClick={() => setEditing(r)} type="button">✎</button>
+                        <button className="action-glyph delete vwh" title="Delete" onClick={() => del(r.id)} type="button">🗑</button>
                       </div>
                     </td>
                   </tr>
@@ -9620,7 +9620,7 @@ function IncidentsSection({ records, employees, onUpdate }: { records: IncidentR
         <div className="table-toolbar activities-toolbar">
           <label className="search-field"><span>Search</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Employee, type, location" /></label>
           <label><span>Status</span><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="All">All Statuses</option><option>Open</option><option>Under Review</option><option>Closed</option></select></label>
-          <button className="primary-button" type="button" onClick={() => setEditing(newIncident())}>+ Log Incident</button>
+          <button className="primary-button vwh" type="button" onClick={() => setEditing(newIncident())}>+ Log Incident</button>
         </div>
         <div className="employee-table-shell compact-scroll"><table className="data-table"><thead><tr><th>Ref No.</th><th>Date</th><th>Time</th><th>Employee</th><th>Section</th><th>Department</th><th>Site / Location</th><th>Type</th><th style={{textAlign:'center'}}>Injury</th><th style={{textAlign:'center'}}>Statement</th><th style={{textAlign:'center'}}>Disciplinary</th><th style={{textAlign:'center'}}>Status</th><th style={{textAlign:'center'}}>Actions</th></tr></thead>
           <tbody>{filtered.length === 0 ? <tr><td colSpan={13} className="empty-row">No incidents found</td></tr> : filtered.map((r) => (
@@ -9637,7 +9637,7 @@ function IncidentsSection({ records, employees, onUpdate }: { records: IncidentR
               <td style={{textAlign:'center'}}>{r.statementTaken ? <span className="doc-yes">✓</span> : <span className="doc-no">—</span>}</td>
               <td style={{textAlign:'center'}}>{r.disciplinaryAction ? <span className="doc-yes">✓</span> : <span className="doc-no">—</span>}</td>
               <td style={{textAlign:'center'}}><StatusBadge status={r.status} /></td>
-              <td style={{textAlign:'center'}}><div className="row-actions"><button className="action-glyph" title="View" onClick={() => setViewing(r)} type="button">👁</button><button className="action-glyph edit" title="Edit" onClick={() => setEditing(r)} type="button">✎</button><button className="action-glyph delete" title="Delete" onClick={() => del(r.id)} type="button">🗑</button></div></td>
+              <td style={{textAlign:'center'}}><div className="row-actions"><button className="action-glyph" title="View" onClick={() => setViewing(r)} type="button">👁</button><button className="action-glyph edit vwh" title="Edit" onClick={() => setEditing(r)} type="button">✎</button><button className="action-glyph delete vwh" title="Delete" onClick={() => del(r.id)} type="button">🗑</button></div></td>
             </tr>
           ))}</tbody>
         </table></div>
@@ -9731,7 +9731,7 @@ function IncidentsSection({ records, employees, onUpdate }: { records: IncidentR
               )}
             </div>
             <div className="modal-actions">
-              <button className="primary-button" type="button" onClick={() => { setViewing(null); setEditing(viewing) }}>✎ Edit</button>
+              <button className="primary-button vwh" type="button" onClick={() => { setViewing(null); setEditing(viewing) }}>✎ Edit</button>
               <button className="back-btn-sm" type="button" onClick={() => setViewing(null)}>Close</button>
             </div>
           </section>
@@ -9925,7 +9925,7 @@ function InventoryCategoryTab({ cat, items, usage, onUpdateItems, onUpdateUsage,
           {lowStockCount > 0 && <div className="inv-banner-kpi inv-banner-kpi-warn"><span className="inv-banner-num">{lowStockCount}</span><span className="inv-banner-lbl">Low Stock</span></div>}
           <div className="inv-banner-kpi"><span className="inv-banner-num">{issueCount}</span><span className="inv-banner-lbl">Issued</span></div>
         </div>
-        <button className="inv-add-btn" onClick={() => setEditingItem(newItem())} type="button">
+        <button className="inv-add-btn vwh" onClick={() => setEditingItem(newItem())} type="button">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Add Item
         </button>
@@ -9975,12 +9975,12 @@ function InventoryCategoryTab({ cat, items, usage, onUpdateItems, onUpdateUsage,
                       <span className="inv-qty-unit">{item.unit}</span>
                     </div>
                     <div className="inv-item-actions">
-                      <button className="inv-issue-btn" onClick={() => setUsingItem(item)} type="button" title="Issue item">
+                      <button className="inv-issue-btn vwh" onClick={() => setUsingItem(item)} type="button" title="Issue item">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="8 5 2 12 8 19"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
                         Issue
                       </button>
-                      <button className="action-glyph edit" onClick={() => setEditingItem(item)} type="button" title="Edit">✎</button>
-                      <button className="action-glyph delete" onClick={() => delItem(item.id)} type="button" title="Delete">🗑</button>
+                      <button className="action-glyph edit vwh" onClick={() => setEditingItem(item)} type="button" title="Edit">✎</button>
+                      <button className="action-glyph delete vwh" onClick={() => delItem(item.id)} type="button" title="Delete">🗑</button>
                     </div>
                   </div>
                 </div>
@@ -10061,7 +10061,7 @@ function OrdersTab({ orders, items, onUpdateOrders }: {
             {['All','Store Order','Bulk Request'].map(t=><option key={t}>{t}</option>)}
           </select>
         </label>
-        <button className="primary-button toolbar-add-btn" onClick={()=>setEditing(newOrder())} type="button">+ New Order</button>
+        <button className="primary-button toolbar-add-btn vwh" onClick={()=>setEditing(newOrder())} type="button">+ New Order</button>
       </div>
 
       <div className="employee-table-shell compact-scroll">
@@ -10090,9 +10090,9 @@ function OrdersTab({ orders, items, onUpdateOrders }: {
                   <td style={{fontSize:'0.75rem',color:'#64748b',maxWidth:160}}>{o.remarks || '—'}</td>
                   <td>
                     <div className="row-actions request-inline-actions">
-                      {o.status === 'Pending' && <button className="action-glyph" style={{color:'#16a34a',fontSize:'0.75rem',fontWeight:700,padding:'2px 7px',background:'#dcfce7',borderRadius:6,border:'none',cursor:'pointer'}} onClick={()=>markReceived(o)} type="button" title="Mark received">✓ Received</button>}
-                      <button className="action-glyph edit"   onClick={()=>setEditing(o)} type="button" title="Edit">✎</button>
-                      <button className="action-glyph delete" onClick={()=>del(o.id)}    type="button" title="Delete">🗑</button>
+                      {o.status === 'Pending' && <button className="action-glyph vwh" style={{color:'#16a34a',fontSize:'0.75rem',fontWeight:700,padding:'2px 7px',background:'#dcfce7',borderRadius:6,border:'none',cursor:'pointer'}} onClick={()=>markReceived(o)} type="button" title="Mark received">✓ Received</button>}
+                      <button className="action-glyph edit vwh"   onClick={()=>setEditing(o)} type="button" title="Edit">✎</button>
+                      <button className="action-glyph delete vwh" onClick={()=>del(o.id)}    type="button" title="Delete">🗑</button>
                     </div>
                   </td>
                 </tr>
@@ -10371,8 +10371,8 @@ type AppUser = {
 }
 
 const initialAppUsers: AppUser[] = [
-  { id: 'USR-001', name: 'Arushulla Rashid', username: 'Rashid50814', role: 'Admin', status: 'Active', lastLogin: '2026-06-01', designation: 'Administrator' },
-  { id: 'USR-002', name: 'Shantumon Pathiyil Chacko', username: 'Chacko58692', role: 'HR Manager', status: 'Active', lastLogin: '2026-06-01', designation: 'Administration Assistant' },
+  { id: 'USR-001', name: 'Administrator', username: 'admin', role: 'Admin', status: 'Active', lastLogin: '2026-06-01', designation: 'System Administrator' },
+  { id: 'USR-002', name: 'Viewer', username: 'viewer', role: 'Viewer', status: 'Active', lastLogin: '2026-06-01', designation: 'Read-only User' },
 ]
 
 const rolePermissions: Record<UserRole, string> = {
@@ -10515,7 +10515,7 @@ function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves:
           <div className="profile-username">@{currentAppUser?.username ?? 'admin'}</div>
         </div>
         <div style={{ marginLeft: 'auto' }}>
-          <button className="quiet-button light" type="button" style={{ fontSize: '0.78rem', background: 'rgba(255,255,255,0.15)', color: '#fff', border: '1.5px solid rgba(255,255,255,0.3)' }}>
+          <button className="quiet-button light vwh" type="button" style={{ fontSize: '0.78rem', background: 'rgba(255,255,255,0.15)', color: '#fff', border: '1.5px solid rgba(255,255,255,0.3)' }}>
             Change Password
           </button>
         </div>
@@ -10617,8 +10617,8 @@ function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves:
                       </td>
                       <td>
                         <div className="row-actions">
-                          <button className="action-glyph edit" onClick={() => setEditing(user)} type="button" title="Edit user">✎</button>
-                          <button className="action-glyph delete" onClick={() => deleteUser(user.id)} type="button" disabled={user.id === 'USR-001'} title={user.id === 'USR-001' ? 'Cannot delete admin' : 'Delete user'}>🗑</button>
+                          <button className="action-glyph edit vwh" onClick={() => setEditing(user)} type="button" title="Edit user">✎</button>
+                          <button className="action-glyph delete vwh" onClick={() => deleteUser(user.id)} type="button" disabled={user.id === 'USR-001'} title={user.id === 'USR-001' ? 'Cannot delete admin' : 'Delete user'}>🗑</button>
                         </div>
                       </td>
                     </tr>
@@ -10675,7 +10675,7 @@ function PendingTasksModal({ employees, onEdit, onClose }: { employees: Employee
                     <span className="pending-name-text">{employee.fullName || 'Unnamed Employee'}</span>
                     <span className="pending-task-id">{employee.employeeId || 'No ID'} · {employee.department}</span>
                   </div>
-                  <button className="pending-edit-btn" type="button" onClick={() => { onEdit(employee); onClose() }} title="Edit employee record">
+                  <button className="pending-edit-btn vwh" type="button" onClick={() => { onEdit(employee); onClose() }} title="Edit employee record">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     Edit
                   </button>
@@ -10692,18 +10692,16 @@ function PendingTasksModal({ employees, onEdit, onClose }: { employees: Employee
   )
 }
 
-function LoginPage({ onLogin }: { onLogin: (name: string) => void }) {
+function LoginPage({ onLogin }: { onLogin: (name: string, role: UserRole) => void }) {
   const [loginUser, setLoginUser] = useState('')
   const [loginPass, setLoginPass] = useState('')
   const [loginError, setLoginError] = useState(false)
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (loginUser === 'Rashid50814' && loginPass === 'Admin@TIC#') {
-      setLoginError(false); onLogin('Arushulla Rashid')
-    } else if (loginUser === 'Chacko58692' && loginPass === '12345') {
-      setLoginError(false); onLogin('Shantumon Pathiyil Chacko')
-    } else if (loginUser === 'admin' && loginPass === 'Admin@Pending') {
-      setLoginError(false); onLogin('Administrator')
+    if (loginUser === 'admin' && loginPass === 'TIC@Admin#2026') {
+      setLoginError(false); onLogin('Administrator', 'Admin')
+    } else if (loginUser === 'viewer' && loginPass === 'TIC@View#2026') {
+      setLoginError(false); onLogin('Viewer', 'Viewer')
     } else {
       setLoginError(true)
     }
@@ -10840,6 +10838,7 @@ function App() {
   }
   const [loggingOut, setLoggingOut] = useState(false)
   const [currentUserName, setCurrentUserName] = useState(() => localStorage.getItem('tic_user') ?? 'Administrator')
+  const [currentUserRole, setCurrentUserRole] = useState<UserRole>(() => (localStorage.getItem('tic_role') as UserRole) ?? 'Admin')
 
   const getInitials = (name: string) => {
     const parts = name.trim().split(/\s+/)
@@ -10848,15 +10847,17 @@ function App() {
   }
   const getFirstName = (name: string) => name.trim().split(/\s+/)[0]
 
-  const login = (name: string) => {
+  const login = (name: string, role: UserRole) => {
     localStorage.setItem('tic_auth', '1')
     localStorage.setItem('tic_user', name)
+    localStorage.setItem('tic_role', role)
     setCurrentUserName(name)
+    setCurrentUserRole(role)
     setIsLoggedIn(true)
   }
   const logout = () => {
     setLoggingOut(true)
-    setTimeout(() => { localStorage.removeItem('tic_auth'); localStorage.removeItem('tic_user'); setIsLoggedIn(false); setLoggingOut(false) }, 700)
+    setTimeout(() => { localStorage.removeItem('tic_auth'); localStorage.removeItem('tic_user'); localStorage.removeItem('tic_role'); setIsLoggedIn(false); setLoggingOut(false) }, 700)
   }
   const [importResult, setImportResult] = useState<{ added: number; updated: number; skipped: number } | null>(null)
 
@@ -11344,7 +11345,7 @@ function App() {
   }
 
   return (
-    <div className={`app-shell${sidebarCollapsed ? ' sidebar-is-collapsed' : ''}${loggingOut ? ' app-logging-out' : ''}`}>
+    <div className={`app-shell${sidebarCollapsed ? ' sidebar-is-collapsed' : ''}${loggingOut ? ' app-logging-out' : ''}${currentUserRole === 'Viewer' ? ' view-only-mode' : ''}`}>
       <aside className={`sidebar${sidebarCollapsed ? ' sidebar--collapsed' : ''}`}>
         <div className="sidebar-header">
           <div className="sidebar-brand">
@@ -11371,7 +11372,12 @@ function App() {
         <div className="sidebar-bottom">
           <div className="sidebar-user" title={sidebarCollapsed ? getFirstName(currentUserName) : undefined}>
             <div className="sidebar-user-avatar">{getInitials(currentUserName)}</div>
-            {!sidebarCollapsed && <span className="sidebar-user-name">{getFirstName(currentUserName)}</span>}
+            {!sidebarCollapsed && (
+              <span className="sidebar-user-name">
+                <span className="sidebar-user-name-text">{getFirstName(currentUserName)}</span>
+                {currentUserRole === 'Viewer' && <span className="sidebar-view-only-badge">View Only</span>}
+              </span>
+            )}
           </div>
           <button className="sidebar-logout" onClick={logout} type="button" title={sidebarCollapsed ? 'Logout' : undefined}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
