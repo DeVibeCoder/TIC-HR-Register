@@ -10823,9 +10823,23 @@ const pageIcons: Record<Page, string> = {
   settings: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2"/></svg>`,
 }
 
+// Bump this whenever login usernames/passwords change — any browser still
+// holding a session from before the bump is logged out and sent back to
+// the login screen so it must re-authenticate with the new credentials.
+const AUTH_VERSION = '2'
+
 function App() {
   const [activePage, setActivePageState] = useState<Page>(() => (localStorage.getItem('tic_page') as Page) ?? 'overview')
-  const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem('tic_auth') === '1')
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    if (localStorage.getItem('tic_auth_version') !== AUTH_VERSION) {
+      localStorage.removeItem('tic_auth')
+      localStorage.removeItem('tic_user')
+      localStorage.removeItem('tic_role')
+      localStorage.setItem('tic_auth_version', AUTH_VERSION)
+      return false
+    }
+    return localStorage.getItem('tic_auth') === '1'
+  })
   const [sidebarCollapsed, setSidebarCollapsedState] = useState(() => localStorage.getItem('tic_sidebar') === '1')
 
   const setActivePage = (page: Page) => { setActivePageState(page); localStorage.setItem('tic_page', page) }
