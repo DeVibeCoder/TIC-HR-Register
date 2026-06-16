@@ -9992,7 +9992,11 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false }: {
                     </td>
                     <td style={{textAlign:'center',whiteSpace:'nowrap'}}><span className="req-type-chip">{r.requestType}</span></td>
                     <td style={{textAlign:'center',whiteSpace:'nowrap'}}><span className={`req-priority-badge ${priorityColors[r.priority]}`}>{r.priority}</span></td>
-                    <td style={{maxWidth:200}}>{r.description || '—'}</td>
+                    <td style={{maxWidth:240}}>
+                      <span title={r.description || undefined} style={{ display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden', fontSize:'0.82rem', lineHeight:'1.4' }}>
+                        {r.description || '—'}
+                      </span>
+                    </td>
                     <td style={{textAlign:'center', position:'relative', whiteSpace:'nowrap'}}>
                       {isHOD ? (
                         <StatusBadge status={r.status} />
@@ -10017,7 +10021,11 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false }: {
                       )}
                     </td>
                     <td style={{textAlign:'center',fontSize:'0.8rem',whiteSpace:'nowrap'}}>{r.completedDate ? formatDateDisplay(r.completedDate) : '—'}</td>
-                    <td style={{maxWidth:180, color:'#64748b', fontSize:'0.82rem'}}>{r.actionTaken || '—'}</td>
+                    <td style={{maxWidth:180}}>
+                      <span title={r.actionTaken || undefined} style={{ display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden', fontSize:'0.82rem', lineHeight:'1.4', color:'#64748b' }}>
+                        {r.actionTaken || '—'}
+                      </span>
+                    </td>
                     <td style={{textAlign:'center',whiteSpace:'nowrap'}}>
                       <div className="row-actions">
                         <button className="action-glyph edit vwh" title="Edit" onClick={() => setEditing(r)} type="button">✎</button>
