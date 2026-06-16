@@ -10027,7 +10027,7 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false }: {
                       </span>
                     </td>
                     <td style={{textAlign:'center',whiteSpace:'nowrap'}}>
-                      <div className="row-actions">
+                      <div className="row-actions" style={{ flexWrap: 'nowrap' }}>
                         <button className="action-glyph edit vwh" title="Edit" onClick={() => setEditing(r)} type="button">✎</button>
                         <button className="action-glyph delete vwh" title="Delete" onClick={() => del(r.id)} type="button">🗑</button>
                       </div>
