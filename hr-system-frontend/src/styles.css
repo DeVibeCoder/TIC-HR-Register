@@ -583,8 +583,9 @@ button:disabled { cursor: not-allowed; opacity: 0.5; }
   display: flex;
   flex-direction: column;
 }
-/* Settings page gets its own scroll */
-.workspace-inner:has(.settings-page) {
+/* Settings and Dashboard pages get their own scroll */
+.workspace-inner:has(.settings-page),
+.workspace-inner:has(.dash-wrap) {
   overflow-y: auto;
 }
 
@@ -5053,6 +5054,37 @@ button.step-pill:hover { filter: brightness(0.98); }
 /* ── Sidebar toggle text ─────────────────────────────────── */
 /* sidebar-toggle removed – replaced by topbar-toggle-btn */
 
+/* ── Settings tabs (admin) ───────────────────────────────── */
+.settings-tabs {
+  display: flex;
+  gap: 4px;
+  margin: 18px 0 0;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 0;
+}
+.settings-tab-btn {
+  padding: 8px 22px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #64748b;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  border-radius: 6px 6px 0 0;
+  transition: color 120ms, border-color 120ms, background 120ms;
+}
+.settings-tab-btn:hover { color: #4f46e5; background: #f5f3ff; }
+.settings-tab-btn.active {
+  color: #4f46e5;
+  border-bottom-color: #4f46e5;
+  background: #f5f3ff;
+}
+.settings-tab-panel {
+  padding: 18px 0 0;
+}
+
 /* ── Settings danger zone ────────────────────────────────── */
 .settings-danger-zone {
   margin: 4px 0 0;
@@ -7824,18 +7856,18 @@ button.step-pill:hover { filter: brightness(0.98); }
 .mc-analytics-modal {
   max-width: 1000px !important;
   width: 97vw !important;
-  height: 88vh !important;
-  max-height: 88vh !important;
+  height: 93vh !important;
+  max-height: 93vh !important;
   display: flex !important;
   flex-direction: column !important;
   overflow: hidden !important;
   padding: 0 !important;
 }
 .mc-analytics-modal .modal-header {
-  flex-shrink: 0; padding: 16px 24px 14px; border-bottom: 1px solid #f1f5f9;
+  flex-shrink: 0; padding: 12px 24px 10px; border-bottom: 1px solid #f1f5f9;
 }
 .mc-analytics-modal .modal-actions {
-  flex-shrink: 0; border-top: 1px solid #f1f5f9; padding: 8px 24px;
+  flex-shrink: 0; border-top: 1px solid #f1f5f9; padding: 6px 24px;
 }
 
 /* Body fills the space between header and actions inside the flex modal */
@@ -7843,7 +7875,7 @@ button.step-pill:hover { filter: brightness(0.98); }
   flex: 1;
   min-height: 0;            /* essential — allows flex child to shrink below content size */
   overflow: hidden;
-  padding: 10px 20px 6px;
+  padding: 8px 20px 6px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -7852,29 +7884,40 @@ button.step-pill:hover { filter: brightness(0.98); }
 /* KPI row — fixed, never shrinks */
 .mc-an-kpi-row {
   flex-shrink: 0;
-  padding-bottom: 8px !important;
+  padding: 4px 0 8px !important;
   border-bottom: 1px solid #f1f5f9;
   margin-bottom: 0 !important;
 }
 
-/* Charts row — fixed height */
-.mc-top-row {
+/* Charts row — two equal panels, fixed height */
+.mc-charts-row {
   flex-shrink: 0;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-  height: 160px;
+  height: 148px;
 }
-.mc-top-row .mc-an-panel {
-  overflow: hidden;
+.mc-charts-row .mc-an-panel {
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
-/* Staff panel — takes ALL remaining space after charts */
+/* Bar chart inside the charts row — needs a defined height */
+.mc-charts-row .mc-an-bar-chart {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+}
+.mc-charts-row .mc-an-bar-wrap { height: 100% !important; }
+
+/* Dept horizontal bars — allow scroll if many sections */
+.mc-charts-row .mc-an-panel:first-child { overflow-y: auto; }
+
+/* Staff panel — full width, takes ALL remaining space */
 .mc-an-staff-panel {
   flex: 1;
-  min-height: 0;            /* allows it to shrink so scroll works */
+  min-height: 0;
   display: flex;
   flex-direction: column;
   background: #f8fafc;
@@ -7896,8 +7939,8 @@ button.step-pill:hover { filter: brightness(0.98); }
 .mc-an-bar.mc-an-bar-active { background: linear-gradient(to top, #f59e0b, #fbbf24) !important; }
 
 @media (max-width: 700px) {
-  .mc-top-row                { grid-template-columns: 1fr; height: auto; flex-shrink: 0; }
-  .mc-top-row .mc-an-panel   { height: 140px; }
+  .mc-charts-row             { grid-template-columns: 1fr; height: auto; }
+  .mc-charts-row .mc-an-panel { height: 160px; }
   .mc-analytics-body         { padding: 8px 12px 4px; }
   .mc-an-kpi-row .mc-kpi-chip { padding: 5px 10px; gap: 6px; }
   .mc-an-kpi-row .mc-kpi-num  { font-size: 1.1rem; }
@@ -8910,7 +8953,7 @@ html { overflow-x: hidden; }
     height: calc(100vh - 40px) !important;
     max-height: calc(100vh - 40px) !important;
   }
-  .mc-top-row { height: 120px !important; }
+  .mc-main-cols { grid-template-columns: 1fr !important; }
   .mc-an-panel { padding: 6px 8px !important; }
   .mc-an-title { font-size: 0.68rem !important; margin-bottom: 6px !important; }
 }
@@ -9288,8 +9331,9 @@ html { overflow-x: hidden; }
    DASHBOARD — complete redesign
    ═══════════════════════════════════════════════════════════════════════════ */
 .dash-wrap {
-  padding: 0 0 24px;
+  padding: 18px 22px 28px;
   max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* Hero bar */

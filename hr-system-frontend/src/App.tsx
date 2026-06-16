@@ -2696,7 +2696,7 @@ function TripRequestModal({ record, employees, onClose, onSave }: {
               <span>Search Employee (optional)</span>
               <input value={empSearch} onChange={e => { setEmpSearch(e.target.value); setShowEmpDrop(true) }}
                 onFocus={() => setShowEmpDrop(true)} onBlur={() => setTimeout(()=>setShowEmpDrop(false),150)}
-                placeholder="Type name or employee ID…" autoComplete="off" />
+                placeholder="Type name or employee ID to override…" autoComplete="off" />
               {showEmpDrop && empResults.length > 0 && (
                 <div className="ei-emp-dropdown">
                   {empResults.map(e => (
@@ -2708,14 +2708,14 @@ function TripRequestModal({ record, employees, onClose, onSave }: {
               )}
             </label>
             <label><span>Requester Name</span><input value={requesterName} onChange={e=>setRequesterName(e.target.value)} placeholder="Full name" /></label>
-            <label><span>Job Title</span><input value={jobTitle} onChange={e=>setJobTitle(e.target.value)} placeholder="Designation" /></label>
-            <label><span>Department</span>
+            <label><span>Job Title / Designation</span><input value={jobTitle} onChange={e=>setJobTitle(e.target.value)} placeholder="e.g. HR Officer" /></label>
+            <label><span>Department / Section</span>
               <select value={department} onChange={e=>setDepartment(e.target.value)}>
                 <option value="">Select section…</option>
                 {departmentsList.map(d=><option key={d}>{d}</option>)}
               </select>
             </label>
-            <label><span>Business Unit</span><input value="VHPL" disabled /></label>
+            <label><span>Business Unit</span><input value="VHPL — Thilafushi Industrial Complex" readOnly style={{ color:'#64748b', background:'#f8fafc' }} /></label>
           </div>
         </div>
 
@@ -2723,18 +2723,19 @@ function TripRequestModal({ record, employees, onClose, onSave }: {
         <div className="pp-modal-section tr-trip-section">
           <div className="pp-modal-section-label tr-trip-label">⛴ Trip Details</div>
           <div className="pp-modal-grid">
-            <label><span>Departing From</span><input value={departingFrom} onChange={e=>setDepartingFrom(e.target.value)} placeholder="e.g. Airport" /></label>
+            <label><span>Departing From</span><input value={departingFrom} onChange={e=>setDepartingFrom(e.target.value)} placeholder="e.g. Airport / Hulhumale" /></label>
             <label><span>Destination</span><input value={destination} onChange={e=>setDestination(e.target.value)} placeholder="e.g. Thilafushi" /></label>
             <label><span>Departure Date</span><input type="date" value={departureDate} onChange={e=>setDepartureDate(e.target.value)} /></label>
             <label><span>Departure Time</span><input type="time" value={departureTime} onChange={e=>setDepartureTime(e.target.value)} /></label>
-            <label className="ef-span2"><span>Purpose of Trip</span><input value={purpose} onChange={e=>setPurpose(e.target.value)} placeholder="e.g. Escorting staff" /></label>
+            <label className="ef-span2"><span>Purpose of Trip</span><input value={purpose} onChange={e=>setPurpose(e.target.value)} placeholder="e.g. Escorting staff to airport" /></label>
             <label><span>Number of Passengers</span><input type="number" min="1" value={passengers} onChange={e=>setPassengers(e.target.value)} /></label>
+            <label><span>Trip to be Invoiced to</span><input value="VHPL" readOnly style={{ color:'#64748b', background:'#f8fafc' }} /></label>
           </div>
         </div>
 
         {/* Trip Type */}
         <div className="pp-modal-section tr-type-section">
-          <div className="pp-modal-section-label tr-type-label">↔ One-Way / Round Trip</div>
+          <div className="pp-modal-section-label tr-type-label">↔ Trip Type</div>
           <div className="tr-type-toggle">
             <button type="button" className={tripType==='One-Way' ? 'active' : ''} onClick={()=>setTripType('One-Way')}>One-Way</button>
             <button type="button" className={tripType==='Round Trip' ? 'active' : ''} onClick={()=>setTripType('Round Trip')}>Round Trip</button>
@@ -2743,7 +2744,7 @@ function TripRequestModal({ record, employees, onClose, onSave }: {
             <div className="pp-modal-grid" style={{ marginTop:10 }}>
               <label className="tr-tbd-check ef-span2">
                 <input type="checkbox" checked={returnTBD} onChange={e=>setReturnTBD(e.target.checked)} />
-                <span>Return date/time not yet available — mark as TBD</span>
+                <span>Return date/time not yet confirmed — mark as TBD</span>
               </label>
               {!returnTBD && (
                 <>
@@ -2755,13 +2756,13 @@ function TripRequestModal({ record, employees, onClose, onSave }: {
           )}
         </div>
 
-        {/* Requested By */}
+        {/* Submission Details */}
         <div className="pp-modal-section">
-          <div className="pp-modal-section-label">📝 Requested By</div>
+          <div className="pp-modal-section-label">📝 Submission Details</div>
           <div className="pp-modal-grid">
-            <label><span>Requested By</span><input value={requesterName} disabled /></label>
+            <label><span>Requested By</span><input value={requesterName} readOnly style={{ color:'#64748b', background:'#f8fafc' }} /></label>
             <label><span>Request Date</span><input type="date" value={requestDate} onChange={e=>setRequestDate(e.target.value)} /></label>
-            <label className="ef-span2"><span>Remarks (optional)</span><input value={remarks} onChange={e=>setRemarks(e.target.value)} placeholder="Optional notes" /></label>
+            <label className="ef-span2"><span>Remarks / Additional Notes</span><input value={remarks} onChange={e=>setRemarks(e.target.value)} placeholder="Any special instructions or notes for VMT…" /></label>
           </div>
         </div>
 
@@ -2774,10 +2775,11 @@ function TripRequestModal({ record, employees, onClose, onSave }: {
   )
 }
 
-function TripReqSection({ records, employees, onUpdate }: {
+function TripReqSection({ records, employees, onUpdate, currentUserName = '' }: {
   records: TripRequest[]
   employees: Employee[]
   onUpdate: (fn: (prev: TripRequest[]) => TripRequest[]) => void
+  currentUserName?: string
 }) {
   const [search,       setSearch]       = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
@@ -2797,12 +2799,19 @@ function TripReqSection({ records, employees, onUpdate }: {
   }
   const del = (id: string) => { if (window.confirm('Delete this trip request?')) onUpdate(prev=>prev.filter(r=>r.id!==id)) }
 
-  const newRec = (): TripRequest => ({
-    id:'TR-new', requesterName:'', jobTitle:'', department:'',
-    departingFrom:'', destination:'', departureDate:new Date().toISOString().slice(0,10), departureTime:'',
-    purpose:'', passengers:'1', tripType:'One-Way', returnDate:'', returnTime:'', returnTBD:false,
-    requestDate:new Date().toISOString().slice(0,10), status:'Pending Approval', approvedDate:'', remarks:'',
-  })
+  const newRec = (): TripRequest => {
+    const emp = employees.find(e => e.fullName === currentUserName)
+    return {
+      id:'TR-new',
+      requesterName: emp?.fullName ?? currentUserName,
+      jobTitle: emp?.designation ?? '',
+      department: emp?.department ?? '',
+      departingFrom:'', destination:'',
+      departureDate:new Date().toISOString().slice(0,10), departureTime:'',
+      purpose:'', passengers:'1', tripType:'One-Way', returnDate:'', returnTime:'', returnTBD:false,
+      requestDate:new Date().toISOString().slice(0,10), status:'Pending Approval', approvedDate:'', remarks:'',
+    }
+  }
 
   const approve = () => {
     if (!approving) return
@@ -2855,7 +2864,7 @@ function TripReqSection({ records, employees, onUpdate }: {
             {['All','Pending Approval','Approved','Rejected'].map(s=><option key={s}>{s}</option>)}
           </select>
         </label>
-        <button className="primary-button vwh" onClick={()=>setEditing(newRec())} type="button">+ New Trip Request</button>
+        <button className="primary-button vwh" onClick={()=>setEditing(newRec())} type="button" style={{ flex:'0 0 auto', padding:'0 18px', height:36, fontSize:'0.82rem' }}>+ New Trip Request</button>
       </div>
 
       <div className="employee-table-shell compact-scroll">
@@ -3008,12 +3017,15 @@ function printTripRequest(record: TripRequest, sigRequester: string, sigAhmedAli
   .return-box { flex:1; min-width:120pt; border:1pt solid #333; padding:3pt 8pt; min-height:14pt; }
 
   .sig-grid { display:grid; grid-template-columns:1fr 1fr; border:1pt solid #333; margin-top:12pt; }
-  .sig-col { padding:6pt 10pt 10pt; border-right:1pt solid #333; }
+  .sig-col { padding:8pt 12pt 12pt; border-right:1pt solid #333; }
   .sig-col:last-child { border-right:none; }
-  .sig-col-hdr { font-weight:700; font-size:10.5pt; border-bottom:1pt solid #333; margin:-6pt -10pt 8pt; padding:5pt 10pt; background:#f8fafc; }
-  .sig-row { font-size:10.5pt; margin-bottom:6pt; }
-  .sig-img-row { min-height:34pt; display:flex; align-items:center; }
-  .sig-img { height:32pt; max-width:140pt; object-fit:contain; }
+  .sig-col-hdr { font-weight:700; font-size:10.5pt; border-bottom:1pt solid #333; margin:-8pt -12pt 10pt; padding:6pt 12pt; background:#f8fafc; }
+  .sig-row { font-size:10.5pt; margin-bottom:8pt; display:flex; align-items:baseline; gap:6pt; }
+  .sig-line { flex:1; border-bottom:1pt solid #333; min-width:80pt; height:14pt; display:inline-block; vertical-align:bottom; padding-left:4pt; }
+  .sig-img-row { min-height:56pt; align-items:flex-end; padding-bottom:2pt; }
+  .sig-img-row .sig-line { height:54pt; border-bottom:1pt solid #333; display:flex; align-items:center; }
+  .sig-img { height:46pt; max-width:160pt; object-fit:contain; }
+  .sig-lbl { font-weight:600; white-space:nowrap; }
 
   .status-stamp { position:absolute; top:54pt; right:42pt; font-family: system-ui, sans-serif; font-size:13pt; font-weight:800; letter-spacing:2px; text-transform:uppercase; padding:4pt 12pt; border:2pt solid; border-radius:4pt; transform:rotate(8deg); opacity:0.8; }
   .status-stamp.pending { color:#b45309; border-color:#b45309; }
@@ -3078,15 +3090,15 @@ function printTripRequest(record: TripRequest, sigRequester: string, sigAhmedAli
     <div class="sig-grid">
       <div class="sig-col">
         <div class="sig-col-hdr">Requested by:</div>
-        <div class="sig-row">Name: ${esc(record.requesterName) || '&nbsp;'}</div>
-        <div class="sig-row sig-img-row">Signature: ${requesterSigHtml}</div>
-        <div class="sig-row">Date: ${record.requestDate ? formatDateDisplay(record.requestDate) : '&nbsp;'}</div>
+        <div class="sig-row"><span class="sig-lbl">Name:</span><span class="sig-line">${esc(record.requesterName) || ''}</span></div>
+        <div class="sig-row sig-img-row"><span class="sig-lbl">Signature:</span><span class="sig-line">${requesterSigHtml}</span></div>
+        <div class="sig-row"><span class="sig-lbl">Date:</span><span class="sig-line">${record.requestDate ? formatDateDisplay(record.requestDate) : ''}</span></div>
       </div>
       <div class="sig-col">
         <div class="sig-col-hdr">Authorized by:</div>
-        <div class="sig-row">Name: AHMED ALI</div>
-        <div class="sig-row sig-img-row">Signature: ${authorizedSigHtml}</div>
-        <div class="sig-row">Date: ${record.approvedDate ? formatDateDisplay(record.approvedDate) : '&nbsp;'}</div>
+        <div class="sig-row"><span class="sig-lbl">Name:</span><span class="sig-line">AHMED ALI</span></div>
+        <div class="sig-row sig-img-row"><span class="sig-lbl">Signature:</span><span class="sig-line">${authorizedSigHtml}</span></div>
+        <div class="sig-row"><span class="sig-lbl">Date:</span><span class="sig-line">${record.approvedDate ? formatDateDisplay(record.approvedDate) : ''}</span></div>
       </div>
     </div>
 
@@ -3097,15 +3109,15 @@ function printTripRequest(record: TripRequest, sigRequester: string, sigAhmedAli
     <div class="sig-grid">
       <div class="sig-col">
         <div class="sig-col-hdr">Reviewed by: Movement Controller</div>
-        <div class="sig-row">Name: &nbsp;</div>
-        <div class="sig-row sig-img-row">Signature: &nbsp;</div>
-        <div class="sig-row">Date: &nbsp;</div>
+        <div class="sig-row"><span class="sig-lbl">Name:</span><span class="sig-line"></span></div>
+        <div class="sig-row sig-img-row"><span class="sig-lbl">Signature:</span><span class="sig-line"></span></div>
+        <div class="sig-row"><span class="sig-lbl">Date:</span><span class="sig-line"></span></div>
       </div>
       <div class="sig-col">
         <div class="sig-col-hdr">Authorized by: Manager of Transport</div>
-        <div class="sig-row">Name: &nbsp;</div>
-        <div class="sig-row sig-img-row">Signature: &nbsp;</div>
-        <div class="sig-row">Date: &nbsp;</div>
+        <div class="sig-row"><span class="sig-lbl">Name:</span><span class="sig-line"></span></div>
+        <div class="sig-row sig-img-row"><span class="sig-lbl">Signature:</span><span class="sig-line"></span></div>
+        <div class="sig-row"><span class="sig-lbl">Date:</span><span class="sig-line"></span></div>
       </div>
     </div>
 
@@ -3459,8 +3471,22 @@ function MedicalAnalyticsModal({ records, onClose }: {
             <div className="mc-kpi-chip mc-kpi-amber"><span className="mc-kpi-num">{onSickToday}</span><span className="mc-kpi-lbl">On Sick Leave</span></div>
           </div>
 
-          {/* Top row: monthly chart + dept breakdown — fixed height */}
-          <div className="mc-top-row">
+          {/* Charts row — dept breakdown + monthly trend side by side */}
+          <div className="mc-charts-row">
+
+            <div className="mc-an-panel">
+              <p className="mc-an-title">Visits by Department{selectedMonth !== 'All' ? ` — ${formatMonthLabel(selectedMonth)}` : ''}</p>
+              {sectionData.length === 0
+                ? <p style={{ color: '#94a3b8', fontSize: '0.82rem' }}>No data.</p>
+                : sectionData.map(([dept, val]) => (
+                  <div className="mc-an-h-row" key={dept}>
+                    <div className="mc-an-h-label" title={dept}>{dept}</div>
+                    <div className="mc-an-h-track"><div className="mc-an-h-fill" style={{ width: `${Math.round((val.cases / maxSectCases) * 100)}%` }} /></div>
+                    <div className="mc-an-h-meta">{val.cases} visits</div>
+                  </div>
+                ))}
+            </div>
+
             <div className="mc-an-panel">
               <p className="mc-an-title">Medical Visits per Month</p>
               {monthlyData.length === 0
@@ -3480,21 +3506,9 @@ function MedicalAnalyticsModal({ records, onClose }: {
                 )}
             </div>
 
-            <div className="mc-an-panel">
-              <p className="mc-an-title">Visits by Department{selectedMonth !== 'All' ? ` — ${formatMonthLabel(selectedMonth)}` : ''}</p>
-              {sectionData.length === 0
-                ? <p style={{ color: '#94a3b8', fontSize: '0.82rem' }}>No data.</p>
-                : sectionData.map(([dept, val]) => (
-                  <div className="mc-an-h-row" key={dept}>
-                    <div className="mc-an-h-label" title={dept}>{dept}</div>
-                    <div className="mc-an-h-track"><div className="mc-an-h-fill" style={{ width: `${Math.round((val.cases / maxSectCases) * 100)}%` }} /></div>
-                    <div className="mc-an-h-meta">{val.cases} visits</div>
-                  </div>
-                ))}
-            </div>
-          </div>
+          </div>{/* mc-charts-row */}
 
-          {/* Staff summary — flex: 1, ONLY this scrolls */}
+          {/* Staff table — full width, takes remaining height */}
           <div className="mc-an-panel mc-an-staff-panel">
             <p className="mc-an-title">
               Staff Medical Summary{selectedMonth !== 'All' ? ` — ${formatMonthLabel(selectedMonth)}` : ''}
@@ -3507,27 +3521,27 @@ function MedicalAnalyticsModal({ records, onClose }: {
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead style={{ position: 'sticky', top: 0, background: '#f8fafc', zIndex: 1 }}>
                       <tr style={{ borderBottom: '2px solid #e8eaf0' }}>
-                        <th style={{ textAlign: 'center', padding: '6px 8px', fontSize: '0.68rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', width: 32 }}>#</th>
-                        <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: '0.68rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Emp ID</th>
-                        <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: '0.68rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Name</th>
-                        <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: '0.68rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Section</th>
-                        <th style={{ textAlign: 'center', padding: '6px 8px', fontSize: '0.68rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Cases</th>
-                        <th style={{ textAlign: 'center', padding: '6px 8px', fontSize: '0.68rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Days</th>
-                        <th style={{ padding: '6px 8px', width: 100 }} />
+                        <th style={{ width: 36, textAlign: 'center', padding: '5px 8px', fontSize: '0.67rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>#</th>
+                        <th style={{ width: 80, textAlign: 'left', padding: '5px 8px', fontSize: '0.67rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Emp ID</th>
+                        <th style={{ textAlign: 'left', padding: '5px 8px', fontSize: '0.67rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Name</th>
+                        <th style={{ textAlign: 'left', padding: '5px 8px', fontSize: '0.67rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Section</th>
+                        <th style={{ width: 70, textAlign: 'center', padding: '5px 8px', fontSize: '0.67rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Cases</th>
+                        <th style={{ width: 70, textAlign: 'center', padding: '5px 8px', fontSize: '0.67rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Days</th>
+                        <th style={{ width: 140, padding: '5px 8px' }} />
                       </tr>
                     </thead>
                     <tbody>
                       {topStaff.map(([empId, v], rank) => (
                         <tr key={empId} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                          <td style={{ padding: '5px 8px', textAlign: 'center' }}>
-                            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20, borderRadius: '50%', background: rank === 0 ? '#fbbf24' : rank === 1 ? '#94a3b8' : rank === 2 ? '#d97706' : '#e2e8f0', color: rank <= 2 ? '#fff' : '#374151', fontSize: '0.65rem', fontWeight: 800 }}>{rank + 1}</span>
+                          <td style={{ padding: '4px 8px', textAlign: 'center' }}>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20, borderRadius: '50%', background: rank === 0 ? '#fbbf24' : rank === 1 ? '#94a3b8' : rank === 2 ? '#d97706' : '#e2e8f0', color: rank <= 2 ? '#fff' : '#374151', fontSize: '0.64rem', fontWeight: 800 }}>{rank + 1}</span>
                           </td>
-                          <td style={{ padding: '5px 8px', fontSize: '0.76rem', color: '#64748b', fontWeight: 600 }}>{empId}</td>
-                          <td style={{ padding: '5px 8px', fontSize: '0.82rem' }}><strong style={{ color: '#111827' }}>{v.name}</strong></td>
-                          <td style={{ padding: '5px 8px', fontSize: '0.76rem', color: '#374151' }}>{v.department}</td>
-                          <td style={{ padding: '5px 8px', textAlign: 'center', fontSize: '0.82rem', color: '#374151', fontWeight: 600 }}>{v.cases}</td>
-                          <td style={{ padding: '5px 8px', textAlign: 'center', fontWeight: 800, color: '#1e40af' }}>{v.days}d</td>
-                          <td style={{ padding: '5px 8px' }}>
+                          <td style={{ padding: '4px 8px', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>{empId}</td>
+                          <td style={{ padding: '4px 8px', fontSize: '0.80rem', whiteSpace: 'nowrap' }}><strong style={{ color: '#111827' }}>{v.name}</strong></td>
+                          <td style={{ padding: '4px 8px', fontSize: '0.75rem', color: '#374151', whiteSpace: 'nowrap' }}>{v.department}</td>
+                          <td style={{ padding: '4px 8px', textAlign: 'center', fontSize: '0.80rem', color: '#374151', fontWeight: 600 }}>{v.cases}</td>
+                          <td style={{ padding: '4px 8px', textAlign: 'center', fontWeight: 800, color: '#1e40af', whiteSpace: 'nowrap' }}>{v.days}d</td>
+                          <td style={{ padding: '4px 12px 4px 8px' }}>
                             <div style={{ height: 6, borderRadius: 3, background: '#e2e8f0', overflow: 'hidden' }}>
                               <div style={{ width: `${Math.round((v.days / maxStaffDays) * 100)}%`, height: '100%', borderRadius: 3, background: 'linear-gradient(90deg,#6366f1,#a5b4fc)' }} />
                             </div>
@@ -8971,15 +8985,13 @@ function MeetingCalendar({ records }: { records: MeetingRecord[] }) {
 }
 
 /* ─── MeetingsSection ──────────────────────────────────────────── */
-function MeetingsSection({ records, onUpdate, employees, activeLeaves, isHOD = false }: {
+function MeetingsSection({ records, onUpdate, employees, activeLeaves }: {
   records: MeetingRecord[]
   onUpdate: (fn: (prev: MeetingRecord[]) => MeetingRecord[]) => void
   employees: Employee[]
   activeLeaves: ActiveLeaveRecord[]
-  isHOD?: boolean
 }) {
   const [editing,   setEditing]   = useState<MeetingRecord | null>(null)
-  const [viewing,   setViewing]   = useState<MeetingRecord | null>(null)
   const [search,    setSearch]    = useState('')
   const [view,      setView]      = useState<'list'|'calendar'>('list')
 
@@ -9140,7 +9152,6 @@ function MeetingsSection({ records, onUpdate, employees, activeLeaves, isHOD = f
                 </div>
                 {/* Icons only — no text labels */}
                 <div className="mtg-actions">
-                  {isHOD && <button className="quiet-button" type="button" title="View" onClick={() => setViewing(rec)} style={{ fontSize:'0.9rem', padding:'3px 8px' }}>👁</button>}
                   <button className="quiet-button vwh" type="button" title="Edit" onClick={() => setEditing(rec)} style={{ fontSize:'0.9rem', padding:'3px 8px' }}>✎</button>
                   <button className="quiet-button" type="button" title="Print" onClick={() => printMeetingMinutes(rec, employees, activeLeaves)} style={{ fontSize:'0.9rem', padding:'3px 8px' }}>🖨</button>
                   <button className="quiet-button vwh" type="button" title="Delete" onClick={() => del(rec.id)} style={{ fontSize:'0.9rem', padding:'3px 8px', color:'#ef4444' }}>🗑</button>
@@ -9158,16 +9169,6 @@ function MeetingsSection({ records, onUpdate, employees, activeLeaves, isHOD = f
           activeLeaves={activeLeaves}
           onClose={() => setEditing(null)}
           onSave={save}
-        />
-      )}
-      {viewing && (
-        <MeetingFormModal
-          record={viewing}
-          employees={employees}
-          activeLeaves={activeLeaves}
-          onClose={() => setViewing(null)}
-          onSave={() => {}}
-          viewOnly
         />
       )}
     </div>
@@ -9408,7 +9409,7 @@ function OperationsPage({ employees, completedTerminations, activeLeaves, isHOD 
       {activeSection === 'induction' && <InductionSection employees={employees} records={inductionRecords} onUpdate={setInductionRecords} onBack={() => {}} />}
       {activeSection === 'training'  && <TrainingSection records={trainingRecords} employees={employees} onUpdate={setTrainingRecords} onBack={() => {}} />}
       {activeSection === 'bank'      && <BankAccountSection employees={employees} records={bankAccountRecords} onUpdate={setBankAccountRecords} onBack={() => {}} />}
-      {activeSection === 'meetings'  && <MeetingsSection records={meetingRecords} onUpdate={setMeetingRecords} employees={employees} activeLeaves={activeLeaves} isHOD={isHOD} />}
+      {activeSection === 'meetings'  && <MeetingsSection records={meetingRecords} onUpdate={setMeetingRecords} employees={employees} activeLeaves={activeLeaves} />}
     </>
   )
 }
@@ -9918,8 +9919,6 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false }: {
   const [resolveModal, setResolveModal] = useState<StaffRequestRecord | null>(null)
   const [resolveAction, setResolveAction] = useState('')
 
-  const deptAbbr = (dept: string) => dept.trim().split(/\s+/).map(w => w[0]?.toUpperCase() ?? '').join('')
-
   const filtered = useMemo(() => records.filter((r) =>
     `${r.employeeId} ${r.employeeName} ${r.section} ${r.department} ${r.requestType} ${r.description}`.toLowerCase().includes(search.toLowerCase())
     && (typeFilter === 'All' || r.requestType === typeFilter)
@@ -9960,40 +9959,34 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false }: {
           <table className="data-table">
             <thead>
               <tr>
-                <th>ID</th>
-                <th style={{textAlign:'center'}}>Submitted</th>
+                <th style={{whiteSpace:'nowrap'}}>ID</th>
+                <th style={{textAlign:'center',whiteSpace:'nowrap'}}>Submitted</th>
                 <th>Emp ID</th>
                 <th>Name</th>
                 <th>Section</th>
-                <th style={{textAlign:'center'}}>Department</th>
                 <th style={{textAlign:'center'}}>Type</th>
                 <th style={{textAlign:'center'}}>Priority</th>
                 <th>Description</th>
                 <th style={{textAlign:'center'}}>Status</th>
-                <th style={{textAlign:'center'}}>Closed Date</th>
+                <th style={{textAlign:'center',whiteSpace:'nowrap'}}>Closed Date</th>
                 <th>Action Taken</th>
                 <th style={{textAlign:'center'}}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0
-                ? <tr><td colSpan={13} className="empty-row">No requests found</td></tr>
+                ? <tr><td colSpan={12} className="empty-row">No requests found</td></tr>
                 : filtered.map((r) => (
                   <tr key={r.id}>
                     <td style={{whiteSpace:'nowrap', fontSize:'0.75rem', color:'#6366f1', fontWeight:700}}>{r.id}</td>
                     <td style={{textAlign:'center',fontSize:'0.8rem',whiteSpace:'nowrap'}}>{formatDateDisplay(r.submittedDate)}</td>
-                    <td style={{whiteSpace:'nowrap'}}>{r.employeeId || '—'}</td>
-                    <td style={{whiteSpace:'nowrap'}}>{r.employeeName}</td>
-                    <td>{r.section || '—'}</td>
-                    <td style={{textAlign:'center'}}>
-                      <span title={r.department} style={{ fontSize:'0.75rem', fontWeight:700, color:'#4338ca', background:'#eef2ff', borderRadius:4, padding:'2px 6px', whiteSpace:'nowrap' }}>
-                        {r.department ? deptAbbr(r.department) : '—'}
-                      </span>
-                    </td>
-                    <td style={{textAlign:'center',whiteSpace:'nowrap'}}><span className="req-type-chip">{r.requestType}</span></td>
-                    <td style={{textAlign:'center',whiteSpace:'nowrap'}}><span className={`req-priority-badge ${priorityColors[r.priority]}`}>{r.priority}</span></td>
-                    <td style={{maxWidth:240}}>
-                      <span title={r.description || undefined} style={{ display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden', fontSize:'0.82rem', lineHeight:'1.4' }}>
+                    <td style={{whiteSpace:'nowrap', fontSize:'0.8rem'}}>{r.employeeId || '—'}</td>
+                    <td style={{whiteSpace:'nowrap', fontWeight:600}}>{r.employeeName}</td>
+                    <td style={{whiteSpace:'nowrap', fontSize:'0.8rem'}}>{r.section || '—'}</td>
+                    <td style={{textAlign:'center'}}><span className="req-type-chip">{r.requestType}</span></td>
+                    <td style={{textAlign:'center'}}><span className={`req-priority-badge ${priorityColors[r.priority]}`}>{r.priority}</span></td>
+                    <td style={{minWidth:220, maxWidth:320}}>
+                      <span title={r.description || undefined} style={{ display:'-webkit-box', WebkitLineClamp:3, WebkitBoxOrient:'vertical', overflow:'hidden', fontSize:'0.81rem', lineHeight:'1.45', color:'#1e293b' }}>
                         {r.description || '—'}
                       </span>
                     </td>
@@ -10887,6 +10880,7 @@ function ActivitiesPage({
   onUpdateInventoryOrders,
   isHOD = false,
   currentUserSections = [],
+  currentUserName = '',
 }: {
   employees: Employee[]
   passportHandovers: PassportRecord[]
@@ -10901,6 +10895,7 @@ function ActivitiesPage({
   onUpdateInventoryOrders: (fn: (prev: StoreOrder[]) => StoreOrder[]) => void
   isHOD?: boolean
   currentUserSections?: string[]
+  currentUserName?: string
 }) {
   const [activeSection, setActiveSection] = useState<ActivitiesSection>('requests')
   const [staffRequests, setStaffRequests] = useState<StaffRequestRecord[]>(initialStaffRequests)
@@ -10926,7 +10921,7 @@ function ActivitiesPage({
       {activeSection === 'visits' && <VisitsSection records={scopedVisitRecords} employees={employees} onUpdate={setVisitRecords} onBack={() => {}} />}
       {!isHOD && activeSection === 'incidents' && <IncidentsSection records={incidentRecords} employees={employees} onUpdate={setIncidentRecords} onBack={() => {}} />}
       {!isHOD && activeSection === 'passport' && <PassportTrackingSection records={passportHandovers} employees={employees} onUpdate={onUpdatePassport} />}
-      {!isHOD && activeSection === 'tripreq' && <TripReqSection records={tripRequests} employees={employees} onUpdate={onUpdateTripRequests} />}
+      {!isHOD && activeSection === 'tripreq' && <TripReqSection records={tripRequests} employees={employees} onUpdate={onUpdateTripRequests} currentUserName={currentUserName} />}
       {!isHOD && activeSection === 'inventory' && <InventorySection items={inventoryItems} usage={inventoryUsage} orders={inventoryOrders} onUpdateItems={onUpdateInventoryItems} onUpdateUsage={onUpdateInventoryUsage} onUpdateOrders={onUpdateInventoryOrders} employees={employees} />}
     </>
   )
@@ -11110,10 +11105,11 @@ function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves:
   }
   const currentAppUser = users.find(u => u.name === currentUserName) ?? users[0]
   const isAdmin = currentAppUser?.role === 'Admin'
+  const [settingsTab, setSettingsTab] = useState<'users' | 'system'>('users')
 
   return (
     <div className="settings-page user-mgmt-page">
-      {/* Section 1 — User Profile Card */}
+      {/* Profile Card — always shown */}
       <div className="settings-profile-card">
         <div className="settings-avatar">{profileInitials(currentAppUser?.name ?? currentUserName)}</div>
         <div className="settings-profile-info">
@@ -11131,7 +11127,7 @@ function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves:
         </div>
       </div>
 
-      {/* Non-admin: show own details only (read-only) */}
+      {/* Non-admin: own details only */}
       {!isAdmin && (
         <div className="user-mgmt-table-wrap" style={{ marginTop: 16 }}>
           <div className="user-table-toolbar">
@@ -11144,12 +11140,7 @@ function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves:
               </thead>
               <tbody>
                 <tr>
-                  <td>
-                    <div className="user-avatar-cell">
-                      <span className="user-avatar">{profileInitials(currentAppUser?.name ?? currentUserName)}</span>
-                      <strong>{currentAppUser?.name ?? currentUserName}</strong>
-                    </div>
-                  </td>
+                  <td><div className="user-avatar-cell"><span className="user-avatar">{profileInitials(currentAppUser?.name ?? currentUserName)}</span><strong>{currentAppUser?.name ?? currentUserName}</strong></div></td>
                   <td><code className="user-username">{currentAppUser?.username ?? '—'}</code></td>
                   <td><span className={`role-chip ${roleColors[currentAppUser?.role ?? 'HR Manager']}`}>{currentAppUser?.role ?? '—'}</span></td>
                   <td>{currentAppUser?.designation ?? '—'}</td>
@@ -11171,112 +11162,118 @@ function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves:
         </div>
       )}
 
-      {/* Everything below is Admin-only */}
+      {/* Admin: tabbed view */}
       {isAdmin && (
         <>
-          {/* Section 2 — System Users */}
-          <div className="user-mgmt-header">
-            <div>
-              <h1 className="user-mgmt-title">System Users</h1>
-              <p className="user-mgmt-subtitle">Manage who can access the TIC HR system and what they can do.</p>
-            </div>
-            <button className="primary-button" onClick={() => setShowAdd(true)} type="button">+ Add User</button>
+          {/* Tab bar */}
+          <div className="settings-tabs">
+            <button type="button" className={`settings-tab-btn${settingsTab === 'users' ? ' active' : ''}`} onClick={() => setSettingsTab('users')}>
+              Users
+            </button>
+            <button type="button" className={`settings-tab-btn${settingsTab === 'system' ? ' active' : ''}`} onClick={() => setSettingsTab('system')}>
+              System
+            </button>
           </div>
 
-          {/* Role legend */}
-          <div className="role-legend">
-            {(Object.entries(rolePermissions) as [UserRole, string][]).map(([role, desc]) => (
-              <div key={role} className="role-legend-item">
-                <span className={`role-chip ${roleColors[role]}`}>{role}</span>
-                <span className="role-legend-desc">{desc}</span>
-                <span className="role-legend-note">Role assignment available when backend is connected.</span>
+          {/* ── Tab: Users ── */}
+          {settingsTab === 'users' && (
+            <div className="settings-tab-panel">
+              <div className="user-table-toolbar" style={{ marginBottom: 12 }}>
+                <label className="search-field">
+                  <span>Search</span>
+                  <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Name, username or role" />
+                </label>
+                <span className="user-count">{filtered.length} user{filtered.length !== 1 ? 's' : ''}</span>
+                <button className="primary-button" onClick={() => setShowAdd(true)} type="button" style={{ marginLeft: 'auto' }}>+ Add User</button>
               </div>
-            ))}
-          </div>
-
-          {/* Search + table */}
-          <div className="user-mgmt-table-wrap">
-            <div className="user-table-toolbar">
-              <label className="search-field">
-                <span>Search</span>
-                <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Name, username or role" />
-              </label>
-              <span className="user-count">{filtered.length} user{filtered.length !== 1 ? 's' : ''}</span>
-            </div>
-            <div className="employee-table-shell">
-              <table className="data-table user-table">
-                <thead>
-                  <tr>
-                    <th>User</th><th>Username</th><th>Role</th><th>Permissions</th>
-                    <th>Section(s)</th>
-                    <th>Last Login</th><th>Status</th><th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((user) => (
-                    <tr key={user.id} className={user.status === 'Inactive' ? 'user-row-inactive' : ''}>
-                      <td>
-                        <div className="user-avatar-cell">
-                          <span className="user-avatar">{profileInitials(user.name)}</span>
-                          <div>
-                            <strong>{user.name}</strong>
-                            {user.designation && <div style={{ fontSize: '0.72rem', color: '#64748b' }}>{user.designation}</div>}
-                          </div>
-                        </div>
-                      </td>
-                      <td><code className="user-username">{user.username}</code></td>
-                      <td><span className={`role-chip ${roleColors[user.role]}`}>{user.role}</span></td>
-                      <td className="user-perms">{rolePermissions[user.role]}</td>
-                      <td>
-                        {user.role === 'HOD'
-                          ? (
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, maxWidth: 220 }}>
-                              {(user.sections ?? []).length === 0
-                                ? <span style={{ color: '#94a3b8', fontSize: '0.74rem' }}>None</span>
-                                : (user.sections ?? []).map((s) => <span key={s} className="req-type-chip">{s}</span>)}
-                            </div>
-                          )
-                          : <span style={{ color: '#cbd5e1', fontSize: '0.74rem' }}>—</span>}
-                      </td>
-                      <td>{user.lastLogin ? formatDateDisplay(user.lastLogin) : '—'}</td>
-                      <td>
-                        <button type="button" className={`status-toggle-btn ${user.status === 'Active' ? 'active' : 'inactive'}`}
-                          onClick={() => toggleStatus(user.id)} disabled={user.id === 'USR-001'}
-                          title={user.id === 'USR-001' ? 'Cannot deactivate admin' : `Set ${user.status === 'Active' ? 'Inactive' : 'Active'}`}>
-                          {user.status}
-                        </button>
-                      </td>
-                      <td>
-                        <div className="row-actions">
-                          <button className="action-glyph edit vwh" onClick={() => setEditing(user)} type="button" title="Edit user">✎</button>
-                          <button className="action-glyph delete vwh" onClick={() => deleteUser(user.id)} type="button" disabled={user.id === 'USR-001'} title={user.id === 'USR-001' ? 'Cannot delete admin' : 'Delete user'}>🗑</button>
-                        </div>
-                      </td>
+              <div className="employee-table-shell">
+                <table className="data-table user-table">
+                  <thead>
+                    <tr>
+                      <th>User</th><th>Username</th><th>Role</th><th>Permissions</th>
+                      <th>Section(s)</th><th>Last Login</th><th>Status</th><th>Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {filtered.map((user) => (
+                      <tr key={user.id} className={user.status === 'Inactive' ? 'user-row-inactive' : ''}>
+                        <td>
+                          <div className="user-avatar-cell">
+                            <span className="user-avatar">{profileInitials(user.name)}</span>
+                            <div>
+                              <strong>{user.name}</strong>
+                              {user.designation && <div style={{ fontSize: '0.72rem', color: '#64748b' }}>{user.designation}</div>}
+                            </div>
+                          </div>
+                        </td>
+                        <td><code className="user-username">{user.username}</code></td>
+                        <td><span className={`role-chip ${roleColors[user.role]}`}>{user.role}</span></td>
+                        <td className="user-perms">{rolePermissions[user.role]}</td>
+                        <td>
+                          {user.role === 'HOD'
+                            ? <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, maxWidth: 220 }}>
+                                {(user.sections ?? []).length === 0
+                                  ? <span style={{ color: '#94a3b8', fontSize: '0.74rem' }}>None</span>
+                                  : (user.sections ?? []).map((s) => <span key={s} className="req-type-chip">{s}</span>)}
+                              </div>
+                            : <span style={{ color: '#cbd5e1', fontSize: '0.74rem' }}>—</span>}
+                        </td>
+                        <td>{user.lastLogin ? formatDateDisplay(user.lastLogin) : '—'}</td>
+                        <td>
+                          <button type="button" className={`status-toggle-btn ${user.status === 'Active' ? 'active' : 'inactive'}`}
+                            onClick={() => toggleStatus(user.id)} disabled={user.id === 'USR-001'}
+                            title={user.id === 'USR-001' ? 'Cannot deactivate admin' : `Set ${user.status === 'Active' ? 'Inactive' : 'Active'}`}>
+                            {user.status}
+                          </button>
+                        </td>
+                        <td>
+                          <div className="row-actions" style={{ flexWrap: 'nowrap' }}>
+                            <button className="action-glyph edit" onClick={() => setEditing(user)} type="button" title="Edit user">✎</button>
+                            <button className="action-glyph delete" onClick={() => deleteUser(user.id)} type="button" disabled={user.id === 'USR-001'} title={user.id === 'USR-001' ? 'Cannot delete admin' : 'Delete user'}>🗑</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* ── Tab: System ── */}
+          {settingsTab === 'system' && (
+            <div className="settings-tab-panel">
+              {/* Role descriptions */}
+              <h2 style={{ fontSize: '0.88rem', fontWeight: 700, color: '#374151', margin: '0 0 10px' }}>Role Permissions</h2>
+              <div className="role-legend" style={{ marginBottom: 28 }}>
+                {(Object.entries(rolePermissions) as [UserRole, string][]).map(([role, desc]) => (
+                  <div key={role} className="role-legend-item">
+                    <span className={`role-chip ${roleColors[role]}`}>{role}</span>
+                    <span className="role-legend-desc">{desc}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Danger Zone */}
+              <div className="settings-danger-zone">
+                <div className="danger-zone-header">
+                  <h2>Danger Zone</h2>
+                  <p>Irreversible actions. Proceed with caution.</p>
+                </div>
+                <div className="danger-zone-row">
+                  <div>
+                    <strong>Reset All Data</strong>
+                    <p>Permanently delete all employees, leave records, terminations, and operations data. This cannot be undone.</p>
+                  </div>
+                  <button className="danger-button" type="button" onClick={onReset}>Reset All Data</button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {(editing || showAdd) && (
             <UserFormModal user={editing ?? newUser} onClose={() => { setEditing(null); setShowAdd(false) }} onSave={saveUser} />
           )}
-
-          {/* Section 3 — Danger Zone */}
-          <div className="settings-danger-zone">
-            <div className="danger-zone-header">
-              <h2>Danger Zone</h2>
-              <p>Irreversible actions. Proceed with caution.</p>
-            </div>
-            <div className="danger-zone-row">
-              <div>
-                <strong>Reset All Data</strong>
-                <p>Permanently delete all employees, leave records, terminations, and operations data. This cannot be undone.</p>
-              </div>
-              <button className="danger-button" type="button" onClick={onReset}>Reset All Data</button>
-            </div>
-          </div>
         </>
       )}
 
@@ -11567,7 +11564,7 @@ function App() {
     setLoggingOut(true)
     setTimeout(() => { localStorage.removeItem('tic_auth'); localStorage.removeItem('tic_user'); localStorage.removeItem('tic_role'); setIsLoggedIn(false); setLoggingOut(false) }, 700)
   }
-  const [importResult, setImportResult] = useState<{ added: number; updated: number; skipped: number } | null>(null)
+  const [importResult, setImportResult] = useState<{ added: number; updated: number; skipped: number; unchanged: number } | null>(null)
 
   function loadStore<T>(key: string, fallback: T[]): T[] {
     try {
@@ -12002,40 +11999,57 @@ function App() {
         const g = (row: string[], key: keyof typeof CI) => { const i = CI[key]; return i >= 0 ? (row[i] ?? '').trim() : '' }
 
         const dataRows = allRows.slice(1)
-        let added = 0; let updated = 0; let skipped = 0
-        setEmployees((current) => {
-          const byId = new Map(current.map((e) => [e.employeeId, e]))
-          const result = [...current]
-          dataRows.forEach((row, index) => {
-            if (row.every((c) => !c.trim())) { skipped++; return } // blank row
-            const eid = g(row, 'id') || `PENDING-${String(current.length + index + 1).padStart(4, '0')}`
-            const nat = (g(row, 'nat') || 'MALDIVES').toUpperCase()
-            const siteRaw = g(row, 'status')
-            const parsed: Employee = {
-              employeeId: eid,
-              fullName: g(row, 'name') || 'Imported Employee',
-              department: g(row, 'dept') || departmentsList[0],
-              designation: g(row, 'desig') || '',
-              nationality: nat,
-              nicPassportNo: g(row, 'nic'),
-              workPermitNo: nat === 'MALDIVES' ? '' : g(row, 'wp'),
-              dateOfJoin: parseImportDate(g(row, 'doj')) || new Date().toISOString().slice(0, 10),
-              mobileNo: g(row, 'mobile'),
-              dateOfBirth: parseImportDate(g(row, 'dob')),
-              passportStatus: 'With Employee',
-              siteStatus: siteRaw === 'On Leave' || siteRaw === 'Off Site' ? siteRaw as SiteStatus : 'On Site',
-            }
-            const existId = g(row, 'id')
-            if (existId && byId.has(existId)) {
-              const idx = result.findIndex((e) => e.employeeId === existId)
-              if (idx >= 0) { result[idx] = { ...result[idx], ...parsed }; updated++ }
+        let added = 0; let updated = 0; let skipped = 0; let unchanged = 0
+        // Work directly from the current employees closure value — avoids React
+        // StrictMode double-invoking a functional updater and inflating counters.
+        const byId = new Map(employees.map((e) => [e.employeeId, e]))
+        const result = [...employees]
+        dataRows.forEach((row, index) => {
+          if (row.every((c) => !c.trim())) { skipped++; return } // blank row
+          const eid = g(row, 'id') || `PENDING-${String(employees.length + index + 1).padStart(4, '0')}`
+          const nat = (g(row, 'nat') || 'MALDIVES').toUpperCase()
+          const siteRaw = g(row, 'status')
+          const parsed: Employee = {
+            employeeId: eid,
+            fullName: g(row, 'name') || 'Imported Employee',
+            department: g(row, 'dept') || departmentsList[0],
+            designation: g(row, 'desig') || '',
+            nationality: nat,
+            nicPassportNo: g(row, 'nic'),
+            workPermitNo: nat === 'MALDIVES' ? '' : g(row, 'wp'),
+            dateOfJoin: parseImportDate(g(row, 'doj')) || new Date().toISOString().slice(0, 10),
+            mobileNo: g(row, 'mobile'),
+            dateOfBirth: parseImportDate(g(row, 'dob')),
+            passportStatus: 'With Employee',
+            siteStatus: siteRaw === 'On Leave' || siteRaw === 'Off Site' ? siteRaw as SiteStatus : 'On Site',
+          }
+          const existing = byId.get(eid)
+          if (existing) {
+            // Only update if at least one CSV-provided field actually changed
+            const changed = (
+              parsed.fullName      !== existing.fullName      ||
+              parsed.department    !== existing.department    ||
+              parsed.designation   !== existing.designation   ||
+              parsed.nationality   !== existing.nationality   ||
+              parsed.nicPassportNo !== existing.nicPassportNo ||
+              parsed.workPermitNo  !== existing.workPermitNo  ||
+              parsed.dateOfJoin    !== existing.dateOfJoin    ||
+              parsed.mobileNo      !== existing.mobileNo      ||
+              parsed.dateOfBirth   !== existing.dateOfBirth   ||
+              parsed.siteStatus    !== existing.siteStatus
+            )
+            if (changed) {
+              const idx = result.findIndex((e) => e.employeeId === eid)
+              if (idx >= 0) { result[idx] = { ...existing, ...parsed }; updated++ }
             } else {
-              result.unshift(parsed); byId.set(eid, parsed); added++
+              unchanged++
             }
-          })
-          setImportResult({ added, updated, skipped })
-          return result
+          } else {
+            result.unshift(parsed); byId.set(eid, parsed); added++
+          }
         })
+        setEmployees(result)
+        setImportResult({ added, updated, skipped, unchanged })
       }
       reader.readAsText(file)
     }
@@ -12145,7 +12159,7 @@ function App() {
           {activePage === 'employees' && <EmployeesPage employees={scopedEmployees} medicalCases={scopedMedicalCases} noticeTerminations={scopedNoticeTerminations} offSiteRecords={offSiteRecords} onUpdateOffSite={(fn) => setOffSiteRecords(fn)} onAdd={() => { setEmployeeMode('add'); setEmployeeForm(emptyEmployee); setShowEmployeeForm(true) }} onEdit={openEditEmployee} onExport={exportCsv} onImport={importCsv} onTemplate={downloadTemplate} onShowTasks={() => setShowPendingTasks(true)} />}
           {activePage === 'leave' && <LeavePage employees={scopedEmployees} leaveRequests={scopedLeaveRequests} activeLeaves={scopedActiveLeaves} leaveHistory={scopedLeaveHistory} medicalCases={scopedMedicalCases} isHOD={isHOD} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onSetRequestStep={setLeaveRequestStep} onExtendLeave={extendActiveLeave} onEditActiveLeave={editActiveLeave} onHistoryConfirm={updateHistoryConfirmation} onUpdateMedical={(fn) => setMedicalCases(fn)} />}
           {activePage === 'operations' && <OperationsPage employees={employees} completedTerminations={completedTerminations} activeLeaves={activeLeaves} isHOD={isHOD} />}
-          {activePage === 'activities' && <ActivitiesPage employees={scopedEmployees} passportHandovers={scopedPassportHandovers} onUpdatePassport={(fn) => setPassportHandovers(fn)} tripRequests={tripRequests} onUpdateTripRequests={(fn) => setTripRequests(fn)} inventoryItems={inventoryItems} inventoryUsage={inventoryUsage} inventoryOrders={inventoryOrders} onUpdateInventoryItems={(fn) => setInventoryItems(fn)} onUpdateInventoryUsage={(fn) => setInventoryUsage(fn)} onUpdateInventoryOrders={(fn) => setInventoryOrders(fn)} isHOD={isHOD} currentUserSections={currentUserSections} />}
+          {activePage === 'activities' && <ActivitiesPage employees={scopedEmployees} passportHandovers={scopedPassportHandovers} onUpdatePassport={(fn) => setPassportHandovers(fn)} tripRequests={tripRequests} onUpdateTripRequests={(fn) => setTripRequests(fn)} inventoryItems={inventoryItems} inventoryUsage={inventoryUsage} inventoryOrders={inventoryOrders} onUpdateInventoryItems={(fn) => setInventoryItems(fn)} onUpdateInventoryUsage={(fn) => setInventoryUsage(fn)} onUpdateInventoryOrders={(fn) => setInventoryOrders(fn)} isHOD={isHOD} currentUserSections={currentUserSections} currentUserName={currentUserName} />}
           {activePage === 'termination' && <TerminationPage noticeTerminations={scopedNoticeTerminations} completedTerminations={scopedCompletedTerminations} exitInterviews={scopedExitInterviews} employees={scopedEmployees} isHOD={isHOD} onAdd={openAddTermination} onEdit={openEditTermination} onSetStage={setTerminationStage} onDelete={deleteTermination} onViewDetails={(record) => setTerminationDetails(record)} onUpdateExitInterviews={(fn) => setExitInterviews(fn)} />}
           {activePage === 'settings' && <SettingsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} onReset={resetAllData} currentUserName={currentUserName} users={users} onUpdateUsers={(fn) => setUsers(fn)} />}
         </main>
@@ -12164,6 +12178,7 @@ function App() {
             <h3>Import Complete</h3>
             {importResult.added > 0 && <p><strong>{importResult.added}</strong> new employee{importResult.added !== 1 ? 's' : ''} added</p>}
             {importResult.updated > 0 && <p><strong>{importResult.updated}</strong> existing record{importResult.updated !== 1 ? 's' : ''} updated</p>}
+            {importResult.unchanged > 0 && <p><strong>{importResult.unchanged}</strong> record{importResult.unchanged !== 1 ? 's' : ''} unchanged — skipped</p>}
             {importResult.skipped > 0 && <p><strong>{importResult.skipped}</strong> blank row{importResult.skipped !== 1 ? 's' : ''} skipped</p>}
             <button className="primary-button" onClick={() => setImportResult(null)} type="button">Done</button>
           </div>
