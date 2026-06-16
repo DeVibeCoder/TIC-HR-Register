@@ -93,6 +93,30 @@ type PassportRecord = {
 }
 type PassportHandoverRecord = PassportRecord
 
+type TripRequestStatus = 'Pending Approval' | 'Approved' | 'Rejected'
+type TripType = 'One-Way' | 'Round Trip'
+
+type TripRequest = {
+  id: string
+  requesterName: string
+  jobTitle: string
+  department: string
+  departingFrom: string
+  destination: string
+  departureDate: string
+  departureTime: string
+  purpose: string
+  passengers: string
+  tripType: TripType
+  returnDate: string
+  returnTime: string
+  returnTBD: boolean
+  requestDate: string
+  status: TripRequestStatus
+  approvedDate: string
+  remarks: string
+}
+
 type OpsSection = 'files' | 'induction' | 'training' | 'bank' | 'meetings'
 
 type MeetingAttendance = 'Attended' | 'On Leave' | 'Absent'
@@ -187,7 +211,7 @@ type TrainingRecord = {
   remarks: string
 }
 
-type ActivitiesSection = 'requests' | 'visits' | 'incidents' | 'passport' | 'inventory'
+type ActivitiesSection = 'requests' | 'visits' | 'incidents' | 'passport' | 'tripreq' | 'inventory'
 
 type InventoryCategory = 'Stationery' | 'Medical' | 'Refresher'
 
@@ -619,6 +643,9 @@ const initialPassportHandovers: PassportRecord[] = [
   { id:'PP-2601-13', date:'2026-01-20', employeeId:'', name:'POLGAMPOLA RALALAGE NIMESH SUDARSHANA', department:'MAINTENANCE', nationality:'SRI LANKAN', ppNo:'N7037718', receivedFromHO:'', purpose:'New Staff', ppIssuedToStaff:'', ppReturnedDate:'2026-01-20', receivedBy:'SHANTUMON', ppSentToHO:'2026-01-20', ppHandoverPerson:'SHANTUMON', ppReceivedByHO:'SONU', remarks:'' },
   { id:'PP-2602-01', date:'2026-02-10', employeeId:'57464', name:'JEGATHEESHWARAN CHIKKANNAN', department:'MECHANICAL', nationality:'INDIA', ppNo:'T6614920', receivedFromHO:'2026-02-15', purpose:'AL', ppIssuedToStaff:'2026-02-19', ppReturnedDate:'', receivedBy:'', ppSentToHO:'', ppHandoverPerson:'', ppReceivedByHO:'', remarks:'' },
 ]
+
+const initialTripRequests: TripRequest[] = []
+
 const initialNoticeTerminations: EnhancedTerminationRecord[] = [
   { id: 'TERM-2026-001', employeeId: '57637', name: 'MUNI ACHARI GUNTI KOVALA', department: 'CAFE', designation: 'COOK', nationality: 'INDIA', passportNo: 'T6678234', wpNo: 'WP-57637', dateOfJoin: '2022-09-10', dateSubmitted: '2026-05-01', lastWorkingDate: '2026-05-31', departureDate: '2026-06-05', currentStage: 'Exit Interview', reasonForLeaving: 'Resigned to pursue better opportunity back home', satisfactionRating: 3, rehireEligible: true, exitInterviewCompleted: false, comments: 'Good performance throughout tenure', terminationType: 'Resignation' },
   { id: 'TERM-2026-002', employeeId: '55427', name: 'SARAVANAN RAJENDRAN', department: 'STORES', designation: 'STOREKEEPER', nationality: 'INDIA', passportNo: 'T6678902', wpNo: 'WP-55427', dateOfJoin: '2021-04-20', dateSubmitted: '2026-05-10', lastWorkingDate: '2026-06-09', departureDate: '2026-06-12', currentStage: 'Letter Submitted', reasonForLeaving: 'Contract expired — not renewing', satisfactionRating: 0, rehireEligible: true, exitInterviewCompleted: false, comments: '', terminationType: 'Contract Expiry' },
@@ -955,6 +982,12 @@ function formatDateDisplay(isoDate: string) {
   const [year, month, day] = isoDate.split('-')
   if (!year || !month || !day) return isoDate
   return `${day}/${month}/${year}`
+}
+
+// Converts a 24h "HH:MM" time input into "HHMM HRS" (matches Villa Marine Transport form style)
+function formatTimeHrs(time: string) {
+  if (!time) return ''
+  return `${time.replace(':', '')} HRS`
 }
 
 function nextIncidentRef(records: IncidentRecord[]) {
@@ -2073,7 +2106,7 @@ function EmployeesPage({ employees, onAdd, onEdit, onExport, onImport, onTemplat
       <section className="employee-workspace">
         <div className="table-actions">
           <div className="table-actions-left">
-            <button className="primary-button" onClick={onTemplate} type="button">Template</button>
+            <button className="primary-button vwh" onClick={onTemplate} type="button">Template</button>
             <button className="primary-button vwh" onClick={onImport} type="button">Import</button>
           </div>
           <div className="table-actions-right">
@@ -2408,14 +2441,26 @@ function PassportHandoverModal({
                 </div>
               )}
             </label>
-            <label><span>Entry Date</span><input type="date" value={date} onChange={e=>setDate(e.target.value)} /></label>
+            <label><span>Full Name</span><input value={name} onChange={e=>setName(e.target.value)} placeholder="Employee full name" /></label>
+            <label><span>Section / Department</span>
+              <select value={dept} onChange={e=>setDept(e.target.value)}>
+                <option value="">Select section…</option>
+                {departmentsList.map(d=><option key={d}>{d}</option>)}
+              </select>
+            </label>
+            <label><span>Nationality</span>
+              <select value={nat} onChange={e=>setNat(e.target.value)}>
+                <option value="">Select nationality…</option>
+                {nationalities.map(n=><option key={n}>{n}</option>)}
+              </select>
+            </label>
             <label><span>Passport / PP No</span><input value={ppNo} onChange={e=>setPpNo(e.target.value)} placeholder="Passport number" /></label>
+            <label><span>Entry Date</span><input type="date" value={date} onChange={e=>setDate(e.target.value)} /></label>
             <label><span>Purpose</span>
               <select value={purpose} onChange={e=>setPurpose(e.target.value)}>
                 {['AL','New Staff','Embassy','Other'].map(p=><option key={p}>{p}</option>)}
               </select>
             </label>
-            {!empId && <label><span>Full Name</span><input value={name} onChange={e=>setName(e.target.value)} placeholder="Enter manually if not in system" /></label>}
           </div>
         </div>
 
@@ -2516,10 +2561,7 @@ function PassportTrackingSection({ records, employees, onUpdate }: {
             {['All','AL','New Staff','Embassy','Other'].map(p=><option key={p}>{p}</option>)}
           </select>
         </label>
-        <button className="pp-add-btn vwh" onClick={()=>setEditing(newRec())} type="button">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Add Record
-        </button>
+        <button className="primary-button vwh" onClick={()=>setEditing(newRec())} type="button">+ Add Record</button>
       </div>
 
       <div className="employee-table-shell compact-scroll">
@@ -2586,6 +2628,499 @@ function PassportTrackingSection({ records, employees, onUpdate }: {
       {editing && <PassportHandoverModal record={editing} employees={employees} onClose={()=>setEditing(null)} onSave={save} />}
     </section>
   )
+}
+
+function TripRequestModal({ record, employees, onClose, onSave }: {
+  record: TripRequest
+  employees: Employee[]
+  onClose: () => void
+  onSave: (r: TripRequest) => void
+}) {
+  const isNew = record.id === 'TR-new'
+  const [empSearch,      setEmpSearch]      = useState(record.requesterName || '')
+  const [showEmpDrop,    setShowEmpDrop]    = useState(false)
+  const [requesterName,  setRequesterName]  = useState(record.requesterName)
+  const [jobTitle,       setJobTitle]       = useState(record.jobTitle)
+  const [department,     setDepartment]     = useState(record.department)
+  const [departingFrom,  setDepartingFrom]  = useState(record.departingFrom)
+  const [destination,    setDestination]    = useState(record.destination)
+  const [departureDate,  setDepartureDate]  = useState(record.departureDate || new Date().toISOString().slice(0,10))
+  const [departureTime,  setDepartureTime]  = useState(record.departureTime)
+  const [purpose,        setPurpose]        = useState(record.purpose)
+  const [passengers,     setPassengers]     = useState(record.passengers || '1')
+  const [tripType,       setTripType]       = useState<TripType>(record.tripType || 'One-Way')
+  const [returnDate,     setReturnDate]     = useState(record.returnDate)
+  const [returnTime,     setReturnTime]     = useState(record.returnTime)
+  const [returnTBD,      setReturnTBD]      = useState(record.returnTBD || false)
+  const [requestDate,    setRequestDate]    = useState(record.requestDate || new Date().toISOString().slice(0,10))
+  const [remarks,        setRemarks]        = useState(record.remarks)
+
+  const empResults = useMemo(() => {
+    const q = empSearch.trim().toLowerCase()
+    if (!q || q.includes('(')) return []
+    return employees.filter(e => e.fullName.toLowerCase().includes(q) || e.employeeId.includes(q)).slice(0, 8)
+  }, [empSearch, employees])
+
+  const pickEmp = (e: Employee) => {
+    setRequesterName(e.fullName); setJobTitle(e.designation); setDepartment(e.department)
+    setEmpSearch(`${e.fullName} (${e.employeeId})`)
+    setShowEmpDrop(false)
+  }
+
+  const save = () => onSave({ ...record,
+    id: isNew ? `TR-${Date.now()}` : record.id,
+    requesterName, jobTitle, department,
+    departingFrom, destination, departureDate, departureTime,
+    purpose, passengers, tripType,
+    returnDate: tripType === 'Round Trip' && !returnTBD ? returnDate : '',
+    returnTime: tripType === 'Round Trip' && !returnTBD ? returnTime : '',
+    returnTBD: tripType === 'Round Trip' ? returnTBD : false,
+    requestDate, remarks,
+    status: record.status || 'Pending Approval',
+    approvedDate: record.approvedDate || '',
+  })
+
+  return (
+    <div className="modal-backdrop" role="presentation">
+      <section className="registration-modal pp-modal tr-modal" role="dialog" aria-modal="true">
+        <div className="modal-header">
+          <div><p className="eyebrow">Trip Requisition</p><h2>{isNew ? 'New Trip Request' : 'Edit Trip Request'}</h2></div>
+          <button className="icon-button" onClick={onClose} type="button">✕</button>
+        </div>
+
+        {/* Requester Details */}
+        <div className="pp-modal-section">
+          <div className="pp-modal-section-label tr-req-label">🧑 Requester Details</div>
+          <div className="pp-modal-grid">
+            <label className="ef-span2" style={{ position:'relative' }}>
+              <span>Search Employee (optional)</span>
+              <input value={empSearch} onChange={e => { setEmpSearch(e.target.value); setShowEmpDrop(true) }}
+                onFocus={() => setShowEmpDrop(true)} onBlur={() => setTimeout(()=>setShowEmpDrop(false),150)}
+                placeholder="Type name or employee ID…" autoComplete="off" />
+              {showEmpDrop && empResults.length > 0 && (
+                <div className="ei-emp-dropdown">
+                  {empResults.map(e => (
+                    <div key={e.employeeId} className="ei-emp-option" onMouseDown={() => pickEmp(e)}>
+                      <strong>{e.fullName}</strong><span>{e.employeeId} · {e.department}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </label>
+            <label><span>Requester Name</span><input value={requesterName} onChange={e=>setRequesterName(e.target.value)} placeholder="Full name" /></label>
+            <label><span>Job Title</span><input value={jobTitle} onChange={e=>setJobTitle(e.target.value)} placeholder="Designation" /></label>
+            <label><span>Department</span>
+              <select value={department} onChange={e=>setDepartment(e.target.value)}>
+                <option value="">Select section…</option>
+                {departmentsList.map(d=><option key={d}>{d}</option>)}
+              </select>
+            </label>
+            <label><span>Business Unit</span><input value="VHPL" disabled /></label>
+          </div>
+        </div>
+
+        {/* Trip Details */}
+        <div className="pp-modal-section tr-trip-section">
+          <div className="pp-modal-section-label tr-trip-label">⛴ Trip Details</div>
+          <div className="pp-modal-grid">
+            <label><span>Departing From</span><input value={departingFrom} onChange={e=>setDepartingFrom(e.target.value)} placeholder="e.g. Airport" /></label>
+            <label><span>Destination</span><input value={destination} onChange={e=>setDestination(e.target.value)} placeholder="e.g. Thilafushi" /></label>
+            <label><span>Departure Date</span><input type="date" value={departureDate} onChange={e=>setDepartureDate(e.target.value)} /></label>
+            <label><span>Departure Time</span><input type="time" value={departureTime} onChange={e=>setDepartureTime(e.target.value)} /></label>
+            <label className="ef-span2"><span>Purpose of Trip</span><input value={purpose} onChange={e=>setPurpose(e.target.value)} placeholder="e.g. Escorting staff" /></label>
+            <label><span>Number of Passengers</span><input type="number" min="1" value={passengers} onChange={e=>setPassengers(e.target.value)} /></label>
+          </div>
+        </div>
+
+        {/* Trip Type */}
+        <div className="pp-modal-section tr-type-section">
+          <div className="pp-modal-section-label tr-type-label">↔ One-Way / Round Trip</div>
+          <div className="tr-type-toggle">
+            <button type="button" className={tripType==='One-Way' ? 'active' : ''} onClick={()=>setTripType('One-Way')}>One-Way</button>
+            <button type="button" className={tripType==='Round Trip' ? 'active' : ''} onClick={()=>setTripType('Round Trip')}>Round Trip</button>
+          </div>
+          {tripType === 'Round Trip' && (
+            <div className="pp-modal-grid" style={{ marginTop:10 }}>
+              <label className="tr-tbd-check ef-span2">
+                <input type="checkbox" checked={returnTBD} onChange={e=>setReturnTBD(e.target.checked)} />
+                <span>Return date/time not yet available — mark as TBD</span>
+              </label>
+              {!returnTBD && (
+                <>
+                  <label><span>Return Date</span><input type="date" value={returnDate} onChange={e=>setReturnDate(e.target.value)} /></label>
+                  <label><span>Return Time</span><input type="time" value={returnTime} onChange={e=>setReturnTime(e.target.value)} /></label>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Requested By */}
+        <div className="pp-modal-section">
+          <div className="pp-modal-section-label">📝 Requested By</div>
+          <div className="pp-modal-grid">
+            <label><span>Requested By</span><input value={requesterName} disabled /></label>
+            <label><span>Request Date</span><input type="date" value={requestDate} onChange={e=>setRequestDate(e.target.value)} /></label>
+            <label className="ef-span2"><span>Remarks (optional)</span><input value={remarks} onChange={e=>setRemarks(e.target.value)} placeholder="Optional notes" /></label>
+          </div>
+        </div>
+
+        <div className="modal-actions">
+          <button className="quiet-button light" onClick={onClose} type="button">Cancel</button>
+          <button className="primary-button" onClick={save} type="button">{isNew ? 'Submit Request' : 'Save Changes'}</button>
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function TripReqSection({ records, employees, onUpdate }: {
+  records: TripRequest[]
+  employees: Employee[]
+  onUpdate: (fn: (prev: TripRequest[]) => TripRequest[]) => void
+}) {
+  const [search,       setSearch]       = useState('')
+  const [statusFilter, setStatusFilter] = useState('All')
+  const [editing,      setEditing]      = useState<TripRequest | null>(null)
+  const [approving,    setApproving]    = useState<TripRequest | null>(null)
+  const [sigRequester, setSigRequester] = useState<string>(() => localStorage.getItem('tic_sig_requester') || '')
+  const [sigAhmedAli,  setSigAhmedAli]  = useState<string>(() => localStorage.getItem('tic_sig_ahmedali') || '')
+
+  const filtered = useMemo(() => records.filter(r => {
+    const txt = [r.requesterName, r.department, r.departingFrom, r.destination, r.purpose].join(' ').toLowerCase()
+    return txt.includes(search.trim().toLowerCase()) && (statusFilter === 'All' || r.status === statusFilter)
+  }).sort((a,b) => b.requestDate.localeCompare(a.requestDate)), [records, search, statusFilter])
+
+  const save = (r: TripRequest) => {
+    onUpdate(prev => prev.some(x=>x.id===r.id) ? prev.map(x=>x.id===r.id?r:x) : [r, ...prev])
+    setEditing(null)
+  }
+  const del = (id: string) => { if (window.confirm('Delete this trip request?')) onUpdate(prev=>prev.filter(r=>r.id!==id)) }
+
+  const newRec = (): TripRequest => ({
+    id:'TR-new', requesterName:'', jobTitle:'', department:'',
+    departingFrom:'', destination:'', departureDate:new Date().toISOString().slice(0,10), departureTime:'',
+    purpose:'', passengers:'1', tripType:'One-Way', returnDate:'', returnTime:'', returnTBD:false,
+    requestDate:new Date().toISOString().slice(0,10), status:'Pending Approval', approvedDate:'', remarks:'',
+  })
+
+  const approve = () => {
+    if (!approving) return
+    onUpdate(prev => prev.map(r => r.id===approving.id ? { ...r, status:'Approved', approvedDate:new Date().toISOString().slice(0,10) } : r))
+    setApproving(null)
+  }
+  const reject = (r: TripRequest) => {
+    if (window.confirm(`Reject the trip request from ${r.requesterName || 'this requester'}?`))
+      onUpdate(prev => prev.map(x => x.id===r.id ? { ...x, status:'Rejected' } : x))
+  }
+
+  const handleSigUpload = (which: 'requester'|'ahmedali', file: File | null) => {
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      const dataUrl = String(reader.result)
+      if (which === 'requester') { setSigRequester(dataUrl); localStorage.setItem('tic_sig_requester', dataUrl) }
+      else { setSigAhmedAli(dataUrl); localStorage.setItem('tic_sig_ahmedali', dataUrl) }
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const statCards = [
+    { label:'Total',    val: records.length,                                              c:'#475569', bg:'#f8fafc' },
+    { label:'Pending',  val: records.filter(r=>r.status==='Pending Approval').length,     c:'#d97706', bg:'#fef3c7' },
+    { label:'Approved', val: records.filter(r=>r.status==='Approved').length,             c:'#16a34a', bg:'#dcfce7' },
+    { label:'Rejected', val: records.filter(r=>r.status==='Rejected').length,             c:'#dc2626', bg:'#fef2f2' },
+  ]
+
+  return (
+    <section className="employee-workspace tr-workspace">
+
+      <div className="pp-stat-strip" style={{ gridTemplateColumns:'repeat(4, 1fr)' }}>
+        {statCards.map(s => (
+          <div key={s.label} className="pp-stat-card" style={{ background:s.bg }}>
+            <span style={{ fontSize:'1.4rem', fontWeight:800, color:s.c, lineHeight:1 }}>{s.val}</span>
+            <span style={{ fontSize:'0.67rem', color:'#64748b', marginTop:2 }}>{s.label}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="table-toolbar leave-toolbar leave-toolbar-has-btn" style={{ flexWrap:'wrap', gap:'6px 10px' }}>
+        <label className="search-field" style={{ flex:'1 1 200px' }}>
+          <span>Search</span>
+          <input type="search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Requester, route, purpose" />
+        </label>
+        <label style={{ flex:'0 0 auto' }}>
+          <span>Status</span>
+          <select value={statusFilter} onChange={e=>setStatusFilter(e.target.value)}>
+            {['All','Pending Approval','Approved','Rejected'].map(s=><option key={s}>{s}</option>)}
+          </select>
+        </label>
+        <button className="primary-button vwh" onClick={()=>setEditing(newRec())} type="button">+ New Trip Request</button>
+      </div>
+
+      <div className="employee-table-shell compact-scroll">
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th style={{ whiteSpace:'nowrap' }}>Request Date</th>
+              <th>Requester</th>
+              <th>Department</th>
+              <th>Route</th>
+              <th style={{ whiteSpace:'nowrap' }}>Departure</th>
+              <th style={{ textAlign:'center' }}>Type</th>
+              <th style={{ textAlign:'center' }}>Pax</th>
+              <th style={{ textAlign:'center' }}>Status</th>
+              <th style={{ textAlign:'center' }}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length === 0
+              ? <tr><td colSpan={9} className="empty-row">No trip requests found. Click "+ New Trip Request" to get started.</td></tr>
+              : filtered.map(r => (
+                <tr key={r.id}>
+                  <td style={{ whiteSpace:'nowrap', fontSize:'0.8rem' }}>{formatDateDisplay(r.requestDate)}</td>
+                  <td style={{ fontWeight:600 }}>{r.requesterName || '—'}</td>
+                  <td style={{ color:'#64748b', fontSize:'0.78rem' }}>{r.department || '—'}</td>
+                  <td style={{ whiteSpace:'nowrap' }}>{r.departingFrom || '—'} → {r.destination || '—'}</td>
+                  <td style={{ whiteSpace:'nowrap', fontSize:'0.8rem' }}>
+                    {formatDateDisplay(r.departureDate)}{r.departureTime ? ` · ${formatTimeHrs(r.departureTime)}` : ''}
+                  </td>
+                  <td style={{ textAlign:'center', whiteSpace:'nowrap' }}><span className="req-type-chip">{r.tripType}</span></td>
+                  <td style={{ textAlign:'center' }}>{r.passengers || '—'}</td>
+                  <td style={{ textAlign:'center' }}><StatusBadge status={r.status} /></td>
+                  <td style={{ textAlign:'center' }}>
+                    <div className="row-actions">
+                      {r.status === 'Pending Approval' && <button className="action-glyph approve vwh" title="Approve" onClick={()=>setApproving(r)} type="button">✓</button>}
+                      {r.status === 'Pending Approval' && <button className="action-glyph delete vwh" title="Reject" onClick={()=>reject(r)} type="button">✕</button>}
+                      <button className="action-glyph edit vwh" title="Edit" onClick={()=>setEditing(r)} type="button">✎</button>
+                      <button className="action-glyph print" title="Print" onClick={()=>printTripRequest(r, sigRequester, sigAhmedAli)} type="button">🖶</button>
+                      <button className="action-glyph delete vwh" title="Delete" onClick={()=>del(r.id)} type="button">🗑</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Signature management (admin / non-viewer only) */}
+      <div className="tr-sig-panel vwh">
+        <div className="tr-sig-hd">🖋 Print Signatures</div>
+        <p className="tr-sig-note">Upload each signature once — they will be embedded automatically on approved trip request printouts.</p>
+        <div className="tr-sig-grid">
+          <div className="tr-sig-item">
+            <span className="tr-sig-label">Requested By Signature</span>
+            {sigRequester ? <img src={sigRequester} alt="Requested by signature" /> : <div className="tr-sig-empty">No signature uploaded</div>}
+            <label className="tr-sig-upload">
+              {sigRequester ? 'Replace' : 'Upload'}
+              <input type="file" accept="image/png,image/jpeg" onChange={e=>handleSigUpload('requester', e.target.files?.[0] ?? null)} />
+            </label>
+          </div>
+          <div className="tr-sig-item">
+            <span className="tr-sig-label">Authorized By Signature — Ahmed Ali</span>
+            {sigAhmedAli ? <img src={sigAhmedAli} alt="Authorized by signature" /> : <div className="tr-sig-empty">No signature uploaded</div>}
+            <label className="tr-sig-upload">
+              {sigAhmedAli ? 'Replace' : 'Upload'}
+              <input type="file" accept="image/png,image/jpeg" onChange={e=>handleSigUpload('ahmedali', e.target.files?.[0] ?? null)} />
+            </label>
+          </div>
+        </div>
+      </div>
+
+      {editing && <TripRequestModal record={editing} employees={employees} onClose={()=>setEditing(null)} onSave={save} />}
+      {approving && (
+        <div className="modal-backdrop" role="presentation">
+          <section className="registration-modal" role="dialog" aria-modal="true" style={{ maxWidth:460 }}>
+            <div className="modal-header">
+              <div><p className="eyebrow">Trip Request</p><h2>Confirm Approval</h2></div>
+              <button className="icon-button" onClick={()=>setApproving(null)} type="button">✕</button>
+            </div>
+            <div style={{ padding:'16px 20px' }}>
+              <p style={{ fontSize:'0.85rem', color:'#374151', lineHeight:1.6 }}>
+                Approve the trip request from <strong>{approving.requesterName || 'this requester'}</strong>
+                {' '}({approving.departingFrom || '—'} → {approving.destination || '—'}) as{' '}
+                <strong>Ahmed Ali — Operations Manager</strong>?
+              </p>
+            </div>
+            <div className="modal-actions">
+              <button className="quiet-button light" onClick={()=>setApproving(null)} type="button">Cancel</button>
+              <button className="primary-button" onClick={approve} type="button">✓ Approve</button>
+            </div>
+          </section>
+        </div>
+      )}
+    </section>
+  )
+}
+
+function printTripRequest(record: TripRequest, sigRequester: string, sigAhmedAli: string) {
+  const esc = (s: string) => (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+
+  const isApproved = record.status === 'Approved'
+  const oneWayChecked = record.tripType === 'One-Way'
+  const roundTripChecked = record.tripType === 'Round Trip'
+
+  let returnDisplay = '-'
+  if (record.tripType === 'Round Trip') {
+    if (record.returnTBD) {
+      returnDisplay = 'TBD'
+    } else {
+      const d = record.returnDate ? formatDateDisplay(record.returnDate) : ''
+      const t = record.returnTime ? formatTimeHrs(record.returnTime) : ''
+      returnDisplay = [d, t].filter(Boolean).join(' ') || 'TBD'
+    }
+  }
+
+  const requesterSigHtml = isApproved && sigRequester ? `<img class="sig-img" src="${sigRequester}" alt="Signature" />` : '&nbsp;'
+  const authorizedSigHtml = isApproved && sigAhmedAli ? `<img class="sig-img" src="${sigAhmedAli}" alt="Signature" />` : '&nbsp;'
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Trip Requisition — ${esc(record.requesterName) || 'Trip Request'}</title>
+<style>
+  @page { size: A4 portrait; margin: 0; }
+  *, *::before, *::after { box-sizing: border-box; }
+  body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #111; background: #f0f0f0; margin: 0; padding: 0; }
+
+  .screen-bar { display:flex; align-items:center; gap:14px; padding:10px 20px; background:#1e1b4b; position: sticky; top:0; z-index:10; font-family: system-ui, sans-serif; font-size:13px; }
+  .screen-bar button { padding:7px 20px; background:#6d28d9; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; }
+  .screen-bar button:hover { background:#5b21b6; }
+  .screen-bar .ref-label { font-weight:700; color:#ddd6fe; }
+  .screen-bar .meta-label { color: rgba(221,214,254,0.7); font-size:12px; }
+
+  .a4-wrap { max-width:210mm; margin:24px auto; padding-bottom:40px; }
+  .a4-page { background:#fff; box-shadow:0 4px 20px rgba(30,27,75,0.16); min-height:297mm; padding:30pt 36pt; position:relative; overflow:hidden; }
+  .accent-bar { position:absolute; top:0; left:0; right:0; height:5pt; background: linear-gradient(90deg,#4f46e5,#06b6d4); }
+
+  .vmt-title { text-align:center; font-size:14pt; font-weight:700; letter-spacing:0.5px; margin:14pt 0 2pt; }
+  .vmt-subtitle { text-align:center; font-size:11.5pt; font-weight:700; margin-bottom:14pt; }
+
+  .sec-label { font-weight:700; font-size:11pt; margin:10pt 0 4pt; }
+
+  table.vmt-tbl { width:100%; border-collapse:collapse; margin-bottom:6pt; }
+  table.vmt-tbl td { border:1pt solid #333; padding:4pt 8pt; font-size:10.5pt; vertical-align:middle; }
+  table.vmt-tbl td.lbl { font-weight:700; width:170pt; }
+
+  .tick-row { display:flex; align-items:center; gap:8pt; font-size:10.5pt; flex-wrap:wrap; }
+  .tick-box { display:inline-flex; align-items:center; justify-content:center; width:24pt; height:16pt; border:1pt solid #333; font-weight:700; font-size:11pt; flex-shrink:0; }
+  .return-box { flex:1; min-width:120pt; border:1pt solid #333; padding:3pt 8pt; min-height:14pt; }
+
+  .sig-grid { display:grid; grid-template-columns:1fr 1fr; border:1pt solid #333; margin-top:12pt; }
+  .sig-col { padding:6pt 10pt 10pt; border-right:1pt solid #333; }
+  .sig-col:last-child { border-right:none; }
+  .sig-col-hdr { font-weight:700; font-size:10.5pt; border-bottom:1pt solid #333; margin:-6pt -10pt 8pt; padding:5pt 10pt; background:#f8fafc; }
+  .sig-row { font-size:10.5pt; margin-bottom:6pt; }
+  .sig-img-row { min-height:34pt; display:flex; align-items:center; }
+  .sig-img { height:32pt; max-width:140pt; object-fit:contain; }
+
+  .status-stamp { position:absolute; top:54pt; right:42pt; font-family: system-ui, sans-serif; font-size:13pt; font-weight:800; letter-spacing:2px; text-transform:uppercase; padding:4pt 12pt; border:2pt solid; border-radius:4pt; transform:rotate(8deg); opacity:0.8; }
+  .status-stamp.pending { color:#b45309; border-color:#b45309; }
+  .status-stamp.rejected { color:#b91c1c; border-color:#b91c1c; }
+
+  .vmt-footer { text-align:center; font-family: system-ui, sans-serif; font-size:7.5pt; color:#94a3b8; margin-top:16pt; letter-spacing:0.5px; }
+
+  @media print {
+    body { background:#fff; }
+    .screen-bar { display:none !important; }
+    .a4-wrap { max-width:none; margin:0; padding:0; }
+    .a4-page { box-shadow:none; min-height:unset; }
+  }
+</style>
+</head>
+<body>
+
+<div class="screen-bar">
+  <button onclick="window.print()">🖨&nbsp; Print / Save as PDF</button>
+  <span class="ref-label">${esc(record.requesterName) || 'Trip Request'}</span>
+  <span class="meta-label">${esc(record.departingFrom)} → ${esc(record.destination)} &nbsp;·&nbsp; ${esc(record.status)}</span>
+</div>
+
+<div class="a4-wrap">
+  <div class="a4-page">
+    <div class="accent-bar"></div>
+    ${record.status !== 'Approved' ? `<div class="status-stamp ${record.status === 'Rejected' ? 'rejected' : 'pending'}">${esc(record.status)}</div>` : ''}
+
+    <div class="vmt-title">VILLA MARINE TRANSPORT</div>
+    <div class="vmt-subtitle">Non-Routine Trip Requisition Form</div>
+
+    <div class="sec-label" style="margin-top:2pt">Requester Details</div>
+    <table class="vmt-tbl">
+      <tr><td class="lbl">Requester Name</td><td>${esc(record.requesterName) || '&nbsp;'}</td></tr>
+      <tr><td class="lbl">Job Title</td><td>${esc(record.jobTitle) || '&nbsp;'}</td></tr>
+      <tr><td class="lbl">Department</td><td>${esc(record.department) || '&nbsp;'}</td></tr>
+      <tr><td class="lbl">Business Unit</td><td>VHPL</td></tr>
+    </table>
+
+    <div class="sec-label">Trip Details</div>
+    <table class="vmt-tbl">
+      <tr><td class="lbl">Departing from:</td><td colspan="3">${esc(record.departingFrom) || '&nbsp;'}</td></tr>
+      <tr><td class="lbl">Destination:</td><td colspan="3">${esc(record.destination) || '&nbsp;'}</td></tr>
+      <tr><td class="lbl">Departure Date:</td><td>${record.departureDate ? formatDateDisplay(record.departureDate) : '&nbsp;'}</td><td class="lbl">Departure Time</td><td>${record.departureTime ? formatTimeHrs(record.departureTime) : '&nbsp;'}</td></tr>
+      <tr><td class="lbl">Purpose of trip:</td><td colspan="3">${esc(record.purpose) || '&nbsp;'}</td></tr>
+      <tr><td class="lbl">Number of Passengers:</td><td colspan="3">${esc(String(record.passengers || '')) || '&nbsp;'}</td></tr>
+    </table>
+
+    <div class="sec-label">Tick the appropriate box</div>
+    <div class="tick-row">
+      <span>One-Way</span><span class="tick-box">${oneWayChecked ? '✓' : ''}</span>
+      <span style="margin-left:10pt">Round Trip</span><span class="tick-box">${roundTripChecked ? '✓' : ''}</span>
+      <span style="margin-left:10pt">Return Date &amp; Time</span>
+      <span class="return-box">${esc(returnDisplay)}</span>
+    </div>
+
+    <div class="sec-label">Tick the appropriate box</div>
+    <table class="vmt-tbl">
+      <tr><td class="lbl">Trip to be invoiced to:</td><td>VHPL</td></tr>
+    </table>
+
+    <div class="sig-grid">
+      <div class="sig-col">
+        <div class="sig-col-hdr">Requested by:</div>
+        <div class="sig-row">Name: ${esc(record.requesterName) || '&nbsp;'}</div>
+        <div class="sig-row sig-img-row">Signature: ${requesterSigHtml}</div>
+        <div class="sig-row">Date: ${record.requestDate ? formatDateDisplay(record.requestDate) : '&nbsp;'}</div>
+      </div>
+      <div class="sig-col">
+        <div class="sig-col-hdr">Authorized by:</div>
+        <div class="sig-row">Name: AHMED ALI</div>
+        <div class="sig-row sig-img-row">Signature: ${authorizedSigHtml}</div>
+        <div class="sig-row">Date: ${record.approvedDate ? formatDateDisplay(record.approvedDate) : '&nbsp;'}</div>
+      </div>
+    </div>
+
+    <div class="sec-label">For VMT's use only</div>
+    <table class="vmt-tbl">
+      <tr><td class="lbl">Cost of the trip</td><td>&nbsp;</td></tr>
+    </table>
+    <div class="sig-grid">
+      <div class="sig-col">
+        <div class="sig-col-hdr">Reviewed by: Movement Controller</div>
+        <div class="sig-row">Name: &nbsp;</div>
+        <div class="sig-row sig-img-row">Signature: &nbsp;</div>
+        <div class="sig-row">Date: &nbsp;</div>
+      </div>
+      <div class="sig-col">
+        <div class="sig-col-hdr">Authorized by: Manager of Transport</div>
+        <div class="sig-row">Name: &nbsp;</div>
+        <div class="sig-row sig-img-row">Signature: &nbsp;</div>
+        <div class="sig-row">Date: &nbsp;</div>
+      </div>
+    </div>
+
+    <div class="vmt-footer">VHPL · Thilafushi Industrial Complex Pvt. Ltd. · Maldives</div>
+  </div>
+</div>
+</body>
+</html>`
+
+  const win = window.open('', '_blank')
+  if (win) {
+    win.document.write(html)
+    win.document.close()
+    win.focus()
+  }
 }
 function MedicalCaseModal({ record, employees, onClose, onSave }: {
   record: MedicalCaseRecord
@@ -3445,6 +3980,7 @@ function LeavePage({
   onEditActiveLeave,
   onHistoryConfirm,
   onUpdateMedical,
+  isHOD = false,
 }: {
   employees: Employee[]
   leaveRequests: LeaveRequestRecord[]
@@ -3459,6 +3995,7 @@ function LeavePage({
   onEditActiveLeave: (updated: ActiveLeaveRecord) => void
   onHistoryConfirm: (id: string, confirmation: HistoryConfirmation) => void
   onUpdateMedical: (fn: (prev: MedicalCaseRecord[]) => MedicalCaseRecord[]) => void
+  isHOD?: boolean
 }) {
   const [activeLeaveView, setActiveLeaveView] = useState<LeaveView>('request')
 
@@ -3493,8 +4030,9 @@ function LeavePage({
     const matchesSearch = leaveSearchText(record).includes(requestSearch.trim().toLowerCase())
     const matchesType = requestTypeFilter === 'All' || record.leaveTypeCode === requestTypeFilter
     const matchesDepartment = requestDepartmentFilter === 'All Departments' || record.department === requestDepartmentFilter
-    return matchesSearch && matchesType && matchesDepartment
-  }).sort((a, b) => a.departureDate.localeCompare(b.departureDate)), [leaveRequests, requestSearch, requestTypeFilter, requestDepartmentFilter])
+    const matchesHodScope = !isHOD || record.step === 'Pending Departure'
+    return matchesSearch && matchesType && matchesDepartment && matchesHodScope
+  }).sort((a, b) => a.departureDate.localeCompare(b.departureDate)), [leaveRequests, requestSearch, requestTypeFilter, requestDepartmentFilter, isHOD])
 
   const activeRows = useMemo(() => activeLeaves.filter((record) => {
     const matchesSearch = leaveSearchText(record).includes(activeSearch.trim().toLowerCase())
@@ -3576,7 +4114,7 @@ function LeavePage({
                           <td className="leave-status-cell" onClick={(e) => e.stopPropagation()}>
                             <button
                               className={`lr-status-pill lr-step-${stepIdx}`}
-                              disabled={isLast}
+                              disabled={isLast || isHOD}
                               onClick={(e) => { e.stopPropagation(); if (nextStep) onSetRequestStep(record.id, nextStep) }}
                               type="button"
                               title={isLast ? 'Pending Departure — final step' : `Advance to: ${nextStep}`}
@@ -3607,6 +4145,7 @@ function LeavePage({
                                         <Fragment key={step}>
                                           <button
                                             className={`lr-pip-step ${cls}`}
+                                            disabled={isHOD}
                                             onClick={(e) => { e.stopPropagation(); onSetRequestStep(record.id, step) }}
                                             type="button"
                                             title={`Set to: ${step}`}
@@ -3708,7 +4247,7 @@ function LeavePage({
                           <td onClick={e => e.stopPropagation()}>
                             {/* Single-extension: if exists → edit it; if not → add it */}
                             <button
-                              className={`action-glyph ${hasExt ? 'action-glyph-edit-ext' : 'action-glyph-extend'}`}
+                              className={`action-glyph vwh ${hasExt ? 'action-glyph-edit-ext' : 'action-glyph-extend'}`}
                               onClick={() => hasExt && ext
                                 ? setEditingExtension({ record, ext })
                                 : setExtendingLeave(record)
@@ -7076,14 +7615,16 @@ function ExitInterviewAnalyticsModal({ records, onClose }: { records: ExitInterv
   )
 }
 
-function ExitInterviewSection({ records, onUpdate, employees }: {
+function ExitInterviewSection({ records, onUpdate, employees, isHOD = false }: {
   records: ExitInterviewRecord[]
   onUpdate: (fn: (prev: ExitInterviewRecord[]) => ExitInterviewRecord[]) => void
   employees: Employee[]
+  isHOD?: boolean
 }) {
   const [monthFilter, setMonthFilter] = useState('All')
   const [deptFilter, setDeptFilter] = useState('All Sections')
   const [editing, setEditing] = useState<ExitInterviewRecord | null>(null)
+  const [editingReadOnly, setEditingReadOnly] = useState(false)
   const [showAnalytics, setShowAnalytics] = useState(false)
 
   const months = useMemo(() => {
@@ -7108,6 +7649,7 @@ function ExitInterviewSection({ records, onUpdate, employees }: {
       return idx >= 0 ? prev.map((x) => x.id === r.id ? r : x) : [r, ...prev]
     })
     setEditing(null)
+    setEditingReadOnly(false)
   }
 
   const del = (id: string) => onUpdate((prev) => prev.filter((x) => x.id !== id))
@@ -7163,7 +7705,7 @@ function ExitInterviewSection({ records, onUpdate, employees }: {
                 return (
                   <tr key={r.id}>
                     <td className="term-empid">{r.employeeId}</td>
-                    <td className="name-cell"><button className="name-link" type="button" onClick={() => setEditing(r)}>{r.name}</button></td>
+                    <td className="name-cell"><button className="name-link" type="button" onClick={() => { setEditing(r); setEditingReadOnly(isHOD) }}>{r.name}</button></td>
                     <td>{r.department}</td>
                     <td>{formatDateDisplay(r.departureDate)}</td>
                     <td><span className="req-type-chip">{r.terminationType}</span></td>
@@ -7180,7 +7722,8 @@ function ExitInterviewSection({ records, onUpdate, employees }: {
                     </td>
                     <td>
                       <div className="row-actions">
-                        <button className="action-glyph vwh" title="Open Form" onClick={() => setEditing(r)} type="button">
+                        <button className="action-glyph" title="View / Print" onClick={() => { setEditing(r); setEditingReadOnly(true) }} type="button">👁</button>
+                        <button className="action-glyph vwh" title="Open Form" onClick={() => { setEditing(r); setEditingReadOnly(false) }} type="button">
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
                             <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
@@ -7197,7 +7740,7 @@ function ExitInterviewSection({ records, onUpdate, employees }: {
       </div>
 
       {showAnalytics && <ExitInterviewAnalyticsModal records={filtered} onClose={() => setShowAnalytics(false)} />}
-      {editing && <ExitInterviewFormModal record={editing} employees={employees} onClose={() => setEditing(null)} onSave={save} />}
+      {editing && <ExitInterviewFormModal record={editing} employees={employees} viewOnly={editingReadOnly} onClose={() => { setEditing(null); setEditingReadOnly(false) }} onSave={save} />}
     </>
   )
 }
@@ -7213,6 +7756,7 @@ function TerminationPage({
   onDelete,
   onViewDetails,
   onUpdateExitInterviews,
+  isHOD = false,
 }: {
   noticeTerminations: EnhancedTerminationRecord[]
   completedTerminations: CompletedTerminationRecord[]
@@ -7224,6 +7768,7 @@ function TerminationPage({
   onDelete: (id: string) => void
   onViewDetails: (record: EnhancedTerminationRecord | CompletedTerminationRecord) => void
   onUpdateExitInterviews: (fn: (prev: ExitInterviewRecord[]) => ExitInterviewRecord[]) => void
+  isHOD?: boolean
 }) {
   const [activeTab, setActiveTab] = useState<TerminationTab>('notice')
   const [noticeSearch, setNoticeSearch] = useState('')
@@ -7232,8 +7777,6 @@ function TerminationPage({
   const [completedDepartmentFilter, setCompletedDepartmentFilter] = useState('All Departments')
   const [noticeStageFilter, setNoticeStageFilter] = useState<'All' | TerminationStage>('All')
   const [expandedTermId, setExpandedTermId] = useState<string | null>(null)
-  const [viewingEI, setViewingEI] = useState<ExitInterviewRecord | null>(null)
-  const [viewingEIReadOnly, setViewingEIReadOnly] = useState(false)
 
   const getDuration = (joinDate: string) => {
     if (!joinDate) return '-'
@@ -7415,25 +7958,10 @@ function TerminationPage({
             records={exitInterviews}
             onUpdate={onUpdateExitInterviews}
             employees={employees}
+            isHOD={isHOD}
           />
         )}
       </section>
-      {viewingEI && (
-        <ExitInterviewFormModal
-          record={viewingEI}
-          employees={employees}
-          viewOnly={viewingEIReadOnly}
-          onClose={() => { setViewingEI(null); setViewingEIReadOnly(false) }}
-          onSave={(r) => {
-            onUpdateExitInterviews(prev => {
-              const idx = prev.findIndex(x => x.id === r.id)
-              return idx >= 0 ? prev.map(x => x.id === r.id ? r : x) : [r, ...prev]
-            })
-            setViewingEI(null)
-            setViewingEIReadOnly(false)
-          }}
-        />
-      )}
     </>
   )
 }
@@ -7737,12 +8265,13 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
 }
 
 /* ─── MeetingFormModal ─────────────────────────────────────────── */
-function MeetingFormModal({ record, employees, activeLeaves, onClose, onSave }: {
+function MeetingFormModal({ record, employees, activeLeaves, onClose, onSave, viewOnly = false }: {
   record: MeetingRecord
   employees: Employee[]
   activeLeaves: ActiveLeaveRecord[]
   onClose: () => void
   onSave: (r: MeetingRecord) => void
+  viewOnly?: boolean
 }) {
   const isNew = record.id.includes('-new-')
   // Tab order: details → attendance → other (agenda) → minutes (section updates)
@@ -7872,7 +8401,7 @@ function MeetingFormModal({ record, employees, activeLeaves, onClose, onSave }: 
         <div style={{ padding:'14px 20px', borderBottom:'1px solid #f1f5f9', flexShrink:0, display:'flex', alignItems:'center', gap:12 }}>
           <div>
             <h2 style={{ margin:0, fontSize:'1rem', fontWeight:800, color:'#1e1b4b' }}>
-              {isNew ? 'New Meeting Minutes' : `Edit — ${record.refNumber}`}
+              {isNew ? 'New Meeting Minutes' : viewOnly ? `View — ${record.refNumber}` : `Edit — ${record.refNumber}`}
             </h2>
             <p style={{ margin:'2px 0 0', fontSize:'0.72rem', color:'#64748b' }}>HOD Briefing Meeting Record</p>
           </div>
@@ -7899,6 +8428,7 @@ function MeetingFormModal({ record, employees, activeLeaves, onClose, onSave }: 
 
         {/* Body */}
         <div style={{ flex:1, minHeight:0, overflowY:'auto', padding:'18px 20px' }}>
+        <fieldset disabled={viewOnly} style={{ border:'none', margin:0, padding:0 }}>
 
           {/* ── TAB: Meeting Details ── */}
           {tab === 'details' && (
@@ -8159,20 +8689,23 @@ function MeetingFormModal({ record, employees, activeLeaves, onClose, onSave }: 
               </div>
             </div>
           )}
+        </fieldset>
         </div>
 
         {/* Footer */}
         <div style={{ flexShrink:0, borderTop:'1px solid #f1f5f9', padding:'10px 20px', display:'flex', gap:8, justifyContent:'flex-end', background:'#fafbff' }}>
-          {status === 'Draft' && !isNew && (
+          {!viewOnly && status === 'Draft' && !isNew && (
             <button type="button" style={{ padding:'7px 16px', borderRadius:7, fontSize:'0.8rem', fontWeight:700, cursor:'pointer', background:'#15803d', color:'#fff', border:'none' }}
               onClick={handleMarkFinal}>
               ✓ Mark as Final
             </button>
           )}
-          <button type="button" className="primary-button" onClick={() => handleSave()}>
-            {isNew ? 'Create Meeting Record' : 'Save Changes'}
-          </button>
-          <button type="button" className="quiet-button" onClick={onClose}>Cancel</button>
+          {!viewOnly && (
+            <button type="button" className="primary-button" onClick={() => handleSave()}>
+              {isNew ? 'Create Meeting Record' : 'Save Changes'}
+            </button>
+          )}
+          <button type="button" className="quiet-button" onClick={onClose}>{viewOnly ? 'Close' : 'Cancel'}</button>
         </div>
       </div>
     </div>
@@ -8438,13 +8971,15 @@ function MeetingCalendar({ records }: { records: MeetingRecord[] }) {
 }
 
 /* ─── MeetingsSection ──────────────────────────────────────────── */
-function MeetingsSection({ records, onUpdate, employees, activeLeaves }: {
+function MeetingsSection({ records, onUpdate, employees, activeLeaves, isHOD = false }: {
   records: MeetingRecord[]
   onUpdate: (fn: (prev: MeetingRecord[]) => MeetingRecord[]) => void
   employees: Employee[]
   activeLeaves: ActiveLeaveRecord[]
+  isHOD?: boolean
 }) {
   const [editing,   setEditing]   = useState<MeetingRecord | null>(null)
+  const [viewing,   setViewing]   = useState<MeetingRecord | null>(null)
   const [search,    setSearch]    = useState('')
   const [view,      setView]      = useState<'list'|'calendar'>('list')
 
@@ -8605,6 +9140,7 @@ function MeetingsSection({ records, onUpdate, employees, activeLeaves }: {
                 </div>
                 {/* Icons only — no text labels */}
                 <div className="mtg-actions">
+                  {isHOD && <button className="quiet-button" type="button" title="View" onClick={() => setViewing(rec)} style={{ fontSize:'0.9rem', padding:'3px 8px' }}>👁</button>}
                   <button className="quiet-button vwh" type="button" title="Edit" onClick={() => setEditing(rec)} style={{ fontSize:'0.9rem', padding:'3px 8px' }}>✎</button>
                   <button className="quiet-button" type="button" title="Print" onClick={() => printMeetingMinutes(rec, employees, activeLeaves)} style={{ fontSize:'0.9rem', padding:'3px 8px' }}>🖨</button>
                   <button className="quiet-button vwh" type="button" title="Delete" onClick={() => del(rec.id)} style={{ fontSize:'0.9rem', padding:'3px 8px', color:'#ef4444' }}>🗑</button>
@@ -8622,6 +9158,16 @@ function MeetingsSection({ records, onUpdate, employees, activeLeaves }: {
           activeLeaves={activeLeaves}
           onClose={() => setEditing(null)}
           onSave={save}
+        />
+      )}
+      {viewing && (
+        <MeetingFormModal
+          record={viewing}
+          employees={employees}
+          activeLeaves={activeLeaves}
+          onClose={() => setViewing(null)}
+          onSave={() => {}}
+          viewOnly
         />
       )}
     </div>
@@ -8772,12 +9318,13 @@ const initialMeetingRecords: MeetingRecord[] = [
   },
 ]
 
-function OperationsPage({ employees, completedTerminations, activeLeaves }: {
+function OperationsPage({ employees, completedTerminations, activeLeaves, isHOD = false }: {
   employees: Employee[]
   completedTerminations: CompletedTerminationRecord[]
   activeLeaves: ActiveLeaveRecord[]
+  isHOD?: boolean
 }) {
-  const [activeSection, setActiveSection] = useState<OpsSection>('files')
+  const [activeSection, setActiveSection] = useState<OpsSection>(isHOD ? 'training' : 'files')
   const [meetingRecords, setMeetingRecords] = useState<MeetingRecord[]>(initialMeetingRecords)
   const [personalFiles, setPersonalFiles] = useState<PersonalFileRecord[]>(initialPersonalFiles)
   const [inductionRecords, setInductionRecords] = useState<InductionRecord[]>(initialInductionRecords)
@@ -8849,10 +9396,10 @@ function OperationsPage({ employees, completedTerminations, activeLeaves }: {
     <>
       <PageHeader eyebrow="HR operations" title="HR Operations" />
       <div className="section-inline-tabs">
-        <button className={activeSection === 'files' ? 'active' : ''} onClick={() => setActiveSection('files')} type="button">Personal Files</button>
-        <button className={activeSection === 'induction' ? 'active' : ''} onClick={() => setActiveSection('induction')} type="button">Induction</button>
+        {!isHOD && <button className={activeSection === 'files' ? 'active' : ''} onClick={() => setActiveSection('files')} type="button">Personal Files</button>}
+        {!isHOD && <button className={activeSection === 'induction' ? 'active' : ''} onClick={() => setActiveSection('induction')} type="button">Induction</button>}
         <button className={activeSection === 'training' ? 'active' : ''} onClick={() => setActiveSection('training')} type="button">Training</button>
-        <button className={activeSection === 'bank' ? 'active' : ''} onClick={() => setActiveSection('bank')} type="button">Bank Account</button>
+        {!isHOD && <button className={activeSection === 'bank' ? 'active' : ''} onClick={() => setActiveSection('bank')} type="button">Bank Account</button>}
         <button className={activeSection === 'meetings' ? 'active' : ''} onClick={() => setActiveSection('meetings')} type="button">
           Minutes
         </button>
@@ -8861,7 +9408,7 @@ function OperationsPage({ employees, completedTerminations, activeLeaves }: {
       {activeSection === 'induction' && <InductionSection employees={employees} records={inductionRecords} onUpdate={setInductionRecords} onBack={() => {}} />}
       {activeSection === 'training'  && <TrainingSection records={trainingRecords} employees={employees} onUpdate={setTrainingRecords} onBack={() => {}} />}
       {activeSection === 'bank'      && <BankAccountSection employees={employees} records={bankAccountRecords} onUpdate={setBankAccountRecords} onBack={() => {}} />}
-      {activeSection === 'meetings'  && <MeetingsSection records={meetingRecords} onUpdate={setMeetingRecords} employees={employees} activeLeaves={activeLeaves} />}
+      {activeSection === 'meetings'  && <MeetingsSection records={meetingRecords} onUpdate={setMeetingRecords} employees={employees} activeLeaves={activeLeaves} isHOD={isHOD} />}
     </>
   )
 }
@@ -9356,11 +9903,12 @@ const priorityColors: Record<RequestPriority, string> = {
   High: 'req-priority-high',
 }
 
-function RequestsSection({ records, employees, onUpdate }: {
+function RequestsSection({ records, employees, onUpdate, isHOD = false }: {
   records: StaffRequestRecord[]
   employees: Employee[]
   onUpdate: (fn: (prev: StaffRequestRecord[]) => StaffRequestRecord[]) => void
   onBack?: () => void
+  isHOD?: boolean
 }) {
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('All')
@@ -9446,11 +9994,15 @@ function RequestsSection({ records, employees, onUpdate }: {
                     <td style={{textAlign:'center',whiteSpace:'nowrap'}}><span className={`req-priority-badge ${priorityColors[r.priority]}`}>{r.priority}</span></td>
                     <td style={{maxWidth:200}}>{r.description || '—'}</td>
                     <td style={{textAlign:'center', position:'relative', whiteSpace:'nowrap'}}>
-                      <button type="button" onClick={() => setStatusMenu(statusMenu === r.id ? null : r.id)}
-                        style={{ background:'none', border:'none', cursor:'pointer', padding:0 }}>
+                      {isHOD ? (
                         <StatusBadge status={r.status} />
-                      </button>
-                      {statusMenu === r.id && (
+                      ) : (
+                        <button type="button" onClick={() => setStatusMenu(statusMenu === r.id ? null : r.id)}
+                          style={{ background:'none', border:'none', cursor:'pointer', padding:0 }}>
+                          <StatusBadge status={r.status} />
+                        </button>
+                      )}
+                      {!isHOD && statusMenu === r.id && (
                         <div style={{ position:'absolute', top:'100%', left:'50%', transform:'translateX(-50%)', zIndex:20,
                           background:'#fff', border:'1.5px solid #e2e8f0', borderRadius:8,
                           boxShadow:'0 4px 14px rgba(0,0,0,0.13)', padding:'4px 0', minWidth:140 }}
@@ -10317,68 +10869,87 @@ function ActivitiesPage({
   employees,
   passportHandovers,
   onUpdatePassport,
+  tripRequests,
+  onUpdateTripRequests,
   inventoryItems,
   inventoryUsage,
   inventoryOrders,
   onUpdateInventoryItems,
   onUpdateInventoryUsage,
   onUpdateInventoryOrders,
+  isHOD = false,
+  currentUserSections = [],
 }: {
   employees: Employee[]
   passportHandovers: PassportRecord[]
   onUpdatePassport: (fn: (prev: PassportRecord[]) => PassportRecord[]) => void
+  tripRequests: TripRequest[]
+  onUpdateTripRequests: (fn: (prev: TripRequest[]) => TripRequest[]) => void
   inventoryItems: InventoryItem[]
   inventoryUsage: InventoryUsageRecord[]
   inventoryOrders: StoreOrder[]
   onUpdateInventoryItems: (fn: (prev: InventoryItem[]) => InventoryItem[]) => void
   onUpdateInventoryUsage: (fn: (prev: InventoryUsageRecord[]) => InventoryUsageRecord[]) => void
   onUpdateInventoryOrders: (fn: (prev: StoreOrder[]) => StoreOrder[]) => void
+  isHOD?: boolean
+  currentUserSections?: string[]
 }) {
   const [activeSection, setActiveSection] = useState<ActivitiesSection>('requests')
   const [staffRequests, setStaffRequests] = useState<StaffRequestRecord[]>(initialStaffRequests)
   const [visitRecords, setVisitRecords] = useState<VisitRecord[]>(initialVisitRecords)
   const [incidentRecords, setIncidentRecords] = useState<IncidentRecord[]>(initialIncidentRecords)
+
+  // For HOD: limit Requests/Visits to records tied to the assigned section(s)
+  const scopedStaffRequests = isHOD ? staffRequests.filter((r) => currentUserSections.includes(r.section)) : staffRequests
+  const scopedVisitRecords  = isHOD ? visitRecords.filter((r) => currentUserSections.includes(r.department)) : visitRecords
+
   return (
     <>
       <PageHeader eyebrow="Activities" title="Activities" />
       <div className="section-inline-tabs">
         <button className={activeSection === 'requests' ? 'active' : ''} onClick={() => setActiveSection('requests')} type="button">Requests</button>
         <button className={activeSection === 'visits' ? 'active' : ''} onClick={() => setActiveSection('visits')} type="button">Visits</button>
-        <button className={activeSection === 'incidents' ? 'active' : ''} onClick={() => setActiveSection('incidents')} type="button">Incidents</button>
-        <button className={activeSection === 'passport' ? 'active' : ''} onClick={() => setActiveSection('passport')} type="button">Passport Tracking</button>
-        <button className={activeSection === 'inventory' ? 'active' : ''} onClick={() => setActiveSection('inventory')} type="button">Inventory</button>
+        {!isHOD && <button className={activeSection === 'incidents' ? 'active' : ''} onClick={() => setActiveSection('incidents')} type="button">Incidents</button>}
+        {!isHOD && <button className={activeSection === 'passport' ? 'active' : ''} onClick={() => setActiveSection('passport')} type="button">Passports</button>}
+        {!isHOD && <button className={activeSection === 'tripreq' ? 'active' : ''} onClick={() => setActiveSection('tripreq')} type="button">Trip Req</button>}
+        {!isHOD && <button className={activeSection === 'inventory' ? 'active' : ''} onClick={() => setActiveSection('inventory')} type="button">Inventory</button>}
       </div>
-      {activeSection === 'requests' && <RequestsSection records={staffRequests} employees={employees} onUpdate={setStaffRequests} onBack={() => {}} />}
-      {activeSection === 'visits' && <VisitsSection records={visitRecords} employees={employees} onUpdate={setVisitRecords} onBack={() => {}} />}
-      {activeSection === 'incidents' && <IncidentsSection records={incidentRecords} employees={employees} onUpdate={setIncidentRecords} onBack={() => {}} />}
-      {activeSection === 'passport' && <PassportTrackingSection records={passportHandovers} employees={employees} onUpdate={onUpdatePassport} />}
-      {activeSection === 'inventory' && <InventorySection items={inventoryItems} usage={inventoryUsage} orders={inventoryOrders} onUpdateItems={onUpdateInventoryItems} onUpdateUsage={onUpdateInventoryUsage} onUpdateOrders={onUpdateInventoryOrders} employees={employees} />}
+      {activeSection === 'requests' && <RequestsSection records={scopedStaffRequests} employees={employees} onUpdate={setStaffRequests} onBack={() => {}} isHOD={isHOD} />}
+      {activeSection === 'visits' && <VisitsSection records={scopedVisitRecords} employees={employees} onUpdate={setVisitRecords} onBack={() => {}} />}
+      {!isHOD && activeSection === 'incidents' && <IncidentsSection records={incidentRecords} employees={employees} onUpdate={setIncidentRecords} onBack={() => {}} />}
+      {!isHOD && activeSection === 'passport' && <PassportTrackingSection records={passportHandovers} employees={employees} onUpdate={onUpdatePassport} />}
+      {!isHOD && activeSection === 'tripreq' && <TripReqSection records={tripRequests} employees={employees} onUpdate={onUpdateTripRequests} />}
+      {!isHOD && activeSection === 'inventory' && <InventorySection items={inventoryItems} usage={inventoryUsage} orders={inventoryOrders} onUpdateItems={onUpdateInventoryItems} onUpdateUsage={onUpdateInventoryUsage} onUpdateOrders={onUpdateInventoryOrders} employees={employees} />}
     </>
   )
 }
 
-type UserRole = 'Admin' | 'HR Manager' | 'Viewer'
+type UserRole = 'Admin' | 'HR Manager' | 'Viewer' | 'HOD'
 type AppUserStatus = 'Active' | 'Inactive'
 
 type AppUser = {
   id: string
   name: string
   username: string
+  password?: string
   role: UserRole
   status: AppUserStatus
   lastLogin: string
   designation?: string
+  /** Section(s) this Head of Department is scoped to — only relevant when role === 'HOD' */
+  sections?: string[]
 }
 
 const initialAppUsers: AppUser[] = [
-  { id: 'USR-001', name: 'Administrator', username: 'admin', role: 'Admin', status: 'Active', lastLogin: '2026-06-01', designation: 'System Administrator' },
-  { id: 'USR-002', name: 'Viewer', username: 'viewer', role: 'Viewer', status: 'Active', lastLogin: '2026-06-01', designation: 'Read-only User' },
+  { id: 'USR-001', name: 'Administrator', username: 'admin', password: 'TIC@Admin#2026', role: 'Admin', status: 'Active', lastLogin: '2026-06-01', designation: 'System Administrator' },
+  { id: 'USR-002', name: 'Viewer', username: 'viewer', password: 'TIC@View#2026', role: 'Viewer', status: 'Active', lastLogin: '2026-06-01', designation: 'Read-only User' },
 ]
 
 const rolePermissions: Record<UserRole, string> = {
   'Admin': 'Full access — view, edit, delete, manage users',
   'HR Manager': 'View and edit all HR records — no user management',
   'Viewer': 'Read-only access to employees and leave records',
+  'HOD': 'Read-only access scoped to assigned section(s) only',
 }
 
 function UserFormModal({ user, onClose, onSave }: {
@@ -10394,10 +10965,22 @@ function UserFormModal({ user, onClose, onSave }: {
   const [role, setRole] = useState<UserRole>(user.role)
   const [status, setStatus] = useState<AppUserStatus>(user.status)
   const [showPassword, setShowPassword] = useState(false)
+  const [sections, setSections] = useState<string[]>(user.sections ?? [])
+
+  const toggleSection = (dept: string) => {
+    setSections((prev) => prev.includes(dept) ? prev.filter((d) => d !== dept) : [...prev, dept])
+  }
 
   const save = (e: FormEvent) => {
     e.preventDefault()
-    onSave({ ...user, id: isNew ? `USR-${String(Date.now()).slice(-4)}` : user.id, name, username, designation, role, status, lastLogin: user.lastLogin || new Date().toISOString().slice(0, 10) })
+    onSave({
+      ...user,
+      id: isNew ? `USR-${String(Date.now()).slice(-4)}` : user.id,
+      name, username, designation, role, status,
+      lastLogin: user.lastLogin || new Date().toISOString().slice(0, 10),
+      password: password ? password : user.password,
+      sections: role === 'HOD' ? sections : undefined,
+    })
   }
 
   return (
@@ -10420,6 +11003,7 @@ function UserFormModal({ user, onClose, onSave }: {
                 <option>Admin</option>
                 <option>HR Manager</option>
                 <option>Viewer</option>
+                <option>HOD</option>
               </select>
             </label>
             <label><span>Status</span>
@@ -10435,6 +11019,20 @@ function UserFormModal({ user, onClose, onSave }: {
                 <button type="button" className="password-toggle" onClick={() => setShowPassword((p) => !p)}>{showPassword ? 'Hide' : 'Show'}</button>
               </div>
             </label>
+            {role === 'HOD' && (
+              <div className="full-field">
+                <span>Assigned Section(s)</span>
+                <div className="hod-section-grid">
+                  {departmentsList.map((d) => (
+                    <label key={d} className="hod-section-check">
+                      <input type="checkbox" checked={sections.includes(d)} onChange={() => toggleSection(d)} />
+                      <span>{d}</span>
+                    </label>
+                  ))}
+                </div>
+                {sections.length === 0 && <p className="hod-section-warn">Select at least one section this HOD will be able to view.</p>}
+              </div>
+            )}
             <div className="full-field user-role-hint">
               <strong>{role}</strong>
               <span>{rolePermissions[role]}</span>
@@ -10450,17 +11048,20 @@ function UserFormModal({ user, onClose, onSave }: {
   )
 }
 
-function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves: _al, onReset, currentUserName }: {
+function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves: _al, onReset, currentUserName, users, onUpdateUsers }: {
   employees: Employee[]
   leaveRequests: LeaveRequestRecord[]
   activeLeaves: ActiveLeaveRecord[]
   onReset: () => void
   currentUserName: string
+  users: AppUser[]
+  onUpdateUsers: (fn: (prev: AppUser[]) => AppUser[]) => void
 }) {
-  const [users, setUsers] = useState<AppUser[]>(initialAppUsers)
+  const setUsers = onUpdateUsers
   const [editing, setEditing] = useState<AppUser | null>(null)
   const [showAdd, setShowAdd] = useState(false)
   const [search, setSearch] = useState('')
+  const [showChangePw, setShowChangePw] = useState(false)
 
   const filtered = users.filter((u) =>
     `${u.name} ${u.username} ${u.role}`.toLowerCase().includes(search.toLowerCase())
@@ -10490,6 +11091,7 @@ function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves:
     'Admin': 'role-admin',
     'HR Manager': 'role-hr',
     'Viewer': 'role-viewer',
+    'HOD': 'role-hod',
   }
 
   // Helpers for profile card
@@ -10515,7 +11117,7 @@ function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves:
           <div className="profile-username">@{currentAppUser?.username ?? 'admin'}</div>
         </div>
         <div style={{ marginLeft: 'auto' }}>
-          <button className="quiet-button light vwh" type="button" style={{ fontSize: '0.78rem', background: 'rgba(255,255,255,0.15)', color: '#fff', border: '1.5px solid rgba(255,255,255,0.3)' }}>
+          <button className="quiet-button light" type="button" onClick={() => setShowChangePw(true)} style={{ fontSize: '0.78rem', background: 'rgba(255,255,255,0.15)', color: '#fff', border: '1.5px solid rgba(255,255,255,0.3)' }}>
             Change Password
           </button>
         </div>
@@ -10530,7 +11132,7 @@ function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves:
           <div className="employee-table-shell">
             <table className="data-table user-table">
               <thead>
-                <tr><th>Name</th><th>Username</th><th>Role</th><th>Designation</th><th>Status</th><th>Last Login</th></tr>
+                <tr><th>Name</th><th>Username</th><th>Role</th><th>Designation</th>{currentAppUser?.role === 'HOD' && <th>Assigned Section(s)</th>}<th>Status</th><th>Last Login</th></tr>
               </thead>
               <tbody>
                 <tr>
@@ -10543,6 +11145,15 @@ function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves:
                   <td><code className="user-username">{currentAppUser?.username ?? '—'}</code></td>
                   <td><span className={`role-chip ${roleColors[currentAppUser?.role ?? 'HR Manager']}`}>{currentAppUser?.role ?? '—'}</span></td>
                   <td>{currentAppUser?.designation ?? '—'}</td>
+                  {currentAppUser?.role === 'HOD' && (
+                    <td>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                        {(currentAppUser?.sections ?? []).length === 0
+                          ? <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>None assigned</span>
+                          : currentAppUser!.sections!.map((s) => <span key={s} className="req-type-chip">{s}</span>)}
+                      </div>
+                    </td>
+                  )}
                   <td><span style={{ fontSize: '0.76rem', fontWeight: 700, color: '#15803d', background: '#dcfce7', padding: '2px 9px', borderRadius: 8 }}>{currentAppUser?.status ?? 'Active'}</span></td>
                   <td>{currentAppUser?.lastLogin ? formatDateDisplay(currentAppUser.lastLogin) : '—'}</td>
                 </tr>
@@ -10589,6 +11200,7 @@ function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves:
                 <thead>
                   <tr>
                     <th>User</th><th>Username</th><th>Role</th><th>Permissions</th>
+                    <th>Section(s)</th>
                     <th>Last Login</th><th>Status</th><th>Actions</th>
                   </tr>
                 </thead>
@@ -10607,6 +11219,17 @@ function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves:
                       <td><code className="user-username">{user.username}</code></td>
                       <td><span className={`role-chip ${roleColors[user.role]}`}>{user.role}</span></td>
                       <td className="user-perms">{rolePermissions[user.role]}</td>
+                      <td>
+                        {user.role === 'HOD'
+                          ? (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, maxWidth: 220 }}>
+                              {(user.sections ?? []).length === 0
+                                ? <span style={{ color: '#94a3b8', fontSize: '0.74rem' }}>None</span>
+                                : (user.sections ?? []).map((s) => <span key={s} className="req-type-chip">{s}</span>)}
+                            </div>
+                          )
+                          : <span style={{ color: '#cbd5e1', fontSize: '0.74rem' }}>—</span>}
+                      </td>
                       <td>{user.lastLogin ? formatDateDisplay(user.lastLogin) : '—'}</td>
                       <td>
                         <button type="button" className={`status-toggle-btn ${user.status === 'Active' ? 'active' : 'inactive'}`}
@@ -10648,6 +11271,66 @@ function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves:
           </div>
         </>
       )}
+
+      {showChangePw && currentAppUser && (
+        <ChangePasswordModal
+          user={currentAppUser}
+          onClose={() => setShowChangePw(false)}
+          onSave={(newPassword) => {
+            setUsers((prev) => prev.map((u) => u.id === currentAppUser.id ? { ...u, password: newPassword } : u))
+            setShowChangePw(false)
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
+function ChangePasswordModal({ user, onClose, onSave }: {
+  user: AppUser
+  onClose: () => void
+  onSave: (newPassword: string) => void
+}) {
+  const [current, setCurrent] = useState('')
+  const [next, setNext] = useState('')
+  const [confirm, setConfirm] = useState('')
+  const [error, setError] = useState('')
+  const [showPw, setShowPw] = useState(false)
+
+  const save = (e: FormEvent) => {
+    e.preventDefault()
+    if (user.password && current !== user.password) { setError('Current password is incorrect.'); return }
+    if (next.length < 6) { setError('New password must be at least 6 characters.'); return }
+    if (next !== confirm) { setError('New password and confirmation do not match.'); return }
+    onSave(next)
+  }
+
+  return (
+    <div className="modal-backdrop" role="presentation">
+      <section className="registration-modal" role="dialog" aria-modal="true" style={{ maxWidth: 420 }}>
+        <div className="modal-header">
+          <div><p className="eyebrow">My Account</p><h2>Change Password</h2></div>
+          <button className="icon-button" onClick={onClose} type="button">✕</button>
+        </div>
+        <form onSubmit={save}>
+          <div className="form-grid">
+            <label className="full-field">
+              <span>Current Password</span>
+              <div className="password-field">
+                <input type={showPw ? 'text' : 'password'} value={current} onChange={(e) => { setCurrent(e.target.value); setError('') }} required placeholder="Enter current password" />
+                <button type="button" className="password-toggle" onClick={() => setShowPw((p) => !p)}>{showPw ? 'Hide' : 'Show'}</button>
+              </div>
+            </label>
+            <label className="full-field"><span>New Password</span><input type={showPw ? 'text' : 'password'} value={next} onChange={(e) => { setNext(e.target.value); setError('') }} required placeholder="At least 6 characters" /></label>
+            <label className="full-field"><span>Confirm New Password</span><input type={showPw ? 'text' : 'password'} value={confirm} onChange={(e) => { setConfirm(e.target.value); setError('') }} required placeholder="Re-enter new password" /></label>
+            {error && <div className="full-field" style={{ color: '#b91c1c', fontSize: '0.8rem', fontWeight: 600 }}>{error}</div>}
+          </div>
+          <div className="modal-actions">
+            <button className="quiet-button light" onClick={onClose} type="button">Cancel</button>
+            <button className="primary-button" type="submit">Update Password</button>
+          </div>
+        </form>
+      </section>
     </div>
   )
 }
@@ -10692,16 +11375,19 @@ function PendingTasksModal({ employees, onEdit, onClose }: { employees: Employee
   )
 }
 
-function LoginPage({ onLogin }: { onLogin: (name: string, role: UserRole) => void }) {
+function LoginPage({ onLogin, users }: { onLogin: (name: string, role: UserRole) => void; users: AppUser[] }) {
   const [loginUser, setLoginUser] = useState('')
   const [loginPass, setLoginPass] = useState('')
   const [loginError, setLoginError] = useState(false)
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (loginUser === 'admin' && loginPass === 'TIC@Admin#2026') {
-      setLoginError(false); onLogin('Administrator', 'Admin')
-    } else if (loginUser === 'viewer' && loginPass === 'TIC@View#2026') {
-      setLoginError(false); onLogin('Viewer', 'Viewer')
+    const match = users.find((u) =>
+      u.username.trim().toLowerCase() === loginUser.trim().toLowerCase()
+      && u.status === 'Active'
+      && (u.password ?? '') === loginPass
+    )
+    if (match) {
+      setLoginError(false); onLogin(match.name, match.role)
     } else {
       setLoginError(true)
     }
@@ -10890,6 +11576,7 @@ function App() {
   const [activeLeaves, setActiveLeaves] = useState<ActiveLeaveRecord[]>(() => loadStore('tic_leave_active', initialActiveLeaves))
   const [leaveHistory, setLeaveHistory] = useState<LeaveHistoryRecord[]>(() => loadStore('tic_leave_history_v2', initialLeaveHistory))
   const [passportHandovers, setPassportHandovers] = useState<PassportRecord[]>(() => loadStore('tic_passport', initialPassportHandovers))
+  const [tripRequests, setTripRequests] = useState<TripRequest[]>(() => loadStore('tic_tripreq', initialTripRequests))
   const [noticeTerminations, setNoticeTerminations] = useState<EnhancedTerminationRecord[]>(() => loadStore('tic_term_notice', initialNoticeTerminations))
   const [completedTerminations, setCompletedTerminations] = useState<CompletedTerminationRecord[]>(() => loadStore('tic_term_done', initialCompletedTerminations))
   const [exitInterviews, setExitInterviews] = useState<ExitInterviewRecord[]>(() => loadStore('tic_exit_interviews_v2', initialExitInterviews))
@@ -10898,6 +11585,7 @@ function App() {
   const [inventoryOrders, setInventoryOrders] = useState<StoreOrder[]>(() => loadStore('tic_inv_orders', initialStoreOrders))
   const [inventoryUsage, setInventoryUsage] = useState<InventoryUsageRecord[]>(() => loadStore('tic_inventory_usage', initialInventoryUsage))
   const [offSiteRecords, setOffSiteRecords] = useState<OffSiteRecord[]>(() => loadStore('tic_offsite', initialOffSiteRecords))
+  const [users, setUsers] = useState<AppUser[]>(() => loadStore('tic_users', initialAppUsers))
   const [showEmployeeForm, setShowEmployeeForm] = useState(false)
   const [employeeMode, setEmployeeMode] = useState<'add' | 'edit'>('add')
   const [employeeForm, setEmployeeForm] = useState<EmployeeForm>(emptyEmployee)
@@ -10930,6 +11618,7 @@ function App() {
   useEffect(() => { localStorage.setItem('tic_leave_active', JSON.stringify(activeLeaves)) }, [activeLeaves])
   useEffect(() => { localStorage.setItem('tic_leave_history_v2', JSON.stringify(leaveHistory)) }, [leaveHistory])
   useEffect(() => { localStorage.setItem('tic_passport', JSON.stringify(passportHandovers)) }, [passportHandovers])
+  useEffect(() => { localStorage.setItem('tic_tripreq', JSON.stringify(tripRequests)) }, [tripRequests])
   useEffect(() => { localStorage.setItem('tic_term_notice', JSON.stringify(noticeTerminations)) }, [noticeTerminations])
   useEffect(() => { localStorage.setItem('tic_term_done', JSON.stringify(completedTerminations)) }, [completedTerminations])
   useEffect(() => { localStorage.setItem('tic_exit_interviews_v2', JSON.stringify(exitInterviews)) }, [exitInterviews])
@@ -10938,6 +11627,7 @@ function App() {
   useEffect(() => { localStorage.setItem('tic_inv_orders', JSON.stringify(inventoryOrders)) }, [inventoryOrders])
   useEffect(() => { localStorage.setItem('tic_inventory_usage', JSON.stringify(inventoryUsage)) }, [inventoryUsage])
   useEffect(() => { localStorage.setItem('tic_offsite', JSON.stringify(offSiteRecords)) }, [offSiteRecords])
+  useEffect(() => { localStorage.setItem('tic_users', JSON.stringify(users)) }, [users])
 
   // Auto-sync employee siteStatus: Off Site → from offSiteRecords, On Leave → from activeLeaves
   useEffect(() => {
@@ -11349,7 +12039,24 @@ function App() {
     ['TIC-0001', 'Example Name', 'ADMINISTRATION', 'Manager', 'MALDIVES', 'A123456', '', '01-01-2024', '+960 777 0000', '15-06-1990', 'On Site'],
   ])
 
-  if (!isLoggedIn) return <LoginPage onLogin={login} />
+  if (!isLoggedIn) return <LoginPage onLogin={login} users={users} />
+
+  // Current user's app-record (for HOD section scoping etc.)
+  const currentAppUser = users.find((u) => u.name === currentUserName)
+  const isHOD = currentUserRole === 'HOD'
+  const currentUserSections = currentAppUser?.sections ?? []
+  const inAssignedSection = (dept: string) => !isHOD || currentUserSections.includes(dept)
+
+  // For HOD: scope every department-bearing dataset down to the assigned section(s)
+  const scopedEmployees             = isHOD ? employees.filter((e) => inAssignedSection(e.department)) : employees
+  const scopedLeaveRequests         = isHOD ? leaveRequests.filter((r) => inAssignedSection(r.department)) : leaveRequests
+  const scopedActiveLeaves          = isHOD ? activeLeaves.filter((r) => inAssignedSection(r.department)) : activeLeaves
+  const scopedLeaveHistory          = isHOD ? leaveHistory.filter((r) => inAssignedSection(r.department)) : leaveHistory
+  const scopedMedicalCases          = isHOD ? medicalCases.filter((r) => inAssignedSection(r.department)) : medicalCases
+  const scopedNoticeTerminations    = isHOD ? noticeTerminations.filter((r) => inAssignedSection(r.department)) : noticeTerminations
+  const scopedCompletedTerminations = isHOD ? completedTerminations.filter((r) => inAssignedSection(r.department)) : completedTerminations
+  const scopedExitInterviews        = isHOD ? exitInterviews.filter((r) => inAssignedSection(r.department)) : exitInterviews
+  const scopedPassportHandovers     = isHOD ? passportHandovers.filter((r) => inAssignedSection(r.department)) : passportHandovers
 
   const openEditEmployee = (employee: Employee) => {
     setEmployeeMode('edit')
@@ -11359,7 +12066,7 @@ function App() {
   }
 
   return (
-    <div className={`app-shell${sidebarCollapsed ? ' sidebar-is-collapsed' : ''}${loggingOut ? ' app-logging-out' : ''}${currentUserRole === 'Viewer' ? ' view-only-mode' : ''}`}>
+    <div className={`app-shell${sidebarCollapsed ? ' sidebar-is-collapsed' : ''}${loggingOut ? ' app-logging-out' : ''}${(currentUserRole === 'Viewer' || isHOD) ? ' view-only-mode' : ''}`}>
       <aside className={`sidebar${sidebarCollapsed ? ' sidebar--collapsed' : ''}`}>
         <div className="sidebar-header">
           <div className="sidebar-brand">
@@ -11390,6 +12097,7 @@ function App() {
               <span className="sidebar-user-name">
                 <span className="sidebar-user-name-text">{getFirstName(currentUserName)}</span>
                 {currentUserRole === 'Viewer' && <span className="sidebar-view-only-badge">View Only</span>}
+                {isHOD && <span className="sidebar-view-only-badge">Section Head</span>}
               </span>
             )}
           </div>
@@ -11425,13 +12133,13 @@ function App() {
           <span className="topbar-page-title">{pages.find((p) => p.id === activePage)?.label}</span>
         </div>
         <main className="workspace-inner" id="top">
-          {activePage === 'overview' && <OverviewPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} noticeTerminations={noticeTerminations} completedTerminations={completedTerminations} exitInterviews={exitInterviews} medicalCases={medicalCases} inventoryItems={inventoryItems} passportHandovers={passportHandovers} />}
-          {activePage === 'employees' && <EmployeesPage employees={employees} medicalCases={medicalCases} noticeTerminations={noticeTerminations} offSiteRecords={offSiteRecords} onUpdateOffSite={(fn) => setOffSiteRecords(fn)} onAdd={() => { setEmployeeMode('add'); setEmployeeForm(emptyEmployee); setShowEmployeeForm(true) }} onEdit={openEditEmployee} onExport={exportCsv} onImport={importCsv} onTemplate={downloadTemplate} onShowTasks={() => setShowPendingTasks(true)} />}
-          {activePage === 'leave' && <LeavePage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} medicalCases={medicalCases} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onSetRequestStep={setLeaveRequestStep} onExtendLeave={extendActiveLeave} onEditActiveLeave={editActiveLeave} onHistoryConfirm={updateHistoryConfirmation} onUpdateMedical={(fn) => setMedicalCases(fn)} />}
-          {activePage === 'operations' && <OperationsPage employees={employees} completedTerminations={completedTerminations} activeLeaves={activeLeaves} />}
-          {activePage === 'activities' && <ActivitiesPage employees={employees} passportHandovers={passportHandovers} onUpdatePassport={(fn) => setPassportHandovers(fn)} inventoryItems={inventoryItems} inventoryUsage={inventoryUsage} inventoryOrders={inventoryOrders} onUpdateInventoryItems={(fn) => setInventoryItems(fn)} onUpdateInventoryUsage={(fn) => setInventoryUsage(fn)} onUpdateInventoryOrders={(fn) => setInventoryOrders(fn)} />}
-          {activePage === 'termination' && <TerminationPage noticeTerminations={noticeTerminations} completedTerminations={completedTerminations} exitInterviews={exitInterviews} employees={employees} onAdd={openAddTermination} onEdit={openEditTermination} onSetStage={setTerminationStage} onDelete={deleteTermination} onViewDetails={(record) => setTerminationDetails(record)} onUpdateExitInterviews={(fn) => setExitInterviews(fn)} />}
-          {activePage === 'settings' && <SettingsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} onReset={resetAllData} currentUserName={currentUserName} />}
+          {activePage === 'overview' && <OverviewPage employees={scopedEmployees} leaveRequests={scopedLeaveRequests} activeLeaves={scopedActiveLeaves} leaveHistory={scopedLeaveHistory} noticeTerminations={scopedNoticeTerminations} completedTerminations={scopedCompletedTerminations} exitInterviews={scopedExitInterviews} medicalCases={scopedMedicalCases} inventoryItems={inventoryItems} passportHandovers={scopedPassportHandovers} />}
+          {activePage === 'employees' && <EmployeesPage employees={scopedEmployees} medicalCases={scopedMedicalCases} noticeTerminations={scopedNoticeTerminations} offSiteRecords={offSiteRecords} onUpdateOffSite={(fn) => setOffSiteRecords(fn)} onAdd={() => { setEmployeeMode('add'); setEmployeeForm(emptyEmployee); setShowEmployeeForm(true) }} onEdit={openEditEmployee} onExport={exportCsv} onImport={importCsv} onTemplate={downloadTemplate} onShowTasks={() => setShowPendingTasks(true)} />}
+          {activePage === 'leave' && <LeavePage employees={scopedEmployees} leaveRequests={scopedLeaveRequests} activeLeaves={scopedActiveLeaves} leaveHistory={scopedLeaveHistory} medicalCases={scopedMedicalCases} isHOD={isHOD} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onSetRequestStep={setLeaveRequestStep} onExtendLeave={extendActiveLeave} onEditActiveLeave={editActiveLeave} onHistoryConfirm={updateHistoryConfirmation} onUpdateMedical={(fn) => setMedicalCases(fn)} />}
+          {activePage === 'operations' && <OperationsPage employees={employees} completedTerminations={completedTerminations} activeLeaves={activeLeaves} isHOD={isHOD} />}
+          {activePage === 'activities' && <ActivitiesPage employees={scopedEmployees} passportHandovers={scopedPassportHandovers} onUpdatePassport={(fn) => setPassportHandovers(fn)} tripRequests={tripRequests} onUpdateTripRequests={(fn) => setTripRequests(fn)} inventoryItems={inventoryItems} inventoryUsage={inventoryUsage} inventoryOrders={inventoryOrders} onUpdateInventoryItems={(fn) => setInventoryItems(fn)} onUpdateInventoryUsage={(fn) => setInventoryUsage(fn)} onUpdateInventoryOrders={(fn) => setInventoryOrders(fn)} isHOD={isHOD} currentUserSections={currentUserSections} />}
+          {activePage === 'termination' && <TerminationPage noticeTerminations={scopedNoticeTerminations} completedTerminations={scopedCompletedTerminations} exitInterviews={scopedExitInterviews} employees={scopedEmployees} isHOD={isHOD} onAdd={openAddTermination} onEdit={openEditTermination} onSetStage={setTerminationStage} onDelete={deleteTermination} onViewDetails={(record) => setTerminationDetails(record)} onUpdateExitInterviews={(fn) => setExitInterviews(fn)} />}
+          {activePage === 'settings' && <SettingsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} onReset={resetAllData} currentUserName={currentUserName} users={users} onUpdateUsers={(fn) => setUsers(fn)} />}
         </main>
       </div> {/* .workspace */}
 
