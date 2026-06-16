@@ -2692,11 +2692,20 @@ function TripRequestModal({ record, employees, onClose, onSave }: {
         <div className="pp-modal-section">
           <div className="pp-modal-section-label tr-req-label">🧑 Requester Details</div>
           <div className="pp-modal-grid">
+            <label><span>Full Name</span><input value={requesterName} onChange={e=>setRequesterName(e.target.value)} placeholder="Full name" /></label>
+            <label><span>Job Title / Designation</span><input value={jobTitle} onChange={e=>setJobTitle(e.target.value)} placeholder="e.g. HR Officer" /></label>
+            <label><span>Department / Section</span>
+              <select value={department} onChange={e=>setDepartment(e.target.value)}>
+                <option value="">Select section…</option>
+                {departmentsList.map(d=><option key={d}>{d}</option>)}
+              </select>
+            </label>
+            <label><span>Business Unit</span><input value="VHPL — Thilafushi Industrial Complex" readOnly style={{ color:'#64748b', background:'#f8fafc' }} /></label>
             <label className="ef-span2" style={{ position:'relative' }}>
-              <span>Search Employee (optional)</span>
+              <span>Quick-fill from Employee Directory <em style={{ fontWeight:400, textTransform:'none', fontSize:'0.72rem', color:'#94a3b8' }}>(optional — auto-fills fields above)</em></span>
               <input value={empSearch} onChange={e => { setEmpSearch(e.target.value); setShowEmpDrop(true) }}
                 onFocus={() => setShowEmpDrop(true)} onBlur={() => setTimeout(()=>setShowEmpDrop(false),150)}
-                placeholder="Type name or employee ID to override…" autoComplete="off" />
+                placeholder="Search by name or employee ID…" autoComplete="off" />
               {showEmpDrop && empResults.length > 0 && (
                 <div className="ei-emp-dropdown">
                   {empResults.map(e => (
@@ -2707,15 +2716,6 @@ function TripRequestModal({ record, employees, onClose, onSave }: {
                 </div>
               )}
             </label>
-            <label><span>Requester Name</span><input value={requesterName} onChange={e=>setRequesterName(e.target.value)} placeholder="Full name" /></label>
-            <label><span>Job Title / Designation</span><input value={jobTitle} onChange={e=>setJobTitle(e.target.value)} placeholder="e.g. HR Officer" /></label>
-            <label><span>Department / Section</span>
-              <select value={department} onChange={e=>setDepartment(e.target.value)}>
-                <option value="">Select section…</option>
-                {departmentsList.map(d=><option key={d}>{d}</option>)}
-              </select>
-            </label>
-            <label><span>Business Unit</span><input value="VHPL — Thilafushi Industrial Complex" readOnly style={{ color:'#64748b', background:'#f8fafc' }} /></label>
           </div>
         </div>
 
@@ -2728,17 +2728,19 @@ function TripRequestModal({ record, employees, onClose, onSave }: {
             <label><span>Departure Date</span><input type="date" value={departureDate} onChange={e=>setDepartureDate(e.target.value)} /></label>
             <label><span>Departure Time</span><input type="time" value={departureTime} onChange={e=>setDepartureTime(e.target.value)} /></label>
             <label className="ef-span2"><span>Purpose of Trip</span><input value={purpose} onChange={e=>setPurpose(e.target.value)} placeholder="e.g. Escorting staff to airport" /></label>
-            <label><span>Number of Passengers</span><input type="number" min="1" value={passengers} onChange={e=>setPassengers(e.target.value)} /></label>
+            <label><span>No. of Passengers</span><input type="number" min="1" value={passengers} onChange={e=>setPassengers(e.target.value)} /></label>
             <label><span>Trip to be Invoiced to</span><input value="VHPL" readOnly style={{ color:'#64748b', background:'#f8fafc' }} /></label>
           </div>
         </div>
 
         {/* Trip Type */}
         <div className="pp-modal-section tr-type-section">
-          <div className="pp-modal-section-label tr-type-label">↔ Trip Type</div>
-          <div className="tr-type-toggle">
-            <button type="button" className={tripType==='One-Way' ? 'active' : ''} onClick={()=>setTripType('One-Way')}>One-Way</button>
-            <button type="button" className={tripType==='Round Trip' ? 'active' : ''} onClick={()=>setTripType('Round Trip')}>Round Trip</button>
+          <div style={{ display:'flex', alignItems:'center', gap:14, flexWrap:'wrap' }}>
+            <div className="pp-modal-section-label tr-type-label" style={{ marginBottom:0 }}>↔ Trip Type</div>
+            <div className="tr-type-toggle">
+              <button type="button" className={tripType==='One-Way' ? 'active' : ''} onClick={()=>setTripType('One-Way')}>One-Way</button>
+              <button type="button" className={tripType==='Round Trip' ? 'active' : ''} onClick={()=>setTripType('Round Trip')}>Round Trip</button>
+            </div>
           </div>
           {tripType === 'Round Trip' && (
             <div className="pp-modal-grid" style={{ marginTop:10 }}>
@@ -2756,12 +2758,12 @@ function TripRequestModal({ record, employees, onClose, onSave }: {
           )}
         </div>
 
-        {/* Submission Details */}
+        {/* Request Info */}
         <div className="pp-modal-section">
-          <div className="pp-modal-section-label">📝 Submission Details</div>
+          <div className="pp-modal-section-label">📋 Request Information</div>
           <div className="pp-modal-grid">
-            <label><span>Requested By</span><input value={requesterName} readOnly style={{ color:'#64748b', background:'#f8fafc' }} /></label>
             <label><span>Request Date</span><input type="date" value={requestDate} onChange={e=>setRequestDate(e.target.value)} /></label>
+            <label><span>Requested By</span><input value={requesterName} readOnly style={{ color:'#64748b', background:'#f8fafc' }} /></label>
             <label className="ef-span2"><span>Remarks / Additional Notes</span><input value={remarks} onChange={e=>setRemarks(e.target.value)} placeholder="Any special instructions or notes for VMT…" /></label>
           </div>
         </div>
@@ -2853,18 +2855,18 @@ function TripReqSection({ records, employees, onUpdate, currentUserName = '' }: 
         ))}
       </div>
 
-      <div className="table-toolbar leave-toolbar leave-toolbar-has-btn" style={{ flexWrap:'wrap', gap:'6px 10px' }}>
-        <label className="search-field" style={{ flex:'1 1 200px' }}>
+      <div className="table-toolbar" style={{ display:'grid', gridTemplateColumns:'1fr auto auto', alignItems:'end', gap:'8px', padding:'8px 0 6px' }}>
+        <label className="search-field">
           <span>Search</span>
           <input type="search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Requester, route, purpose" />
         </label>
-        <label style={{ flex:'0 0 auto' }}>
+        <label>
           <span>Status</span>
           <select value={statusFilter} onChange={e=>setStatusFilter(e.target.value)}>
             {['All','Pending Approval','Approved','Rejected'].map(s=><option key={s}>{s}</option>)}
           </select>
         </label>
-        <button className="primary-button vwh" onClick={()=>setEditing(newRec())} type="button" style={{ flex:'0 0 auto', padding:'0 18px', height:36, fontSize:'0.82rem' }}>+ New Trip Request</button>
+        <button className="primary-button vwh toolbar-add-btn" onClick={()=>setEditing(newRec())} type="button" style={{ padding:'0 14px', height:34, fontSize:'0.8rem', whiteSpace:'nowrap' }}>+ New Trip Request</button>
       </div>
 
       <div className="employee-table-shell compact-scroll">
