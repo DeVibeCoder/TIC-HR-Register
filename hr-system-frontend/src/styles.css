@@ -354,9 +354,9 @@ button:disabled { cursor: not-allowed; opacity: 0.5; }
 }
 
 .sidebar-user-desig {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   font-weight: 500;
-  color: rgba(255,255,255,0.45);
+  color: rgba(255,255,255,0.4);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
