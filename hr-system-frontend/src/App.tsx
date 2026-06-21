@@ -1,5 +1,7 @@
 ﻿import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
+import type { User as SupabaseUser } from '@supabase/supabase-js'
+import { supabase, usernameToEmail } from './lib/supabase'
 
 type Page = 'overview' | 'employees' | 'leave' | 'operations' | 'activities' | 'termination' | 'settings'
 type SiteStatus = 'On Site' | 'Off Site' | 'On Leave'
@@ -11303,22 +11305,22 @@ function PendingTasksModal({ employees, onEdit, onClose }: { employees: Employee
   )
 }
 
-function LoginPage({ onLogin, users }: { onLogin: (name: string, role: UserRole) => void; users: AppUser[] }) {
+function LoginPage() {
   const [loginUser, setLoginUser] = useState('')
   const [loginPass, setLoginPass] = useState('')
   const [loginError, setLoginError] = useState(false)
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const [loginLoading, setLoginLoading] = useState(false)
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    const match = users.find((u) =>
-      u.username.trim().toLowerCase() === loginUser.trim().toLowerCase()
-      && u.status === 'Active'
-      && (u.password ?? '') === loginPass
-    )
-    if (match) {
-      setLoginError(false); onLogin(match.name, match.role)
-    } else {
-      setLoginError(true)
-    }
+    setLoginLoading(true)
+    setLoginError(false)
+    const { error } = await supabase.auth.signInWithPassword({
+      email:    usernameToEmail(loginUser),
+      password: loginPass,
+    })
+    if (error) setLoginError(true)
+    setLoginLoading(false)
+    // On success the onAuthStateChange listener in App() handles the rest
   }
   return (
     <main className="login-shell">
@@ -11411,8 +11413,8 @@ function LoginPage({ onLogin, users }: { onLogin: (name: string, role: UserRole)
 
             {loginError && <p className="login-error">Invalid username or password.</p>}
 
-            <button className="login-btn" type="submit">
-              Sign In →
+            <button className="login-btn" type="submit" disabled={loginLoading}>
+              {loginLoading ? 'Signing in…' : 'Sign In →'}
             </button>
           </form>
         </div>
@@ -11437,23 +11439,8 @@ const pageIcons: Record<Page, string> = {
   settings: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2"/></svg>`,
 }
 
-// Bump this whenever login usernames/passwords change — any browser still
-// holding a session from before the bump is logged out and sent back to
-// the login screen so it must re-authenticate with the new credentials.
-const AUTH_VERSION = '2'
-
 function App() {
   const [activePage, setActivePageState] = useState<Page>(() => (localStorage.getItem('tic_page') as Page) ?? 'overview')
-  const [isLoggedIn, setIsLoggedIn] = useState(() => {
-    if (localStorage.getItem('tic_auth_version') !== AUTH_VERSION) {
-      localStorage.removeItem('tic_auth')
-      localStorage.removeItem('tic_user')
-      localStorage.removeItem('tic_role')
-      localStorage.setItem('tic_auth_version', AUTH_VERSION)
-      return false
-    }
-    return localStorage.getItem('tic_auth') === '1'
-  })
   const [sidebarCollapsed, setSidebarCollapsedState] = useState(() => localStorage.getItem('tic_sidebar') === '1')
 
   const setActivePage = (page: Page) => { setActivePageState(page); localStorage.setItem('tic_page', page) }
@@ -11464,32 +11451,66 @@ function App() {
       return next
     })
   }
-  const [loggingOut, setLoggingOut] = useState(false)
-  const [currentUserName, setCurrentUserName] = useState(() => localStorage.getItem('tic_user') ?? 'Administrator')
-  const [currentUserRole, setCurrentUserRole] = useState<UserRole>(() => {
-    const stored = localStorage.getItem('tic_role') as UserRole | null
-    if (stored === ('HR Manager' as UserRole)) return 'HR' // migrate legacy value
-    return stored ?? 'Admin'
-  })
+
+  // ── Supabase auth state ──────────────────────────────────────────────────
+  const [authLoading,    setAuthLoading]    = useState(true)
+  const [supaUser,       setSupaUser]       = useState<SupabaseUser | null>(null)
+  const [currentProfile, setCurrentProfile] = useState<AppUser | null>(null)
+  const [loggingOut,     setLoggingOut]     = useState(false)
+
+  // Listen for auth session changes (login, logout, token refresh, page reload)
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSupaUser(session?.user ?? null)
+      setAuthLoading(false)
+    })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSupaUser(session?.user ?? null)
+      if (!session) setCurrentProfile(null)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
+
+  // Fetch profile from DB whenever the logged-in user changes
+  useEffect(() => {
+    if (!supaUser) return
+    supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', supaUser.id)
+      .single()
+      .then(({ data }) => {
+        if (data) {
+          setCurrentProfile({
+            id:          data.id,
+            name:        data.name,
+            username:    data.username,
+            role:        data.role as UserRole,
+            designation: data.designation ?? '',
+            sections:    data.sections ?? [],
+            status:      data.status,
+            lastLogin:   data.last_login ?? '',
+          })
+          // Stamp last_login silently
+          supabase.from('profiles').update({ last_login: new Date().toISOString() }).eq('id', supaUser.id)
+        }
+      })
+  }, [supaUser])
+
+  // Derived auth values used throughout the app
+  const isLoggedIn      = !!supaUser && !!currentProfile
+  const currentUserName = currentProfile?.name ?? ''
+  const currentUserRole: UserRole = currentProfile?.role ?? 'HR'
 
   const getInitials = (name: string) => {
     const parts = name.trim().split(/\s+/)
     if (parts.length === 1) return parts[0][0]?.toUpperCase() ?? 'A'
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
   }
-  const _getFirstName = (name: string) => name.trim().split(/\s+/)[0]; void _getFirstName
 
-  const login = (name: string, role: UserRole) => {
-    localStorage.setItem('tic_auth', '1')
-    localStorage.setItem('tic_user', name)
-    localStorage.setItem('tic_role', role)
-    setCurrentUserName(name)
-    setCurrentUserRole(role)
-    setIsLoggedIn(true)
-  }
   const logout = () => {
     setLoggingOut(true)
-    setTimeout(() => { localStorage.removeItem('tic_auth'); localStorage.removeItem('tic_user'); localStorage.removeItem('tic_role'); setIsLoggedIn(false); setLoggingOut(false) }, 700)
+    supabase.auth.signOut().finally(() => setLoggingOut(false))
   }
   const [importResult, setImportResult] = useState<{ added: number; updated: number; skipped: number; unchanged: number } | null>(null)
 
@@ -11517,7 +11538,26 @@ function App() {
   const [inventoryOrders, setInventoryOrders] = useState<StoreOrder[]>(() => loadStore('tic_inv_orders', initialStoreOrders))
   const [inventoryUsage, setInventoryUsage] = useState<InventoryUsageRecord[]>(() => loadStore('tic_inventory_usage', initialInventoryUsage))
   const [offSiteRecords, setOffSiteRecords] = useState<OffSiteRecord[]>(() => loadStore('tic_offsite', initialOffSiteRecords))
-  const [users, setUsers] = useState<AppUser[]>(() => loadStore('tic_users', initialAppUsers))
+  const [users, setUsers] = useState<AppUser[]>(initialAppUsers)
+
+  // Fetch all user profiles from Supabase whenever logged in
+  useEffect(() => {
+    if (!isLoggedIn) return
+    supabase.from('profiles').select('*').then(({ data }) => {
+      if (data && data.length > 0) {
+        setUsers(data.map(d => ({
+          id:          d.id,
+          name:        d.name,
+          username:    d.username,
+          role:        d.role as UserRole,
+          designation: d.designation ?? '',
+          sections:    d.sections ?? [],
+          status:      d.status,
+          lastLogin:   d.last_login ?? '',
+        })))
+      }
+    })
+  }, [isLoggedIn])
   const [showEmployeeForm, setShowEmployeeForm] = useState(false)
   const [employeeMode, setEmployeeMode] = useState<'add' | 'edit'>('add')
   const [employeeForm, setEmployeeForm] = useState<EmployeeForm>(emptyEmployee)
@@ -11559,7 +11599,7 @@ function App() {
   useEffect(() => { localStorage.setItem('tic_inv_orders', JSON.stringify(inventoryOrders)) }, [inventoryOrders])
   useEffect(() => { localStorage.setItem('tic_inventory_usage', JSON.stringify(inventoryUsage)) }, [inventoryUsage])
   useEffect(() => { localStorage.setItem('tic_offsite', JSON.stringify(offSiteRecords)) }, [offSiteRecords])
-  useEffect(() => { localStorage.setItem('tic_users', JSON.stringify(users)) }, [users])
+  // (users are now stored in Supabase — no localStorage sync needed)
 
   // Auto-sync employee siteStatus: Off Site → from offSiteRecords, On Leave → from activeLeaves
   useEffect(() => {
@@ -11988,10 +12028,15 @@ function App() {
     ['TIC-0001', 'Example Name', 'ADMINISTRATION', 'Manager', 'MALDIVES', 'A123456', '', '01-01-2024', '+960 777 0000', '15-06-1990', 'On Site'],
   ])
 
-  if (!isLoggedIn) return <LoginPage onLogin={login} users={users} />
+  if (authLoading) return (
+    <div style={{ display:'grid', placeItems:'center', height:'100vh', background:'#0f172a', color:'rgba(255,255,255,0.5)', fontSize:'0.85rem', letterSpacing:'0.05em' }}>
+      Authenticating…
+    </div>
+  )
+  if (!isLoggedIn) return <LoginPage />
 
-  // Current user's app-record (for HOD section scoping etc.)
-  const currentAppUser = users.find((u) => u.name === currentUserName)
+  // Current user's app-record (from Supabase profile)
+  const currentAppUser = currentProfile
   const isHOD = currentUserRole === 'HOD'
   const isHR  = currentUserRole === 'HR'
   const currentUserSections = currentAppUser?.sections ?? []
