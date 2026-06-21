@@ -9746,24 +9746,104 @@ html { overflow-x: hidden; }
 }
 @media (max-width: 560px) { .dash-row-pair { grid-template-columns: 1fr; } }
 
-/* Terminations */
+/* Terminations (legacy classes kept for safety) */
 .dash-term-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
-.dash-term-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 6px;
-}
+.dash-term-row { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
 .dash-term-name  { font-size: 0.76rem; font-weight: 700; color: #0f172a; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dash-term-stage { font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 20px; flex-shrink: 0; }
-.dash-term-footer { font-size: 0.67rem; color: #94a3b8; padding-top: 6px; border-top: 1px solid #f1f5f9; margin-top: 4px; }
+.dash-term-footer { font-size: 0.67rem; color: #94a3b8; padding-top: 8px; border-top: 1px solid #f1f5f9; margin-top: 8px; }
 
-/* Record health bar */
-.dash-rh-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
-.dash-rh-track { flex: 1; height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden; }
-.dash-rh-fill  { height: 100%; background: #6366f1; border-radius: 4px; transition: width 0.5s; }
-.dash-rh-pct   { font-size: 0.75rem; font-weight: 800; color: #4f46e5; flex-shrink: 0; }
-.dash-rh-labels { display: flex; justify-content: space-between; font-size: 0.67rem; color: #94a3b8; }
+/* ── Staff Presence stat grid ────────────────────────────────── */
+.dash-presence-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.dash-ps-stat {
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border: 1px solid rgba(0,0,0,0.05);
+}
+.dash-ps-val { font-size: 1.4rem; font-weight: 800; line-height: 1; }
+.dash-ps-lbl { font-size: 0.62rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; }
+
+/* ── Active Leaves table ─────────────────────────────────────── */
+.dash-al-head {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 0.7fr 0.9fr 0.9fr;
+  gap: 0 6px;
+  padding: 5px 6px;
+  background: #f8fafc;
+  border-radius: 6px;
+  margin-bottom: 2px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+}
+.dash-al-list { display: flex; flex-direction: column; }
+.dash-al-row {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 0.7fr 0.9fr 0.9fr;
+  gap: 0 6px;
+  align-items: center;
+  padding: 7px 6px;
+  border-bottom: 1px solid #f1f5f9;
+}
+.dash-al-row:last-child { border-bottom: none; }
+.dash-al-name { font-size: 0.76rem; font-weight: 700; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-al-dept { font-size: 0.68rem; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-al-date { font-size: 0.7rem; color: #475569; white-space: nowrap; }
+
+/* ── Medical Leave KPIs ──────────────────────────────────────── */
+.dash-med-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.dash-med-kpi {
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border: 1px solid rgba(0,0,0,0.05);
+  text-align: center;
+}
+.dash-med-num { font-size: 1.5rem; font-weight: 800; line-height: 1; }
+.dash-med-lbl { font-size: 0.62rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; }
+.dash-sub-lbl {
+  font-size: 0.67rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 6px;
+}
+
+/* ── Termination Notice Period detail rows ───────────────────── */
+.dash-term-detail-list { display: flex; flex-direction: column; gap: 0; margin-bottom: 4px; }
+.dash-td-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+.dash-td-row:last-child { border-bottom: none; }
+.dash-td-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.dash-td-name { font-size: 0.78rem; font-weight: 700; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-td-meta { font-size: 0.65rem; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-td-right { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex-shrink: 0; }
+.dash-td-badge { font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+.dash-td-lwd   { font-size: 0.62rem; color: #94a3b8; white-space: nowrap; }
 
 /* ════════════════════════════════════════════════════════
    VIEW-ONLY MODE — hides every add/edit/delete/import/reset
