@@ -2121,7 +2121,7 @@ function EmployeesPage({ employees, onAdd, onEdit, onExport, onImport, onTemplat
           </div>
         </div>
         <div className="table-toolbar employee-toolbar">
-          <label className="search-field"><span>Search</span><input onChange={(event) => setFilter(setQuery, event.target.value)} placeholder="Name, ID, section, designation, passport, permit..." type="search" value={query} /></label>
+          <label className="search-field"><span>Search</span><input onChange={(event) => setFilter(setQuery, event.target.value)} placeholder="Name, ID, section, designation, passport, permit..." type="text" value={query} /></label>
           <label><span>Section</span><select onChange={(event) => setFilter(setDepartment, event.target.value)} value={department}>{departments.map((item) => <option key={item}>{item}</option>)}</select></label>
           <label><span>Nationality</span><select onChange={(event) => setFilter(setNationality, event.target.value)} value={nationality}>{nationalityList.map((item) => <option key={item}>{item}</option>)}</select></label>
           <label><span>Status</span><select onChange={(event) => setFilter(setStatus, event.target.value)} value={status}>{['All Statuses', 'On Site', 'Off Site', 'On Leave'].map((item) => <option key={item}>{item}</option>)}</select></label>
@@ -2553,7 +2553,7 @@ function PassportTrackingSection({ records, employees, onUpdate }: {
       <div className="table-toolbar leave-toolbar leave-toolbar-has-btn" style={{ flexWrap:'wrap', gap:'6px 10px' }}>
         <label className="search-field" style={{ flex:'1 1 200px' }}>
           <span>Search</span>
-          <input type="search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Name, Emp ID, PP No" />
+          <input type="text" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Name, Emp ID, PP No" />
         </label>
         <label style={{ flex:'0 0 auto' }}>
           <span>Purpose</span>
@@ -2858,7 +2858,7 @@ function TripReqSection({ records, employees, onUpdate, currentUserName = '' }: 
       <div className="table-toolbar" style={{ display:'grid', gridTemplateColumns:'1fr auto auto', alignItems:'end', gap:'8px', padding:'8px 0 6px' }}>
         <label className="search-field">
           <span>Search</span>
-          <input type="search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Requester, route, purpose" />
+          <input type="text" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Requester, route, purpose" />
         </label>
         <label>
           <span>Status</span>
@@ -3649,7 +3649,7 @@ function MedicalLeaveSection({ records, employees, onUpdate }: {
 
       {/* Filters + Add */}
       <div className="table-toolbar mc-toolbar leave-toolbar-has-btn">
-        <label className="search-field"><span>Search</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Name, Emp ID, reason…" /></label>
+        <label className="search-field"><span>Search</span><input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Name, Emp ID, reason…" /></label>
         <label><span>MC</span>
           <select value={mcFilter} onChange={(e) => setMcFilter(e.target.value as 'All' | 'Yes' | 'No')}>
             <option value="All">All</option><option>Yes</option><option>No</option>
@@ -4093,7 +4093,7 @@ function LeavePage({
         {activeLeaveView === 'request' && (
           <>
             <div className="table-toolbar leave-toolbar leave-toolbar-3 leave-toolbar-has-btn">
-              <label className="search-field"><span>Search</span><input type="search" value={requestSearch} onChange={(event) => setRequestSearch(event.target.value)} placeholder="Employee, ID, purpose" /></label>
+              <label className="search-field"><span>Search</span><input type="text" value={requestSearch} onChange={(event) => setRequestSearch(event.target.value)} placeholder="Employee, ID, purpose" /></label>
               <label><span>Leave Type</span><select value={requestTypeFilter} onChange={(event) => setRequestTypeFilter(event.target.value as 'All' | LeaveTypeCode)}><option value="All">All Types</option>{leaveTypeOptions.map((item) => <option key={item.code} value={item.code}>{item.label} ({item.code})</option>)}</select></label>
               <label><span>Section</span><select value={requestDepartmentFilter} onChange={(event) => setRequestDepartmentFilter(event.target.value)}><option>All Departments</option>{departmentsList.map((item) => <option key={item}>{item}</option>)}</select></label>
               <button className="primary-button toolbar-add-btn vwh" onClick={onAddRequest} type="button">Add Leave Request</button>
@@ -4193,7 +4193,7 @@ function LeavePage({
         {activeLeaveView === 'active' && (
           <>
             <div className="table-toolbar leave-toolbar leave-toolbar-3">
-              <label className="search-field"><span>Search</span><input type="search" value={activeSearch} onChange={(event) => setActiveSearch(event.target.value)} placeholder="Employee, ID, purpose" /></label>
+              <label className="search-field"><span>Search</span><input type="text" value={activeSearch} onChange={(event) => setActiveSearch(event.target.value)} placeholder="Employee, ID, purpose" /></label>
               <label><span>Section</span><select value={activeDepartmentFilter} onChange={(event) => setActiveDepartmentFilter(event.target.value)}><option>All Departments</option>{departmentsList.map((item) => <option key={item}>{item}</option>)}</select></label>
               <label><span>Leave Type</span><select value={activeTypeFilter} onChange={(event) => setActiveTypeFilter(event.target.value as 'All' | LeaveTypeCode)}><option value="All">All Types</option>{leaveTypeOptions.map((item) => <option key={item.code} value={item.code}>{item.label} ({item.code})</option>)}</select></label>
             </div>
@@ -4313,7 +4313,7 @@ function LeavePage({
         {activeLeaveView === 'history' && (
           <>
             <div className="table-toolbar leave-toolbar leave-toolbar-4">
-              <label className="search-field"><span>Search</span><input type="search" value={historySearch} onChange={(event) => setHistorySearch(event.target.value)} placeholder="Employee, ID, purpose" /></label>
+              <label className="search-field"><span>Search</span><input type="text" value={historySearch} onChange={(event) => setHistorySearch(event.target.value)} placeholder="Employee, ID, purpose" /></label>
               <label><span>Status</span><select value={historyStatusFilter} onChange={(event) => setHistoryStatusFilter(event.target.value as 'All' | HistoryConfirmation)}><option value="All">All Status</option><option>Returned</option><option>Not Returned</option></select></label>
               <label><span>Month</span><select value={historyMonthFilter} onChange={(event) => setHistoryMonthFilter(event.target.value)}><option value="All">All Months</option>{historyMonths.map((key) => <option key={key} value={key}>{formatMonthLabel(key)}</option>)}</select></label>
               <label><span>Section</span><select value={historyDepartmentFilter} onChange={(event) => setHistoryDepartmentFilter(event.target.value)}><option>All Departments</option>{departmentsList.map((item) => <option key={item}>{item}</option>)}</select></label>
@@ -5655,7 +5655,7 @@ function PersonalFilesSection({ records, onUpdate }: {
         <div className="table-toolbar pf-toolbar">
           <label className="search-field">
             <span>Search</span>
-            <input type="search" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1) }} placeholder="File no, employee, department" />
+            <input type="text" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1) }} placeholder="File no, employee, department" />
           </label>
           <label>
             <span>Section</span>
@@ -5794,7 +5794,7 @@ function InductionSection({ employees, records, onUpdate }: {
         <div className="table-toolbar ops-section-toolbar">
           <label className="search-field">
             <span>Search</span>
-            <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Ref no, conducted by, participant name" />
+            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Ref no, conducted by, participant name" />
           </label>
           <button className="primary-button vwh" onClick={() => setEditing(newRecord())} type="button">Add Session</button>
         </div>
@@ -5887,7 +5887,7 @@ function TrainingSection({ records, onUpdate, employees }: {
     <>
       <section className="employee-workspace">
         <div className="table-toolbar ops-section-toolbar">
-          <label className="search-field"><span>Search</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Training title, trainer" /></label>
+          <label className="search-field"><span>Search</span><input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Training title, trainer" /></label>
           <label><span>Type</span><select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as typeof typeFilter)}><option value="All">All Types</option><option value="Internal">Internal</option><option value="External">External</option></select></label>
           <button className="primary-button vwh" onClick={() => setEditing(newRecord())} type="button">Add</button>
         </div>
@@ -6263,7 +6263,7 @@ function BankAccountSection({ employees, records, onUpdate }: {
         <div className="table-toolbar bank-toolbar">
           <label className="search-field">
             <span>Search</span>
-            <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Name, Emp ID, section, bank, nationality…" />
+            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Name, Emp ID, section, bank, nationality…" />
           </label>
           <label><span>Bank</span>
             <select value={bankFilter} onChange={(e) => setBankFilter(e.target.value as typeof bankFilter)}>
@@ -6452,7 +6452,7 @@ function TerminationFormModal({
               <div style={{ position: 'relative', marginBottom: 10 }}>
                 <label><span>Search Staff</span>
                   <input className="lf-search-input" placeholder="Employee ID or name…"
-                    type="search" value={searchQuery} autoComplete="off"
+                    type="text" value={searchQuery} autoComplete="off"
                     onChange={(e) => handleSearchChange(e.target.value)}
                     onFocus={() => !form.employeeId && setShowResults(true)} />
                 </label>
@@ -7519,7 +7519,7 @@ function ExitInterviewAnalyticsModal({ records, onClose }: { records: ExitInterv
                     <div style={{ marginBottom:12 }}>
                       <label className="search-field" style={{ maxWidth:380 }}>
                         <span>Search</span>
-                        <input type="search" value={personSearch} onChange={e => setPersonSearch(e.target.value)}
+                        <input type="text" value={personSearch} onChange={e => setPersonSearch(e.target.value)}
                           placeholder="Name or employee ID…" />
                       </label>
                     </div>
@@ -7839,7 +7839,7 @@ function TerminationPage({
         {activeTab === 'notice' && (
           <>
             <div className="table-toolbar leave-toolbar leave-toolbar-3 termination-topbar leave-toolbar-has-btn">
-              <label className="search-field"><span>Search</span><input onChange={(e) => setNoticeSearch(e.target.value)} placeholder="Employee, ID, department…" type="search" value={noticeSearch} /></label>
+              <label className="search-field"><span>Search</span><input onChange={(e) => setNoticeSearch(e.target.value)} placeholder="Employee, ID, department…" type="text" value={noticeSearch} /></label>
               <label><span>Section</span><select onChange={(e) => setNoticeDepartmentFilter(e.target.value)} value={noticeDepartmentFilter}>{noticeDepartments.map((d) => <option key={d}>{d}</option>)}</select></label>
               <label><span>Stage</span><select onChange={(e) => setNoticeStageFilter(e.target.value === 'All' ? 'All' : e.target.value as TerminationStage)} value={noticeStageFilter}><option value="All">All Stages</option>{allTerminationStages.map((s) => <option key={s}>{s}</option>)}</select></label>
               <button className="primary-button toolbar-add-btn vwh" onClick={onAdd} type="button">+ Add</button>
@@ -7940,7 +7940,7 @@ function TerminationPage({
         {activeTab === 'history' && (
           <>
             <div className="table-toolbar leave-toolbar termination-topbar termination-topbar-completed">
-              <label className="search-field"><span>Search</span><input onChange={(e) => setCompletedSearch(e.target.value)} placeholder="Employee, ID, department…" type="search" value={completedSearch} /></label>
+              <label className="search-field"><span>Search</span><input onChange={(e) => setCompletedSearch(e.target.value)} placeholder="Employee, ID, department…" type="text" value={completedSearch} /></label>
               <label><span>Section</span><select onChange={(e) => setCompletedDepartmentFilter(e.target.value)} value={completedDepartmentFilter}>{completedDepartments.map((d) => <option key={d}>{d}</option>)}</select></label>
             </div>
             <div className="employee-table-shell compact-scroll termination-table-shell">
@@ -9104,7 +9104,7 @@ function MeetingsSection({ records, onUpdate, employees, activeLeaves }: {
           {view === 'list' && (
             <label className="search-field">
               <span>Search</span>
-              <input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Ref, date, chairperson…" />
+              <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Ref, date, chairperson…" />
             </label>
           )}
           <button className="primary-button vwh" onClick={() => setEditing(mkNew())} type="button">+ New Meeting</button>
@@ -9945,7 +9945,7 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false }: {
     <>
       <section className="employee-workspace">
         <div className="table-toolbar activities-toolbar">
-          <label className="search-field"><span>Search</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Emp ID, name, description…" /></label>
+          <label className="search-field"><span>Search</span><input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Emp ID, name, description…" /></label>
           <label><span>Type</span>
             <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
               <option value="All">All Types</option>
@@ -10096,7 +10096,7 @@ function VisitsSection({ records, employees, onUpdate }: {
     <>
       <section className="employee-workspace">
         <div className="table-toolbar activities-toolbar">
-          <label className="search-field"><span>Search</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="ID, name, NIC/PP, department" /></label>
+          <label className="search-field"><span>Search</span><input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="ID, name, NIC/PP, department" /></label>
           <label><span>Type</span>
             <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
               <option value="All">All Types</option>
@@ -10173,7 +10173,7 @@ function IncidentsSection({ records, employees, onUpdate }: { records: IncidentR
     <>
       <section className="employee-workspace">
         <div className="table-toolbar activities-toolbar">
-          <label className="search-field"><span>Search</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Employee, type, location" /></label>
+          <label className="search-field"><span>Search</span><input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Employee, type, location" /></label>
           <label><span>Status</span><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="All">All Statuses</option><option>Open</option><option>Under Review</option><option>Closed</option></select></label>
           <button className="primary-button vwh" type="button" onClick={() => setEditing(newIncident())}>+ Log Incident</button>
         </div>
@@ -10490,7 +10490,7 @@ function InventoryCategoryTab({ cat, items, usage, onUpdateItems, onUpdateUsage,
       <div style={{ padding: '10px 0 6px', display: 'flex', gap: 10 }}>
         <label className="search-field" style={{ flex: 1 }}>
           <span>Search</span>
-          <input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder={`Search ${cat} items by name or location…`} />
+          <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder={`Search ${cat} items by name or location…`} />
         </label>
       </div>
 
@@ -10822,7 +10822,7 @@ function InventorySection({ items, usage, orders, onUpdateItems, onUpdateUsage, 
       {subTab === 'history' && (
         <>
           <div className="table-toolbar" style={{ display: 'flex', gap: 10, padding: '10px 0', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-            <label className="search-field" style={{ flex: 2 }}><span>Search</span><input type="search" value={histSearch} onChange={e => setHistSearch(e.target.value)} placeholder="Item name, employee, department, purpose…" /></label>
+            <label className="search-field" style={{ flex: 2 }}><span>Search</span><input type="text" value={histSearch} onChange={e => setHistSearch(e.target.value)} placeholder="Item name, employee, department, purpose…" /></label>
             <label><span>Department</span>
               <select value={histDeptFilter} onChange={e => setHistDeptFilter(e.target.value)}>
                 {histDepts.map(d => <option key={d}>{d}</option>)}
@@ -11183,7 +11183,7 @@ function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves:
               <div className="user-table-toolbar" style={{ marginBottom: 12 }}>
                 <label className="search-field">
                   <span>Search</span>
-                  <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Name, username or role" />
+                  <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Name, username or role" />
                 </label>
                 <span className="user-count">{filtered.length} user{filtered.length !== 1 ? 's' : ''}</span>
                 <button className="primary-button" onClick={() => setShowAdd(true)} type="button" style={{ marginLeft: 'auto' }}>+ Add User</button>
