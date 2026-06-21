@@ -9216,23 +9216,36 @@ html { overflow-x: hidden; }
 .pp-recv-section { border-left: 3px solid #16a34a; background: #f0fdf4; }
 .pp-send-section { border-left: 3px solid #d97706; background: #fffbeb; }
 
-/* Modal sections */
-.pp-modal-section { margin-bottom: 18px; }
+/* ── Modal section cards ─────────────────────────────────── */
+.pp-modal-section {
+  background: #ffffff;
+  border: 1px solid #e8ecf0;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+
+/* Section header — clean divider-style, no colored pill background */
 .pp-modal-section-label {
-  font-size: 0.69rem;
+  font-size: 0.67rem;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
-  padding: 5px 12px;
-  border-radius: 6px;
+  letter-spacing: 0.08em;
+  color: #64748b;
   margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f5f9;
   display: flex;
   align-items: center;
   gap: 7px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
-.pp-recv-label { background: #f0fdf4; color: #166534; border-left: 3px solid #16a34a; }
-.pp-send-label { background: #fffbeb; color: #92400e; border-left: 3px solid #d97706; }
+/* Passport modal phase colors */
+.pp-recv-section { border-left: 3px solid #16a34a; background: #f0fdf4; }
+.pp-send-section { border-left: 3px solid #d97706; background: #fffbeb; }
+.pp-recv-label { color: #166534; border-bottom-color: rgba(22, 163, 74, 0.18); }
+.pp-send-label { color: #92400e; border-bottom-color: rgba(217, 119, 6, 0.18); }
+
+/* ── Form field layout inside modal grid ─────────────────── */
 .pp-modal-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -9243,32 +9256,56 @@ html { overflow-x: hidden; }
   .pp-modal-grid { grid-template-columns: 1fr; }
   .pp-modal-grid .ef-span2 { grid-column: 1 / -1; }
 }
+.pp-modal-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.pp-modal-grid label > span {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.02em;
+}
+.pp-modal-grid input,
+.pp-modal-grid select {
+  height: 36px;
+  padding: 0 10px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 0.84rem;
+  width: 100%;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+.pp-modal-grid input:focus,
+.pp-modal-grid select:focus {
+  border-color: #6366f1;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+.pp-modal-grid input[readonly] {
+  background: #f1f5f9;
+  color: #94a3b8;
+  cursor: default;
+}
+.pp-modal-grid input::placeholder { color: #94a3b8; }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    TRIP REQUISITION — form modal, list section, signature manager
    ═══════════════════════════════════════════════════════════════════════════ */
 .tr-modal { max-width: 780px; }
 
-/* Section label accents — clean, minimal, professional */
-.tr-req-label  { background: #f0f9ff; color: #0369a1; border-left: 3px solid #0284c7; }
-.tr-trip-label { background: #f0fdfa; color: #0f766e; border-left: 3px solid #0d9488; }
-.tr-type-label { background: #f8fafc; color: #475569; border-left: 3px solid #64748b; }
+/* Section header text-color accents — label text only, no pill background */
+.tr-req-label  { color: #0369a1; border-bottom-color: rgba(2, 132, 199, 0.18); }
+.tr-trip-label { color: #0f766e; border-bottom-color: rgba(13, 148, 136, 0.18); }
+.tr-type-label { color: #475569; }
 
-/* Section panels — white cards with top accent border */
-.tr-trip-section {
-  background: #f8fffe;
-  border: 1px solid #d1fae5;
-  border-top: 2px solid #0d9488;
-  border-radius: 10px;
-  padding: 14px 16px;
-}
-.tr-type-section {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-top: 2px solid #94a3b8;
-  border-radius: 10px;
-  padding: 14px 16px;
-}
+/* All sections share pp-modal-section base card — no extra overrides */
+.tr-trip-section, .tr-type-section { /* inherits base card style */ }
 
 /* One-Way / Round Trip segmented toggle */
 .tr-type-toggle {
@@ -9298,17 +9335,25 @@ html { overflow-x: hidden; }
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
-/* Return-date TBD checkbox row */
+/* Return-date TBD checkbox row — overrides flex-column from pp-modal-grid label */
 .tr-tbd-check {
-  display: flex;
+  display: flex !important;
+  flex-direction: row !important;
   align-items: center;
   gap: 8px;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 600;
   color: #334155;
   cursor: pointer;
 }
-.tr-tbd-check input { width: 16px; height: 16px; accent-color: #0e7490; cursor: pointer; }
+.tr-tbd-check > span {
+  font-size: 0.82rem !important;
+  font-weight: 600 !important;
+  color: #334155 !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+}
+.tr-tbd-check input[type="checkbox"] { width: 16px; height: 16px; flex-shrink: 0; accent-color: #0e7490; cursor: pointer; }
 
 /* Print / approve action glyphs */
 .action-glyph.approve { color: #16a34a; }
