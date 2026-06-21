@@ -12045,7 +12045,7 @@ function App() {
             <div className="sidebar-user-avatar">{getInitials(currentUserName)}</div>
             {!sidebarCollapsed && (
               <span className="sidebar-user-name">
-                <span className="sidebar-user-name-text">{currentUserName}</span>
+                <span className="sidebar-user-name-text">{currentUserName.trim().split(/\s+/)[0]}</span>
                 <span className="sidebar-user-desig">
                   {currentAppUser?.designation ?? currentUserRole}
                   {currentUserRole === 'Viewer' && <span className="sidebar-view-only-badge" style={{ marginLeft: 4 }}>View Only</span>}
