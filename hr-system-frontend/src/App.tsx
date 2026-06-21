@@ -10745,6 +10745,7 @@ function ActivitiesPage({
   onUpdateInventoryUsage,
   onUpdateInventoryOrders,
   isHOD = false,
+  isHR = false,
   currentUserSections = [],
   currentUserName = '',
 }: {
@@ -10760,6 +10761,7 @@ function ActivitiesPage({
   onUpdateInventoryUsage: (fn: (prev: InventoryUsageRecord[]) => InventoryUsageRecord[]) => void
   onUpdateInventoryOrders: (fn: (prev: StoreOrder[]) => StoreOrder[]) => void
   isHOD?: boolean
+  isHR?: boolean
   currentUserSections?: string[]
   currentUserName?: string
 }) {
@@ -10780,20 +10782,20 @@ function ActivitiesPage({
         <button className={activeSection === 'visits' ? 'active' : ''} onClick={() => setActiveSection('visits')} type="button">Visits</button>
         {!isHOD && <button className={activeSection === 'incidents' ? 'active' : ''} onClick={() => setActiveSection('incidents')} type="button">Incidents</button>}
         {!isHOD && <button className={activeSection === 'passport' ? 'active' : ''} onClick={() => setActiveSection('passport')} type="button">Passports</button>}
-        {!isHOD && <button className={activeSection === 'tripreq' ? 'active' : ''} onClick={() => setActiveSection('tripreq')} type="button">Trip Req</button>}
-        {!isHOD && <button className={activeSection === 'inventory' ? 'active' : ''} onClick={() => setActiveSection('inventory')} type="button">Inventory</button>}
+        {!isHOD && !isHR && <button className={activeSection === 'tripreq' ? 'active' : ''} onClick={() => setActiveSection('tripreq')} type="button">Trip Req</button>}
+        {!isHOD && !isHR && <button className={activeSection === 'inventory' ? 'active' : ''} onClick={() => setActiveSection('inventory')} type="button">Inventory</button>}
       </div>
       {activeSection === 'requests' && <RequestsSection records={scopedStaffRequests} employees={employees} onUpdate={setStaffRequests} onBack={() => {}} isHOD={isHOD} />}
       {activeSection === 'visits' && <VisitsSection records={scopedVisitRecords} employees={employees} onUpdate={setVisitRecords} onBack={() => {}} />}
       {!isHOD && activeSection === 'incidents' && <IncidentsSection records={incidentRecords} employees={employees} onUpdate={setIncidentRecords} onBack={() => {}} />}
       {!isHOD && activeSection === 'passport' && <PassportTrackingSection records={passportHandovers} employees={employees} onUpdate={onUpdatePassport} />}
-      {!isHOD && activeSection === 'tripreq' && <TripReqSection records={tripRequests} employees={employees} onUpdate={onUpdateTripRequests} currentUserName={currentUserName} />}
-      {!isHOD && activeSection === 'inventory' && <InventorySection items={inventoryItems} usage={inventoryUsage} orders={inventoryOrders} onUpdateItems={onUpdateInventoryItems} onUpdateUsage={onUpdateInventoryUsage} onUpdateOrders={onUpdateInventoryOrders} employees={employees} />}
+      {!isHOD && !isHR && activeSection === 'tripreq' && <TripReqSection records={tripRequests} employees={employees} onUpdate={onUpdateTripRequests} currentUserName={currentUserName} />}
+      {!isHOD && !isHR && activeSection === 'inventory' && <InventorySection items={inventoryItems} usage={inventoryUsage} orders={inventoryOrders} onUpdateItems={onUpdateInventoryItems} onUpdateUsage={onUpdateInventoryUsage} onUpdateOrders={onUpdateInventoryOrders} employees={employees} />}
     </>
   )
 }
 
-type UserRole = 'Admin' | 'HR Manager' | 'Viewer' | 'HOD'
+type UserRole = 'Admin' | 'HR' | 'Viewer' | 'HOD'
 type AppUserStatus = 'Active' | 'Inactive'
 
 type AppUser = {
@@ -10816,13 +10818,14 @@ const initialAppUsers: AppUser[] = [
 
 const rolePermissions: Record<UserRole, string> = {
   'Admin': 'Full access — view, edit, delete, manage users',
-  'HR Manager': 'View and edit all HR records — no user management',
+  'HR': 'View and edit HR records (Employees, Leave, Operations, Termination) — no user management, no Trip Req or Inventory',
   'Viewer': 'Read-only access to employees and leave records',
   'HOD': 'Read-only access scoped to assigned section(s) only',
 }
 
-function UserFormModal({ user, onClose, onSave }: {
+function UserFormModal({ user, employees, onClose, onSave }: {
   user: AppUser & { password?: string }
+  employees: Employee[]
   onClose: () => void
   onSave: (user: AppUser) => void
 }) {
@@ -10835,6 +10838,32 @@ function UserFormModal({ user, onClose, onSave }: {
   const [status, setStatus] = useState<AppUserStatus>(user.status)
   const [showPassword, setShowPassword] = useState(false)
   const [sections, setSections] = useState<string[]>(user.sections ?? [])
+  const [empSearch, setEmpSearch] = useState('')
+  const [showEmpDrop, setShowEmpDrop] = useState(false)
+
+  const empResults = useMemo(() => {
+    const q = empSearch.trim().toLowerCase()
+    if (!q || q.includes('(')) return []
+    return employees.filter(e =>
+      e.fullName.toLowerCase().includes(q) || e.employeeId.includes(q)
+    ).slice(0, 8)
+  }, [empSearch, employees])
+
+  const pickEmp = (e: Employee) => {
+    setName(e.fullName)
+    setDesignation(e.designation)
+    const lastName = e.fullName.trim().split(/\s+/).at(-1)?.toLowerCase() ?? ''
+    setUsername(lastName + e.employeeId)
+    setEmpSearch(`${e.fullName} (${e.employeeId})`)
+    setShowEmpDrop(false)
+  }
+
+  const generatePassword = () => {
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$'
+    const pwd = Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
+    setPassword(pwd)
+    setShowPassword(true)
+  }
 
   const toggleSection = (dept: string) => {
     setSections((prev) => prev.includes(dept) ? prev.filter((d) => d !== dept) : [...prev, dept])
@@ -10854,25 +10883,52 @@ function UserFormModal({ user, onClose, onSave }: {
 
   return (
     <div className="modal-backdrop" role="presentation">
-      <section className="registration-modal" role="dialog" aria-modal="true">
+      <section className="registration-modal" role="dialog" aria-modal="true" style={{ maxWidth: 620 }}>
         <div className="modal-header">
           <div>
-            <p className="eyebrow">User management</p>
+            <p className="eyebrow">User Management</p>
             <h2>{isNew ? 'Add User' : `Edit — ${user.name}`}</h2>
           </div>
-          <button className="icon-button" onClick={onClose} type="button">×</button>
+          <button className="icon-button" onClick={onClose} type="button">✕</button>
         </div>
         <form onSubmit={save}>
+          {/* Employee quick-fill */}
+          <div className="uf-emp-search-wrap" style={{ position:'relative', marginBottom:16 }}>
+            <label className="uf-emp-search-label">
+              <span>Quick-fill from Employee Directory</span>
+              <em className="uf-emp-hint">(optional — auto-fills name, designation & username)</em>
+            </label>
+            <input
+              className="uf-emp-search-input"
+              value={empSearch}
+              onChange={e => { setEmpSearch(e.target.value); setShowEmpDrop(true) }}
+              onFocus={() => setShowEmpDrop(true)}
+              onBlur={() => setTimeout(() => setShowEmpDrop(false), 150)}
+              placeholder="Search employee by name or ID…"
+              autoComplete="off"
+            />
+            {showEmpDrop && empResults.length > 0 && (
+              <div className="ei-emp-dropdown">
+                {empResults.map(e => (
+                  <div key={e.employeeId} className="ei-emp-option" onMouseDown={() => pickEmp(e)}>
+                    <strong>{e.fullName}</strong>
+                    <span>{e.employeeId} · {e.designation} · {e.department}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="form-grid">
             <label><span>Full Name</span><input value={name} onChange={(e) => setName(e.target.value)} required placeholder="Display name" /></label>
             <label><span>Username</span><input value={username} onChange={(e) => setUsername(e.target.value)} required placeholder="Login username" /></label>
-            <label><span>Designation</span><input value={designation} onChange={(e) => setDesignation(e.target.value)} placeholder="e.g. HR Manager" /></label>
+            <label><span>Designation</span><input value={designation} onChange={(e) => setDesignation(e.target.value)} placeholder="e.g. HR Officer" /></label>
             <label><span>Role</span>
               <select value={role} onChange={(e) => setRole(e.target.value as UserRole)}>
-                <option>Admin</option>
-                <option>HR Manager</option>
-                <option>Viewer</option>
-                <option>HOD</option>
+                <option value="Admin">Admin</option>
+                <option value="HR">HR</option>
+                <option value="Viewer">Viewer</option>
+                <option value="HOD">HOD</option>
               </select>
             </label>
             <label><span>Status</span>
@@ -10886,6 +10942,7 @@ function UserFormModal({ user, onClose, onSave }: {
               <div className="password-field">
                 <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required={isNew} placeholder={isNew ? 'Set a password' : 'Enter new password to change'} />
                 <button type="button" className="password-toggle" onClick={() => setShowPassword((p) => !p)}>{showPassword ? 'Hide' : 'Show'}</button>
+                <button type="button" className="password-toggle" onClick={generatePassword} style={{ background:'#ede9fe', color:'#6d28d9', borderColor:'#c4b5fd' }}>Generate</button>
               </div>
             </label>
             {role === 'HOD' && (
@@ -10917,7 +10974,7 @@ function UserFormModal({ user, onClose, onSave }: {
   )
 }
 
-function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves: _al, onReset, currentUserName, users, onUpdateUsers }: {
+function SettingsPage({ employees, leaveRequests: _lr, activeLeaves: _al, onReset, currentUserName, users, onUpdateUsers }: {
   employees: Employee[]
   leaveRequests: LeaveRequestRecord[]
   activeLeaves: ActiveLeaveRecord[]
@@ -10954,11 +11011,11 @@ function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves:
     setUsers((prev) => prev.map((u) => u.id === id ? { ...u, status: u.status === 'Active' ? 'Inactive' : 'Active' } : u))
   }
 
-  const newUser: AppUser = { id: 'USR-new', name: '', username: '', role: 'HR Manager', status: 'Active', lastLogin: '' }
+  const newUser: AppUser = { id: 'USR-new', name: '', username: '', role: 'HR', status: 'Active', lastLogin: '' }
 
   const roleColors: Record<UserRole, string> = {
     'Admin': 'role-admin',
-    'HR Manager': 'role-hr',
+    'HR': 'role-hr',
     'Viewer': 'role-viewer',
     'HOD': 'role-hod',
   }
@@ -11008,7 +11065,7 @@ function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves:
                 <tr>
                   <td><div className="user-avatar-cell"><span className="user-avatar">{profileInitials(currentAppUser?.name ?? currentUserName)}</span><strong>{currentAppUser?.name ?? currentUserName}</strong></div></td>
                   <td><code className="user-username">{currentAppUser?.username ?? '—'}</code></td>
-                  <td><span className={`role-chip ${roleColors[currentAppUser?.role ?? 'HR Manager']}`}>{currentAppUser?.role ?? '—'}</span></td>
+                  <td><span className={`role-chip ${roleColors[currentAppUser?.role ?? 'HR']}`}>{currentAppUser?.role ?? '—'}</span></td>
                   <td>{currentAppUser?.designation ?? '—'}</td>
                   {currentAppUser?.role === 'HOD' && (
                     <td>
@@ -11138,7 +11195,7 @@ function SettingsPage({ employees: _employees, leaveRequests: _lr, activeLeaves:
           )}
 
           {(editing || showAdd) && (
-            <UserFormModal user={editing ?? newUser} onClose={() => { setEditing(null); setShowAdd(false) }} onSave={saveUser} />
+            <UserFormModal user={editing ?? newUser} employees={employees} onClose={() => { setEditing(null); setShowAdd(false) }} onSave={saveUser} />
           )}
         </>
       )}
@@ -11409,14 +11466,18 @@ function App() {
   }
   const [loggingOut, setLoggingOut] = useState(false)
   const [currentUserName, setCurrentUserName] = useState(() => localStorage.getItem('tic_user') ?? 'Administrator')
-  const [currentUserRole, setCurrentUserRole] = useState<UserRole>(() => (localStorage.getItem('tic_role') as UserRole) ?? 'Admin')
+  const [currentUserRole, setCurrentUserRole] = useState<UserRole>(() => {
+    const stored = localStorage.getItem('tic_role') as UserRole | null
+    if (stored === ('HR Manager' as UserRole)) return 'HR' // migrate legacy value
+    return stored ?? 'Admin'
+  })
 
   const getInitials = (name: string) => {
     const parts = name.trim().split(/\s+/)
     if (parts.length === 1) return parts[0][0]?.toUpperCase() ?? 'A'
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
   }
-  const getFirstName = (name: string) => name.trim().split(/\s+/)[0]
+  const _getFirstName = (name: string) => name.trim().split(/\s+/)[0]; void _getFirstName
 
   const login = (name: string, role: UserRole) => {
     localStorage.setItem('tic_auth', '1')
@@ -11932,6 +11993,7 @@ function App() {
   // Current user's app-record (for HOD section scoping etc.)
   const currentAppUser = users.find((u) => u.name === currentUserName)
   const isHOD = currentUserRole === 'HOD'
+  const isHR  = currentUserRole === 'HR'
   const currentUserSections = currentAppUser?.sections ?? []
   const inAssignedSection = (dept: string) => !isHOD || currentUserSections.includes(dept)
 
@@ -11979,13 +12041,16 @@ function App() {
         </nav>
 
         <div className="sidebar-bottom">
-          <div className="sidebar-user" title={sidebarCollapsed ? getFirstName(currentUserName) : undefined}>
+          <div className="sidebar-user" title={sidebarCollapsed ? currentUserName : undefined}>
             <div className="sidebar-user-avatar">{getInitials(currentUserName)}</div>
             {!sidebarCollapsed && (
               <span className="sidebar-user-name">
-                <span className="sidebar-user-name-text">{getFirstName(currentUserName)}</span>
-                {currentUserRole === 'Viewer' && <span className="sidebar-view-only-badge">View Only</span>}
-                {isHOD && <span className="sidebar-view-only-badge">Section Head</span>}
+                <span className="sidebar-user-name-text">{currentUserName}</span>
+                <span className="sidebar-user-desig">
+                  {currentAppUser?.designation ?? currentUserRole}
+                  {currentUserRole === 'Viewer' && <span className="sidebar-view-only-badge" style={{ marginLeft: 4 }}>View Only</span>}
+                  {isHOD && <span className="sidebar-view-only-badge" style={{ marginLeft: 4 }}>HOD</span>}
+                </span>
               </span>
             )}
           </div>
@@ -12025,7 +12090,7 @@ function App() {
           {activePage === 'employees' && <EmployeesPage employees={scopedEmployees} medicalCases={scopedMedicalCases} noticeTerminations={scopedNoticeTerminations} offSiteRecords={offSiteRecords} onUpdateOffSite={(fn) => setOffSiteRecords(fn)} onAdd={() => { setEmployeeMode('add'); setEmployeeForm(emptyEmployee); setShowEmployeeForm(true) }} onEdit={openEditEmployee} onExport={exportCsv} onImport={importCsv} onTemplate={downloadTemplate} onShowTasks={() => setShowPendingTasks(true)} />}
           {activePage === 'leave' && <LeavePage employees={scopedEmployees} leaveRequests={scopedLeaveRequests} activeLeaves={scopedActiveLeaves} leaveHistory={scopedLeaveHistory} medicalCases={scopedMedicalCases} isHOD={isHOD} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onSetRequestStep={setLeaveRequestStep} onExtendLeave={extendActiveLeave} onEditActiveLeave={editActiveLeave} onHistoryConfirm={updateHistoryConfirmation} onUpdateMedical={(fn) => setMedicalCases(fn)} />}
           {activePage === 'operations' && <OperationsPage employees={employees} completedTerminations={completedTerminations} activeLeaves={activeLeaves} isHOD={isHOD} />}
-          {activePage === 'activities' && <ActivitiesPage employees={scopedEmployees} passportHandovers={scopedPassportHandovers} onUpdatePassport={(fn) => setPassportHandovers(fn)} tripRequests={tripRequests} onUpdateTripRequests={(fn) => setTripRequests(fn)} inventoryItems={inventoryItems} inventoryUsage={inventoryUsage} inventoryOrders={inventoryOrders} onUpdateInventoryItems={(fn) => setInventoryItems(fn)} onUpdateInventoryUsage={(fn) => setInventoryUsage(fn)} onUpdateInventoryOrders={(fn) => setInventoryOrders(fn)} isHOD={isHOD} currentUserSections={currentUserSections} currentUserName={currentUserName} />}
+          {activePage === 'activities' && <ActivitiesPage employees={scopedEmployees} passportHandovers={scopedPassportHandovers} onUpdatePassport={(fn) => setPassportHandovers(fn)} tripRequests={tripRequests} onUpdateTripRequests={(fn) => setTripRequests(fn)} inventoryItems={inventoryItems} inventoryUsage={inventoryUsage} inventoryOrders={inventoryOrders} onUpdateInventoryItems={(fn) => setInventoryItems(fn)} onUpdateInventoryUsage={(fn) => setInventoryUsage(fn)} onUpdateInventoryOrders={(fn) => setInventoryOrders(fn)} isHOD={isHOD} isHR={isHR} currentUserSections={currentUserSections} currentUserName={currentUserName} />}
           {activePage === 'termination' && <TerminationPage noticeTerminations={scopedNoticeTerminations} completedTerminations={scopedCompletedTerminations} exitInterviews={scopedExitInterviews} employees={scopedEmployees} isHOD={isHOD} onAdd={openAddTermination} onEdit={openEditTermination} onSetStage={setTerminationStage} onDelete={deleteTermination} onViewDetails={(record) => setTerminationDetails(record)} onUpdateExitInterviews={(fn) => setExitInterviews(fn)} />}
           {activePage === 'settings' && <SettingsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} onReset={resetAllData} currentUserName={currentUserName} users={users} onUpdateUsers={(fn) => setUsers(fn)} />}
         </main>
