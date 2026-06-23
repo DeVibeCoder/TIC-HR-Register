@@ -1597,6 +1597,30 @@ h2 { margin: 0; color: #111; font-size: 0.95rem; line-height: 1.2; }
   box-shadow: 0 0 0 3px rgba(167, 139, 250,0.15);
 }
 
+/* Password field with show/hide toggle */
+.login-pass-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.login-pass-wrap input {
+  width: 100%;
+  padding-right: 48px !important;
+}
+.login-pass-toggle {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: rgba(167, 139, 250, 0.6);
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+.login-pass-toggle:hover { color: #a78bfa; }
+
 .login-btn {
   min-height: 50px;
   margin-top: 4px;
