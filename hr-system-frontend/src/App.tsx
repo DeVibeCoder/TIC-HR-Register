@@ -12453,7 +12453,7 @@ function App() {
         <div className="sidebar-header">
           <div className="sidebar-brand">
             <img src="/logo.png" alt="TIC" className="sidebar-logo-img" />
-            {!sidebarCollapsed && <span className="sidebar-brand-text"><strong>HR Portal</strong><small>Thilafushi Industrial Complex</small></span>}
+            {!sidebarCollapsed && <span className="sidebar-brand-text"><strong>TIC HR Portal</strong><small>Thilafushi Industrial Complex</small></span>}
           </div>
         </div>
 
