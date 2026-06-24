@@ -492,19 +492,35 @@ const invUsageToDb   = (r: InventoryUsageRecord) => ({ id: r.id, item_id: r.item
 const storeOrderFromDb = (r: DbRow): StoreOrder => ({ id: r.id as string, orderDate: r.order_date as string, orderedBy: r.ordered_by as string, orderType: r.order_type as 'Store Order'|'Bulk Request', category: r.category as InventoryCategory, items: (r.items ?? []) as StoreOrderItem[], status: r.status as 'Pending'|'Received'|'Partial', receivedDate: r.received_date as string, receivedBy: r.received_by as string, remarks: r.remarks as string })
 const storeOrderToDb   = (r: StoreOrder) => ({ id: r.id, order_date: r.orderDate, ordered_by: r.orderedBy, order_type: r.orderType, category: r.category, items: r.items ?? [], status: r.status, received_date: r.receivedDate, received_by: r.receivedBy, remarks: r.remarks })
 
-// ── Supabase sync helper: upsert array + delete removed rows ──────────────────
+// ── Supabase sync helper: upsert changed rows + delete removed rows ──────────
 function syncTable<T>(
   table: string, pkField: string,
   current: T[], previous: T[],
   toDb: (item: T) => Record<string, unknown>,
   getPk: (item: T) => string,
 ) {
-  if (current.length > 0)
-    supabase.from(table).upsert(current.map(toDb), { onConflict: pkField }).then(() => {})
+  const prevIds = new Set(previous.map(getPk))
+  const changed = current.filter(item => {
+    const id = getPk(item)
+    const prev = previous.find(p => getPk(p) === id)
+    // Always upsert new items; for existing, compare JSON to detect changes
+    return !prevIds.has(id) || JSON.stringify(toDb(item)) !== JSON.stringify(prev ? toDb(prev) : null)
+  })
+  if (changed.length > 0) {
+    supabase.from(table)
+      .upsert(changed.map(toDb), { onConflict: pkField })
+      .then(({ error }) => {
+        if (error) console.error(`[DB] ${table} upsert error:`, error.message, error.code)
+      })
+  }
   const curIds = new Set(current.map(getPk))
   const delIds = previous.map(getPk).filter(id => !curIds.has(id))
-  if (delIds.length)
-    supabase.from(table).delete().in(pkField, delIds).then(() => {})
+  if (delIds.length) {
+    supabase.from(table).delete().in(pkField, delIds)
+      .then(({ error }) => {
+        if (error) console.error(`[DB] ${table} delete error:`, error.message)
+      })
+  }
 }
 
 const pages: Array<{ id: Page; label: string }> = [
@@ -723,6 +739,7 @@ const initialCompletedTerminations: CompletedTerminationRecord[] = [
   { id: 'COMP-2024-001', employeeId: '38201', name: 'PRASAD JAYAWARDENA', department: 'MAINTENANCE', designation: 'MAINTENANCE TECHNICIAN', nationality: 'SRI LANKAN', passportNo: 'N5634789', wpNo: 'WP-38201', dateOfJoin: '2011-06-01', lastWorkingDate: '2024-09-30', departureDate: '2024-10-04', currentStage: 'Pending Departure', rehireEligible: false, exitInterviewCompleted: false, reasonForLeaving: 'Absconded after annual leave — did not return', comments: 'No contact since Sept 2024', terminationType: 'Absconded' },
 ]
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const initialExitInterviews: ExitInterviewRecord[] = [
   {
     id: 'EI-2024-001', employeeId: '33856', name: 'KRISHNA PRASAD RIMAL', department: 'MECHANICAL',
@@ -780,7 +797,9 @@ const initialExitInterviews: ExitInterviewRecord[] = [
   },
 ]
 
-const initialMedicalCases: MedicalCaseRecord[] = [
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _initialMedicalCases: MedicalCaseRecord[] = [
   { id: 'MC-2026-001', caseDate: '2026-04-26', employeeId: '55426', name: 'ABHISHEK CHETRY', department: 'LOSS PREVENTION', reason: 'Fever, Body pain - Follow up', hospital: 'IGMH', departTime: '09:00', returnTime: '14:00', doctorAdvice: '- Fever x 3 DAYS\n- Headache+, body pain+\n- Productive cough+, pleuritic chest pain\n- Sore throat+\n- No vomiting, abdominal pain\n- Poor appetite\n- No altered bowl habits\n- Medication provided for 5 days\n- MC : 26/04/26 to 27/04/26', mcProvided: true, sickLeaveFrom: '2026-04-26', sickLeaveTo: '2026-04-27', sickLeaveDays: 2, recordedBy: 'HR Admin', isUrgent: false, isAdmitted: false },
   { id: 'MC-2026-002', caseDate: '2026-04-26', employeeId: '59361', name: 'DIBIN ROY', department: 'LPG PLANT', reason: 'Fever, Dizziness, Vomiting', hospital: 'IGMH', departTime: '09:00', returnTime: '12:30', doctorAdvice: '- Fever since 25/04/26\n- Day 2 of illness\n- Coryza+, mild productive cough+\n- One episode of vomiting yesterday\n- Body pain+, headache+, dizziness+\n- No abdominal pain, loose motion\n- Bladder habits normal\n- Medication provided for 5 days\n- MC : 26/04/26 to 27/04/26', mcProvided: true, sickLeaveFrom: '2026-04-26', sickLeaveTo: '2026-04-27', sickLeaveDays: 2, recordedBy: 'HR Admin', isUrgent: false, isAdmitted: false },
   { id: 'MC-2026-003', caseDate: '2026-04-26', employeeId: '44160', name: 'ANURA PUSHPA KUMARA K W', department: 'CEMENT PLANT', reason: 'Back pain', hospital: 'IGMH', departTime: '09:00', returnTime: '12:30', doctorAdvice: '- Prescription not RECEIVED\n- MC : 26/04/26 to 27/04/26', mcProvided: false, sickLeaveFrom: '2026-04-26', sickLeaveTo: '2026-04-26', sickLeaveDays: 1, recordedBy: 'HR Admin', isUrgent: false, isAdmitted: false },
@@ -942,9 +961,12 @@ const initialStaffRequests: StaffRequestRecord[] = [
   { id: 'REQ-2026-006', employeeId: '61245', employeeName: 'ARUSHULLA RASHID', section: 'HUMAN RESOURCES', department: 'THILAFUSHI INDUSTRIAL COMPLEX', requestType: 'IT', priority: 'Low', description: 'Requesting ergonomic chair for HR office workstation. Current chair causing back strain during extended working hours.', submittedDate: '2026-05-02', completedDate: '2026-05-14', status: 'Resolved', actionTaken: 'Ergonomic chair procured and delivered' },
 ]
 
-const initialOffSiteRecords: OffSiteRecord[] = []
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _initialOffSiteRecords: OffSiteRecord[] = []; void _initialOffSiteRecords
 
-const initialInventoryItems: InventoryItem[] = [
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _initialInventoryItems: InventoryItem[] = [
   // ─── Stationery ─────────────────────────────────────────────────────────
   { id:'ST-001', name:'A4 Paper', category:'Stationery', quantity:20, unit:'reams', minQuantity:5, location:'HR Storeroom', lastUpdated:'2026-05-20', remarks:'500 sheets per ream' },
   { id:'ST-002', name:'Printer Cartridge (HP Black)', category:'Stationery', quantity:3, unit:'pcs', minQuantity:2, location:'HR Office', lastUpdated:'2026-05-18', remarks:'' },
@@ -978,7 +1000,9 @@ const initialInventoryItems: InventoryItem[] = [
   { id:'RF-006', name:'Disposable Cups', category:'Refresher', quantity:80, unit:'pcs', minQuantity:30, location:'HR Office', lastUpdated:'2026-05-22', remarks:'' },
   { id:'RF-007', name:'Plastic Spoons', category:'Refresher', quantity:50, unit:'pcs', minQuantity:20, location:'HR Office', lastUpdated:'2026-05-22', remarks:'' },
 ]
-const initialInventoryUsage: InventoryUsageRecord[] = [
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _initialInventoryUsage: InventoryUsageRecord[] = [
   { id:'USG-001', itemId:'ST-001', itemName:'A4 Paper', quantityUsed:3, unit:'reams', usedBy:'SHANTUMON PATHIYIL CHACKO', employeeId:'58692', department:'HUMAN RESOURCES', usedDate:'2026-05-18', purpose:'HR documentation printing', remarks:'' },
   { id:'USG-002', itemId:'ST-002', itemName:'Printer Cartridge (HP Black)', quantityUsed:1, unit:'pcs', usedBy:'SHANTUMON PATHIYIL CHACKO', employeeId:'58692', department:'HUMAN RESOURCES', usedDate:'2026-05-10', purpose:'HR printer replacement', remarks:'' },
   { id:'USG-003', itemId:'ST-003', itemName:'Ball Pen (Blue)', quantityUsed:20, unit:'pcs', usedBy:'SHANTUMON PATHIYIL CHACKO', employeeId:'58692', department:'HUMAN RESOURCES', usedDate:'2026-04-25', purpose:'Office stationery distribution', remarks:'' },
@@ -989,7 +1013,9 @@ const initialInventoryUsage: InventoryUsageRecord[] = [
   { id:'USG-008', itemId:'RF-001', itemName:'Coffee Powder', quantityUsed:1, unit:'tins', usedBy:'SHANTUMON PATHIYIL CHACKO', employeeId:'58692', department:'HUMAN RESOURCES', usedDate:'2026-05-15', purpose:'Office refreshment', remarks:'' },
   { id:'USG-009', itemId:'RF-006', itemName:'Disposable Cups', quantityUsed:20, unit:'pcs', usedBy:'SHANTUMON PATHIYIL CHACKO', employeeId:'58692', department:'HUMAN RESOURCES', usedDate:'2026-05-22', purpose:'Office use', remarks:'' },
 ]
-const initialStoreOrders: StoreOrder[] = [
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _initialStoreOrders: StoreOrder[] = [
   { id:'ORD-001', orderDate:'2026-05-05', orderedBy:'SHANTUMON PATHIYIL CHACKO', orderType:'Store Order', category:'Medical', items:[{ itemId:'MD-007', itemName:'Cotton (Absorbent)', quantity:10, unit:'rolls' }, { itemId:'MD-008', itemName:'Bandage', quantity:20, unit:'rolls' }, { itemId:'MD-009', itemName:'Plaster (Band-Aid)', quantity:5, unit:'boxes' }], status:'Received', receivedDate:'2026-05-07', receivedBy:'SHANTUMON PATHIYIL CHACKO', remarks:'Monthly medical restock' },
   { id:'ORD-002', orderDate:'2026-05-20', orderedBy:'SHANTUMON PATHIYIL CHACKO', orderType:'Store Order', category:'Stationery', items:[{ itemId:'ST-001', itemName:'A4 Paper', quantity:20, unit:'reams' }, { itemId:'ST-003', itemName:'Ball Pen (Blue)', quantity:100, unit:'pcs' }], status:'Received', receivedDate:'2026-05-22', receivedBy:'SHANTUMON PATHIYIL CHACKO', remarks:'' },
   { id:'ORD-003', orderDate:'2026-06-02', orderedBy:'SHANTUMON PATHIYIL CHACKO', orderType:'Store Order', category:'Medical', items:[{ itemId:'MD-001', itemName:'Panadol (500mg)', quantity:100, unit:'tablets' }, { itemId:'MD-012', itemName:'Sunlyte ORS Sachets', quantity:30, unit:'sachets' }], status:'Pending', receivedDate:'', receivedBy:'', remarks:'Low stock reorder' },
@@ -11626,11 +11652,12 @@ function App() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSupaUser(session?.user ?? null)
-      setAuthLoading(false)
+      // If no session, stop loading immediately. If session exists, wait for profile fetch.
+      if (!session?.user) setAuthLoading(false)
     })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSupaUser(session?.user ?? null)
-      if (!session) setCurrentProfile(null)
+      if (!session) { setCurrentProfile(null); setAuthLoading(false) }
     })
     return () => subscription.unsubscribe()
   }, [])
@@ -11655,9 +11682,10 @@ function App() {
             status:      data.status,
             lastLogin:   data.last_login ?? '',
           })
-          // Stamp last_login silently
           supabase.from('profiles').update({ last_login: new Date().toISOString() }).eq('id', supaUser.id)
         }
+        // Auth loading done — profile found or not
+        setAuthLoading(false)
       })
   }, [supaUser])
 
@@ -11688,21 +11716,22 @@ function App() {
     } catch { return fallback }
   }
 
-  // ── Data state (loaded from Supabase on login) ──────────────────────────
-  const [employees,            setEmployees]            = useState<Employee[]>([])
-  const [leaveRequests,        setLeaveRequests]        = useState<LeaveRequestRecord[]>([])
-  const [activeLeaves,         setActiveLeaves]         = useState<ActiveLeaveRecord[]>([])
-  const [leaveHistory,         setLeaveHistory]         = useState<LeaveHistoryRecord[]>([])
-  const [passportHandovers,    setPassportHandovers]    = useState<PassportRecord[]>([])
-  const [tripRequests,         setTripRequests]         = useState<TripRequest[]>([])
-  const [noticeTerminations,   setNoticeTerminations]   = useState<EnhancedTerminationRecord[]>([])
-  const [completedTerminations,setCompletedTerminations]= useState<CompletedTerminationRecord[]>([])
-  const [exitInterviews,       setExitInterviews]       = useState<ExitInterviewRecord[]>([])
-  const [medicalCases,         setMedicalCases]         = useState<MedicalCaseRecord[]>([])
-  const [inventoryItems,       setInventoryItems]       = useState<InventoryItem[]>([])
-  const [inventoryOrders,      setInventoryOrders]      = useState<StoreOrder[]>([])
-  const [inventoryUsage,       setInventoryUsage]       = useState<InventoryUsageRecord[]>([])
-  const [offSiteRecords,       setOffSiteRecords]       = useState<OffSiteRecord[]>([])
+  // ── Data state — initialise from localStorage for instant render,
+  //    then Supabase overrides on login (single source of truth after that)
+  const [employees,            setEmployees]            = useState<Employee[]>(() => loadStore('tic_employees', []))
+  const [leaveRequests,        setLeaveRequests]        = useState<LeaveRequestRecord[]>(() => loadStore('tic_leave_req', []))
+  const [activeLeaves,         setActiveLeaves]         = useState<ActiveLeaveRecord[]>(() => loadStore('tic_leave_active', []))
+  const [leaveHistory,         setLeaveHistory]         = useState<LeaveHistoryRecord[]>(() => loadStore('tic_leave_history_v2', []))
+  const [passportHandovers,    setPassportHandovers]    = useState<PassportRecord[]>(() => loadStore('tic_passport', []))
+  const [tripRequests,         setTripRequests]         = useState<TripRequest[]>(() => loadStore('tic_tripreq', []))
+  const [noticeTerminations,   setNoticeTerminations]   = useState<EnhancedTerminationRecord[]>(() => loadStore('tic_term_notice', []))
+  const [completedTerminations,setCompletedTerminations]= useState<CompletedTerminationRecord[]>(() => loadStore('tic_term_done', []))
+  const [exitInterviews,       setExitInterviews]       = useState<ExitInterviewRecord[]>(() => loadStore('tic_exit_interviews_v2', []))
+  const [medicalCases,         setMedicalCases]         = useState<MedicalCaseRecord[]>(() => loadStore('tic_medical_cases', []))
+  const [inventoryItems,       setInventoryItems]       = useState<InventoryItem[]>(() => loadStore('tic_inventory_items', []))
+  const [inventoryOrders,      setInventoryOrders]      = useState<StoreOrder[]>(() => loadStore('tic_inv_orders', []))
+  const [inventoryUsage,       setInventoryUsage]       = useState<InventoryUsageRecord[]>(() => loadStore('tic_inventory_usage', []))
+  const [offSiteRecords,       setOffSiteRecords]       = useState<OffSiteRecord[]>(() => loadStore('tic_offsite', []))
   const [users, setUsers] = useState<AppUser[]>(initialAppUsers)
 
   // Fetch all user profiles from Supabase whenever logged in
@@ -11724,7 +11753,7 @@ function App() {
     })
   }, [isLoggedIn])
 
-  // ── Load ALL data from Supabase on login ──────────────────────────────────
+  // ── Load ALL data from Supabase on login (overrides localStorage cache) ──────
   const dbLoaded = useRef(false)
   useEffect(() => {
     if (!isLoggedIn) { dbLoaded.current = false; return }
@@ -11745,35 +11774,23 @@ function App() {
         supabase.from('inventory_usage').select('*'),
         supabase.from('store_orders').select('*'),
       ])
-      // Use Supabase data if present, otherwise fall back to localStorage cache
+      // Supabase is the source of truth — always use it when it returns data
+      // If table is empty, the localStorage initial state (already in useState) stays
       if (emp.data?.length) setEmployees(emp.data.map(empFromDb))
-        else { const ls = loadStore('tic_employees', initialEmployees); if (ls.length) { setEmployees(ls); supabase.from('employees').upsert(ls.map(empToDb), { onConflict: 'employee_id' }) } }
       if (lr.data?.length)  setLeaveRequests(lr.data.map(leaveReqFromDb))
-        else { const ls = loadStore('tic_leave_req', initialLeaveRequests); if (ls.length) { setLeaveRequests(ls); supabase.from('leave_requests').upsert(ls.map(leaveReqToDb), { onConflict: 'id' }) } }
       if (al.data?.length)  setActiveLeaves(al.data.map(activeLeaveFromDb))
-        else { const ls = loadStore('tic_leave_active', initialActiveLeaves); if (ls.length) { setActiveLeaves(ls); supabase.from('active_leaves').upsert(ls.map(activeLeaveToDb), { onConflict: 'id' }) } }
       if (lh.data?.length)  setLeaveHistory(lh.data.map(leaveHistFromDb))
-        else { const ls = loadStore('tic_leave_history_v2', initialLeaveHistory); if (ls.length) { setLeaveHistory(ls); supabase.from('leave_history').upsert(ls.map(leaveHistToDb), { onConflict: 'id' }) } }
       if (med.data?.length) setMedicalCases(med.data.map(medFromDb))
-        else { const ls = loadStore('tic_medical_cases', initialMedicalCases); if (ls.length) { setMedicalCases(ls); supabase.from('medical_cases').upsert(ls.map(medToDb), { onConflict: 'id' }) } }
       if (off.data?.length) setOffSiteRecords(off.data.map(offSiteFromDb))
-        else { const ls = loadStore('tic_offsite', initialOffSiteRecords); if (ls.length) { setOffSiteRecords(ls); supabase.from('off_site_records').upsert(ls.map(offSiteToDb), { onConflict: 'id' }) } }
       if (nt.data?.length)  setNoticeTerminations(nt.data.map(noticetermFromDb))
-        else { const ls = loadStore('tic_term_notice', initialNoticeTerminations); if (ls.length) { setNoticeTerminations(ls); supabase.from('notice_terminations').upsert(ls.map(noticetermToDb), { onConflict: 'id' }) } }
       if (ct.data?.length)  setCompletedTerminations(ct.data.map(compTermFromDb))
-        else { const ls = loadStore('tic_term_done', initialCompletedTerminations); if (ls.length) { setCompletedTerminations(ls); supabase.from('completed_terminations').upsert(ls.map(compTermToDb), { onConflict: 'id' }) } }
       if (ei.data?.length)  setExitInterviews(ei.data.map(exitIntFromDb))
-        else { const ls = loadStore('tic_exit_interviews_v2', initialExitInterviews); if (ls.length) { setExitInterviews(ls); supabase.from('exit_interviews').upsert(ls.map(exitIntToDb), { onConflict: 'id' }) } }
       if (pp.data?.length)  setPassportHandovers(pp.data.map(passportFromDb))
-        else { const ls = loadStore('tic_passport', initialPassportHandovers); if (ls.length) { setPassportHandovers(ls); supabase.from('passport_records').upsert(ls.map(passportToDb), { onConflict: 'id' }) } }
       if (tr.data?.length)  setTripRequests(tr.data.map(tripReqFromDb))
-        else { const ls = loadStore('tic_tripreq', initialTripRequests); if (ls.length) { setTripRequests(ls); supabase.from('trip_requests').upsert(ls.map(tripReqToDb), { onConflict: 'id' }) } }
       if (ii.data?.length)  setInventoryItems(ii.data.map(invItemFromDb))
-        else { const ls = loadStore('tic_inventory_items', initialInventoryItems); if (ls.length) { setInventoryItems(ls); supabase.from('inventory_items').upsert(ls.map(invItemToDb), { onConflict: 'id' }) } }
       if (iu.data?.length)  setInventoryUsage(iu.data.map(invUsageFromDb))
-        else { const ls = loadStore('tic_inventory_usage', initialInventoryUsage); if (ls.length) { setInventoryUsage(ls); supabase.from('inventory_usage').upsert(ls.map(invUsageToDb), { onConflict: 'id' }) } }
       if (so.data?.length)  setInventoryOrders(so.data.map(storeOrderFromDb))
-        else { const ls = loadStore('tic_inv_orders', initialStoreOrders); if (ls.length) { setInventoryOrders(ls); supabase.from('store_orders').upsert(ls.map(storeOrderToDb), { onConflict: 'id' }) } }
+      // Mark loaded so sync useEffects start writing back to Supabase
       dbLoaded.current = true
     }
     go()
