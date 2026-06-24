@@ -10829,7 +10829,7 @@ function UserFormModal({ user, employees, onClose, onSave }: {
   user: AppUser & { password?: string }
   employees: Employee[]
   onClose: () => void
-  onSave: (user: AppUser) => void
+  onSave: (user: AppUser) => Promise<void>
 }) {
   const isNew = user.id.startsWith('USR-new')
   const [name, setName] = useState(user.name)
@@ -10871,16 +10871,21 @@ function UserFormModal({ user, employees, onClose, onSave }: {
     setSections((prev) => prev.includes(dept) ? prev.filter((d) => d !== dept) : [...prev, dept])
   }
 
-  const save = (e: FormEvent) => {
+  const [isSaving, setIsSaving] = useState(false)
+
+  const save = async (e: FormEvent) => {
     e.preventDefault()
-    onSave({
+    if (isNew && !password) { alert('Password is required for new users.'); return }
+    setIsSaving(true)
+    await onSave({
       ...user,
-      id: isNew ? `USR-${String(Date.now()).slice(-4)}` : user.id,
+      id: isNew ? 'USR-new' : user.id,
       name, username, designation, role, status,
       lastLogin: user.lastLogin || new Date().toISOString().slice(0, 10),
-      password: password ? password : user.password,
-      sections: role === 'HOD' ? sections : undefined,
+      password: password || user.password,
+      sections: role === 'HOD' ? sections : [],
     })
+    setIsSaving(false)
   }
 
   return (
@@ -10968,7 +10973,9 @@ function UserFormModal({ user, employees, onClose, onSave }: {
           </div>
           <div className="modal-actions">
             <button className="quiet-button light" onClick={onClose} type="button">Cancel</button>
-            <button className="primary-button" type="submit">{isNew ? 'Create User' : 'Save Changes'}</button>
+            <button className="primary-button" type="submit" disabled={isSaving}>
+              {isSaving ? 'Saving…' : isNew ? 'Create User' : 'Save Changes'}
+            </button>
           </div>
         </form>
       </section>
@@ -10985,32 +10992,104 @@ function SettingsPage({ employees, leaveRequests: _lr, activeLeaves: _al, onRese
   users: AppUser[]
   onUpdateUsers: (fn: (prev: AppUser[]) => AppUser[]) => void
 }) {
-  const setUsers = onUpdateUsers
-  const [editing, setEditing] = useState<AppUser | null>(null)
-  const [showAdd, setShowAdd] = useState(false)
-  const [search, setSearch] = useState('')
-  const [showChangePw, setShowChangePw] = useState(false)
+  const [editing,     setEditing]     = useState<AppUser | null>(null)
+  const [showAdd,     setShowAdd]     = useState(false)
+  const [search,      setSearch]      = useState('')
+  const [showChangePw,setShowChangePw]= useState(false)
+  const [_saving,     _setSaving]     = useState(false); void _saving; void _setSaving
 
   const filtered = users.filter((u) =>
     `${u.name} ${u.username} ${u.role}`.toLowerCase().includes(search.toLowerCase())
   )
 
-  const saveUser = (user: AppUser) => {
-    setUsers((prev) => {
-      const exists = prev.some((u) => u.id === user.id)
-      return exists ? prev.map((u) => u.id === user.id ? user : u) : [...prev, user]
+  // Helper: map a Supabase profiles row → AppUser
+  const mapProfile = (d: Record<string, unknown>): AppUser => ({
+    id:          d.id as string,
+    name:        d.name as string,
+    username:    d.username as string,
+    role:        d.role as UserRole,
+    designation: (d.designation as string) ?? '',
+    sections:    (d.sections as string[]) ?? [],
+    status:      d.status as AppUserStatus,
+    lastLogin:   (d.last_login as string) ?? '',
+  })
+
+  // Reload users list from Supabase
+  const refreshUsers = async () => {
+    const { data } = await supabase.from('profiles').select('*')
+    if (data) onUpdateUsers(() => data.map(mapProfile))
+  }
+
+  const saveUser = async (user: AppUser) => {
+    _setSaving(true)
+    const isNew = user.id.startsWith('USR-new')
+    try {
+      if (isNew) {
+        // Create new auth user + profile via Edge Function
+        const { data, error } = await supabase.functions.invoke('manage-user', {
+          body: {
+            action:      'create',
+            username:    user.username,
+            password:    user.password,
+            name:        user.name,
+            role:        user.role,
+            designation: user.designation ?? '',
+            sections:    user.sections ?? [],
+          },
+        })
+        if (error || !data?.success) {
+          alert('Failed to create user: ' + (data?.error ?? error?.message))
+          return
+        }
+        await refreshUsers()
+      } else {
+        // Update profile + metadata via Edge Function
+        const { data, error } = await supabase.functions.invoke('manage-user', {
+          body: {
+            action:      'update',
+            userId:      user.id,
+            name:        user.name,
+            role:        user.role,
+            designation: user.designation ?? '',
+            sections:    user.sections ?? [],
+            ...(user.password ? { password: user.password } : {}),
+          },
+        })
+        if (error || !data?.success) {
+          alert('Failed to update user: ' + (data?.error ?? error?.message))
+          return
+        }
+        onUpdateUsers((prev) => prev.map((u) =>
+          u.id === user.id
+            ? { ...u, name: user.name, role: user.role, designation: user.designation ?? '', sections: user.sections ?? [] }
+            : u
+        ))
+      }
+    } finally {
+      _setSaving(false)
+      setEditing(null)
+      setShowAdd(false)
+    }
+  }
+
+  const deleteUser = async (id: string) => {
+    if (!window.confirm('Delete this user? They will lose all access immediately.')) return
+    const { data, error } = await supabase.functions.invoke('manage-user', {
+      body: { action: 'delete', userId: id },
     })
-    setEditing(null)
-    setShowAdd(false)
+    if (error || !data?.success) {
+      alert('Failed to delete user: ' + (data?.error ?? error?.message))
+      return
+    }
+    onUpdateUsers((prev) => prev.filter((u) => u.id !== id))
   }
 
-  const deleteUser = (id: string) => {
-    if (id === 'USR-001') return
-    setUsers((prev) => prev.filter((u) => u.id !== id))
-  }
-
-  const toggleStatus = (id: string) => {
-    setUsers((prev) => prev.map((u) => u.id === id ? { ...u, status: u.status === 'Active' ? 'Inactive' : 'Active' } : u))
+  const toggleStatus = async (id: string) => {
+    const target = users.find((u) => u.id === id)
+    if (!target) return
+    const newStatus: AppUserStatus = target.status === 'Active' ? 'Inactive' : 'Active'
+    await supabase.from('profiles').update({ status: newStatus }).eq('id', id)
+    onUpdateUsers((prev) => prev.map((u) => u.id === id ? { ...u, status: newStatus } : u))
   }
 
   const newUser: AppUser = { id: 'USR-new', name: '', username: '', role: 'HR', status: 'Active', lastLogin: '' }
@@ -11206,8 +11285,10 @@ function SettingsPage({ employees, leaveRequests: _lr, activeLeaves: _al, onRese
         <ChangePasswordModal
           user={currentAppUser}
           onClose={() => setShowChangePw(false)}
-          onSave={(newPassword) => {
-            setUsers((prev) => prev.map((u) => u.id === currentAppUser.id ? { ...u, password: newPassword } : u))
+          onSave={async (newPassword) => {
+            await supabase.functions.invoke('manage-user', {
+              body: { action: 'update', userId: currentAppUser.id, password: newPassword }
+            })
             setShowChangePw(false)
           }}
         />
@@ -11315,13 +11396,10 @@ function LoginPage() {
     event.preventDefault()
     setLoginLoading(true)
     setLoginError(false)
-    const email = usernameToEmail(loginUser)
-    console.log('[Auth] Attempting login with email:', email)
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
+    const { error } = await supabase.auth.signInWithPassword({
+      email:    usernameToEmail(loginUser),
       password: loginPass,
     })
-    console.log('[Auth] Result:', { data, error })
     if (error) setLoginError(true)
     setLoginLoading(false)
     // On success the onAuthStateChange listener in App() handles the rest
