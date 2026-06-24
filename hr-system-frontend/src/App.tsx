@@ -497,6 +497,31 @@ const invUsageToDb   = (r: InventoryUsageRecord) => ({ id: r.id, item_id: r.item
 const storeOrderFromDb = (r: DbRow): StoreOrder => ({ id: r.id as string, orderDate: r.order_date as string, orderedBy: r.ordered_by as string, orderType: r.order_type as 'Store Order'|'Bulk Request', category: r.category as InventoryCategory, items: (r.items ?? []) as StoreOrderItem[], status: r.status as 'Pending'|'Received'|'Partial', receivedDate: r.received_date as string, receivedBy: r.received_by as string, remarks: r.remarks as string })
 const storeOrderToDb   = (r: StoreOrder) => ({ id: r.id, order_date: r.orderDate, ordered_by: r.orderedBy, order_type: r.orderType, category: r.category, items: r.items ?? [], status: r.status, received_date: r.receivedDate, received_by: r.receivedBy, remarks: r.remarks })
 
+// ── Operations + Activities mappers ───────────────────────────────────────────
+const personalFileFromDb = (r: DbRow): PersonalFileRecord => ({ fileNo: r.file_no as string, employeeId: r.employee_id as string, fullName: r.full_name as string, department: r.department as string, staffStatus: r.staff_status as StaffStatus, coc: r.coc as boolean, jd: r.jd as boolean, ea: r.ea as boolean, eaExpiryDate: r.ea_expiry_date as string, remarks: r.remarks as string })
+const personalFileToDb   = (r: PersonalFileRecord) => ({ file_no: r.fileNo, employee_id: r.employeeId, full_name: r.fullName, department: r.department, staff_status: r.staffStatus, coc: r.coc, jd: r.jd, ea: r.ea, ea_expiry_date: r.eaExpiryDate, remarks: r.remarks })
+
+const inductionFromDb = (r: DbRow): InductionRecord => ({ id: r.id as string, refNo: r.ref_no as string, inductionDate: r.induction_date as string, conductedBy: r.conducted_by as string, conductedByEmpId: r.conducted_by_emp_id as string, participants: (r.participants ?? []) as InductionParticipant[], inductionContent: r.induction_content as string, status: r.status as InductionRecord['status'], remarks: r.remarks as string })
+const inductionToDb   = (r: InductionRecord) => ({ id: r.id, ref_no: r.refNo, induction_date: r.inductionDate, conducted_by: r.conductedBy, conducted_by_emp_id: r.conductedByEmpId ?? '', participants: r.participants ?? [], induction_content: r.inductionContent, status: r.status, remarks: r.remarks })
+
+const trainingFromDb = (r: DbRow): TrainingRecord => ({ id: r.id as string, trainingTitle: r.training_title as string, date: r.date as string, conductedBy: r.conducted_by as string, trainingType: r.training_type as 'Internal'|'External', participants: (r.participants ?? []) as TrainingParticipant[], status: r.status as 'Completed'|'Pending', remarks: r.remarks as string })
+const trainingToDb   = (r: TrainingRecord) => ({ id: r.id, training_title: r.trainingTitle, date: r.date, conducted_by: r.conductedBy, training_type: r.trainingType, participants: r.participants ?? [], status: r.status, remarks: r.remarks })
+
+const meetingFromDb = (r: DbRow): MeetingRecord => ({ id: r.id as string, refNumber: r.ref_number as string, date: r.date as string, timeStarted: r.time_started as string, timeEnded: r.time_ended as string, venue: r.venue as string, chairperson: r.chairperson as string, reps: (r.reps ?? []) as MeetingRep[], prevMeetingDate: r.prev_meeting_date as string, deptUpdates: (r.dept_updates ?? []) as MeetingDeptUpdate[], agendaType: (r.agenda_type ?? 'standard') as 'standard'|'custom', customAgenda: r.custom_agenda as string, reviewNotes: r.review_notes as string, additionalSectionNotes: r.additional_section_notes as string, otherMatters: r.other_matters as string, preparedBy: r.prepared_by as string, approvedBy: r.approved_by as string, status: r.status as 'Draft'|'Final', createdAt: r.created_at as string })
+const meetingToDb   = (r: MeetingRecord) => ({ id: r.id, ref_number: r.refNumber, date: r.date, time_started: r.timeStarted, time_ended: r.timeEnded, venue: r.venue, chairperson: r.chairperson, reps: r.reps ?? [], prev_meeting_date: r.prevMeetingDate, dept_updates: r.deptUpdates ?? [], agenda_type: r.agendaType ?? 'standard', custom_agenda: r.customAgenda ?? '', review_notes: r.reviewNotes ?? '', additional_section_notes: r.additionalSectionNotes ?? '', other_matters: r.otherMatters, prepared_by: r.preparedBy, approved_by: r.approvedBy, status: r.status, created_at: r.createdAt })
+
+const bankAccFromDb = (r: DbRow): BankAccountRecord => ({ id: r.id as string, employeeId: r.employee_id as string, fullName: r.full_name as string, department: r.department as string, nationality: r.nationality as string, bank: r.bank as BankName, accountType: r.account_type as AccountType, scheduledDate: r.scheduled_date as string, status: r.status as AccountStatus, remarks: r.remarks as string })
+const bankAccToDb   = (r: BankAccountRecord) => ({ id: r.id, employee_id: r.employeeId, full_name: r.fullName, department: r.department, nationality: r.nationality, bank: r.bank, account_type: r.accountType, scheduled_date: r.scheduledDate, status: r.status, remarks: r.remarks ?? '' })
+
+const staffReqFromDb = (r: DbRow): StaffRequestRecord => ({ id: r.id as string, employeeId: r.employee_id as string, employeeName: r.employee_name as string, section: r.section as string, department: r.department as string, requestType: r.request_type as StaffRequestRecord['requestType'], priority: r.priority as RequestPriority, description: r.description as string, submittedDate: r.submitted_date as string, completedDate: r.completed_date as string, status: r.status as StaffRequestRecord['status'], actionTaken: r.action_taken as string })
+const staffReqToDb   = (r: StaffRequestRecord) => ({ id: r.id, employee_id: r.employeeId, employee_name: r.employeeName, section: r.section, department: r.department, request_type: r.requestType, priority: r.priority, description: r.description, submitted_date: r.submittedDate, completed_date: r.completedDate, status: r.status, action_taken: r.actionTaken })
+
+const visitFromDb = (r: DbRow): VisitRecord => ({ id: r.id as string, employeeId: r.employee_id as string, employeeName: r.employee_name as string, department: r.department as string, nicPassportNo: r.nic_passport_no as string, nationality: r.nationality as string, visitType: r.visit_type as VisitRecord['visitType'], visitDate: r.visit_date as string, status: r.status as VisitRecord['status'], remarks: r.remarks as string })
+const visitToDb   = (r: VisitRecord) => ({ id: r.id, employee_id: r.employeeId, employee_name: r.employeeName, department: r.department, nic_passport_no: r.nicPassportNo, nationality: r.nationality, visit_type: r.visitType, visit_date: r.visitDate, status: r.status, remarks: r.remarks })
+
+const incidentFromDb = (r: DbRow): IncidentRecord => ({ id: r.id as string, incidentDate: r.incident_date as string, timeOfIncident: r.time_of_incident as IncidentRecord['timeOfIncident'], employeeId: r.employee_id as string, employeeName: r.employee_name as string, reportedById: r.reported_by_id as string, reportedByName: r.reported_by_name as string, section: r.section as string, department: r.department as string, siteLocation: r.site_location as string, incidentType: r.incident_type as IncidentRecord['incidentType'], incidentSummary: r.incident_summary as string, exactLocation: r.exact_location as string, immediateCause: r.immediate_cause as string, witnessName: r.witness_name as string, witnessId: r.witness_id as string, correctiveOwner: r.corrective_owner as string, followUpDate: r.follow_up_date as string, description: r.description as string, injuryInvolved: r.injury_involved as boolean, actionTaken: r.action_taken as string, statementTaken: r.statement_taken as boolean, disciplinaryAction: r.disciplinary_action as boolean, status: r.status as IncidentRecord['status'] })
+const incidentToDb   = (r: IncidentRecord) => ({ id: r.id, incident_date: r.incidentDate, time_of_incident: r.timeOfIncident, employee_id: r.employeeId, employee_name: r.employeeName, reported_by_id: r.reportedById, reported_by_name: r.reportedByName, section: r.section, department: r.department, site_location: r.siteLocation, incident_type: r.incidentType, incident_summary: r.incidentSummary ?? '', exact_location: r.exactLocation ?? '', immediate_cause: r.immediateCause ?? '', witness_name: r.witnessName ?? '', witness_id: r.witnessId ?? '', corrective_owner: r.correctiveOwner ?? '', follow_up_date: r.followUpDate ?? '', description: r.description, injury_involved: r.injuryInvolved, action_taken: r.actionTaken, statement_taken: r.statementTaken, disciplinary_action: r.disciplinaryAction, status: r.status })
+
 // ── Supabase sync helper: upsert changed rows + delete removed rows ──────────
 function syncTable<T>(
   table: string, pkField: string,
@@ -9304,11 +9329,39 @@ function OperationsPage({ employees, completedTerminations, activeLeaves, isHOD 
   const [inductionRecords,  setInductionRecords]  = useState<InductionRecord[]>(() => tryLoad('tic_induction'))
   const [trainingRecords,   setTrainingRecords]   = useState<TrainingRecord[]>(() => tryLoad('tic_training'))
   const [bankAccountRecords,setBankAccountRecords]= useState<BankAccountRecord[]>(() => tryLoad('tic_bank_acc'))
-  useEffect(() => { localStorage.setItem('tic_meetings',       JSON.stringify(meetingRecords))    }, [meetingRecords])
-  useEffect(() => { localStorage.setItem('tic_personal_files', JSON.stringify(personalFiles))     }, [personalFiles])
-  useEffect(() => { localStorage.setItem('tic_induction',      JSON.stringify(inductionRecords))  }, [inductionRecords])
-  useEffect(() => { localStorage.setItem('tic_training',       JSON.stringify(trainingRecords))   }, [trainingRecords])
-  useEffect(() => { localStorage.setItem('tic_bank_acc',       JSON.stringify(bankAccountRecords))}, [bankAccountRecords])
+
+  // ── Supabase load on mount ────────────────────────────────────────────────
+  const opsLoaded = useRef(false)
+  const prevMt  = useRef<MeetingRecord[]>([])
+  const prevPf  = useRef<PersonalFileRecord[]>([])
+  const prevInd = useRef<InductionRecord[]>([])
+  const prevTr  = useRef<TrainingRecord[]>([])
+  const prevBnk = useRef<BankAccountRecord[]>([])
+
+  useEffect(() => {
+    Promise.all([
+      supabase.from('meeting_records').select('*'),
+      supabase.from('personal_files').select('*'),
+      supabase.from('induction_records').select('*'),
+      supabase.from('training_records').select('*'),
+      supabase.from('bank_account_records').select('*'),
+    ]).then(([mt, pf, ind, tr, bnk]) => {
+      if (mt.data?.length)  setMeetingRecords(mt.data.map(meetingFromDb))
+      if (pf.data?.length)  setPersonalFiles(pf.data.map(personalFileFromDb))
+      if (ind.data?.length) setInductionRecords(ind.data.map(inductionFromDb))
+      if (tr.data?.length)  setTrainingRecords(tr.data.map(trainingFromDb))
+      if (bnk.data?.length) setBankAccountRecords(bnk.data.map(bankAccFromDb))
+      opsLoaded.current = true
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // ── Supabase sync on change ───────────────────────────────────────────────
+  useEffect(() => { localStorage.setItem('tic_meetings', JSON.stringify(meetingRecords)); if (opsLoaded.current) { syncTable('meeting_records','id',meetingRecords,prevMt.current,meetingToDb,r=>r.id); prevMt.current=meetingRecords } }, [meetingRecords])
+  useEffect(() => { localStorage.setItem('tic_personal_files', JSON.stringify(personalFiles)); if (opsLoaded.current) { syncTable('personal_files','file_no',personalFiles,prevPf.current,personalFileToDb,r=>r.fileNo); prevPf.current=personalFiles } }, [personalFiles])
+  useEffect(() => { localStorage.setItem('tic_induction', JSON.stringify(inductionRecords)); if (opsLoaded.current) { syncTable('induction_records','id',inductionRecords,prevInd.current,inductionToDb,r=>r.id); prevInd.current=inductionRecords } }, [inductionRecords])
+  useEffect(() => { localStorage.setItem('tic_training', JSON.stringify(trainingRecords)); if (opsLoaded.current) { syncTable('training_records','id',trainingRecords,prevTr.current,trainingToDb,r=>r.id); prevTr.current=trainingRecords } }, [trainingRecords])
+  useEffect(() => { localStorage.setItem('tic_bank_acc', JSON.stringify(bankAccountRecords)); if (opsLoaded.current) { syncTable('bank_account_records','id',bankAccountRecords,prevBnk.current,bankAccToDb,r=>r.id); prevBnk.current=bankAccountRecords } }, [bankAccountRecords])
 
   // Auto-add newly registered employees → personal files + bank accounts
   const prevEmployeeIdsRef = useRef<Set<string>>(new Set(employees.map((e) => e.employeeId)))
@@ -10878,12 +10931,34 @@ function ActivitiesPage({
   currentUserName?: string
 }) {
   const [activeSection, setActiveSection] = useState<ActivitiesSection>('requests')
-  const [staffRequests, setStaffRequests] = useState<StaffRequestRecord[]>(() => tryLoad('tic_staff_req'))
-  const [visitRecords, setVisitRecords] = useState<VisitRecord[]>(() => tryLoad('tic_visit_rec'))
+  const [staffRequests,   setStaffRequests]   = useState<StaffRequestRecord[]>(() => tryLoad('tic_staff_req'))
+  const [visitRecords,    setVisitRecords]    = useState<VisitRecord[]>(() => tryLoad('tic_visit_rec'))
   const [incidentRecords, setIncidentRecords] = useState<IncidentRecord[]>(() => tryLoad('tic_incidents'))
-  useEffect(() => { localStorage.setItem('tic_staff_req', JSON.stringify(staffRequests)) }, [staffRequests])
-  useEffect(() => { localStorage.setItem('tic_visit_rec', JSON.stringify(visitRecords)) }, [visitRecords])
-  useEffect(() => { localStorage.setItem('tic_incidents', JSON.stringify(incidentRecords)) }, [incidentRecords])
+
+  // ── Supabase load on mount ────────────────────────────────────────────────
+  const actLoaded = useRef(false)
+  const prevSr  = useRef<StaffRequestRecord[]>([])
+  const prevVr  = useRef<VisitRecord[]>([])
+  const prevIr  = useRef<IncidentRecord[]>([])
+
+  useEffect(() => {
+    Promise.all([
+      supabase.from('staff_requests').select('*'),
+      supabase.from('visit_records').select('*'),
+      supabase.from('incident_records').select('*'),
+    ]).then(([sr, vr, ir]) => {
+      if (sr.data?.length) setStaffRequests(sr.data.map(staffReqFromDb))
+      if (vr.data?.length) setVisitRecords(vr.data.map(visitFromDb))
+      if (ir.data?.length) setIncidentRecords(ir.data.map(incidentFromDb))
+      actLoaded.current = true
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // ── Supabase sync on change ───────────────────────────────────────────────
+  useEffect(() => { localStorage.setItem('tic_staff_req', JSON.stringify(staffRequests)); if (actLoaded.current) { syncTable('staff_requests','id',staffRequests,prevSr.current,staffReqToDb,r=>r.id); prevSr.current=staffRequests } }, [staffRequests])
+  useEffect(() => { localStorage.setItem('tic_visit_rec', JSON.stringify(visitRecords)); if (actLoaded.current) { syncTable('visit_records','id',visitRecords,prevVr.current,visitToDb,r=>r.id); prevVr.current=visitRecords } }, [visitRecords])
+  useEffect(() => { localStorage.setItem('tic_incidents', JSON.stringify(incidentRecords)); if (actLoaded.current) { syncTable('incident_records','id',incidentRecords,prevIr.current,incidentToDb,r=>r.id); prevIr.current=incidentRecords } }, [incidentRecords])
 
   // For HOD: limit Requests/Visits to records tied to the assigned section(s)
   const scopedStaffRequests = isHOD ? staffRequests.filter((r) => currentUserSections.includes(r.section)) : staffRequests
