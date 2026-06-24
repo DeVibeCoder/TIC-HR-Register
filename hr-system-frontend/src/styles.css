@@ -1160,8 +1160,8 @@ h2 { margin: 0; color: #111; font-size: 0.95rem; line-height: 1.2; }
 }
 
 .employee-table tbody td {
-  padding-top: 7px;
-  padding-bottom: 7px;
+  padding-top: 5px;
+  padding-bottom: 5px;
   white-space: nowrap;
   text-transform: uppercase;
   font-size: 0.84rem;
@@ -2121,6 +2121,8 @@ h2 { margin: 0; color: #111; font-size: 0.95rem; line-height: 1.2; }
 .employee-table th:last-child,
 .employee-table td:last-child {
   text-align: center;
+  min-width: 68px;
+  width: 68px;
 }
 
 .personal-files-table th:nth-child(1),
@@ -2199,7 +2201,7 @@ h2 { margin: 0; color: #111; font-size: 0.95rem; line-height: 1.2; }
 }
 .lst-btn svg { flex-shrink: 0; opacity: 0.9; }
 
-.row-actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.row-actions { display: flex; flex-wrap: nowrap; gap: 4px; justify-content: center; align-items: center; }
 .history-confirm-actions { gap: 4px; }
 .history-confirm-actions .mini-button {
   min-height: 22px;
