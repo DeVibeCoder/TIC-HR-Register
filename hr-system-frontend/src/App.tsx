@@ -11972,22 +11972,49 @@ function App() {
     })
   }, [offSiteRecords, activeLeaves])
 
-  const resetAllData = () => {
-    if (!window.confirm('This will permanently delete ALL data (employees, leave records, etc.). Are you sure?')) return
-    const keys = ['tic_employees','tic_leave_req','tic_leave_active','tic_leave_history_v2','tic_passport','tic_term_notice','tic_term_done','tic_exit_interviews_v2','tic_medical_cases','tic_inventory_items','tic_inventory_usage','tic_offsite']
-    keys.forEach((k) => localStorage.removeItem(k))
-    setEmployees([])
-    setLeaveRequests([])
-    setActiveLeaves([])
-    setLeaveHistory([])
-    setPassportHandovers([])
-    setNoticeTerminations([])
-    setCompletedTerminations([])
-    setExitInterviews([])
-    setMedicalCases([])
-    setInventoryItems([])
-    setInventoryUsage([])
-    setOffSiteRecords([])
+  const resetAllData = async () => {
+    if (!window.confirm('This will permanently delete ALL data from the database and cannot be undone. Are you absolutely sure?')) return
+    if (!window.confirm('Second confirmation: this deletes everything for ALL users. Continue?')) return
+
+    // Stop sync useEffects from re-writing to Supabase while we clear
+    dbLoaded.current = false
+
+    // 1. Delete all rows from every Supabase table
+    const tablesById = [
+      'employees', 'leave_requests', 'active_leaves', 'leave_history',
+      'medical_cases', 'off_site_records', 'notice_terminations',
+      'completed_terminations', 'exit_interviews', 'passport_records',
+      'trip_requests', 'inventory_items', 'inventory_usage', 'store_orders',
+      'induction_records', 'training_records', 'meeting_records',
+      'bank_account_records', 'staff_requests', 'visit_records', 'incident_records',
+    ]
+    await Promise.all([
+      ...tablesById.map(t =>
+        supabase.from(t).delete().neq('id', '__never__')
+          .then(({ error }) => { if (error) console.error(`[Reset] ${t}:`, error.message) })
+      ),
+      // personal_files uses file_no as its primary key
+      supabase.from('personal_files').delete().neq('file_no', '__never__')
+        .then(({ error }) => { if (error) console.error('[Reset] personal_files:', error.message) }),
+    ])
+
+    // 2. Clear localStorage
+    const lsKeys = [
+      'tic_employees','tic_leave_req','tic_leave_active','tic_leave_history_v2',
+      'tic_passport','tic_tripreq','tic_term_notice','tic_term_done',
+      'tic_exit_interviews_v2','tic_medical_cases','tic_inventory_items',
+      'tic_inv_orders','tic_inventory_usage','tic_offsite',
+      'tic_meetings','tic_personal_files','tic_induction',
+      'tic_training','tic_bank_acc','tic_staff_req','tic_visit_rec','tic_incidents',
+    ]
+    lsKeys.forEach(k => localStorage.removeItem(k))
+
+    // 3. Reset all React state
+    setEmployees([]);          setLeaveRequests([]);     setActiveLeaves([])
+    setLeaveHistory([]);       setPassportHandovers([]);  setTripRequests([])
+    setNoticeTerminations([]);  setCompletedTerminations([]); setExitInterviews([])
+    setMedicalCases([]);       setInventoryItems([]);    setInventoryUsage([])
+    setInventoryOrders([]);    setOffSiteRecords([])
   }
 
   const deleteEmployee = (employeeId: string) => {
