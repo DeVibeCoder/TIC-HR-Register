@@ -444,6 +444,69 @@ type CompletedTerminationRecord = {
   terminationType: TerminationType
 }
 
+// ── Database row ↔ TypeScript type converters ──────────────────────────────
+type DbRow = Record<string, unknown>
+
+const empFromDb = (r: DbRow): Employee => ({ employeeId: r.employee_id as string, fullName: r.full_name as string, department: r.department as string, designation: r.designation as string, nationality: r.nationality as string, nicPassportNo: r.nic_passport_no as string, workPermitNo: r.work_permit_no as string, dateOfJoin: r.date_of_join as string, mobileNo: r.mobile_no as string, dateOfBirth: r.date_of_birth as string, passportStatus: r.passport_status as string, siteStatus: r.site_status as SiteStatus, gender: (r.gender as string) || '' })
+const empToDb = (e: Employee) => ({ employee_id: e.employeeId, full_name: e.fullName, department: e.department, designation: e.designation, nationality: e.nationality, nic_passport_no: e.nicPassportNo, work_permit_no: e.workPermitNo, date_of_join: e.dateOfJoin, mobile_no: e.mobileNo, date_of_birth: e.dateOfBirth, passport_status: e.passportStatus, site_status: e.siteStatus, gender: e.gender ?? '', updated_at: new Date().toISOString() })
+
+const _leaveBase = (r: DbRow): LeaveBase => ({ id: r.id as string, employeeId: r.employee_id as string, name: r.name as string, department: r.department as string, nationality: r.nationality as string, leaveTypeCode: r.leave_type_code as LeaveTypeCode, departureDate: r.departure_date as string, returnDate: r.return_date as string, days: r.days as number, remarks: r.remarks as string })
+const _leaveBaseDb = (r: LeaveBase) => ({ id: r.id, employee_id: r.employeeId, name: r.name, department: r.department, nationality: r.nationality, leave_type_code: r.leaveTypeCode, departure_date: r.departureDate, return_date: r.returnDate, days: r.days, remarks: r.remarks ?? '' })
+
+const leaveReqFromDb = (r: DbRow): LeaveRequestRecord => ({ ..._leaveBase(r), step: r.step as LeaveRequestStep, stepDates: (r.step_dates ?? {}) as Partial<Record<LeaveRequestStep,string>>, skipProgress: r.skip_progress as boolean })
+const leaveReqToDb   = (r: LeaveRequestRecord) => ({ ..._leaveBaseDb(r), step: r.step, step_dates: r.stepDates ?? {}, skip_progress: r.skipProgress ?? false })
+
+const activeLeaveFromDb = (r: DbRow): ActiveLeaveRecord => ({ ..._leaveBase(r), status: 'Departed' as const, stepDates: (r.step_dates ?? {}) as Partial<Record<LeaveRequestStep,string>>, skipProgress: r.skip_progress as boolean, extensions: (r.extensions ?? []) as LeaveExtension[], originalReturnDate: r.original_return_date as string, originalDays: r.original_days as number })
+const activeLeaveToDb   = (r: ActiveLeaveRecord) => ({ ..._leaveBaseDb(r), status: r.status, step_dates: r.stepDates ?? {}, skip_progress: r.skipProgress ?? false, extensions: r.extensions ?? [], original_return_date: r.originalReturnDate ?? '', original_days: r.originalDays ?? 0 })
+
+const leaveHistFromDb = (r: DbRow): LeaveHistoryRecord => ({ ..._leaveBase(r), confirmation: r.confirmation as HistoryConfirmation | undefined, stepDates: (r.step_dates ?? {}) as Partial<Record<LeaveRequestStep,string>>, skipProgress: r.skip_progress as boolean, extensions: (r.extensions ?? []) as LeaveExtension[], originalReturnDate: r.original_return_date as string, originalDays: r.original_days as number })
+const leaveHistToDb   = (r: LeaveHistoryRecord) => ({ ..._leaveBaseDb(r), confirmation: r.confirmation ?? '', step_dates: r.stepDates ?? {}, skip_progress: r.skipProgress ?? false, extensions: r.extensions ?? [], original_return_date: r.originalReturnDate ?? '', original_days: r.originalDays ?? 0 })
+
+const medFromDb = (r: DbRow): MedicalCaseRecord => ({ id: r.id as string, caseDate: r.case_date as string, employeeId: r.employee_id as string, name: r.name as string, department: r.department as string, reason: r.reason as string, hospital: r.hospital as string, departTime: r.depart_time as string, returnTime: r.return_time as string, doctorAdvice: r.doctor_advice as string, mcProvided: r.mc_provided as boolean, sickLeaveFrom: r.sick_leave_from as string, sickLeaveTo: r.sick_leave_to as string, sickLeaveDays: r.sick_leave_days as number, recordedBy: r.recorded_by as string, isUrgent: r.is_urgent as boolean, isAdmitted: r.is_admitted as boolean, admittedDate: r.admitted_date as string, dischargedDate: r.discharged_date as string })
+const medToDb   = (r: MedicalCaseRecord) => ({ id: r.id, case_date: r.caseDate, employee_id: r.employeeId, name: r.name, department: r.department, reason: r.reason, hospital: r.hospital, depart_time: r.departTime, return_time: r.returnTime, doctor_advice: r.doctorAdvice, mc_provided: r.mcProvided, sick_leave_from: r.sickLeaveFrom, sick_leave_to: r.sickLeaveTo, sick_leave_days: r.sickLeaveDays, recorded_by: r.recordedBy, is_urgent: r.isUrgent ?? false, is_admitted: r.isAdmitted ?? false, admitted_date: r.admittedDate ?? '', discharged_date: r.dischargedDate ?? '' })
+
+const offSiteFromDb = (r: DbRow): OffSiteRecord => ({ id: r.id as string, employeeId: r.employee_id as string, name: r.name as string, department: r.department as string, nationality: r.nationality as string, departureDate: r.departure_date as string, returnDate: r.return_date as string, purpose: r.purpose as string, status: r.status as 'Out'|'Returned', recordedBy: r.recorded_by as string })
+const offSiteToDb   = (r: OffSiteRecord) => ({ id: r.id, employee_id: r.employeeId, name: r.name, department: r.department, nationality: r.nationality, departure_date: r.departureDate, return_date: r.returnDate, purpose: r.purpose, status: r.status, recorded_by: r.recordedBy })
+
+const noticetermFromDb = (r: DbRow): EnhancedTerminationRecord => ({ id: r.id as string, employeeId: r.employee_id as string, name: r.name as string, department: r.department as string, designation: r.designation as string, nationality: r.nationality as string, passportNo: r.passport_no as string, wpNo: r.wp_no as string, dateOfJoin: r.date_of_join as string, dateSubmitted: r.date_submitted as string, lastWorkingDate: r.last_working_date as string, departureDate: r.departure_date as string, currentStage: r.current_stage as TerminationStage, stageDates: (r.stage_dates ?? {}) as Partial<Record<TerminationStage,string>>, reasonForLeaving: r.reason_for_leaving as string, satisfactionRating: r.satisfaction_rating as number, rehireEligible: r.rehire_eligible as boolean, exitInterviewCompleted: r.exit_interview_completed as boolean, comments: r.comments as string, terminationType: r.termination_type as TerminationType })
+const noticetermToDb   = (r: EnhancedTerminationRecord) => ({ id: r.id, employee_id: r.employeeId, name: r.name, department: r.department, designation: r.designation, nationality: r.nationality, passport_no: r.passportNo, wp_no: r.wpNo, date_of_join: r.dateOfJoin, date_submitted: r.dateSubmitted, last_working_date: r.lastWorkingDate, departure_date: r.departureDate, current_stage: r.currentStage, stage_dates: r.stageDates ?? {}, reason_for_leaving: r.reasonForLeaving, satisfaction_rating: r.satisfactionRating, rehire_eligible: r.rehireEligible, exit_interview_completed: r.exitInterviewCompleted, comments: r.comments, termination_type: r.terminationType })
+
+const compTermFromDb = (r: DbRow): CompletedTerminationRecord => ({ id: r.id as string, employeeId: r.employee_id as string, name: r.name as string, department: r.department as string, designation: r.designation as string, nationality: r.nationality as string, passportNo: r.passport_no as string, wpNo: r.wp_no as string, dateOfJoin: r.date_of_join as string, lastWorkingDate: r.last_working_date as string, departureDate: r.departure_date as string, currentStage: r.current_stage as TerminationStage, rehireEligible: r.rehire_eligible as boolean, exitInterviewCompleted: r.exit_interview_completed as boolean, reasonForLeaving: r.reason_for_leaving as string, comments: r.comments as string, terminationType: r.termination_type as TerminationType })
+const compTermToDb   = (r: CompletedTerminationRecord) => ({ id: r.id, employee_id: r.employeeId, name: r.name, department: r.department, designation: r.designation, nationality: r.nationality, passport_no: r.passportNo, wp_no: r.wpNo, date_of_join: r.dateOfJoin, last_working_date: r.lastWorkingDate, departure_date: r.departureDate, current_stage: r.currentStage, rehire_eligible: r.rehireEligible, exit_interview_completed: r.exitInterviewCompleted, reason_for_leaving: r.reasonForLeaving, comments: r.comments, termination_type: r.terminationType })
+
+const exitIntFromDb = (r: DbRow): ExitInterviewRecord => ({ id: r.id as string, employeeId: r.employee_id as string, name: r.name as string, department: r.department as string, designation: r.designation as string, nationality: r.nationality as string, terminationType: r.termination_type as TerminationType, departureDate: r.departure_date as string, periodOfService: r.period_of_service as string, joinDate: r.join_date as string, rehireEligible: r.rehire_eligible as boolean, interviewDate: r.interview_date as string, skipped: r.skipped as boolean, skipReason: r.skip_reason as string, interviewerEmployeeId: r.interviewer_employee_id as string, involuntaryReasons: (r.involuntary_reasons ?? []) as string[], voluntaryReasons: (r.voluntary_reasons ?? []) as string[], invOther: r.inv_other as string, volOther: r.vol_other as string, employeeComments: r.employee_comments as string, questionnaire: (r.questionnaire ?? {}) as EIQuestionnaire, areasToImprove: r.areas_to_improve as string, q1: r.q1 as string, q2: r.q2 as string, q3: r.q3 as string, q4: r.q4 as string, q5: r.q5 as string, q6: r.q6 as string, q7: r.q7 as string, q8: r.q8 as string, q9: r.q9 as string, q10: r.q10 as string, q11: r.q11 as string, q12: r.q12 as string, q13: r.q13 as string, q14: r.q14 as string, interviewerComments: r.interviewer_comments as string, interviewerName: r.interviewer_name as string })
+const exitIntToDb   = (r: ExitInterviewRecord) => ({ id: r.id, employee_id: r.employeeId, name: r.name, department: r.department, designation: r.designation, nationality: r.nationality, termination_type: r.terminationType, departure_date: r.departureDate, period_of_service: r.periodOfService, join_date: r.joinDate ?? '', rehire_eligible: r.rehireEligible, interview_date: r.interviewDate, skipped: r.skipped ?? false, skip_reason: r.skipReason ?? '', interviewer_employee_id: r.interviewerEmployeeId ?? '', involuntary_reasons: r.involuntaryReasons ?? [], voluntary_reasons: r.voluntaryReasons ?? [], inv_other: r.invOther, vol_other: r.volOther, employee_comments: r.employeeComments, questionnaire: r.questionnaire ?? {}, areas_to_improve: r.areasToImprove, q1: r.q1, q2: r.q2, q3: r.q3, q4: r.q4, q5: r.q5, q6: r.q6, q7: r.q7, q8: r.q8, q9: r.q9, q10: r.q10, q11: r.q11, q12: r.q12, q13: r.q13, q14: r.q14, interviewer_comments: r.interviewerComments, interviewer_name: r.interviewerName })
+
+const passportFromDb = (r: DbRow): PassportRecord => ({ id: r.id as string, date: r.date as string, employeeId: r.employee_id as string, name: r.name as string, department: r.department as string, nationality: r.nationality as string, ppNo: r.pp_no as string, receivedFromHO: r.received_from_ho as string, purpose: r.purpose as string, ppIssuedToStaff: r.pp_issued_to_staff as string, ppReturnedDate: r.pp_returned_date as string, receivedBy: r.received_by as string, ppSentToHO: r.pp_sent_to_ho as string, ppHandoverPerson: r.pp_handover_person as string, ppReceivedByHO: r.pp_received_by_ho as string, remarks: r.remarks as string })
+const passportToDb   = (r: PassportRecord) => ({ id: r.id, date: r.date, employee_id: r.employeeId, name: r.name, department: r.department, nationality: r.nationality, pp_no: r.ppNo, received_from_ho: r.receivedFromHO, purpose: r.purpose, pp_issued_to_staff: r.ppIssuedToStaff, pp_returned_date: r.ppReturnedDate, received_by: r.receivedBy, pp_sent_to_ho: r.ppSentToHO, pp_handover_person: r.ppHandoverPerson, pp_received_by_ho: r.ppReceivedByHO, remarks: r.remarks })
+
+const tripReqFromDb = (r: DbRow): TripRequest => ({ id: r.id as string, requesterName: r.requester_name as string, jobTitle: r.job_title as string, department: r.department as string, departingFrom: r.departing_from as string, destination: r.destination as string, departureDate: r.departure_date as string, departureTime: r.departure_time as string, purpose: r.purpose as string, passengers: r.passengers as string, tripType: r.trip_type as TripType, returnDate: r.return_date as string, returnTime: r.return_time as string, returnTBD: r.return_tbd as boolean, requestDate: r.request_date as string, status: r.status as TripRequestStatus, approvedDate: r.approved_date as string, remarks: r.remarks as string })
+const tripReqToDb   = (r: TripRequest) => ({ id: r.id, requester_name: r.requesterName, job_title: r.jobTitle, department: r.department, departing_from: r.departingFrom, destination: r.destination, departure_date: r.departureDate, departure_time: r.departureTime, purpose: r.purpose, passengers: r.passengers, trip_type: r.tripType, return_date: r.returnDate, return_time: r.returnTime, return_tbd: r.returnTBD, request_date: r.requestDate, status: r.status, approved_date: r.approvedDate, remarks: r.remarks })
+
+const invItemFromDb = (r: DbRow): InventoryItem => ({ id: r.id as string, name: r.name as string, category: r.category as InventoryCategory, quantity: r.quantity as number, unit: r.unit as string, minQuantity: r.min_quantity as number, location: r.location as string, lastUpdated: r.last_updated as string, remarks: r.remarks as string })
+const invItemToDb   = (r: InventoryItem) => ({ id: r.id, name: r.name, category: r.category, quantity: r.quantity, unit: r.unit, min_quantity: r.minQuantity, location: r.location, last_updated: r.lastUpdated, remarks: r.remarks })
+
+const invUsageFromDb = (r: DbRow): InventoryUsageRecord => ({ id: r.id as string, itemId: r.item_id as string, itemName: r.item_name as string, quantityUsed: r.quantity_used as number, unit: r.unit as string, usedBy: r.used_by as string, employeeId: r.employee_id as string, department: r.department as string, usedDate: r.used_date as string, purpose: r.purpose as string, remarks: r.remarks as string })
+const invUsageToDb   = (r: InventoryUsageRecord) => ({ id: r.id, item_id: r.itemId, item_name: r.itemName, quantity_used: r.quantityUsed, unit: r.unit, used_by: r.usedBy, employee_id: r.employeeId, department: r.department, used_date: r.usedDate, purpose: r.purpose, remarks: r.remarks })
+
+const storeOrderFromDb = (r: DbRow): StoreOrder => ({ id: r.id as string, orderDate: r.order_date as string, orderedBy: r.ordered_by as string, orderType: r.order_type as 'Store Order'|'Bulk Request', category: r.category as InventoryCategory, items: (r.items ?? []) as StoreOrderItem[], status: r.status as 'Pending'|'Received'|'Partial', receivedDate: r.received_date as string, receivedBy: r.received_by as string, remarks: r.remarks as string })
+const storeOrderToDb   = (r: StoreOrder) => ({ id: r.id, order_date: r.orderDate, ordered_by: r.orderedBy, order_type: r.orderType, category: r.category, items: r.items ?? [], status: r.status, received_date: r.receivedDate, received_by: r.receivedBy, remarks: r.remarks })
+
+// ── Supabase sync helper: upsert array + delete removed rows ──────────────────
+function syncTable<T>(
+  table: string, pkField: string,
+  current: T[], previous: T[],
+  toDb: (item: T) => Record<string, unknown>,
+  getPk: (item: T) => string,
+) {
+  if (current.length > 0)
+    supabase.from(table).upsert(current.map(toDb), { onConflict: pkField }).then(() => {})
+  const curIds = new Set(current.map(getPk))
+  const delIds = previous.map(getPk).filter(id => !curIds.has(id))
+  if (delIds.length)
+    supabase.from(table).delete().in(pkField, delIds).then(() => {})
+}
+
 const pages: Array<{ id: Page; label: string }> = [
   { id: 'overview', label: 'Overview' },
   { id: 'employees', label: 'Employees' },
@@ -11625,20 +11688,21 @@ function App() {
     } catch { return fallback }
   }
 
-  const [employees, setEmployees] = useState<Employee[]>(() => loadStore('tic_employees', initialEmployees))
-  const [leaveRequests, setLeaveRequests] = useState<LeaveRequestRecord[]>(() => loadStore('tic_leave_req', initialLeaveRequests))
-  const [activeLeaves, setActiveLeaves] = useState<ActiveLeaveRecord[]>(() => loadStore('tic_leave_active', initialActiveLeaves))
-  const [leaveHistory, setLeaveHistory] = useState<LeaveHistoryRecord[]>(() => loadStore('tic_leave_history_v2', initialLeaveHistory))
-  const [passportHandovers, setPassportHandovers] = useState<PassportRecord[]>(() => loadStore('tic_passport', initialPassportHandovers))
-  const [tripRequests, setTripRequests] = useState<TripRequest[]>(() => loadStore('tic_tripreq', initialTripRequests))
-  const [noticeTerminations, setNoticeTerminations] = useState<EnhancedTerminationRecord[]>(() => loadStore('tic_term_notice', initialNoticeTerminations))
-  const [completedTerminations, setCompletedTerminations] = useState<CompletedTerminationRecord[]>(() => loadStore('tic_term_done', initialCompletedTerminations))
-  const [exitInterviews, setExitInterviews] = useState<ExitInterviewRecord[]>(() => loadStore('tic_exit_interviews_v2', initialExitInterviews))
-  const [medicalCases, setMedicalCases] = useState<MedicalCaseRecord[]>(() => loadStore('tic_medical_cases', initialMedicalCases))
-  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>(() => loadStore('tic_inventory_items', initialInventoryItems))
-  const [inventoryOrders, setInventoryOrders] = useState<StoreOrder[]>(() => loadStore('tic_inv_orders', initialStoreOrders))
-  const [inventoryUsage, setInventoryUsage] = useState<InventoryUsageRecord[]>(() => loadStore('tic_inventory_usage', initialInventoryUsage))
-  const [offSiteRecords, setOffSiteRecords] = useState<OffSiteRecord[]>(() => loadStore('tic_offsite', initialOffSiteRecords))
+  // ── Data state (loaded from Supabase on login) ──────────────────────────
+  const [employees,            setEmployees]            = useState<Employee[]>([])
+  const [leaveRequests,        setLeaveRequests]        = useState<LeaveRequestRecord[]>([])
+  const [activeLeaves,         setActiveLeaves]         = useState<ActiveLeaveRecord[]>([])
+  const [leaveHistory,         setLeaveHistory]         = useState<LeaveHistoryRecord[]>([])
+  const [passportHandovers,    setPassportHandovers]    = useState<PassportRecord[]>([])
+  const [tripRequests,         setTripRequests]         = useState<TripRequest[]>([])
+  const [noticeTerminations,   setNoticeTerminations]   = useState<EnhancedTerminationRecord[]>([])
+  const [completedTerminations,setCompletedTerminations]= useState<CompletedTerminationRecord[]>([])
+  const [exitInterviews,       setExitInterviews]       = useState<ExitInterviewRecord[]>([])
+  const [medicalCases,         setMedicalCases]         = useState<MedicalCaseRecord[]>([])
+  const [inventoryItems,       setInventoryItems]       = useState<InventoryItem[]>([])
+  const [inventoryOrders,      setInventoryOrders]      = useState<StoreOrder[]>([])
+  const [inventoryUsage,       setInventoryUsage]       = useState<InventoryUsageRecord[]>([])
+  const [offSiteRecords,       setOffSiteRecords]       = useState<OffSiteRecord[]>([])
   const [users, setUsers] = useState<AppUser[]>(initialAppUsers)
 
   // Fetch all user profiles from Supabase whenever logged in
@@ -11658,6 +11722,62 @@ function App() {
         })))
       }
     })
+  }, [isLoggedIn])
+
+  // ── Load ALL data from Supabase on login ──────────────────────────────────
+  const dbLoaded = useRef(false)
+  useEffect(() => {
+    if (!isLoggedIn) { dbLoaded.current = false; return }
+    const go = async () => {
+      const [emp, lr, al, lh, med, off, nt, ct, ei, pp, tr, ii, iu, so] = await Promise.all([
+        supabase.from('employees').select('*'),
+        supabase.from('leave_requests').select('*'),
+        supabase.from('active_leaves').select('*'),
+        supabase.from('leave_history').select('*'),
+        supabase.from('medical_cases').select('*'),
+        supabase.from('off_site_records').select('*'),
+        supabase.from('notice_terminations').select('*'),
+        supabase.from('completed_terminations').select('*'),
+        supabase.from('exit_interviews').select('*'),
+        supabase.from('passport_records').select('*'),
+        supabase.from('trip_requests').select('*'),
+        supabase.from('inventory_items').select('*'),
+        supabase.from('inventory_usage').select('*'),
+        supabase.from('store_orders').select('*'),
+      ])
+      // Use Supabase data if present, otherwise fall back to localStorage cache
+      if (emp.data?.length) setEmployees(emp.data.map(empFromDb))
+        else { const ls = loadStore('tic_employees', initialEmployees); if (ls.length) { setEmployees(ls); supabase.from('employees').upsert(ls.map(empToDb), { onConflict: 'employee_id' }) } }
+      if (lr.data?.length)  setLeaveRequests(lr.data.map(leaveReqFromDb))
+        else { const ls = loadStore('tic_leave_req', initialLeaveRequests); if (ls.length) { setLeaveRequests(ls); supabase.from('leave_requests').upsert(ls.map(leaveReqToDb), { onConflict: 'id' }) } }
+      if (al.data?.length)  setActiveLeaves(al.data.map(activeLeaveFromDb))
+        else { const ls = loadStore('tic_leave_active', initialActiveLeaves); if (ls.length) { setActiveLeaves(ls); supabase.from('active_leaves').upsert(ls.map(activeLeaveToDb), { onConflict: 'id' }) } }
+      if (lh.data?.length)  setLeaveHistory(lh.data.map(leaveHistFromDb))
+        else { const ls = loadStore('tic_leave_history_v2', initialLeaveHistory); if (ls.length) { setLeaveHistory(ls); supabase.from('leave_history').upsert(ls.map(leaveHistToDb), { onConflict: 'id' }) } }
+      if (med.data?.length) setMedicalCases(med.data.map(medFromDb))
+        else { const ls = loadStore('tic_medical_cases', initialMedicalCases); if (ls.length) { setMedicalCases(ls); supabase.from('medical_cases').upsert(ls.map(medToDb), { onConflict: 'id' }) } }
+      if (off.data?.length) setOffSiteRecords(off.data.map(offSiteFromDb))
+        else { const ls = loadStore('tic_offsite', initialOffSiteRecords); if (ls.length) { setOffSiteRecords(ls); supabase.from('off_site_records').upsert(ls.map(offSiteToDb), { onConflict: 'id' }) } }
+      if (nt.data?.length)  setNoticeTerminations(nt.data.map(noticetermFromDb))
+        else { const ls = loadStore('tic_term_notice', initialNoticeTerminations); if (ls.length) { setNoticeTerminations(ls); supabase.from('notice_terminations').upsert(ls.map(noticetermToDb), { onConflict: 'id' }) } }
+      if (ct.data?.length)  setCompletedTerminations(ct.data.map(compTermFromDb))
+        else { const ls = loadStore('tic_term_done', initialCompletedTerminations); if (ls.length) { setCompletedTerminations(ls); supabase.from('completed_terminations').upsert(ls.map(compTermToDb), { onConflict: 'id' }) } }
+      if (ei.data?.length)  setExitInterviews(ei.data.map(exitIntFromDb))
+        else { const ls = loadStore('tic_exit_interviews_v2', initialExitInterviews); if (ls.length) { setExitInterviews(ls); supabase.from('exit_interviews').upsert(ls.map(exitIntToDb), { onConflict: 'id' }) } }
+      if (pp.data?.length)  setPassportHandovers(pp.data.map(passportFromDb))
+        else { const ls = loadStore('tic_passport', initialPassportHandovers); if (ls.length) { setPassportHandovers(ls); supabase.from('passport_records').upsert(ls.map(passportToDb), { onConflict: 'id' }) } }
+      if (tr.data?.length)  setTripRequests(tr.data.map(tripReqFromDb))
+        else { const ls = loadStore('tic_tripreq', initialTripRequests); if (ls.length) { setTripRequests(ls); supabase.from('trip_requests').upsert(ls.map(tripReqToDb), { onConflict: 'id' }) } }
+      if (ii.data?.length)  setInventoryItems(ii.data.map(invItemFromDb))
+        else { const ls = loadStore('tic_inventory_items', initialInventoryItems); if (ls.length) { setInventoryItems(ls); supabase.from('inventory_items').upsert(ls.map(invItemToDb), { onConflict: 'id' }) } }
+      if (iu.data?.length)  setInventoryUsage(iu.data.map(invUsageFromDb))
+        else { const ls = loadStore('tic_inventory_usage', initialInventoryUsage); if (ls.length) { setInventoryUsage(ls); supabase.from('inventory_usage').upsert(ls.map(invUsageToDb), { onConflict: 'id' }) } }
+      if (so.data?.length)  setInventoryOrders(so.data.map(storeOrderFromDb))
+        else { const ls = loadStore('tic_inv_orders', initialStoreOrders); if (ls.length) { setInventoryOrders(ls); supabase.from('store_orders').upsert(ls.map(storeOrderToDb), { onConflict: 'id' }) } }
+      dbLoaded.current = true
+    }
+    go()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn])
   const [showEmployeeForm, setShowEmployeeForm] = useState(false)
   const [employeeMode, setEmployeeMode] = useState<'add' | 'edit'>('add')
@@ -11686,20 +11806,37 @@ function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  useEffect(() => { localStorage.setItem('tic_employees', JSON.stringify(employees)) }, [employees])
-  useEffect(() => { localStorage.setItem('tic_leave_req', JSON.stringify(leaveRequests)) }, [leaveRequests])
-  useEffect(() => { localStorage.setItem('tic_leave_active', JSON.stringify(activeLeaves)) }, [activeLeaves])
-  useEffect(() => { localStorage.setItem('tic_leave_history_v2', JSON.stringify(leaveHistory)) }, [leaveHistory])
-  useEffect(() => { localStorage.setItem('tic_passport', JSON.stringify(passportHandovers)) }, [passportHandovers])
-  useEffect(() => { localStorage.setItem('tic_tripreq', JSON.stringify(tripRequests)) }, [tripRequests])
-  useEffect(() => { localStorage.setItem('tic_term_notice', JSON.stringify(noticeTerminations)) }, [noticeTerminations])
-  useEffect(() => { localStorage.setItem('tic_term_done', JSON.stringify(completedTerminations)) }, [completedTerminations])
-  useEffect(() => { localStorage.setItem('tic_exit_interviews_v2', JSON.stringify(exitInterviews)) }, [exitInterviews])
-  useEffect(() => { localStorage.setItem('tic_medical_cases', JSON.stringify(medicalCases)) }, [medicalCases])
-  useEffect(() => { localStorage.setItem('tic_inventory_items', JSON.stringify(inventoryItems)) }, [inventoryItems])
-  useEffect(() => { localStorage.setItem('tic_inv_orders', JSON.stringify(inventoryOrders)) }, [inventoryOrders])
-  useEffect(() => { localStorage.setItem('tic_inventory_usage', JSON.stringify(inventoryUsage)) }, [inventoryUsage])
-  useEffect(() => { localStorage.setItem('tic_offsite', JSON.stringify(offSiteRecords)) }, [offSiteRecords])
+  // ── Sync data → Supabase + localStorage on every state change ──────────────
+  // Refs hold the previous array so we can detect deletes
+  const prevEmp   = useRef<Employee[]>([])
+  const prevLr    = useRef<LeaveRequestRecord[]>([])
+  const prevAl    = useRef<ActiveLeaveRecord[]>([])
+  const prevLh    = useRef<LeaveHistoryRecord[]>([])
+  const prevPp    = useRef<PassportRecord[]>([])
+  const prevTr    = useRef<TripRequest[]>([])
+  const prevNt    = useRef<EnhancedTerminationRecord[]>([])
+  const prevCt    = useRef<CompletedTerminationRecord[]>([])
+  const prevEi    = useRef<ExitInterviewRecord[]>([])
+  const prevMed   = useRef<MedicalCaseRecord[]>([])
+  const prevInvI  = useRef<InventoryItem[]>([])
+  const prevInvO  = useRef<StoreOrder[]>([])
+  const prevInvU  = useRef<InventoryUsageRecord[]>([])
+  const prevOff   = useRef<OffSiteRecord[]>([])
+
+  useEffect(() => { localStorage.setItem('tic_employees', JSON.stringify(employees)); if (dbLoaded.current) { syncTable('employees','employee_id',employees,prevEmp.current,empToDb,e=>e.employeeId); prevEmp.current=employees } }, [employees])
+  useEffect(() => { localStorage.setItem('tic_leave_req', JSON.stringify(leaveRequests)); if (dbLoaded.current) { syncTable('leave_requests','id',leaveRequests,prevLr.current,leaveReqToDb,r=>r.id); prevLr.current=leaveRequests } }, [leaveRequests])
+  useEffect(() => { localStorage.setItem('tic_leave_active', JSON.stringify(activeLeaves)); if (dbLoaded.current) { syncTable('active_leaves','id',activeLeaves,prevAl.current,activeLeaveToDb,r=>r.id); prevAl.current=activeLeaves } }, [activeLeaves])
+  useEffect(() => { localStorage.setItem('tic_leave_history_v2', JSON.stringify(leaveHistory)); if (dbLoaded.current) { syncTable('leave_history','id',leaveHistory,prevLh.current,leaveHistToDb,r=>r.id); prevLh.current=leaveHistory } }, [leaveHistory])
+  useEffect(() => { localStorage.setItem('tic_passport', JSON.stringify(passportHandovers)); if (dbLoaded.current) { syncTable('passport_records','id',passportHandovers,prevPp.current,passportToDb,r=>r.id); prevPp.current=passportHandovers } }, [passportHandovers])
+  useEffect(() => { localStorage.setItem('tic_tripreq', JSON.stringify(tripRequests)); if (dbLoaded.current) { syncTable('trip_requests','id',tripRequests,prevTr.current,tripReqToDb,r=>r.id); prevTr.current=tripRequests } }, [tripRequests])
+  useEffect(() => { localStorage.setItem('tic_term_notice', JSON.stringify(noticeTerminations)); if (dbLoaded.current) { syncTable('notice_terminations','id',noticeTerminations,prevNt.current,noticetermToDb,r=>r.id); prevNt.current=noticeTerminations } }, [noticeTerminations])
+  useEffect(() => { localStorage.setItem('tic_term_done', JSON.stringify(completedTerminations)); if (dbLoaded.current) { syncTable('completed_terminations','id',completedTerminations,prevCt.current,compTermToDb,r=>r.id); prevCt.current=completedTerminations } }, [completedTerminations])
+  useEffect(() => { localStorage.setItem('tic_exit_interviews_v2', JSON.stringify(exitInterviews)); if (dbLoaded.current) { syncTable('exit_interviews','id',exitInterviews,prevEi.current,exitIntToDb,r=>r.id); prevEi.current=exitInterviews } }, [exitInterviews])
+  useEffect(() => { localStorage.setItem('tic_medical_cases', JSON.stringify(medicalCases)); if (dbLoaded.current) { syncTable('medical_cases','id',medicalCases,prevMed.current,medToDb,r=>r.id); prevMed.current=medicalCases } }, [medicalCases])
+  useEffect(() => { localStorage.setItem('tic_inventory_items', JSON.stringify(inventoryItems)); if (dbLoaded.current) { syncTable('inventory_items','id',inventoryItems,prevInvI.current,invItemToDb,r=>r.id); prevInvI.current=inventoryItems } }, [inventoryItems])
+  useEffect(() => { localStorage.setItem('tic_inv_orders', JSON.stringify(inventoryOrders)); if (dbLoaded.current) { syncTable('store_orders','id',inventoryOrders,prevInvO.current,storeOrderToDb,r=>r.id); prevInvO.current=inventoryOrders } }, [inventoryOrders])
+  useEffect(() => { localStorage.setItem('tic_inventory_usage', JSON.stringify(inventoryUsage)); if (dbLoaded.current) { syncTable('inventory_usage','id',inventoryUsage,prevInvU.current,invUsageToDb,r=>r.id); prevInvU.current=inventoryUsage } }, [inventoryUsage])
+  useEffect(() => { localStorage.setItem('tic_offsite', JSON.stringify(offSiteRecords)); if (dbLoaded.current) { syncTable('off_site_records','id',offSiteRecords,prevOff.current,offSiteToDb,r=>r.id); prevOff.current=offSiteRecords } }, [offSiteRecords])
   // (users are now stored in Supabase — no localStorage sync needed)
 
   // Auto-sync employee siteStatus: Off Site → from offSiteRecords, On Leave → from activeLeaves
