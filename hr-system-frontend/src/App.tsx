@@ -11315,10 +11315,13 @@ function LoginPage() {
     event.preventDefault()
     setLoginLoading(true)
     setLoginError(false)
-    const { error } = await supabase.auth.signInWithPassword({
-      email:    usernameToEmail(loginUser),
+    const email = usernameToEmail(loginUser)
+    console.log('[Auth] Attempting login with email:', email)
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
       password: loginPass,
     })
+    console.log('[Auth] Result:', { data, error })
     if (error) setLoginError(true)
     setLoginLoading(false)
     // On success the onAuthStateChange listener in App() handles the rest
