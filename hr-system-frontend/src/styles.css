@@ -2121,8 +2121,12 @@ h2 { margin: 0; color: #111; font-size: 0.95rem; line-height: 1.2; }
 .employee-table th:last-child,
 .employee-table td:last-child {
   text-align: center;
-  min-width: 68px;
-  width: 68px;
+}
+/* Action column only — enough width for edit + delete side by side */
+.employee-table th:last-child,
+.employee-table td:last-child {
+  min-width: 72px;
+  width: 72px;
 }
 
 .personal-files-table th:nth-child(1),
