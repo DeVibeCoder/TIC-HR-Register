@@ -444,6 +444,11 @@ type CompletedTerminationRecord = {
   terminationType: TerminationType
 }
 
+// ── Lightweight localStorage helper (no sample-data fallback) ────────────────
+function tryLoad<T>(key: string): T[] {
+  try { return JSON.parse(localStorage.getItem(key) ?? '[]') as T[] } catch { return [] }
+}
+
 // ── Database row ↔ TypeScript type converters ──────────────────────────────
 type DbRow = Record<string, unknown>
 
@@ -1040,7 +1045,7 @@ const initialIncidentRecords: IncidentRecord[] = [
 const emptyEmployee: EmployeeForm = {
   employeeId: '',
   fullName: '',
-  department: 'Operations',
+  department: 'ADMINISTRATION',
   designation: '',
   nationality: 'MALDIVES',
   nicPassportNo: '',
@@ -1555,7 +1560,12 @@ function EmployeeFormModal({ form, mode, onClose, onSave, setForm }: {
           <div className="emp-form-section-label">Employment Details</div>
           <div className="emp-form-grid">
             <label><span>Emp ID</span><input value={form.employeeId} onChange={(e) => update('employeeId', e.target.value)} placeholder="e.g. TIC-0001" /></label>
-            <label><span>Section</span><select value={form.department} onChange={(e) => update('department', e.target.value)}>{departmentsList.map((d) => <option key={d}>{d}</option>)}</select></label>
+            <label><span>Section</span>
+              <select value={form.department} onChange={(e) => update('department', e.target.value)}>
+                <option value="">Select section…</option>
+                {departmentsList.map((d) => <option key={d} value={d}>{d}</option>)}
+              </select>
+            </label>
             <label><span>Designation</span><input value={form.designation} onChange={(e) => update('designation', e.target.value)} placeholder="Job title" /></label>
             <label><span>Date of Join</span><input type="date" value={form.dateOfJoin} onChange={(e) => update('dateOfJoin', e.target.value)} /></label>
             <label><span>Work Permit No</span><input disabled={wpDisabled} placeholder={wpDisabled ? 'N/A — Maldivian' : 'Work permit number'} value={wpDisabled ? '' : form.workPermitNo} onChange={(e) => update('workPermitNo', e.target.value)} /></label>
@@ -9283,11 +9293,16 @@ function OperationsPage({ employees, completedTerminations, activeLeaves, isHOD 
   isHOD?: boolean
 }) {
   const [activeSection, setActiveSection] = useState<OpsSection>(isHOD ? 'training' : 'files')
-  const [meetingRecords, setMeetingRecords] = useState<MeetingRecord[]>(initialMeetingRecords)
-  const [personalFiles, setPersonalFiles] = useState<PersonalFileRecord[]>(initialPersonalFiles)
-  const [inductionRecords, setInductionRecords] = useState<InductionRecord[]>(initialInductionRecords)
-  const [trainingRecords, setTrainingRecords] = useState<TrainingRecord[]>(initialTrainingRecords)
-  const [bankAccountRecords, setBankAccountRecords] = useState<BankAccountRecord[]>(initialBankAccountRecords)
+  const [meetingRecords,    setMeetingRecords]    = useState<MeetingRecord[]>(() => tryLoad('tic_meetings'))
+  const [personalFiles,     setPersonalFiles]     = useState<PersonalFileRecord[]>(() => tryLoad('tic_personal_files'))
+  const [inductionRecords,  setInductionRecords]  = useState<InductionRecord[]>(() => tryLoad('tic_induction'))
+  const [trainingRecords,   setTrainingRecords]   = useState<TrainingRecord[]>(() => tryLoad('tic_training'))
+  const [bankAccountRecords,setBankAccountRecords]= useState<BankAccountRecord[]>(() => tryLoad('tic_bank_acc'))
+  useEffect(() => { localStorage.setItem('tic_meetings',       JSON.stringify(meetingRecords))    }, [meetingRecords])
+  useEffect(() => { localStorage.setItem('tic_personal_files', JSON.stringify(personalFiles))     }, [personalFiles])
+  useEffect(() => { localStorage.setItem('tic_induction',      JSON.stringify(inductionRecords))  }, [inductionRecords])
+  useEffect(() => { localStorage.setItem('tic_training',       JSON.stringify(trainingRecords))   }, [trainingRecords])
+  useEffect(() => { localStorage.setItem('tic_bank_acc',       JSON.stringify(bankAccountRecords))}, [bankAccountRecords])
 
   // Auto-add newly registered employees → personal files + bank accounts
   const prevEmployeeIdsRef = useRef<Set<string>>(new Set(employees.map((e) => e.employeeId)))
@@ -10857,9 +10872,12 @@ function ActivitiesPage({
   currentUserName?: string
 }) {
   const [activeSection, setActiveSection] = useState<ActivitiesSection>('requests')
-  const [staffRequests, setStaffRequests] = useState<StaffRequestRecord[]>(initialStaffRequests)
-  const [visitRecords, setVisitRecords] = useState<VisitRecord[]>(initialVisitRecords)
-  const [incidentRecords, setIncidentRecords] = useState<IncidentRecord[]>(initialIncidentRecords)
+  const [staffRequests, setStaffRequests] = useState<StaffRequestRecord[]>(() => tryLoad('tic_staff_req'))
+  const [visitRecords, setVisitRecords] = useState<VisitRecord[]>(() => tryLoad('tic_visit_rec'))
+  const [incidentRecords, setIncidentRecords] = useState<IncidentRecord[]>(() => tryLoad('tic_incidents'))
+  useEffect(() => { localStorage.setItem('tic_staff_req', JSON.stringify(staffRequests)) }, [staffRequests])
+  useEffect(() => { localStorage.setItem('tic_visit_rec', JSON.stringify(visitRecords)) }, [visitRecords])
+  useEffect(() => { localStorage.setItem('tic_incidents', JSON.stringify(incidentRecords)) }, [incidentRecords])
 
   // For HOD: limit Requests/Visits to records tied to the assigned section(s)
   const scopedStaffRequests = isHOD ? staffRequests.filter((r) => currentUserSections.includes(r.section)) : staffRequests
