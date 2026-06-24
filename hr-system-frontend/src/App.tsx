@@ -11639,7 +11639,7 @@ function LoginPage() {
           <span className="login-topbar-mark">TIC</span>
           <span className="login-topbar-name">Thilafushi Industrial Complex</span>
         </div>
-        <span className="login-topbar-badge">HR Register</span>
+        <span className="login-topbar-badge">HR Portal</span>
       </div>
 
       {/* Centre content */}
@@ -11648,7 +11648,7 @@ function LoginPage() {
         <div className="login-headline-col login-animate-left">
           <p className="login-eyebrow">People Operations Platform</p>
           <h1 className="login-headline">
-            TIC&nbsp;HR<br />Register
+            TIC&nbsp;HR<br />Portal
           </h1>
           <p className="login-desc">
             Centralised HR management for employee records, leave, operations, and site activities across Thilafushi Industrial Complex.
@@ -11667,6 +11667,7 @@ function LoginPage() {
         <div className="login-form-col login-animate-right">
           <form className="login-form" onSubmit={handleSubmit}>
             <div className="login-form-top">
+              <img src="/logo.png" alt="TIC HR Portal" className="login-logo" />
               <h2 className="login-form-title">Sign in</h2>
               <p className="login-form-sub">Access your HR dashboard</p>
             </div>
@@ -11712,7 +11713,7 @@ function LoginPage() {
       {/* Footer */}
       <div className="login-footer">
         <span>Thilafushi Industrial Complex · Maldives</span>
-        <span>TIC HR Register v0.1</span>
+        <span>TIC HR Portal v1.0</span>
       </div>
     </main>
   )
@@ -12451,8 +12452,8 @@ function App() {
       <aside className={`sidebar${sidebarCollapsed ? ' sidebar--collapsed' : ''}`}>
         <div className="sidebar-header">
           <div className="sidebar-brand">
-            <span className="sidebar-logo">TIC</span>
-            {!sidebarCollapsed && <span className="sidebar-brand-text"><strong>HR Register</strong><small>Thilafushi Industrial Complex</small></span>}
+            <img src="/logo.png" alt="TIC" className="sidebar-logo-img" />
+            {!sidebarCollapsed && <span className="sidebar-brand-text"><strong>HR Portal</strong><small>Thilafushi Industrial Complex</small></span>}
           </div>
         </div>
 
