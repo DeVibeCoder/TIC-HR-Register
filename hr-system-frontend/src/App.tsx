@@ -11974,32 +11974,44 @@ function App() {
   }, [offSiteRecords, activeLeaves])
 
   const resetAllData = async () => {
-    if (!window.confirm('This will permanently delete ALL data from the database and cannot be undone. Are you absolutely sure?')) return
-    if (!window.confirm('Second confirmation: this deletes everything for ALL users. Continue?')) return
+    if (!window.confirm('This will permanently delete ALL data from the database for ALL users. This cannot be undone. Are you absolutely sure?')) return
+    if (!window.confirm('Final confirmation: delete everything?')) return
 
-    // Stop sync useEffects from re-writing to Supabase while we clear
+    // Stop sync useEffects from firing during the reset
     dbLoaded.current = false
+    // Also zero out all prev-refs so sync can't re-detect "deletes"
+    prevEmp.current  = []; prevLr.current   = []; prevAl.current  = []
+    prevLh.current   = []; prevPp.current   = []; prevTr.current  = []
+    prevNt.current   = []; prevCt.current   = []; prevEi.current  = []
+    prevMed.current  = []; prevInvI.current = []; prevInvO.current = []
+    prevInvU.current = []; prevOff.current  = []
 
-    // 1. Delete all rows from every Supabase table
-    const tablesById = [
+    // ── 1. Delete every row from every table ─────────────────────────────
+    // Use gte('created_at','1900-01-01') — works on ALL tables regardless of PK name
+    const allTables = [
       'employees', 'leave_requests', 'active_leaves', 'leave_history',
       'medical_cases', 'off_site_records', 'notice_terminations',
       'completed_terminations', 'exit_interviews', 'passport_records',
       'trip_requests', 'inventory_items', 'inventory_usage', 'store_orders',
-      'induction_records', 'training_records', 'meeting_records',
-      'bank_account_records', 'staff_requests', 'visit_records', 'incident_records',
+      'personal_files', 'induction_records', 'training_records',
+      'meeting_records', 'bank_account_records',
+      'staff_requests', 'visit_records', 'incident_records',
     ]
-    await Promise.all([
-      ...tablesById.map(t =>
-        supabase.from(t).delete().neq('id', '__never__')
-          .then(({ error }) => { if (error) console.error(`[Reset] ${t}:`, error.message) })
-      ),
-      // personal_files uses file_no as its primary key
-      supabase.from('personal_files').delete().neq('file_no', '__never__')
-        .then(({ error }) => { if (error) console.error('[Reset] personal_files:', error.message) }),
-    ])
+    const results = await Promise.all(
+      allTables.map(t =>
+        supabase.from(t).delete().gte('created_at', '1900-01-01')
+          .then(({ error }) => {
+            if (error) console.error(`[Reset] ${t}:`, error.message)
+            return { table: t, ok: !error }
+          })
+      )
+    )
+    const failed = results.filter(r => !r.ok).map(r => r.table)
+    if (failed.length > 0) {
+      alert(`Warning: some tables could not be cleared: ${failed.join(', ')}. Check console for details.`)
+    }
 
-    // 2. Clear localStorage
+    // ── 2. Clear all localStorage keys ───────────────────────────────────
     const lsKeys = [
       'tic_employees','tic_leave_req','tic_leave_active','tic_leave_history_v2',
       'tic_passport','tic_tripreq','tic_term_notice','tic_term_done',
@@ -12010,12 +12022,12 @@ function App() {
     ]
     lsKeys.forEach(k => localStorage.removeItem(k))
 
-    // 3. Reset all React state
-    setEmployees([]);          setLeaveRequests([]);     setActiveLeaves([])
-    setLeaveHistory([]);       setPassportHandovers([]);  setTripRequests([])
+    // ── 3. Reset all React state ──────────────────────────────────────────
+    setEmployees([]);           setLeaveRequests([]);      setActiveLeaves([])
+    setLeaveHistory([]);        setPassportHandovers([]);  setTripRequests([])
     setNoticeTerminations([]);  setCompletedTerminations([]); setExitInterviews([])
-    setMedicalCases([]);       setInventoryItems([]);    setInventoryUsage([])
-    setInventoryOrders([]);    setOffSiteRecords([])
+    setMedicalCases([]);        setInventoryItems([]);     setInventoryUsage([])
+    setInventoryOrders([]);     setOffSiteRecords([])
   }
 
   const deleteEmployee = (employeeId: string) => {
