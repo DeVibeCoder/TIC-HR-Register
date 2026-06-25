@@ -453,7 +453,10 @@ function tryLoad<T>(key: string): T[] {
 type DbRow = Record<string, unknown>
 
 const empFromDb = (r: DbRow): Employee => ({ employeeId: r.employee_id as string, fullName: r.full_name as string, department: r.department as string, designation: r.designation as string, nationality: r.nationality as string, nicPassportNo: r.nic_passport_no as string, workPermitNo: r.work_permit_no as string, dateOfJoin: r.date_of_join as string, mobileNo: r.mobile_no as string, dateOfBirth: r.date_of_birth as string, passportStatus: r.passport_status as string, siteStatus: r.site_status as SiteStatus, gender: (r.gender as string) || '' })
-const empToDb = (e: Employee) => ({ employee_id: e.employeeId, full_name: e.fullName, department: e.department, designation: e.designation, nationality: e.nationality, nic_passport_no: e.nicPassportNo, work_permit_no: e.workPermitNo, date_of_join: e.dateOfJoin, mobile_no: e.mobileNo, date_of_birth: e.dateOfBirth, passport_status: e.passportStatus, site_status: e.siteStatus, gender: e.gender ?? '', updated_at: new Date().toISOString() })
+const empToDb = (e: Employee) => ({ employee_id: e.employeeId, full_name: e.fullName, department: e.department, designation: e.designation, nationality: e.nationality, nic_passport_no: e.nicPassportNo, work_permit_no: e.workPermitNo, date_of_join: e.dateOfJoin, mobile_no: e.mobileNo, date_of_birth: e.dateOfBirth, passport_status: e.passportStatus, site_status: e.siteStatus, gender: e.gender ?? '' })
+// NOTE: updated_at intentionally excluded — including it caused every employee to appear
+// "changed" in syncTable's JSON comparison (fresh timestamp on every call), triggering
+// unnecessary upserts of the full employees table on every sync cycle.
 
 const _leaveBase = (r: DbRow): LeaveBase => ({ id: r.id as string, employeeId: r.employee_id as string, name: r.name as string, department: r.department as string, nationality: r.nationality as string, leaveTypeCode: r.leave_type_code as LeaveTypeCode, departureDate: r.departure_date as string, returnDate: r.return_date as string, days: r.days as number, remarks: r.remarks as string })
 const _leaveBaseDb = (r: LeaveBase) => ({ id: r.id, employee_id: r.employeeId, name: r.name, department: r.department, nationality: r.nationality, leave_type_code: r.leaveTypeCode, departure_date: r.departureDate, return_date: r.returnDate, days: r.days, remarks: r.remarks ?? '' })
@@ -11880,6 +11883,8 @@ function App() {
   const dbLoaded = useRef(false)
   useEffect(() => {
     if (!isLoggedIn) { dbLoaded.current = false; return }
+    // Pause syncs while fetching so stale prevX refs don't trigger spurious upserts
+    dbLoaded.current = false
     const go = async () => {
       const [emp, lr, al, lh, med, off, nt, ct, ei, pp, tr, ii, iu, so] = await Promise.all([
         supabase.from('employees').select('*'),
@@ -12055,6 +12060,11 @@ function App() {
   const deleteEmployee = (employeeId: string) => {
     if (!window.confirm('Delete this employee record permanently?')) return
     setEmployees(prev => prev.filter(e => e.employeeId !== employeeId))
+    // Explicitly delete from Supabase — don't rely solely on the sync useEffect
+    // since dbLoaded.current may still be false if the user deletes within the
+    // first ~2 seconds of page load (before the async Supabase fetch completes)
+    supabase.from('employees').delete().eq('employee_id', employeeId)
+      .then(({ error }) => { if (error) console.error('[deleteEmployee]', error.message) })
   }
 
   const saveEmployee = () => {
