@@ -11811,6 +11811,8 @@ function App() {
     supabase.auth.signOut().finally(() => setLoggingOut(false))
   }
   const [importResult, setImportResult] = useState<{ added: number; updated: number; skipped: number; unchanged: number } | null>(null)
+  const [resetStep, setResetStep]   = useState<0|1|2>(0)  // 0=none 1=first 2=second confirm
+  const [resetDone, setResetDone]   = useState(false)
 
   function loadStore<T>(key: string, fallback: T[]): T[] {
     try {
@@ -11999,8 +12001,6 @@ function App() {
   }, [offSiteRecords, activeLeaves])
 
   const resetAllData = async () => {
-    if (!window.confirm('This will permanently delete ALL data from the database for ALL users. This cannot be undone. Are you absolutely sure?')) return
-    if (!window.confirm('Final confirmation: delete everything?')) return
 
     // Stop sync useEffects from firing during the reset
     dbLoaded.current = false
@@ -12053,6 +12053,8 @@ function App() {
     setNoticeTerminations([]);  setCompletedTerminations([]); setExitInterviews([])
     setMedicalCases([]);        setInventoryItems([]);     setInventoryUsage([])
     setInventoryOrders([]);     setOffSiteRecords([])
+    setResetStep(0)
+    setResetDone(true)
   }
 
   const deleteEmployee = (employeeId: string) => {
@@ -12581,7 +12583,7 @@ function App() {
           {activePage === 'operations' && <OperationsPage employees={employees} completedTerminations={completedTerminations} activeLeaves={activeLeaves} isHOD={isHOD} />}
           {activePage === 'activities' && <ActivitiesPage employees={scopedEmployees} passportHandovers={scopedPassportHandovers} onUpdatePassport={(fn) => setPassportHandovers(fn)} tripRequests={tripRequests} onUpdateTripRequests={(fn) => setTripRequests(fn)} inventoryItems={inventoryItems} inventoryUsage={inventoryUsage} inventoryOrders={inventoryOrders} onUpdateInventoryItems={(fn) => setInventoryItems(fn)} onUpdateInventoryUsage={(fn) => setInventoryUsage(fn)} onUpdateInventoryOrders={(fn) => setInventoryOrders(fn)} isHOD={isHOD} isHR={isHR} currentUserSections={currentUserSections} currentUserName={currentUserName} />}
           {activePage === 'termination' && <TerminationPage noticeTerminations={scopedNoticeTerminations} completedTerminations={scopedCompletedTerminations} exitInterviews={scopedExitInterviews} employees={scopedEmployees} isHOD={isHOD} onAdd={openAddTermination} onEdit={openEditTermination} onSetStage={setTerminationStage} onDelete={deleteTermination} onViewDetails={(record) => setTerminationDetails(record)} onUpdateExitInterviews={(fn) => setExitInterviews(fn)} />}
-          {activePage === 'settings' && <SettingsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} onReset={resetAllData} currentUserName={currentUserName} loggedInUser={currentProfile} users={users} onUpdateUsers={(fn) => setUsers(fn)} />}
+          {activePage === 'settings' && <SettingsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} onReset={() => setResetStep(1)} currentUserName={currentUserName} loggedInUser={currentProfile} users={users} onUpdateUsers={(fn) => setUsers(fn)} />}
         </main>
       </div> {/* .workspace */}
 
@@ -12601,6 +12603,51 @@ function App() {
             {importResult.unchanged > 0 && <p><strong>{importResult.unchanged}</strong> record{importResult.unchanged !== 1 ? 's' : ''} unchanged — skipped</p>}
             {importResult.skipped > 0 && <p><strong>{importResult.skipped}</strong> blank row{importResult.skipped !== 1 ? 's' : ''} skipped</p>}
             <button className="primary-button" onClick={() => setImportResult(null)} type="button">Done</button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Reset All Data — step 1 confirmation ─────────────────────── */}
+      {resetStep === 1 && (
+        <div className="import-toast-backdrop" role="presentation" onClick={() => setResetStep(0)}>
+          <div className="reset-confirm-modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+            <div className="reset-confirm-icon">⚠️</div>
+            <h3>Reset All Data?</h3>
+            <p>This will permanently delete <strong>all employees, leave records, medical cases, terminations, passports, inventory, and every other HR record</strong> for all users.</p>
+            <p className="reset-confirm-sub">This action affects everyone logged in and <strong>cannot be undone</strong>.</p>
+            <div className="reset-confirm-actions">
+              <button className="quiet-button light" onClick={() => setResetStep(0)} type="button">Cancel</button>
+              <button className="danger-button" onClick={() => setResetStep(2)} type="button">Yes, continue →</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Reset All Data — step 2 final confirmation ───────────────── */}
+      {resetStep === 2 && (
+        <div className="import-toast-backdrop" role="presentation" onClick={() => setResetStep(0)}>
+          <div className="reset-confirm-modal reset-confirm-final" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+            <div className="reset-confirm-icon reset-confirm-icon-red">🗑</div>
+            <h3>Final Confirmation</h3>
+            <p>You are about to <strong>delete everything</strong> from the database. All users will lose access to all data immediately.</p>
+            <p className="reset-confirm-sub">Are you absolutely sure?</p>
+            <div className="reset-confirm-actions">
+              <button className="quiet-button light" onClick={() => setResetStep(0)} type="button">Cancel</button>
+              <button className="danger-button" onClick={resetAllData} type="button">Delete Everything</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Reset complete toast ──────────────────────────────────────── */}
+      {resetDone && (
+        <div className="import-toast-backdrop" role="presentation" onClick={() => setResetDone(false)}>
+          <div className="import-toast" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+            <div className="import-toast-icon" style={{ background:'linear-gradient(135deg,#dc2626,#f87171)' }}>✓</div>
+            <h3>Reset Complete</h3>
+            <p>All data has been permanently deleted from the database.</p>
+            <p style={{ fontSize:'0.8rem', color:'#94a3b8' }}>All users will see empty data on their next refresh.</p>
+            <button className="primary-button" onClick={() => setResetDone(false)} type="button" style={{ marginTop:16, width:'100%' }}>Done</button>
           </div>
         </div>
       )}
