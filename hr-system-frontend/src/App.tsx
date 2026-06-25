@@ -12373,7 +12373,7 @@ function App() {
       const file = input.files?.[0]
       if (!file) return
       const reader = new FileReader()
-      reader.onload = () => {
+      reader.onload = async () => {
         const allRows = parseCsv(String(reader.result ?? ''))
         if (allRows.length < 2) return
         // Build column index map from the header row (case-insensitive)
@@ -12444,15 +12444,22 @@ function App() {
             result.unshift(parsed); byId.set(eid, parsed); added++
           }
         })
+        // Show the result in UI immediately (optimistic update)
         setEmployees(result)
         setImportResult({ added, updated, skipped, unchanged })
-        // Explicitly upsert imported employees to Supabase immediately —
-        // don't rely on the sync useEffect (dbLoaded.current may still be
-        // false if the import runs before the initial fetch completes)
+
         if (added > 0 || updated > 0) {
-          supabase.from('employees')
+          // 1. Await upsert so Supabase has the data before we re-read
+          const { error } = await supabase.from('employees')
             .upsert(result.map(empToDb), { onConflict: 'employee_id' })
-            .then(({ error }) => { if (error) console.error('[importCsv]', error.message) })
+          if (error) {
+            console.error('[importCsv] upsert failed:', error.message)
+          } else {
+            // 2. Re-fetch employees from Supabase — this overwrites any stale
+            //    data that a concurrent initial-load fetch may have written
+            const { data } = await supabase.from('employees').select('*')
+            if (data) setEmployees(data.map(empFromDb))
+          }
         }
       }
       reader.readAsText(file)
