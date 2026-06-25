@@ -449,6 +449,29 @@ function tryLoad<T>(key: string): T[] {
   try { return JSON.parse(localStorage.getItem(key) ?? '[]') as T[] } catch { return [] }
 }
 
+// ── Reusable delete confirmation (bottom slide-up bar) ────────────────────────
+function useDeleteConfirm() {
+  const [pending, setPending] = useState<{ message: string; resolve: (v: boolean) => void } | null>(null)
+
+  const confirmDelete = (message: string): Promise<boolean> =>
+    new Promise(resolve => setPending({ message, resolve }))
+
+  const confirm = () => { pending?.resolve(true);  setPending(null) }
+  const cancel  = () => { pending?.resolve(false); setPending(null) }
+
+  const bar = pending ? (
+    <div className="delete-confirm-bar" role="alertdialog">
+      <span className="dcb-msg">{pending.message}</span>
+      <div className="dcb-actions">
+        <button className="dcb-cancel"  onClick={cancel}  type="button">Cancel</button>
+        <button className="dcb-confirm" onClick={confirm} type="button">Delete</button>
+      </div>
+    </div>
+  ) : null
+
+  return { confirmDelete, deleteBar: bar }
+}
+
 // ── Database row ↔ TypeScript type converters ──────────────────────────────
 type DbRow = Record<string, unknown>
 
@@ -5606,9 +5629,11 @@ function StaffStatusBadge({ status }: { status: StaffStatus }) {
   return <span className={`pf-status-badge pf-status-${status.toLowerCase()}`}>{status}</span>
 }
 
-function PersonalFilesSection({ records, onUpdate }: {
+function PersonalFilesSection({ records, onUpdate, employees = [], isAdmin = false }: {
   records: PersonalFileRecord[]
   onUpdate: (fn: (prev: PersonalFileRecord[]) => PersonalFileRecord[]) => void
+  employees?: Employee[]
+  isAdmin?: boolean
   onBack?: () => void
 }) {
   const [search, setSearch] = useState('')
@@ -5617,6 +5642,91 @@ function PersonalFilesSection({ records, onUpdate }: {
   const [editingFileNo, setEditingFileNo] = useState<string | null>(null)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState<50 | 100 | 'All'>(50)
+  const [showPicker, setShowPicker] = useState(false)
+  const [pickerSearch, setPickerSearch] = useState('')
+  const { confirmDelete, deleteBar } = useDeleteConfirm()
+
+  // Employees not yet in personal files
+  const existingEmpIds = useMemo(() => new Set(records.map(r => r.employeeId)), [records])
+  const availableEmps = useMemo(() => {
+    const q = pickerSearch.trim().toLowerCase()
+    return employees
+      .filter(e => !existingEmpIds.has(e.employeeId))
+      .filter(e => !q || e.fullName.toLowerCase().includes(q) || e.employeeId.includes(q) || e.department.toLowerCase().includes(q))
+      .sort((a, b) => a.fullName.localeCompare(b.fullName))
+  }, [employees, existingEmpIds, pickerSearch])
+
+  const addFromEmployee = (emp: Employee) => {
+    const maxNum = Math.max(0, ...records.map(r => parseInt(r.fileNo, 10)).filter(n => !isNaN(n)))
+    const newFile: PersonalFileRecord = {
+      fileNo: String(maxNum + 1).padStart(4, '0'),
+      employeeId: emp.employeeId,
+      fullName: emp.fullName,
+      department: emp.department,
+      staffStatus: 'Active',
+      coc: false, jd: false, ea: false, eaExpiryDate: '', remarks: '',
+    }
+    onUpdate(prev => [newFile, ...prev])
+    supabase.from('personal_files').upsert(personalFileToDb(newFile), { onConflict: 'file_no' })
+      .then(({ error }) => { if (error) console.error('[PF add]', error.message) })
+    setPickerSearch('')
+  }
+
+  const deleteFile = async (fileNo: string, name: string) => {
+    const ok = await confirmDelete(`Delete personal file for ${name}?`)
+    if (!ok) return
+    onUpdate(prev => prev.filter(r => r.fileNo !== fileNo))
+    supabase.from('personal_files').delete().eq('file_no', fileNo)
+      .then(({ error }) => { if (error) console.error('[PF delete]', error.message) })
+  }
+
+  const downloadPfTemplate = () => downloadCsv('personal-files-template.csv', [
+    ['File No', 'Emp ID', 'Full Name', 'Section', 'Status', 'COC', 'JD', 'EA', 'EA Expiry Date', 'Remarks'],
+    ['0001', '12345', 'EXAMPLE EMPLOYEE', 'ADMINISTRATION', 'Active', 'TRUE', 'FALSE', 'FALSE', '', ''],
+  ])
+
+  const importPfCsv = () => {
+    const input = document.createElement('input')
+    input.type = 'file'; input.accept = '.csv,text/csv'
+    input.onchange = async () => {
+      const file = input.files?.[0]; if (!file) return
+      const text = await file.text()
+      const rows = parseCsv(text)
+      if (rows.length < 2) return
+      const hdr = rows[0].map(h => h.toLowerCase().replace(/[^a-z0-9]/g, ''))
+      const ci = (terms: string[]) => terms.map(t => hdr.indexOf(t)).find(i => i >= 0) ?? -1
+      const g = (row: string[], idx: number) => idx >= 0 ? (row[idx] ?? '').trim() : ''
+      const iFileNo = ci(['fileno','file']), iEmpId = ci(['empid','employeeid']),
+            iName   = ci(['fullname','name']), iDept = ci(['section','department']),
+            iStatus = ci(['status','staffstatus']), iCoc = ci(['coc']),
+            iJd     = ci(['jd']),               iEa   = ci(['ea']),
+            iEaExp  = ci(['eaexpirydate','eaexpiry']), iRemarks = ci(['remarks'])
+      const imported: PersonalFileRecord[] = rows.slice(1)
+        .filter(r => r.some(c => c.trim()))
+        .map(r => ({
+          fileNo:        g(r, iFileNo) || String(Date.now()).slice(-6),
+          employeeId:    g(r, iEmpId),
+          fullName:      g(r, iName),
+          department:    g(r, iDept),
+          staffStatus:   (g(r, iStatus) || 'Active') as StaffStatus,
+          coc:           g(r, iCoc).toLowerCase() === 'true' || g(r, iCoc) === '1',
+          jd:            g(r, iJd).toLowerCase()  === 'true' || g(r, iJd)  === '1',
+          ea:            g(r, iEa).toLowerCase()  === 'true' || g(r, iEa)  === '1',
+          eaExpiryDate:  g(r, iEaExp),
+          remarks:       g(r, iRemarks),
+        }))
+      if (imported.length === 0) return
+      onUpdate(prev => {
+        const existingNos = new Set(prev.map(r => r.fileNo))
+        const toAdd = imported.filter(r => !existingNos.has(r.fileNo))
+        const toUpdate = imported.filter(r => existingNos.has(r.fileNo))
+        const updated = prev.map(r => { const u = toUpdate.find(x => x.fileNo === r.fileNo); return u ?? r })
+        return [...toAdd, ...updated]
+      })
+      await supabase.from('personal_files').upsert(imported.map(personalFileToDb), { onConflict: 'file_no' })
+    }
+    input.click()
+  }
 
   const filtered = useMemo(() => records.filter((r) => {
     const matchSearch = [r.fileNo, r.employeeId, r.fullName, r.department].join(' ').toLowerCase().includes(search.trim().toLowerCase())
@@ -5652,7 +5762,7 @@ function PersonalFilesSection({ records, onUpdate }: {
     <>
       <section className="employee-workspace">
         <div className="table-toolbar pf-toolbar">
-          <label className="search-field">
+          <label className="search-field" style={{ flex:'1 1 220px' }}>
             <span>Search</span>
             <input type="text" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1) }} placeholder="File no, employee, department" />
           </label>
@@ -5674,32 +5784,33 @@ function PersonalFilesSection({ records, onUpdate }: {
           <label>
             <span>Rows</span>
             <select value={pageSize} onChange={(e) => { setPageSize(e.target.value === 'All' ? 'All' : Number(e.target.value) as 50 | 100); setPage(1) }}>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-              <option value="All">All</option>
+              <option value={50}>50</option><option value={100}>100</option><option value="All">All</option>
             </select>
           </label>
+          {/* Admin-only actions */}
+          {isAdmin && <>
+            <button className="quiet-button vwh" type="button" onClick={downloadPfTemplate} title="Download CSV template">Template</button>
+            <button className="quiet-button vwh" type="button" onClick={importPfCsv} title="Import from CSV">Import</button>
+          </>}
+          <button className="primary-button vwh" type="button" onClick={() => { setPickerSearch(''); setShowPicker(true) }}>+ Add Staff</button>
         </div>
 
         <div className="employee-table-shell compact-scroll">
           <table className="data-table personal-files-table">
             <thead>
               <tr>
-                <th>File No</th>
-                <th>Emp ID</th>
-                <th>Full Name</th>
-                <th>Section</th>
-                <th style={{ textAlign: 'center' }}>COC</th>
-                <th style={{ textAlign: 'center' }}>JD</th>
-                <th style={{ textAlign: 'center' }}>EA</th>
-                <th style={{ textAlign: 'center' }}>EA Expiry</th>
-                <th style={{ textAlign: 'center' }}>Status</th>
-                <th style={{ textAlign: 'center' }}>Action</th>
+                <th>File No</th><th>Emp ID</th><th>Full Name</th><th>Section</th>
+                <th style={{ textAlign:'center' }}>COC</th>
+                <th style={{ textAlign:'center' }}>JD</th>
+                <th style={{ textAlign:'center' }}>EA</th>
+                <th style={{ textAlign:'center' }}>EA Expiry</th>
+                <th style={{ textAlign:'center' }}>Status</th>
+                <th style={{ textAlign:'center' }}>Action</th>
               </tr>
             </thead>
             <tbody>
               {rows.length === 0 ? (
-                <tr><td colSpan={10} className="empty-row">No personal file records match the current filters.</td></tr>
+                <tr><td colSpan={10} className="empty-row">No personal file records. Use "+ Add Staff" to add employees.</td></tr>
               ) : rows.map((file) => (
                 <tr key={file.fileNo} className={rowClass(file.staffStatus)}>
                   <td>{file.fileNo}</td>
@@ -5707,12 +5818,15 @@ function PersonalFilesSection({ records, onUpdate }: {
                   <td>{file.fullName}</td>
                   <td>{file.department}</td>
                   <td className="doc-check-cell">{file.coc ? <span className="doc-yes">✓</span> : <span className="doc-no">—</span>}</td>
-                  <td className="doc-check-cell">{file.jd ? <span className="doc-yes">✓</span> : <span className="doc-no">—</span>}</td>
-                  <td className="doc-check-cell">{file.ea ? <span className="doc-yes">✓</span> : <span className="doc-no">—</span>}</td>
-                  <td style={{ textAlign: 'center' }}>{file.eaExpiryDate ? formatDateDisplay(file.eaExpiryDate) : '—'}</td>
-                  <td style={{ textAlign: 'center' }}><StaffStatusBadge status={file.staffStatus} /></td>
-                  <td style={{ textAlign: 'center' }}>
-                    <button className="action-glyph edit vwh" onClick={() => setEditingFileNo(file.fileNo)} type="button" title="Edit" aria-label="Edit file">✎</button>
+                  <td className="doc-check-cell">{file.jd  ? <span className="doc-yes">✓</span> : <span className="doc-no">—</span>}</td>
+                  <td className="doc-check-cell">{file.ea  ? <span className="doc-yes">✓</span> : <span className="doc-no">—</span>}</td>
+                  <td style={{ textAlign:'center' }}>{file.eaExpiryDate ? formatDateDisplay(file.eaExpiryDate) : '—'}</td>
+                  <td style={{ textAlign:'center' }}><StaffStatusBadge status={file.staffStatus} /></td>
+                  <td style={{ textAlign:'center' }}>
+                    <div className="row-actions">
+                      <button className="action-glyph edit vwh" onClick={() => setEditingFileNo(file.fileNo)} type="button" title="Edit">✎</button>
+                      <button className="action-glyph delete vwh" onClick={() => deleteFile(file.fileNo, file.fullName)} type="button" title="Delete">🗑</button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -5720,21 +5834,66 @@ function PersonalFilesSection({ records, onUpdate }: {
           </table>
         </div>
 
-        {/* Pagination */}
         {pageSize !== 'All' && totalPages > 1 && (
           <div className="pagination-bar">
             <button className="page-btn" onClick={() => setPage(1)} disabled={safePage === 1} type="button">«</button>
-            <button className="page-btn" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={safePage === 1} type="button">‹</button>
-            <span className="page-info">Page {safePage} of {totalPages} &nbsp;·&nbsp; {filtered.length} records</span>
-            <button className="page-btn" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={safePage === totalPages} type="button">›</button>
+            <button className="page-btn" onClick={() => setPage(p => Math.max(1, p-1))} disabled={safePage === 1} type="button">‹</button>
+            <span className="page-info">Page {safePage} of {totalPages} · {filtered.length} records</span>
+            <button className="page-btn" onClick={() => setPage(p => Math.min(totalPages, p+1))} disabled={safePage === totalPages} type="button">›</button>
             <button className="page-btn" onClick={() => setPage(totalPages)} disabled={safePage === totalPages} type="button">»</button>
           </div>
         )}
-        {pageSize === 'All' && (
-          <div className="pagination-bar"><span className="page-info">{filtered.length} records total</span></div>
-        )}
+        {pageSize === 'All' && <div className="pagination-bar"><span className="page-info">{filtered.length} records total</span></div>}
       </section>
+
       {editingFile && <PersonalFileModal file={editingFile} onClose={() => setEditingFileNo(null)} onSave={saveFile} />}
+
+      {/* ── Add Staff picker ──────────────────────────────────────────── */}
+      {showPicker && (
+        <div className="modal-backdrop" role="presentation" onClick={() => setShowPicker(false)}>
+          <section className="registration-modal pf-picker-modal" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()} style={{ maxWidth:560 }}>
+            <div className="modal-header">
+              <div><p className="eyebrow">Personal Files</p><h2>Add Staff</h2></div>
+              <button className="icon-button" onClick={() => setShowPicker(false)} type="button">✕</button>
+            </div>
+            <p style={{ fontSize:'0.82rem', color:'#64748b', margin:'0 0 12px' }}>
+              Select an employee to add to Personal Files. Only staff not already in the list are shown.
+            </p>
+            <div className="uf-emp-search-wrap" style={{ marginBottom:12 }}>
+              <input
+                className="uf-emp-search-input"
+                value={pickerSearch}
+                onChange={e => setPickerSearch(e.target.value)}
+                placeholder="Search by name, ID or section…"
+                autoFocus
+                autoComplete="off"
+              />
+            </div>
+            <div className="pf-picker-list">
+              {availableEmps.length === 0 ? (
+                <p style={{ textAlign:'center', color:'#94a3b8', padding:'24px 0', fontSize:'0.85rem' }}>
+                  {pickerSearch ? 'No employees match your search.' : 'All employees are already in Personal Files.'}
+                </p>
+              ) : availableEmps.map(emp => (
+                <button
+                  key={emp.employeeId}
+                  className="pf-picker-row"
+                  type="button"
+                  onClick={() => { addFromEmployee(emp); setShowPicker(false) }}
+                >
+                  <div className="pf-picker-info">
+                    <span className="pf-picker-name">{emp.fullName}</span>
+                    <span className="pf-picker-meta">{emp.employeeId} · {emp.department} · {emp.designation || '—'}</span>
+                  </div>
+                  <span className="pf-picker-add">+ Add</span>
+                </button>
+              ))}
+            </div>
+          </section>
+        </div>
+      )}
+
+      {deleteBar}
     </>
   )
 }
@@ -9320,11 +9479,12 @@ const initialMeetingRecords: MeetingRecord[] = [
   },
 ]
 
-function OperationsPage({ employees, completedTerminations, activeLeaves, isHOD = false }: {
+function OperationsPage({ employees, completedTerminations, activeLeaves, isHOD = false, userRole = 'HR' }: {
   employees: Employee[]
   completedTerminations: CompletedTerminationRecord[]
   activeLeaves: ActiveLeaveRecord[]
   isHOD?: boolean
+  userRole?: UserRole
 }) {
   const [activeSection, setActiveSection] = useState<OpsSection>(isHOD ? 'training' : 'files')
   const [meetingRecords,    setMeetingRecords]    = useState<MeetingRecord[]>(() => tryLoad('tic_meetings'))
@@ -9366,55 +9526,8 @@ function OperationsPage({ employees, completedTerminations, activeLeaves, isHOD 
   useEffect(() => { localStorage.setItem('tic_training', JSON.stringify(trainingRecords)); if (opsLoaded.current) { syncTable('training_records','id',trainingRecords,prevTr.current,trainingToDb,r=>r.id); prevTr.current=trainingRecords } }, [trainingRecords])
   useEffect(() => { localStorage.setItem('tic_bank_acc', JSON.stringify(bankAccountRecords)); if (opsLoaded.current) { syncTable('bank_account_records','id',bankAccountRecords,prevBnk.current,bankAccToDb,r=>r.id); prevBnk.current=bankAccountRecords } }, [bankAccountRecords])
 
-  // Auto-add newly registered employees → personal files + bank accounts
-  const prevEmployeeIdsRef = useRef<Set<string>>(new Set(employees.map((e) => e.employeeId)))
-  useEffect(() => {
-    const currentIds = new Set(employees.map((e) => e.employeeId))
-    const addedEmployees = employees.filter((e) => !prevEmployeeIdsRef.current.has(e.employeeId))
-    prevEmployeeIdsRef.current = currentIds
-    if (addedEmployees.length === 0) return
-
-    // Auto-add to personal files
-    setPersonalFiles((prev) => {
-      const existingIds = new Set(prev.map((r) => r.employeeId))
-      const toAdd = addedEmployees.filter((e) => !existingIds.has(e.employeeId))
-      if (toAdd.length === 0) return prev
-      const maxNum = Math.max(0, ...prev.map((r) => parseInt(r.fileNo, 10)).filter((n) => !isNaN(n)))
-      return [...prev, ...toAdd.map((e, idx): PersonalFileRecord => ({
-        fileNo: String(maxNum + 1 + idx).padStart(4, '0'),
-        employeeId: e.employeeId,
-        fullName: e.fullName,
-        department: e.department,
-        staffStatus: 'Active',
-        coc: false,
-        jd: false,
-        ea: false,
-        eaExpiryDate: '',
-        remarks: '',
-      }))]
-    })
-
-    // Auto-add non-Maldivians to bank accounts
-    const nonMaldivian = addedEmployees.filter((e) => e.nationality !== 'MALDIVIAN')
-    if (nonMaldivian.length > 0) {
-      setBankAccountRecords((prev) => {
-        const existingIds = new Set(prev.map((r) => r.employeeId))
-        const toAdd = nonMaldivian.filter((e) => !existingIds.has(e.employeeId))
-        if (toAdd.length === 0) return prev
-        return [...prev, ...toAdd.map((e): BankAccountRecord => ({
-          id: `BNK-auto-${e.employeeId}`,
-          employeeId: e.employeeId,
-          fullName: e.fullName,
-          department: e.department,
-          nationality: e.nationality,
-          bank: 'SBI',
-          accountType: 'USD & MVR',
-          scheduledDate: '',
-          status: 'Pending',
-        }))]
-      })
-    }
-  }, [employees])
+  // NOTE: auto-copy from employees removed — Personal Files and Bank Accounts
+  // are now managed manually via Add Staff picker and CSV import.
 
   // Auto-terminate personal files when termination is completed
   useEffect(() => {
@@ -9439,7 +9552,7 @@ function OperationsPage({ employees, completedTerminations, activeLeaves, isHOD 
           Minutes
         </button>
       </div>
-      {activeSection === 'files'     && <PersonalFilesSection records={personalFiles} onUpdate={setPersonalFiles} onBack={() => {}} />}
+      {activeSection === 'files'     && <PersonalFilesSection records={personalFiles} onUpdate={setPersonalFiles} employees={employees} isAdmin={userRole === 'Admin'} />}
       {activeSection === 'induction' && <InductionSection employees={employees} records={inductionRecords} onUpdate={setInductionRecords} onBack={() => {}} />}
       {activeSection === 'training'  && <TrainingSection records={trainingRecords} employees={employees} onUpdate={setTrainingRecords} onBack={() => {}} />}
       {activeSection === 'bank'      && <BankAccountSection employees={employees} records={bankAccountRecords} onUpdate={setBankAccountRecords} onBack={() => {}} />}
@@ -12058,11 +12171,10 @@ function App() {
   }
 
   const deleteEmployee = (employeeId: string) => {
+    // Uses window.confirm for the employee table — the employee row uses
+    // its own inline delete button; a global bottom bar would need context threading
     if (!window.confirm('Delete this employee record permanently?')) return
     setEmployees(prev => prev.filter(e => e.employeeId !== employeeId))
-    // Explicitly delete from Supabase — don't rely solely on the sync useEffect
-    // since dbLoaded.current may still be false if the user deletes within the
-    // first ~2 seconds of page load (before the async Supabase fetch completes)
     supabase.from('employees').delete().eq('employee_id', employeeId)
       .then(({ error }) => { if (error) console.error('[deleteEmployee]', error.message) })
   }
@@ -12580,7 +12692,7 @@ function App() {
           {activePage === 'overview' && <OverviewPage employees={scopedEmployees} leaveRequests={scopedLeaveRequests} activeLeaves={scopedActiveLeaves} leaveHistory={scopedLeaveHistory} noticeTerminations={scopedNoticeTerminations} completedTerminations={scopedCompletedTerminations} exitInterviews={scopedExitInterviews} medicalCases={scopedMedicalCases} inventoryItems={inventoryItems} passportHandovers={scopedPassportHandovers} />}
           {activePage === 'employees' && <EmployeesPage employees={scopedEmployees} medicalCases={scopedMedicalCases} noticeTerminations={scopedNoticeTerminations} offSiteRecords={offSiteRecords} onUpdateOffSite={(fn) => setOffSiteRecords(fn)} onAdd={() => { setEmployeeMode('add'); setEmployeeForm(emptyEmployee); setShowEmployeeForm(true) }} onEdit={openEditEmployee} onDelete={deleteEmployee} onExport={exportCsv} onImport={importCsv} onTemplate={downloadTemplate} onShowTasks={() => setShowPendingTasks(true)} />}
           {activePage === 'leave' && <LeavePage employees={scopedEmployees} leaveRequests={scopedLeaveRequests} activeLeaves={scopedActiveLeaves} leaveHistory={scopedLeaveHistory} medicalCases={scopedMedicalCases} isHOD={isHOD} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onSetRequestStep={setLeaveRequestStep} onExtendLeave={extendActiveLeave} onEditActiveLeave={editActiveLeave} onHistoryConfirm={updateHistoryConfirmation} onUpdateMedical={(fn) => setMedicalCases(fn)} />}
-          {activePage === 'operations' && <OperationsPage employees={employees} completedTerminations={completedTerminations} activeLeaves={activeLeaves} isHOD={isHOD} />}
+          {activePage === 'operations' && <OperationsPage employees={employees} completedTerminations={completedTerminations} activeLeaves={activeLeaves} isHOD={isHOD} userRole={currentUserRole} />}
           {activePage === 'activities' && <ActivitiesPage employees={scopedEmployees} passportHandovers={scopedPassportHandovers} onUpdatePassport={(fn) => setPassportHandovers(fn)} tripRequests={tripRequests} onUpdateTripRequests={(fn) => setTripRequests(fn)} inventoryItems={inventoryItems} inventoryUsage={inventoryUsage} inventoryOrders={inventoryOrders} onUpdateInventoryItems={(fn) => setInventoryItems(fn)} onUpdateInventoryUsage={(fn) => setInventoryUsage(fn)} onUpdateInventoryOrders={(fn) => setInventoryOrders(fn)} isHOD={isHOD} isHR={isHR} currentUserSections={currentUserSections} currentUserName={currentUserName} />}
           {activePage === 'termination' && <TerminationPage noticeTerminations={scopedNoticeTerminations} completedTerminations={scopedCompletedTerminations} exitInterviews={scopedExitInterviews} employees={scopedEmployees} isHOD={isHOD} onAdd={openAddTermination} onEdit={openEditTermination} onSetStage={setTerminationStage} onDelete={deleteTermination} onViewDetails={(record) => setTerminationDetails(record)} onUpdateExitInterviews={(fn) => setExitInterviews(fn)} />}
           {activePage === 'settings' && <SettingsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} onReset={() => setResetStep(1)} currentUserName={currentUserName} loggedInUser={currentProfile} users={users} onUpdateUsers={(fn) => setUsers(fn)} />}
