@@ -11883,8 +11883,6 @@ function App() {
   const dbLoaded = useRef(false)
   useEffect(() => {
     if (!isLoggedIn) { dbLoaded.current = false; return }
-    // Pause syncs while fetching so stale prevX refs don't trigger spurious upserts
-    dbLoaded.current = false
     const go = async () => {
       const [emp, lr, al, lh, med, off, nt, ct, ei, pp, tr, ii, iu, so] = await Promise.all([
         supabase.from('employees').select('*'),
@@ -12448,6 +12446,14 @@ function App() {
         })
         setEmployees(result)
         setImportResult({ added, updated, skipped, unchanged })
+        // Explicitly upsert imported employees to Supabase immediately —
+        // don't rely on the sync useEffect (dbLoaded.current may still be
+        // false if the import runs before the initial fetch completes)
+        if (added > 0 || updated > 0) {
+          supabase.from('employees')
+            .upsert(result.map(empToDb), { onConflict: 'employee_id' })
+            .then(({ error }) => { if (error) console.error('[importCsv]', error.message) })
+        }
       }
       reader.readAsText(file)
     }
