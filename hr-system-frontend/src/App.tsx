@@ -11171,11 +11171,12 @@ function UserFormModal({ user, employees, onClose, onSave }: {
   )
 }
 
-function SettingsPage({ employees, leaveRequests: _lr, activeLeaves: _al, onReset, currentUserName, users, onUpdateUsers }: {
+function SettingsPage({ employees, leaveRequests: _lr, activeLeaves: _al, onReset, currentUserName, loggedInUser, users, onUpdateUsers }: {
   employees: Employee[]
   leaveRequests: LeaveRequestRecord[]
   activeLeaves: ActiveLeaveRecord[]
   onReset: () => void
+  loggedInUser: AppUser | null
   currentUserName: string
   users: AppUser[]
   onUpdateUsers: (fn: (prev: AppUser[]) => AppUser[]) => void
@@ -11295,7 +11296,9 @@ function SettingsPage({ employees, leaveRequests: _lr, activeLeaves: _al, onRese
     if (parts.length === 1) return parts[0][0]?.toUpperCase() ?? 'A'
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
   }
-  const currentAppUser = users.find(u => u.name === currentUserName) ?? users[0]
+  // Use Supabase-loaded profile as authoritative fallback — never fall back to
+  // users[0] which was causing the admin-view flash for non-admin users
+  const currentAppUser = users.find(u => u.name === currentUserName) ?? loggedInUser ?? null
   const isAdmin = currentAppUser?.role === 'Admin'
   const [settingsTab, setSettingsTab] = useState<'users' | 'system'>('users')
 
@@ -11832,7 +11835,7 @@ function App() {
   const [inventoryOrders,      setInventoryOrders]      = useState<StoreOrder[]>(() => loadStore('tic_inv_orders', []))
   const [inventoryUsage,       setInventoryUsage]       = useState<InventoryUsageRecord[]>(() => loadStore('tic_inventory_usage', []))
   const [offSiteRecords,       setOffSiteRecords]       = useState<OffSiteRecord[]>(() => loadStore('tic_offsite', []))
-  const [users, setUsers] = useState<AppUser[]>(initialAppUsers)
+  const [users, setUsers] = useState<AppUser[]>([])
 
   // Fetch all user profiles from Supabase whenever logged in
   useEffect(() => {
@@ -11853,7 +11856,27 @@ function App() {
     })
   }, [isLoggedIn])
 
-  // ── Load ALL data from Supabase on login (overrides localStorage cache) ──────
+  // ── Refresh key: incremented on window focus/visibility → re-fetches all data ──
+  const [refreshKey, setRefreshKey] = useState(0)
+  useEffect(() => {
+    if (!isLoggedIn) return
+    let lastFire = 0
+    const bump = () => {
+      const now = Date.now()
+      if (now - lastFire < 5000) return   // debounce: ignore if < 5s since last fire
+      lastFire = now
+      setRefreshKey(k => k + 1)
+    }
+    window.addEventListener('focus', bump)
+    const onVis = () => { if (!document.hidden) bump() }
+    document.addEventListener('visibilitychange', onVis)
+    return () => {
+      window.removeEventListener('focus', bump)
+      document.removeEventListener('visibilitychange', onVis)
+    }
+  }, [isLoggedIn])
+
+  // ── Load ALL data from Supabase on login + on every focus/visibility change ──
   const dbLoaded = useRef(false)
   useEffect(() => {
     if (!isLoggedIn) { dbLoaded.current = false; return }
@@ -11874,28 +11897,27 @@ function App() {
         supabase.from('inventory_usage').select('*'),
         supabase.from('store_orders').select('*'),
       ])
-      // Supabase is the source of truth — always use it when it returns data
-      // If table is empty, the localStorage initial state (already in useState) stays
-      if (emp.data?.length) setEmployees(emp.data.map(empFromDb))
-      if (lr.data?.length)  setLeaveRequests(lr.data.map(leaveReqFromDb))
-      if (al.data?.length)  setActiveLeaves(al.data.map(activeLeaveFromDb))
-      if (lh.data?.length)  setLeaveHistory(lh.data.map(leaveHistFromDb))
-      if (med.data?.length) setMedicalCases(med.data.map(medFromDb))
-      if (off.data?.length) setOffSiteRecords(off.data.map(offSiteFromDb))
-      if (nt.data?.length)  setNoticeTerminations(nt.data.map(noticetermFromDb))
-      if (ct.data?.length)  setCompletedTerminations(ct.data.map(compTermFromDb))
-      if (ei.data?.length)  setExitInterviews(ei.data.map(exitIntFromDb))
-      if (pp.data?.length)  setPassportHandovers(pp.data.map(passportFromDb))
-      if (tr.data?.length)  setTripRequests(tr.data.map(tripReqFromDb))
-      if (ii.data?.length)  setInventoryItems(ii.data.map(invItemFromDb))
-      if (iu.data?.length)  setInventoryUsage(iu.data.map(invUsageFromDb))
-      if (so.data?.length)  setInventoryOrders(so.data.map(storeOrderFromDb))
-      // Mark loaded so sync useEffects start writing back to Supabase
+      // Always apply Supabase result — null means error, array (even []) is truth
+      // Using !== null instead of ?.length so empty arrays clear the state after a reset
+      if (emp.data !== null) setEmployees(emp.data.map(empFromDb))
+      if (lr.data  !== null) setLeaveRequests(lr.data.map(leaveReqFromDb))
+      if (al.data  !== null) setActiveLeaves(al.data.map(activeLeaveFromDb))
+      if (lh.data  !== null) setLeaveHistory(lh.data.map(leaveHistFromDb))
+      if (med.data !== null) setMedicalCases(med.data.map(medFromDb))
+      if (off.data !== null) setOffSiteRecords(off.data.map(offSiteFromDb))
+      if (nt.data  !== null) setNoticeTerminations(nt.data.map(noticetermFromDb))
+      if (ct.data  !== null) setCompletedTerminations(ct.data.map(compTermFromDb))
+      if (ei.data  !== null) setExitInterviews(ei.data.map(exitIntFromDb))
+      if (pp.data  !== null) setPassportHandovers(pp.data.map(passportFromDb))
+      if (tr.data  !== null) setTripRequests(tr.data.map(tripReqFromDb))
+      if (ii.data  !== null) setInventoryItems(ii.data.map(invItemFromDb))
+      if (iu.data  !== null) setInventoryUsage(iu.data.map(invUsageFromDb))
+      if (so.data  !== null) setInventoryOrders(so.data.map(storeOrderFromDb))
       dbLoaded.current = true
     }
     go()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoggedIn])
+  }, [isLoggedIn, refreshKey])
   const [showEmployeeForm, setShowEmployeeForm] = useState(false)
   const [employeeMode, setEmployeeMode] = useState<'add' | 'edit'>('add')
   const [employeeForm, setEmployeeForm] = useState<EmployeeForm>(emptyEmployee)
@@ -12536,7 +12558,7 @@ function App() {
           {activePage === 'operations' && <OperationsPage employees={employees} completedTerminations={completedTerminations} activeLeaves={activeLeaves} isHOD={isHOD} />}
           {activePage === 'activities' && <ActivitiesPage employees={scopedEmployees} passportHandovers={scopedPassportHandovers} onUpdatePassport={(fn) => setPassportHandovers(fn)} tripRequests={tripRequests} onUpdateTripRequests={(fn) => setTripRequests(fn)} inventoryItems={inventoryItems} inventoryUsage={inventoryUsage} inventoryOrders={inventoryOrders} onUpdateInventoryItems={(fn) => setInventoryItems(fn)} onUpdateInventoryUsage={(fn) => setInventoryUsage(fn)} onUpdateInventoryOrders={(fn) => setInventoryOrders(fn)} isHOD={isHOD} isHR={isHR} currentUserSections={currentUserSections} currentUserName={currentUserName} />}
           {activePage === 'termination' && <TerminationPage noticeTerminations={scopedNoticeTerminations} completedTerminations={scopedCompletedTerminations} exitInterviews={scopedExitInterviews} employees={scopedEmployees} isHOD={isHOD} onAdd={openAddTermination} onEdit={openEditTermination} onSetStage={setTerminationStage} onDelete={deleteTermination} onViewDetails={(record) => setTerminationDetails(record)} onUpdateExitInterviews={(fn) => setExitInterviews(fn)} />}
-          {activePage === 'settings' && <SettingsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} onReset={resetAllData} currentUserName={currentUserName} users={users} onUpdateUsers={(fn) => setUsers(fn)} />}
+          {activePage === 'settings' && <SettingsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} onReset={resetAllData} currentUserName={currentUserName} loggedInUser={currentProfile} users={users} onUpdateUsers={(fn) => setUsers(fn)} />}
         </main>
       </div> {/* .workspace */}
 
