@@ -8488,6 +8488,11 @@ function MeetingFormModal({ record, employees, activeLeaves, onClose, onSave, vi
   const [chairperson, setChairperson] = useState(record.chairperson)
   const [status,      setStatus]      = useState<'Draft'|'Final'>(record.status)
   const [approvedBy,  setApprovedBy]  = useState(record.approvedBy)
+  // Ref number: prefix is fixed, only last 3 digits are editable
+  const refParts    = record.refNumber.split('/')
+  const refPrefix   = refParts.slice(0, -1).join('/') + '/'   // e.g. "VHPL/MBM/26/"
+  const [refSeq, setRefSeq] = useState(refParts[refParts.length - 1] ?? '001')
+  const handleRefSeq = (v: string) => setRefSeq(v.replace(/\D/g,'').slice(0, 3))
   const [reps,        setReps]        = useState<MeetingRep[]>(record.reps)
   const [deptUpdates,     setDeptUpdates]     = useState<MeetingDeptUpdate[]>(
     // Ensure all current MEETING_DEPTS sections are present
@@ -8508,6 +8513,7 @@ function MeetingFormModal({ record, employees, activeLeaves, onClose, onSave, vi
 
   const buildCurrent = (overrideStatus?: 'Draft'|'Final'): MeetingRecord => ({
     ...record, date, timeStarted, timeEnded,
+    refNumber: refPrefix + refSeq.padStart(3, '0'),
     venue: FIXED_VENUE,
     chairperson, status: overrideStatus ?? status,
     preparedBy: FIXED_PREPARED_BY,
@@ -8642,8 +8648,18 @@ function MeetingFormModal({ record, employees, activeLeaves, onClose, onSave, vi
               {/* Ref — read-only */}
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
                 <label style={{ display:'flex', flexDirection:'column', gap:4 }}>
-                  <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151' }}>Reference Number <span style={{ fontWeight:400, color:'#94a3b8' }}>(auto)</span></span>
-                  <input style={inpRO} value={record.refNumber} readOnly />
+                  <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151' }}>Reference Number <span style={{ fontWeight:400, color:'#94a3b8' }}>(edit last 3 digits)</span></span>
+                  <div style={{ display:'flex', alignItems:'center', gap:0, border:'1.5px solid #e2e8f0', borderRadius:8, overflow:'hidden', background: viewOnly ? '#f8fafc' : '#fff' }}>
+                    <span style={{ padding:'0 10px', fontSize:'0.84rem', color:'#64748b', background:'#f1f5f9', borderRight:'1px solid #e2e8f0', whiteSpace:'nowrap', lineHeight:'36px', userSelect:'none' }}>{refPrefix}</span>
+                    <input
+                      value={refSeq}
+                      onChange={e => handleRefSeq(e.target.value)}
+                      readOnly={viewOnly}
+                      maxLength={3}
+                      placeholder="001"
+                      style={{ width:52, border:'none', outline:'none', padding:'0 10px', fontSize:'0.9rem', fontWeight:700, color:'#0f172a', background:'transparent', lineHeight:'36px', height:36 }}
+                    />
+                  </div>
                 </label>
                 <label style={{ display:'flex', flexDirection:'column', gap:4 }}>
                   <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151' }}>Status</span>
@@ -9297,7 +9313,7 @@ function MeetingsSection({ records, onUpdate, employees, activeLeaves }: {
               <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Ref, date, chairperson…" />
             </label>
           )}
-          <button className="primary-button vwh" onClick={() => setEditing(mkNew())} type="button">+ New Meeting</button>
+          <button className="primary-button vwh" onClick={() => setEditing(mkNew())} type="button" style={{ fontSize:'0.76rem', padding:'0 12px', minHeight:30 }}>+ New Meeting</button>
         </div>
       </div>
 
