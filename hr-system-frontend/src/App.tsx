@@ -2063,6 +2063,12 @@ function EmployeesPage({ employees, onAdd, onEdit, onDelete, onExport, onImport,
   const [pageSize, setPageSize] = useState<PageSize>(50)
   const [sortKey, setSortKey] = useState<SortKey>('department')
   const [sortAsc, setSortAsc] = useState(true)
+  const { confirmDelete, deleteBar } = useDeleteConfirm()
+
+  const handleDelete = async (employee: Employee) => {
+    const ok = await confirmDelete(`Delete ${employee.fullName} (${employee.employeeId})?`)
+    if (ok) onDelete(employee.employeeId)
+  }
 
   const today = new Date().toISOString().slice(0, 10)
   const onLeaveIds = useMemo(() => new Set(
@@ -2183,7 +2189,7 @@ function EmployeesPage({ employees, onAdd, onEdit, onDelete, onExport, onImport,
                   <td>
                     <div className="row-actions">
                       <button className="action-glyph edit vwh" onClick={() => onEdit(employee)} type="button" title="Edit">✎</button>
-                      <button className="action-glyph delete vwh" onClick={() => onDelete(employee.employeeId)} type="button" title="Delete employee">🗑</button>
+                      <button className="action-glyph delete vwh" onClick={() => handleDelete(employee)} type="button" title="Delete employee">🗑</button>
                     </div>
                   </td>
                 </tr>
@@ -2208,6 +2214,7 @@ function EmployeesPage({ employees, onAdd, onEdit, onDelete, onExport, onImport,
         )}
       </section>
       {showOffSite && <OffSiteModal records={offSiteRecords} employees={employees} onUpdate={onUpdateOffSite} onClose={() => setShowOffSite(false)} />}
+      {deleteBar}
     </>
   )
 }
@@ -12171,9 +12178,8 @@ function App() {
   }
 
   const deleteEmployee = (employeeId: string) => {
-    // Uses window.confirm for the employee table — the employee row uses
-    // its own inline delete button; a global bottom bar would need context threading
-    if (!window.confirm('Delete this employee record permanently?')) return
+    // Confirmation is handled in EmployeesPage via useDeleteConfirm (bottom bar)
+    // so we only run the actual delete here — no window.confirm
     setEmployees(prev => prev.filter(e => e.employeeId !== employeeId))
     supabase.from('employees').delete().eq('employee_id', employeeId)
       .then(({ error }) => { if (error) console.error('[deleteEmployee]', error.message) })
