@@ -463,8 +463,8 @@ function useDeleteConfirm() {
     // Show bottom-right success toast
     const id = Date.now()
     setToasts(t => [...t, { id, text: 'Record deleted', fading: false }])
-    setTimeout(() => setToasts(t => t.map(x => x.id === id ? { ...x, fading: true } : x)), 4500)
-    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 5200)
+    setTimeout(() => setToasts(t => t.map(x => x.id === id ? { ...x, fading: true } : x)), 2300)
+    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 3000)
   }
   const doCancel = () => { pending?.resolve(false); setPending(null) }
 
