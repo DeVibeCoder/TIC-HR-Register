@@ -449,27 +449,52 @@ function tryLoad<T>(key: string): T[] {
   try { return JSON.parse(localStorage.getItem(key) ?? '[]') as T[] } catch { return [] }
 }
 
-// ── Reusable delete confirmation (bottom slide-up bar) ────────────────────────
+// ── Delete confirmation modal + success toast ─────────────────────────────────
 function useDeleteConfirm() {
-  const [pending, setPending] = useState<{ message: string; resolve: (v: boolean) => void } | null>(null)
+  const [pending, setPending]   = useState<{ message: string; resolve: (v: boolean) => void } | null>(null)
+  const [toasts,  setToasts]    = useState<{ id: number; text: string; fading: boolean }[]>([])
 
   const confirmDelete = (message: string): Promise<boolean> =>
     new Promise(resolve => setPending({ message, resolve }))
 
-  const confirm = () => { pending?.resolve(true);  setPending(null) }
-  const cancel  = () => { pending?.resolve(false); setPending(null) }
+  const doConfirm = () => {
+    pending?.resolve(true)
+    setPending(null)
+    // Show bottom-right success toast
+    const id = Date.now()
+    setToasts(t => [...t, { id, text: 'Record deleted', fading: false }])
+    setTimeout(() => setToasts(t => t.map(x => x.id === id ? { ...x, fading: true } : x)), 4500)
+    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 5200)
+  }
+  const doCancel = () => { pending?.resolve(false); setPending(null) }
 
-  const bar = pending ? (
-    <div className="delete-confirm-bar" role="alertdialog">
-      <span className="dcb-msg">{pending.message}</span>
-      <div className="dcb-actions">
-        <button className="dcb-cancel"  onClick={cancel}  type="button">Cancel</button>
-        <button className="dcb-confirm" onClick={confirm} type="button">Delete</button>
+  const modal = pending ? (
+    <div className="modal-backdrop" role="presentation" onClick={doCancel}>
+      <div className="del-confirm-modal" role="alertdialog" aria-modal="true" onClick={e => e.stopPropagation()}>
+        <div className="del-confirm-icon">🗑</div>
+        <h3>Confirm Delete</h3>
+        <p>{pending.message}</p>
+        <p className="del-confirm-sub">This action cannot be undone.</p>
+        <div className="del-confirm-actions">
+          <button className="quiet-button light" onClick={doCancel}  type="button">Cancel</button>
+          <button className="danger-button"      onClick={doConfirm} type="button">Delete</button>
+        </div>
       </div>
     </div>
   ) : null
 
-  return { confirmDelete, deleteBar: bar }
+  const toastEl = toasts.length > 0 ? (
+    <div className="del-toast-stack">
+      {toasts.map(t => (
+        <div key={t.id} className={`del-toast${t.fading ? ' del-toast-fade' : ''}`}>
+          <span className="del-toast-icon">✓</span>
+          <span>{t.text}</span>
+        </div>
+      ))}
+    </div>
+  ) : null
+
+  return { confirmDelete, deleteBar: <>{modal}{toastEl}</> }
 }
 
 // ── Database row ↔ TypeScript type converters ──────────────────────────────
