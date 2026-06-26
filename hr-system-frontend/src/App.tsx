@@ -9244,7 +9244,7 @@ function MeetingsSection({ records, onUpdate, employees, activeLeaves }: {
       id: `MTG-new-${Date.now()}`,
       refNumber: `VHPL/MBM/${yr}/${nextSeq}`,
       date: new Date().toISOString().split('T')[0],
-      timeStarted: '10:00', timeEnded: '',
+      timeStarted: '09:30', timeEnded: '',
       venue: 'Villa Hakatha Pvt Ltd, Thilafushi, Meeting Room',
       chairperson: CHAIRPERSON_OPTIONS[0].value,
       reps: [dgmRep, ...fixedReps],
@@ -9313,7 +9313,7 @@ function MeetingsSection({ records, onUpdate, employees, activeLeaves }: {
               <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Ref, date, chairperson…" />
             </label>
           )}
-          <button className="primary-button vwh" onClick={() => setEditing(mkNew())} type="button" style={{ fontSize:'0.76rem', padding:'0 12px', minHeight:30 }}>+ New Meeting</button>
+          <button className="primary-button vwh" onClick={() => setEditing(mkNew())} type="button" style={{ fontSize:'0.76rem', padding:'0 12px', height:36, minHeight:36, alignSelf:'flex-end' }}>+ New Meeting</button>
         </div>
       </div>
 
