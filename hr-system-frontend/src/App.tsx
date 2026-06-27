@@ -1377,11 +1377,28 @@ function LeaveTypeBadge({ code }: { code: LeaveTypeCode }) {
   )
 }
 
+// Animated counter hook
+function useCountUp(target: number) {
+  const [n, setN] = useState(0)
+  useEffect(() => {
+    if (!target) { setN(0); return }
+    let frame = 0
+    const total = 24
+    const tick = () => {
+      frame++
+      setN(Math.round(target * (1 - Math.pow(1 - frame/total, 3))))
+      if (frame < total) requestAnimationFrame(tick)
+    }
+    requestAnimationFrame(tick)
+  }, [target])
+  return n
+}
+
 function OverviewPage({
   employees, leaveRequests, activeLeaves, leaveHistory: _leaveHistory,
   noticeTerminations, completedTerminations, exitInterviews: _exitInterviews,
   medicalCases, inventoryItems: _inventoryItems, passportHandovers: _passportHandovers,
-  onNavigate,
+  onNavigate, currentUserName,
 }: {
   employees: Employee[]
   leaveRequests: LeaveRequestRecord[]
@@ -1394,6 +1411,7 @@ function OverviewPage({
   inventoryItems: InventoryItem[]
   passportHandovers: PassportHandoverRecord[]
   onNavigate?: (page: Page) => void
+  currentUserName?: string
 }) {
   // ── Staff presence ───────────────────────────────────────────────────────
   const onSite    = employees.filter(e => e.siteStatus === 'On Site').length
@@ -1439,238 +1457,258 @@ function OverviewPage({
 
   const todayStr = new Date().toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })
 
-  // ── Data limits (executive preview) ─────────────────────────────────────
+  // ── Greeting ────────────────────────────────────────────────────────────
+  const hour = new Date().getHours()
+  const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening'
+  const firstName = (currentUserName || 'HR Manager').trim().split(/\s+/)[0]
+
+  // ── Leave rows (max 5) ───────────────────────────────────────────────────
   const noticeEmpIds2 = new Set(noticeTerminations.map(t => t.employeeId))
   const in7days = new Date(Date.now() + 7*86400000).toISOString().slice(0,10)
-
-  // Leave: active first, then upcoming sorted by date — max 5 rows
   const upcomingRows = [...leaveRequests]
     .sort((a,b) => a.departureDate.localeCompare(b.departureDate))
     .map(r => ({ id:`req-${r.id}`, name:r.name, department:r.department,
                   leaveTypeCode:r.leaveTypeCode, departureDate:r.departureDate,
-                  returnDate:r.returnDate, _upcoming:true, _notice:noticeEmpIds2.has(r.employeeId),
-                  _soon: r.departureDate <= in7days }))
-  type LRow = { id:string; name:string; department:string; leaveTypeCode:LeaveTypeCode; departureDate:string; returnDate:string; _notice?:boolean; _upcoming?:boolean; _soon?:boolean }
+                  returnDate:r.returnDate, _notice:noticeEmpIds2.has(r.employeeId), _soon:r.departureDate<=in7days }))
+  type LRow = { id:string; name:string; department:string; leaveTypeCode:LeaveTypeCode; departureDate:string; returnDate:string; _notice?:boolean; _soon?:boolean }
   const allLeaveRows: LRow[] = [
-    ...activeLeaves.map(r => ({ ...r, _notice:noticeEmpIds2.has(r.employeeId), _upcoming:false, _soon:false })),
+    ...activeLeaves.map(r => ({ ...r, _notice:noticeEmpIds2.has(r.employeeId), _soon:false })),
     ...upcomingRows,
   ]
-  const LEAVE_LIMIT = 5
-  const leavePreview = allLeaveRows.slice(0, LEAVE_LIMIT)
-  const leaveExtra   = allLeaveRows.length - LEAVE_LIMIT
+  const leavePreview = allLeaveRows.slice(0, 5)
+  const leaveExtra   = allLeaveRows.length - 5
 
-  // Departments: top 8 only
-  const DEPT_LIMIT = 8
-  const deptPreview = deptCounts.slice(0, DEPT_LIMIT)
-  const deptExtra   = deptCounts.length - DEPT_LIMIT
+  // ── Termination (max 3) ──────────────────────────────────────────────────
+  const termPreview = noticeTerminations.slice(0, 3)
+  const termExtra   = noticeTerminations.length - 3
 
-  // Termination: max 3
-  const TERM_LIMIT = 3
-  const termPreview = noticeTerminations.slice(0, TERM_LIMIT)
-  const termExtra   = noticeTerminations.length - TERM_LIMIT
+  // ── New joiners (last 30 days) + Pending approvals ───────────────────────
+  const thirtyDaysAgo = new Date(Date.now() - 30*86400000).toISOString().slice(0,10)
+  const newJoiners = employees.filter(e => e.dateOfJoin >= thirtyDaysAgo).length
+  const pendingApprovals = leaveRequests.filter(r => r.step !== 'Pending Departure').length
 
-  // SVG donut chart
-  const donutR = 50, donutSW = 11
+  // ── Animated KPI values ───────────────────────────────────────────────────
+  const cTotal   = useCountUp(employees.length)
+  const cOnSite  = useCountUp(onSite)
+  const cLeave   = useCountUp(onLeave)
+  const cOffSite = useCountUp(offSite)
+  const cNew     = useCountUp(newJoiners)
+  const cPending = useCountUp(pendingApprovals)
+
+  // ── Donut chart ───────────────────────────────────────────────────────────
+  const donutR = 48, donutSW = 10
   const donutC = 2 * Math.PI * donutR
-  const donutTotal = employees.length || 1
-  const donutSite  = (onSite  / donutTotal) * donutC
-  const donutOff   = (offSite / donutTotal) * donutC
-  const donutLeave = (onLeave / donutTotal) * donutC
-  const off2 = donutSite, off3 = off2 + donutOff
+  const tot = employees.length || 1
+  const dSite  = (onSite  / tot) * donutC
+  const dOff   = (offSite / tot) * donutC
+  const dLeave = (onLeave / tot) * donutC
+  const off2 = dSite, off3 = off2 + dOff
 
   return (
-    <div className="hd-page">
+    <div className="pdb-shell">
 
-      {/* header */}
-      <div className="hd-top">
-        <div>
-          <div className="hd-title">HR Dashboard</div>
-          <div className="hd-sub">Thilafushi Industrial Complex &nbsp;·&nbsp; {todayStr}</div>
+      {/* ── HERO ─────────────────────────────────────────────────────── */}
+      <div className="pdb-hero">
+        <div className="pdb-hero-left">
+          <p className="pdb-greeting">{greeting}, <span className="pdb-name">{firstName}</span> 👋</p>
+          <p className="pdb-org">Thilafushi Industrial Complex · {todayStr}</p>
+        </div>
+        <div className="pdb-hero-actions">
+          <button className="pdb-btn-ghost" onClick={()=>onNavigate?.('employees')} type="button">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Employees
+          </button>
+          <button className="pdb-btn-ghost" onClick={()=>onNavigate?.('leave')} type="button">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Leave
+          </button>
         </div>
       </div>
 
-      {/* KPI row */}
-      <div className="hd-kpis">
+      {/* ── KPI CARDS ────────────────────────────────────────────────── */}
+      <div className="pdb-kpis">
         {([
-          { c:'#6366f1', label:'Total Staff', val:employees.length,  note:`${deptCounts.length} sections` },
-          { c:'#059669', label:'On Site',     val:onSite,            note:`${onSitePct}% on site` },
-          { c:'#d97706', label:'Off Site',    val:offSite,           note:`${employees.length?Math.round(offSite/employees.length*100):0}% away` },
-          { c:'#2563eb', label:'On Leave',    val:onLeave,           note:`${employees.length?Math.round(onLeave/employees.length*100):0}% on leave` },
+          { label:'Total Employees', val:cTotal,   raw:employees.length, note:`${deptCounts.length} sections`, icon:'👥', g:'#6D5DF6,#8B5CF6', light:'#EDE9FE' },
+          { label:'Present Today',   val:cOnSite,  raw:onSite,           note:`${onSitePct}% on site`,         icon:'🏢', g:'#059669,#10B981', light:'#D1FAE5' },
+          { label:'On Leave',        val:cLeave,   raw:onLeave,          note:`${employees.length?Math.round(onLeave/employees.length*100):0}% away`,  icon:'✈️', g:'#2563EB,#3B82F6', light:'#DBEAFE' },
+          { label:'Off Site',        val:cOffSite, raw:offSite,          note:`${employees.length?Math.round(offSite/employees.length*100):0}% offsite`, icon:'🏠', g:'#D97706,#F59E0B', light:'#FEF3C7' },
+          { label:'New Joiners',     val:cNew,     raw:newJoiners,       note:'last 30 days',                  icon:'🌱', g:'#7C3AED,#A855F7', light:'#F3E8FF' },
+          { label:'Pending Approvals',val:cPending,raw:pendingApprovals, note:'awaiting action',               icon:'⏳', g:'#BE185D,#EC4899', light:'#FCE7F3' },
         ] as const).map(k=>(
-          <div key={k.label} className="hd-kpi" style={{ '--kc': k.c } as React.CSSProperties}>
-            <span className="hd-kpi-n">{k.val}</span>
-            <span className="hd-kpi-l">{k.label}</span>
-            <span className="hd-kpi-s">{k.note}</span>
+          <div key={k.label} className="pdb-kpi" style={{ '--kg': k.g, '--kl': k.light } as React.CSSProperties}>
+            <div className="pdb-kpi-icon">{k.icon}</div>
+            <div className="pdb-kpi-num">{k.val}</div>
+            <div className="pdb-kpi-lbl">{k.label}</div>
+            <div className="pdb-kpi-note">{k.note}</div>
           </div>
         ))}
       </div>
 
-      {/* Middle row: Presence + Leave */}
-      <div className="hd-mid">
+      {/* ── MAIN GRID ────────────────────────────────────────────────── */}
+      <div className="pdb-main">
 
-        {/* Presence */}
-        <div className="hd-card hd-presence">
-          <div className="hd-card-ttl">Staff Presence</div>
-          <div style={{ position:'relative', width:120, height:120, margin:'8px auto' }}>
-            <svg width="120" height="120" viewBox="0 0 120 120" style={{ transform:'rotate(-90deg)' }}>
-              <circle cx="60" cy="60" r={donutR} fill="none" stroke="#f1f5f9" strokeWidth={donutSW}/>
-              {onSite  > 0 && <circle cx="60" cy="60" r={donutR} fill="none" stroke="#059669" strokeWidth={donutSW} strokeDasharray={`${donutSite} ${donutC-donutSite}`} strokeDashoffset={0} />}
-              {offSite > 0 && <circle cx="60" cy="60" r={donutR} fill="none" stroke="#d97706" strokeWidth={donutSW} strokeDasharray={`${donutOff} ${donutC-donutOff}`} strokeDashoffset={-off2} />}
-              {onLeave > 0 && <circle cx="60" cy="60" r={donutR} fill="none" stroke="#2563eb" strokeWidth={donutSW} strokeDasharray={`${donutLeave} ${donutC-donutLeave}`} strokeDashoffset={-off3} />}
+        {/* Presence donut */}
+        <div className="pdb-card pdb-presence">
+          <div className="pdb-card-hd">
+            <span className="pdb-ttl">Staff Presence</span>
+            <span className="pdb-badge pdb-badge-g">{onSitePct}% on site</span>
+          </div>
+          <div className="pdb-donut">
+            <svg width="130" height="130" viewBox="0 0 130 130" className="pdb-donut-svg" style={{ transform:'rotate(-90deg)' }}>
+              <circle cx="65" cy="65" r={donutR} fill="none" stroke="#EDE9FE" strokeWidth={donutSW}/>
+              {onSite  > 0 && <circle cx="65" cy="65" r={donutR} fill="none" stroke="#059669" strokeWidth={donutSW} strokeDasharray={`${dSite}  ${donutC-dSite}`}  strokeDashoffset={0}    className="pdb-arc"/>}
+              {offSite > 0 && <circle cx="65" cy="65" r={donutR} fill="none" stroke="#D97706" strokeWidth={donutSW} strokeDasharray={`${dOff}   ${donutC-dOff}`}   strokeDashoffset={-off2} className="pdb-arc"/>}
+              {onLeave > 0 && <circle cx="65" cy="65" r={donutR} fill="none" stroke="#6D5DF6" strokeWidth={donutSW} strokeDasharray={`${dLeave} ${donutC-dLeave}`} strokeDashoffset={-off3} className="pdb-arc"/>}
             </svg>
-            <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center' }}>
-              <span style={{ fontSize:'1.5rem', fontWeight:800, color:'#111827', lineHeight:1 }}>{employees.length}</span>
-              <span style={{ fontSize:'0.6rem', color:'#9ca3af', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.05em' }}>staff</span>
+            <div className="pdb-donut-center">
+              <span className="pdb-donut-n">{cTotal}</span>
+              <span className="pdb-donut-l">total</span>
             </div>
           </div>
-          <div className="hd-legend">
-            {([['#059669','On Site',onSite],['#d97706','Off Site',offSite],['#2563eb','On Leave',onLeave]] as const).map(([c,l,v])=>(
-              <div key={l} className="hd-leg-row">
-                <span style={{ width:8, height:8, borderRadius:'50%', background:c, flexShrink:0, display:'block' }}/>
-                <span style={{ flex:1, fontSize:'0.74rem', color:'#6b7280' }}>{l}</span>
-                <span style={{ fontWeight:700, fontSize:'0.8rem', color:'#111827' }}>{v}</span>
-                <span style={{ fontSize:'0.66rem', color:'#9ca3af', width:28, textAlign:'right' }}>{employees.length?Math.round((v as number)/employees.length*100):0}%</span>
+          <div className="pdb-legend">
+            {([['#059669','On Site',onSite],['#D97706','Off Site',offSite],['#6D5DF6','On Leave',onLeave]] as const).map(([c,l,v])=>(
+              <div key={l} className="pdb-leg-row">
+                <span className="pdb-leg-dot" style={{ background:c }}/>
+                <span className="pdb-leg-l">{l}</span>
+                <span className="pdb-leg-n">{v}</span>
+                <span className="pdb-leg-p">{employees.length?Math.round((v as number)/employees.length*100):0}%</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* Leave table */}
-        <div className="hd-card hd-leave">
-          <div className="hd-card-hd">
-            <span className="hd-card-ttl">Leave — Active &amp; Upcoming</span>
+        <div className="pdb-card pdb-leave">
+          <div className="pdb-card-hd">
+            <span className="pdb-ttl">Leave &amp; Upcoming</span>
             <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-              <span className="hd-chip hd-chip-blue">{activeLeaves.length} active</span>
-              <span className="hd-chip hd-chip-grey">{upcomingRows.length} upcoming</span>
-              <button className="hd-va" onClick={()=>onNavigate?.('leave')} type="button">View all →</button>
+              <span className="pdb-badge pdb-badge-b">{activeLeaves.length} active</span>
+              <span className="pdb-badge pdb-badge-n">{upcomingRows.length} upcoming</span>
+              <button className="pdb-va" onClick={()=>onNavigate?.('leave')} type="button">View all →</button>
             </div>
           </div>
           {allLeaveRows.length === 0
-            ? <p className="hd-empty">No active or upcoming leave.</p>
-            : <table className="hd-tbl">
-                <thead>
-                  <tr>
-                    <th>Employee</th><th>Section</th><th>Type</th><th>Departs</th><th>Returns</th>
-                  </tr>
-                </thead>
-                <tbody>
+            ? <p className="pdb-empty">No active or upcoming leave.</p>
+            : <>
+                <div className="pdb-tbl-head">
+                  <span>Employee</span><span>Section</span><span>Type</span><span>Departs</span><span>Returns</span>
+                </div>
+                <div className="pdb-tbl-body">
                   {leavePreview.map(r=>(
-                    <tr key={r.id} className={r._soon?'hd-row-soon':''}>
-                      <td>
-                        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                          <span className="hd-av" style={{ background:r._upcoming?'#dbeafe':'#d1fae5', color:r._upcoming?'#1d4ed8':'#065f46' }}>{r.name.charAt(0)}</span>
-                          <span className="hd-empname">
-                            {r.name}
-                            {r._soon   && <span className="hd-tag hd-tag-red">7d</span>}
-                            {r._notice && <span className="hd-tag hd-tag-amber">Notice</span>}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="hd-tc-muted">{r.department}</td>
-                      <td><span className="hd-type-chip">{r.leaveTypeCode}</span></td>
-                      <td className="hd-tc-date">{formatDateDisplay(r.departureDate)}</td>
-                      <td className="hd-tc-date">{r.returnDate?formatDateDisplay(r.returnDate):'—'}</td>
-                    </tr>
+                    <div key={r.id} className={`pdb-tbl-row${r._soon?' pdb-row-soon':''}`}>
+                      <div className="pdb-emp">
+                        <span className="pdb-av pdb-av-b">{r.name.charAt(0)}</span>
+                        <span className="pdb-emp-n">
+                          {r.name}
+                          {r._soon   && <span className="pdb-tag pdb-tag-r">7d</span>}
+                          {r._notice && <span className="pdb-tag pdb-tag-a">Notice</span>}
+                        </span>
+                      </div>
+                      <span className="pdb-tc-m">{r.department}</span>
+                      <span className="pdb-type">{r.leaveTypeCode}</span>
+                      <span className="pdb-tc-d">{formatDateDisplay(r.departureDate)}</span>
+                      <span className="pdb-tc-d">{r.returnDate?formatDateDisplay(r.returnDate):'—'}</span>
+                    </div>
                   ))}
-                </tbody>
-              </table>
+                </div>
+                {leaveExtra > 0 && <button className="pdb-more-btn" onClick={()=>onNavigate?.('leave')} type="button">+{leaveExtra} more employees → View All Leave</button>}
+              </>
           }
-          {leaveExtra > 0 && <button className="hd-more" onClick={()=>onNavigate?.('leave')} type="button">+{leaveExtra} more · View all leave →</button>}
         </div>
+
       </div>
 
-      {/* Bottom row: Depts + Medical + Termination */}
-      <div className="hd-bot">
+      {/* ── BOTTOM GRID ──────────────────────────────────────────────── */}
+      <div className="pdb-bottom">
 
-        {/* Departments */}
-        <div className="hd-card">
-          <div className="hd-card-hd">
-            <span className="hd-card-ttl">Headcount by Section</span>
-            <button className="hd-va" onClick={()=>onNavigate?.('employees')} type="button">View all →</button>
+        {/* ALL Sections */}
+        <div className="pdb-card pdb-depts">
+          <div className="pdb-card-hd">
+            <span className="pdb-ttl">Headcount by Section</span>
+            <span className="pdb-badge pdb-badge-p">{employees.length} total · {deptCounts.length} sections</span>
           </div>
-          {deptPreview.length === 0
-            ? <p className="hd-empty">No departments yet.</p>
-            : <div className="hd-depts">
-                {deptPreview.map(([dept,cnt])=>(
-                  <div key={dept} className="hd-dept-row">
-                    <span className="hd-dept-lbl">{dept}</span>
-                    <div className="hd-dept-track">
-                      <div className="hd-dept-fill" style={{ width:Math.round(cnt/maxDept*100)+'%' }}/>
+          {deptCounts.length === 0
+            ? <p className="pdb-empty">No sections yet.</p>
+            : <div className="pdb-dept-list">
+                {deptCounts.map(([dept,cnt])=>(
+                  <div key={dept} className="pdb-dept-row">
+                    <span className="pdb-dept-lbl">{dept}</span>
+                    <div className="pdb-dept-track">
+                      <div className="pdb-dept-fill" style={{ width:Math.round(cnt/maxDept*100)+'%' }}/>
                     </div>
-                    <span className="hd-dept-n">{cnt}</span>
-                    <span className="hd-dept-p">{employees.length?Math.round(cnt/employees.length*100):0}%</span>
+                    <span className="pdb-dept-n">{cnt}</span>
+                    <span className="pdb-dept-p">{employees.length?Math.round(cnt/employees.length*100):0}%</span>
                   </div>
                 ))}
-                {deptExtra > 0 && <button className="hd-more" onClick={()=>onNavigate?.('employees')} type="button">+{deptExtra} more sections</button>}
               </div>
           }
         </div>
 
         {/* Medical */}
-        <div className="hd-card">
-          <div className="hd-card-hd">
-            <span className="hd-card-ttl">Medical Leave</span>
-            <span className="hd-chip hd-chip-grey">{medicalCases.length} total</span>
+        <div className="pdb-card pdb-medical">
+          <div className="pdb-card-hd">
+            <span className="pdb-ttl">Medical Leave</span>
+            <span className="pdb-badge pdb-badge-n">{medicalCases.length} total</span>
           </div>
-          <div className="hd-med-stats">
+          <div className="pdb-med-grid">
             {([
-              { l:'This Month', v:thisMonthMed, c:'#111827', alert:false },
-              { l:'Urgent',     v:urgentMed,    c:urgentMed?'#dc2626':'#d1d5db',   alert:urgentMed>0 },
-              { l:'Admitted',   v:admittedMed,  c:admittedMed?'#7c3aed':'#d1d5db', alert:admittedMed>0 },
+              { l:'This Month', v:thisMonthMed, c:'#111827', bg:'#F8FAFC', alert:false },
+              { l:'Urgent',     v:urgentMed,    c:urgentMed?'#DC2626':'#9CA3AF',   bg:urgentMed?'#FEF2F2':'#F8FAFC', alert:urgentMed>0 },
+              { l:'Admitted',   v:admittedMed,  c:admittedMed?'#7C3AED':'#9CA3AF', bg:admittedMed?'#F5F3FF':'#F8FAFC', alert:admittedMed>0 },
             ] as const).map(s=>(
-              <div key={s.l} className={`hd-med-stat${s.alert?' hd-med-alert':''}`}>
-                <span style={{ fontSize:'1.8rem', fontWeight:800, color:s.c, lineHeight:1 }}>{s.v}</span>
-                <span style={{ fontSize:'0.65rem', color:'#9ca3af', fontWeight:600 }}>{s.l}</span>
+              <div key={s.l} className={`pdb-med-stat${s.alert?' pdb-med-alert':''}`} style={{ background:s.bg }}>
+                <span className="pdb-med-n" style={{ color:s.c }}>{s.v}</span>
+                <span className="pdb-med-l">{s.l}</span>
               </div>
             ))}
           </div>
           {medByDept.length > 0 && <>
-            <div style={{ fontSize:'0.63rem', fontWeight:700, color:'#9ca3af', textTransform:'uppercase', letterSpacing:'0.06em', marginTop:10 }}>By Section</div>
-            <div className="hd-depts" style={{ marginTop:6 }}>
+            <p className="pdb-sec-lbl">Top Sections</p>
+            <div className="pdb-dept-list pdb-dept-sm">
               {medByDept.slice(0,4).map(([dept,cnt])=>(
-                <div key={dept} className="hd-dept-row">
-                  <span className="hd-dept-lbl">{dept}</span>
-                  <div className="hd-dept-track">
-                    <div className="hd-dept-fill" style={{ width:Math.round(cnt/maxMedDept*100)+'%', background:'#0ea5e9' }}/>
+                <div key={dept} className="pdb-dept-row">
+                  <span className="pdb-dept-lbl">{dept}</span>
+                  <div className="pdb-dept-track">
+                    <div className="pdb-dept-fill" style={{ width:Math.round(cnt/maxMedDept*100)+'%', background:'#0EA5E9' }}/>
                   </div>
-                  <span className="hd-dept-n">{cnt}</span>
+                  <span className="pdb-dept-n">{cnt}</span>
                 </div>
               ))}
             </div>
           </>}
-          {medicalCases.length===0 && <p className="hd-empty">No medical cases on record.</p>}
+          {medicalCases.length===0 && <p className="pdb-empty">No medical cases on record.</p>}
         </div>
 
         {/* Notice Period */}
-        <div className="hd-card">
-          <div className="hd-card-hd">
-            <span className="hd-card-ttl">Notice Period</span>
+        <div className="pdb-card pdb-term">
+          <div className="pdb-card-hd">
+            <span className="pdb-ttl">Notice Period</span>
             <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-              {noticeTerminations.length > 0 && <span className="hd-chip hd-chip-red">{noticeTerminations.length} active</span>}
-              {noticeTerminations.length > 0 && <button className="hd-va" onClick={()=>onNavigate?.('termination')} type="button">View all →</button>}
+              {noticeTerminations.length > 0 && <span className="pdb-badge pdb-badge-r">{noticeTerminations.length} active</span>}
+              {noticeTerminations.length > 0 && <button className="pdb-va" onClick={()=>onNavigate?.('termination')} type="button">View all →</button>}
             </div>
           </div>
           {noticeTerminations.length === 0
-            ? <p className="hd-empty">No staff in notice period.</p>
-            : <div className="hd-terms">
+            ? <p className="pdb-empty">No staff in notice period.</p>
+            : <div className="pdb-term-list">
                 {termPreview.map(t=>{
-                  const sc = stageStyle[t.currentStage] ?? { color:'#6b7280', bg:'#f9fafb' }
+                  const sc = stageStyle[t.currentStage] ?? { color:'#6B7280', bg:'#F9FAFB' }
                   return (
-                    <div key={t.id} className="hd-term-row">
-                      <span className="hd-av" style={{ background:'#fee2e2', color:'#b91c1c' }}>{t.name.charAt(0)}</span>
-                      <div style={{ flex:1, minWidth:0 }}>
-                        <div style={{ fontSize:'0.78rem', fontWeight:700, color:'#111827', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{t.name}</div>
-                        <div style={{ fontSize:'0.65rem', color:'#9ca3af', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{t.designation}</div>
-                        {t.lastWorkingDate && <div style={{ fontSize:'0.63rem', color:'#dc2626', fontWeight:600 }}>LWD {formatDateDisplay(t.lastWorkingDate)}</div>}
+                    <div key={t.id} className="pdb-term-row">
+                      <span className="pdb-av pdb-av-r">{t.name.charAt(0)}</span>
+                      <div className="pdb-term-info">
+                        <span className="pdb-term-n">{t.name}</span>
+                        <span className="pdb-term-m">{t.designation}</span>
+                        {t.lastWorkingDate && <span className="pdb-term-lwd">LWD {formatDateDisplay(t.lastWorkingDate)}</span>}
                       </div>
-                      <span style={{ fontSize:'0.62rem', fontWeight:700, padding:'2px 8px', borderRadius:20, color:sc.color, background:sc.bg, flexShrink:0 }}>{t.currentStage}</span>
+                      <span className="pdb-stage" style={{ color:sc.color, background:sc.bg }}>{t.currentStage}</span>
                     </div>
                   )
                 })}
-                {termExtra > 0 && <button className="hd-more" onClick={()=>onNavigate?.('termination')} type="button">+{termExtra} more →</button>}
+                {termExtra > 0 && <button className="pdb-more-btn" onClick={()=>onNavigate?.('termination')} type="button">+{termExtra} more →</button>}
               </div>
           }
-          <div style={{ fontSize:'0.7rem', color:'#059669', fontWeight:700, paddingTop:8, borderTop:'1px solid #f3f4f6', marginTop:'auto' }}>✓ {completedTerminations.length} completed</div>
+          <div className="pdb-term-foot">✓ {completedTerminations.length} completed</div>
         </div>
 
       </div>
@@ -12977,7 +13015,7 @@ function App() {
           <span className="topbar-page-title">{pages.find((p) => p.id === activePage)?.label}</span>
         </div>
         <main className="workspace-inner" id="top">
-          {activePage === 'overview' && <OverviewPage employees={scopedEmployees} leaveRequests={scopedLeaveRequests} activeLeaves={scopedActiveLeaves} leaveHistory={scopedLeaveHistory} noticeTerminations={scopedNoticeTerminations} completedTerminations={scopedCompletedTerminations} exitInterviews={scopedExitInterviews} medicalCases={scopedMedicalCases} inventoryItems={inventoryItems} passportHandovers={scopedPassportHandovers} onNavigate={setActivePage} />}
+          {activePage === 'overview' && <OverviewPage employees={scopedEmployees} leaveRequests={scopedLeaveRequests} activeLeaves={scopedActiveLeaves} leaveHistory={scopedLeaveHistory} noticeTerminations={scopedNoticeTerminations} completedTerminations={scopedCompletedTerminations} exitInterviews={scopedExitInterviews} medicalCases={scopedMedicalCases} inventoryItems={inventoryItems} passportHandovers={scopedPassportHandovers} onNavigate={setActivePage} currentUserName={currentUserName} />}
           {activePage === 'employees' && <EmployeesPage employees={scopedEmployees} medicalCases={scopedMedicalCases} noticeTerminations={scopedNoticeTerminations} offSiteRecords={scopedOffSiteRecords} onUpdateOffSite={(fn) => setOffSiteRecords(fn)} onAdd={() => { setEmployeeMode('add'); setEmployeeForm(emptyEmployee); setShowEmployeeForm(true) }} onEdit={openEditEmployee} onDelete={deleteEmployee} onExport={exportCsv} onImport={importCsv} onTemplate={downloadTemplate} onShowTasks={() => setShowPendingTasks(true)} isHOD={isHOD} />}
           {activePage === 'leave' && <LeavePage employees={scopedEmployees} leaveRequests={scopedLeaveRequests} activeLeaves={scopedActiveLeaves} leaveHistory={scopedLeaveHistory} medicalCases={scopedMedicalCases} isHOD={isHOD} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onSetRequestStep={setLeaveRequestStep} onExtendLeave={extendActiveLeave} onEditActiveLeave={editActiveLeave} onHistoryConfirm={updateHistoryConfirmation} onUpdateMedical={(fn) => setMedicalCases(fn)} />}
           {activePage === 'operations' && <OperationsPage employees={employees} completedTerminations={completedTerminations} activeLeaves={activeLeaves} isHOD={isHOD} userRole={currentUserRole} />}
