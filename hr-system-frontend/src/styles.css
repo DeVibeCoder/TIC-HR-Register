@@ -10091,9 +10091,14 @@ html { overflow-x: hidden; }
   border-bottom: 1px solid #f1f5f9;
 }
 .dash-al-row:last-child { border-bottom: none; }
-.dash-al-name { font-size: 0.76rem; font-weight: 700; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-al-name { font-size: 0.76rem; font-weight: 700; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; align-items: center; gap: 5px; }
 .dash-al-dept { font-size: 0.68rem; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dash-al-date { font-size: 0.7rem; color: #475569; white-space: nowrap; }
+/* Compact type code — replaces the big LeaveTypeBadge in the overview */
+.dash-al-code { font-size: 0.68rem; font-weight: 700; color: #1d4ed8; background: #dbeafe; padding: 1px 6px; border-radius: 10px; white-space: nowrap; flex-shrink: 0; }
+/* Notice period indicator tag */
+.dash-al-notice-tag { font-size: 0.58rem; font-weight: 800; color: #92400e; background: #fef3c7; padding: 1px 5px; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.04em; flex-shrink: 0; }
+.dash-al-row-notice { background: #fffbeb; }
 
 /* ── Medical Leave KPIs ──────────────────────────────────────── */
 .dash-med-kpis {

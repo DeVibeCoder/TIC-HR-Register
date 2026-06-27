@@ -1545,33 +1545,46 @@ function OverviewPage({
         {/* RIGHT COLUMN */}
         <div className="dash-col">
 
-          {/* Active Leaves */}
-          <article className="dash-panel">
-            <div className="dash-panel-hd">
-              <span className="dash-panel-ttl">Leave — Currently Active</span>
-              <span className="dash-chip" style={{ background:'#dbeafe', color:'#1d4ed8' }}>{activeLeaves.length} on leave</span>
-            </div>
-            {activeLeaves.length === 0
-              ? <p className="dash-empty">No staff currently on leave.</p>
-              : <>
-                  <div className="dash-al-head">
-                    <span>Name</span><span>Section</span><span>Type</span><span>Departed</span><span>Due Back</span>
-                  </div>
-                  <div className="dash-al-list">
-                    {activeLeaves.slice(0, 9).map(r => (
-                      <div key={r.id} className="dash-al-row">
-                        <span className="dash-al-name">{r.name}</span>
-                        <span className="dash-al-dept">{r.department}</span>
-                        <LeaveTypeBadge code={r.leaveTypeCode} />
-                        <span className="dash-al-date">{formatDateDisplay(r.departureDate)}</span>
-                        <span className="dash-al-date">{r.returnDate ? formatDateDisplay(r.returnDate) : '—'}</span>
+          {/* Active Leaves + Notice Period staff who are on AL */}
+          {(() => {
+            const noticeEmpIds = new Set(noticeTerminations.map(t => t.employeeId))
+            type Row = typeof activeLeaves[0] & { _notice?: boolean }
+            const rows: Row[] = [
+              ...activeLeaves.filter(r => !noticeEmpIds.has(r.employeeId)),
+              ...activeLeaves.filter(r => noticeEmpIds.has(r.employeeId)).map(r => ({ ...r, _notice: true as const })),
+            ]
+            return (
+              <article className="dash-panel">
+                <div className="dash-panel-hd">
+                  <span className="dash-panel-ttl">Leave — Currently Active</span>
+                  <span className="dash-chip" style={{ background:'#dbeafe', color:'#1d4ed8' }}>{activeLeaves.length} on leave</span>
+                </div>
+                {rows.length === 0
+                  ? <p className="dash-empty">No staff currently on leave.</p>
+                  : <>
+                      <div className="dash-al-head">
+                        <span>Name</span><span>Section</span><span>Type</span><span>Departed</span><span>Due Back</span>
                       </div>
-                    ))}
-                  </div>
-                  {activeLeaves.length > 9 && <p className="dash-more">+{activeLeaves.length - 9} more</p>}
-                </>
-            }
-          </article>
+                      <div className="dash-al-list">
+                        {rows.slice(0, 10).map(r => (
+                          <div key={r.id} className="dash-al-row">
+                            <span className="dash-al-name">
+                              {r.name}
+                              {r._notice && <span className="dash-al-notice-tag">Notice</span>}
+                            </span>
+                            <span className="dash-al-dept">{r.department}</span>
+                            <span className="dash-al-code">{r.leaveTypeCode}</span>
+                            <span className="dash-al-date">{formatDateDisplay(r.departureDate)}</span>
+                            <span className="dash-al-date">{r.returnDate ? formatDateDisplay(r.returnDate) : '—'}</span>
+                          </div>
+                        ))}
+                      </div>
+                      {rows.length > 10 && <p className="dash-more">+{rows.length - 10} more</p>}
+                    </>
+                }
+              </article>
+            )
+          })()}
 
           {/* Medical Leave */}
           <article className="dash-panel">
@@ -2116,7 +2129,7 @@ function OffSiteModal({ records, employees, onUpdate, onClose }: {
   )
 }
 
-function EmployeesPage({ employees, onAdd, onEdit, onDelete, onExport, onImport, onTemplate, onShowTasks, medicalCases, noticeTerminations, offSiteRecords, onUpdateOffSite }: {
+function EmployeesPage({ employees, onAdd, onEdit, onDelete, onExport, onImport, onTemplate, onShowTasks, medicalCases, noticeTerminations, offSiteRecords, onUpdateOffSite, isHOD = false }: {
   employees: Employee[]
   onAdd: () => void
   onEdit: (employee: Employee) => void
@@ -2129,6 +2142,7 @@ function EmployeesPage({ employees, onAdd, onEdit, onDelete, onExport, onImport,
   noticeTerminations: EnhancedTerminationRecord[]
   offSiteRecords: OffSiteRecord[]
   onUpdateOffSite: (fn: (prev: OffSiteRecord[]) => OffSiteRecord[]) => void
+  isHOD?: boolean
 }) {
   const [query, setQuery] = useState('')
   const [showOffSite, setShowOffSite] = useState(false)
@@ -2209,9 +2223,11 @@ function EmployeesPage({ employees, onAdd, onEdit, onDelete, onExport, onImport,
             <button className="primary-button vwh" onClick={onImport} type="button">Import</button>
           </div>
           <div className="table-actions-right">
-            <button className="primary-button" onClick={onShowTasks} type="button">
-              Pending Tasks{pendingCount > 0 && <span className="pending-count-badge" style={{ marginLeft: '6px' }}>{pendingCount}</span>}
-            </button>
+            {!isHOD && (
+              <button className="primary-button" onClick={onShowTasks} type="button">
+                Pending Tasks{pendingCount > 0 && <span className="pending-count-badge" style={{ marginLeft: '6px' }}>{pendingCount}</span>}
+              </button>
+            )}
             <button className="primary-button" onClick={() => setShowOffSite(true)} type="button">
               Off Site{offSiteRecords.filter(r => r.status === 'Out').length > 0 && <span className="pending-count-badge" style={{ marginLeft: '6px' }}>{offSiteRecords.filter(r => r.status === 'Out').length}</span>}
             </button>
@@ -7621,13 +7637,13 @@ function ExitInterviewAnalyticsModal({ records, onClose }: { records: ExitInterv
 
   const SatisfactionBars = ({ src }: { src: ExitInterviewRecord[] }) => {
     const stats = buildQuestStats(src)
-    const pctColors = ['#16a34a','#b45309','#dc2626']
+    const pctColors = ['#2563eb','#b45309','#dc2626']
     return (
       <div style={{ background:'#fff', border:'1px solid #e2e8f0', borderRadius:10, padding:'14px 16px', marginBottom:14 }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
           <div style={{ fontSize:'0.72rem', fontWeight:800, color:'#6366f1', textTransform:'uppercase', letterSpacing:'0.07em' }}>Satisfaction by Category</div>
           <div style={{ display:'flex', gap:12 }}>
-            {[['#16a34a','Very Satisfied'],['#d97706','Satisfied'],['#dc2626','Dissatisfied']].map(([c,l])=>(
+            {[['#2563eb','Very Satisfied'],['#d97706','Satisfied'],['#dc2626','Dissatisfied']].map(([c,l])=>(
               <span key={l} style={{ display:'inline-flex', alignItems:'center', gap:4, fontSize:'0.67rem', color:'#64748b' }}>
                 <span style={{ width:9, height:9, borderRadius:2, background:c, display:'inline-block', flexShrink:0 }}/>{l}
               </span>
@@ -8173,10 +8189,10 @@ function TerminationPage({
                             <td className="leave-status-cell termination-status-cell" onClick={(e) => e.stopPropagation()}>
                               <button
                                 className={`lr-status-pill lr-step-${stageIdx}`}
-                                disabled={isLast}
+                                disabled={isLast || isHOD}
                                 onClick={(e) => { e.stopPropagation(); if (nextStage) onSetStage(r.id, nextStage) }}
                                 type="button"
-                                title={isLast ? 'Pending Departure — final stage' : `Advance to: ${nextStage}`}
+                                title={isLast ? 'Pending Departure — final stage' : isHOD ? 'View only' : `Advance to: ${nextStage}`}
                               >
                                 {r.currentStage}
                                 {!isLast && <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 4, opacity: 0.7 }}><path d="M4 2l4 4-4 4"/></svg>}
@@ -8207,9 +8223,10 @@ function TerminationPage({
                                       <Fragment key={stage}>
                                         <button
                                           className={`lr-pip-step ${cls}`}
-                                          onClick={(e) => { e.stopPropagation(); onSetStage(r.id, stage) }}
+                                          disabled={isHOD}
+                                          onClick={(e) => { e.stopPropagation(); if (!isHOD) onSetStage(r.id, stage) }}
                                           type="button"
-                                          title={`Set to: ${stage}`}
+                                          title={isHOD ? 'View only' : `Set to: ${stage}`}
                                         >
                                           <div className="lr-pip-circle">{isDone ? '✓' : i + 1}</div>
                                           <div className="lr-pip-label">{stage}</div>
@@ -9711,7 +9728,7 @@ function OperationsPage({ employees, completedTerminations, activeLeaves, isHOD 
       {activeSection === 'induction' && <InductionSection employees={employees} records={inductionRecords} onUpdate={setInductionRecords} onBack={() => {}} />}
       {activeSection === 'training'  && <TrainingSection records={trainingRecords} employees={employees} onUpdate={setTrainingRecords} onBack={() => {}} />}
       {activeSection === 'bank'      && <BankAccountSection employees={employees} records={bankAccountRecords} onUpdate={setBankAccountRecords} onBack={() => {}} />}
-      {activeSection === 'meetings'  && <MeetingsSection records={meetingRecords} onUpdate={setMeetingRecords} employees={employees} activeLeaves={activeLeaves} />}
+      {activeSection === 'meetings'  && <MeetingsSection records={isHOD ? meetingRecords.filter(r => r.status === 'Final') : meetingRecords} onUpdate={setMeetingRecords} employees={employees} activeLeaves={activeLeaves} />}
     </>
   )
 }
@@ -12861,6 +12878,7 @@ function App() {
   const scopedCompletedTerminations = isHOD ? completedTerminations.filter((r) => inAssignedSection(r.department)) : completedTerminations
   const scopedExitInterviews        = isHOD ? exitInterviews.filter((r) => inAssignedSection(r.department)) : exitInterviews
   const scopedPassportHandovers     = isHOD ? passportHandovers.filter((r) => inAssignedSection(r.department)) : passportHandovers
+  const scopedOffSiteRecords        = isHOD ? offSiteRecords.filter((r) => inAssignedSection(r.department)) : offSiteRecords
 
   const openEditEmployee = (employee: Employee) => {
     setEmployeeMode('edit')
@@ -12941,7 +12959,7 @@ function App() {
         </div>
         <main className="workspace-inner" id="top">
           {activePage === 'overview' && <OverviewPage employees={scopedEmployees} leaveRequests={scopedLeaveRequests} activeLeaves={scopedActiveLeaves} leaveHistory={scopedLeaveHistory} noticeTerminations={scopedNoticeTerminations} completedTerminations={scopedCompletedTerminations} exitInterviews={scopedExitInterviews} medicalCases={scopedMedicalCases} inventoryItems={inventoryItems} passportHandovers={scopedPassportHandovers} />}
-          {activePage === 'employees' && <EmployeesPage employees={scopedEmployees} medicalCases={scopedMedicalCases} noticeTerminations={scopedNoticeTerminations} offSiteRecords={offSiteRecords} onUpdateOffSite={(fn) => setOffSiteRecords(fn)} onAdd={() => { setEmployeeMode('add'); setEmployeeForm(emptyEmployee); setShowEmployeeForm(true) }} onEdit={openEditEmployee} onDelete={deleteEmployee} onExport={exportCsv} onImport={importCsv} onTemplate={downloadTemplate} onShowTasks={() => setShowPendingTasks(true)} />}
+          {activePage === 'employees' && <EmployeesPage employees={scopedEmployees} medicalCases={scopedMedicalCases} noticeTerminations={scopedNoticeTerminations} offSiteRecords={scopedOffSiteRecords} onUpdateOffSite={(fn) => setOffSiteRecords(fn)} onAdd={() => { setEmployeeMode('add'); setEmployeeForm(emptyEmployee); setShowEmployeeForm(true) }} onEdit={openEditEmployee} onDelete={deleteEmployee} onExport={exportCsv} onImport={importCsv} onTemplate={downloadTemplate} onShowTasks={() => setShowPendingTasks(true)} isHOD={isHOD} />}
           {activePage === 'leave' && <LeavePage employees={scopedEmployees} leaveRequests={scopedLeaveRequests} activeLeaves={scopedActiveLeaves} leaveHistory={scopedLeaveHistory} medicalCases={scopedMedicalCases} isHOD={isHOD} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onSetRequestStep={setLeaveRequestStep} onExtendLeave={extendActiveLeave} onEditActiveLeave={editActiveLeave} onHistoryConfirm={updateHistoryConfirmation} onUpdateMedical={(fn) => setMedicalCases(fn)} />}
           {activePage === 'operations' && <OperationsPage employees={employees} completedTerminations={completedTerminations} activeLeaves={activeLeaves} isHOD={isHOD} userRole={currentUserRole} />}
           {activePage === 'activities' && <ActivitiesPage employees={scopedEmployees} passportHandovers={scopedPassportHandovers} onUpdatePassport={(fn) => setPassportHandovers(fn)} tripRequests={tripRequests} onUpdateTripRequests={(fn) => setTripRequests(fn)} inventoryItems={inventoryItems} inventoryUsage={inventoryUsage} inventoryOrders={inventoryOrders} onUpdateInventoryItems={(fn) => setInventoryItems(fn)} onUpdateInventoryUsage={(fn) => setInventoryUsage(fn)} onUpdateInventoryOrders={(fn) => setInventoryOrders(fn)} isHOD={isHOD} isHR={isHR} isTripReqApprover={isTripReqApprover} currentUserSections={currentUserSections} currentUserName={currentUserName} />}
