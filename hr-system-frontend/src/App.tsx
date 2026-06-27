@@ -3169,7 +3169,7 @@ function printTripRequest(record: TripRequest, sigRequester: string, sigAhmedAli
   .br  { border-bottom:0.7pt solid #000; padding:2pt 6pt; font-size:9.5pt; }
   .br:last-child { border-bottom:none; }
   .br.hd { font-weight:700; background:#f0f0f0; }
-  .br.sig { min-height:60pt; vertical-align:top; padding:2pt 6pt; }
+  .br.sig { min-height:0; }
 
   /* Status stamp (non-approved) */
   .stamp { position:absolute; top:40pt; right:20pt;
