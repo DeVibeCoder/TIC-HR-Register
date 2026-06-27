@@ -6725,11 +6725,13 @@ function TerminationFormModal({
               Reason &amp; Notes
             </div>
             <div className="form-grid">
-              <label><span>Reason for Leaving</span>
-                <textarea rows={2} placeholder="Reason for termination" value={form.reasonForLeaving} onChange={(e) => setForm((cur) => ({ ...cur, reasonForLeaving: e.target.value }))} style={{ resize: 'none' }} />
+              <label style={{ gridColumn: '1 / -1' }}>
+                <span>Reason for Leaving</span>
+                <textarea rows={3} placeholder="Reason for termination" value={form.reasonForLeaving} onChange={(e) => setForm((cur) => ({ ...cur, reasonForLeaving: e.target.value }))} style={{ resize: 'vertical', width: '100%' }} />
               </label>
-              <label><span>Comments (optional)</span>
-                <textarea rows={2} placeholder="Any additional notes…" value={form.comments ?? ''} onChange={(e) => setForm((cur) => ({ ...cur, comments: e.target.value }))} style={{ resize: 'none' }} />
+              <label style={{ gridColumn: '1 / -1' }}>
+                <span>Comments / Notes (optional)</span>
+                <textarea rows={3} placeholder="Any additional notes or observations…" value={form.comments ?? ''} onChange={(e) => setForm((cur) => ({ ...cur, comments: e.target.value }))} style={{ resize: 'vertical', width: '100%' }} />
               </label>
             </div>
           </div>

@@ -8249,7 +8249,12 @@ input::-webkit-credentials-auto-fill-button { visibility: hidden; pointer-events
 }
 
 /* ═══ Termination Form Redesign ═════════════════════════ */
-.trn-form-redesign { padding: 0 !important; overflow: hidden; }
+.trn-form-redesign {
+  padding: 0 !important;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
 .trn-form-header {
   display: flex; align-items: center; gap: 14px;
   padding: 16px 22px;
@@ -8265,7 +8270,20 @@ input::-webkit-credentials-auto-fill-button { visibility: hidden; pointer-events
 .trn-form-title { font-size: 1.05rem; font-weight: 800; color: #fff; margin: 0; }
 .trn-form-close { margin-left: auto; width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.15); border: none; color: #fff; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .trn-form-close:hover { background: rgba(255,255,255,0.28); }
-.trn-form-body { padding: 16px 20px; }
+.trn-form-body {
+  padding: 16px 20px;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0; /* allows flex child to shrink and scroll */
+}
+/* Cancel / Add buttons always visible at bottom */
+.trn-form-redesign .modal-actions {
+  flex-shrink: 0;
+  margin-top: 0;
+  background: #fff;
+  padding: 12px 20px 16px;
+  border-top: 1px solid rgba(226, 232, 240, 0.8);
+}
 .trn-form-section {
   background: #fff; border-radius: 10px; border: 1px solid #e8eaf0;
   padding: 14px 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.05);
