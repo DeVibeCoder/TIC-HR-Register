@@ -10069,7 +10069,7 @@ html { overflow-x: hidden; }
 /* ── Active Leaves table ─────────────────────────────────────── */
 .dash-al-head {
   display: grid;
-  grid-template-columns: 1.8fr 1fr 0.42fr 0.9fr 0.9fr;
+  grid-template-columns: 1.8fr 1fr 30px 0.9fr 0.9fr;
   gap: 0 6px;
   padding: 5px 6px;
   background: #f8fafc;
@@ -10084,7 +10084,7 @@ html { overflow-x: hidden; }
 .dash-al-list { display: flex; flex-direction: column; }
 .dash-al-row {
   display: grid;
-  grid-template-columns: 1.8fr 1fr 0.42fr 0.9fr 0.9fr;
+  grid-template-columns: 1.8fr 1fr 30px 0.9fr 0.9fr;
   gap: 0 6px;
   align-items: center;
   padding: 7px 6px;
@@ -10095,7 +10095,7 @@ html { overflow-x: hidden; }
 .dash-al-dept { font-size: 0.68rem; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dash-al-date { font-size: 0.7rem; color: #475569; white-space: nowrap; }
 /* Compact type code — replaces the big LeaveTypeBadge in the overview */
-.dash-al-code { font-size: 0.65rem; font-weight: 700; color: #1d4ed8; background: #dbeafe; padding: 0 3px; border-radius: 4px; white-space: nowrap; flex-shrink: 0; line-height: 1.3; display: inline-block; }
+.dash-al-code { font-size: 0.65rem; font-weight: 700; color: #1d4ed8; background: #dbeafe; padding: 1px 4px; border-radius: 5px; white-space: nowrap; display: inline-block; width: fit-content; line-height: 1.3; }
 /* Notice period indicator tag */
 .dash-al-notice-tag { font-size: 0.58rem; font-weight: 800; color: #92400e; background: #fef3c7; padding: 1px 5px; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.04em; flex-shrink: 0; }
 .dash-al-row-notice   { background: #fffbeb; }
