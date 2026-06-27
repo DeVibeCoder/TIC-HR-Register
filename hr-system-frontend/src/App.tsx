@@ -2844,11 +2844,12 @@ function TripRequestModal({ record, employees, onClose, onSave }: {
   )
 }
 
-function TripReqSection({ records, employees, onUpdate, currentUserName = '' }: {
+function TripReqSection({ records, employees, onUpdate, currentUserName = '', canApprove = false }: {
   records: TripRequest[]
   employees: Employee[]
   onUpdate: (fn: (prev: TripRequest[]) => TripRequest[]) => void
   currentUserName?: string
+  canApprove?: boolean   // true for the designated Trip Req approver (ali41966)
 }) {
   const [search,       setSearch]       = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
@@ -2972,8 +2973,8 @@ function TripReqSection({ records, employees, onUpdate, currentUserName = '' }: 
                   <td style={{ textAlign:'center' }}><StatusBadge status={r.status} /></td>
                   <td style={{ textAlign:'center' }}>
                     <div className="row-actions">
-                      {r.status === 'Pending Approval' && <button className="action-glyph approve vwh" title="Approve" onClick={()=>setApproving(r)} type="button">✓</button>}
-                      {r.status === 'Pending Approval' && <button className="action-glyph delete vwh" title="Reject" onClick={()=>reject(r)} type="button">✕</button>}
+                      {r.status === 'Pending Approval' && <button className={`action-glyph approve${canApprove ? '' : ' vwh'}`} title="Approve" onClick={()=>setApproving(r)} type="button">✓</button>}
+                      {r.status === 'Pending Approval' && <button className={`action-glyph delete${canApprove ? '' : ' vwh'}`} title="Reject" onClick={()=>reject(r)} type="button">✕</button>}
                       <button className="action-glyph edit vwh" title="Edit" onClick={()=>setEditing(r)} type="button">✎</button>
                       <button className="action-glyph print" title="Print" onClick={()=>printTripRequest(r, sigRequester, sigAhmedAli)} type="button">🖶</button>
                       <button className="action-glyph delete vwh" title="Delete" onClick={()=>del(r.id)} type="button">🗑</button>
@@ -11084,6 +11085,7 @@ function ActivitiesPage({
   onUpdateInventoryOrders,
   isHOD = false,
   isHR = false,
+  isTripReqApprover = false,
   currentUserSections = [],
   currentUserName = '',
 }: {
@@ -11100,6 +11102,7 @@ function ActivitiesPage({
   onUpdateInventoryOrders: (fn: (prev: StoreOrder[]) => StoreOrder[]) => void
   isHOD?: boolean
   isHR?: boolean
+  isTripReqApprover?: boolean
   currentUserSections?: string[]
   currentUserName?: string
 }) {
@@ -11145,14 +11148,15 @@ function ActivitiesPage({
         <button className={activeSection === 'visits' ? 'active' : ''} onClick={() => setActiveSection('visits')} type="button">Visits</button>
         {!isHOD && <button className={activeSection === 'incidents' ? 'active' : ''} onClick={() => setActiveSection('incidents')} type="button">Incidents</button>}
         {!isHOD && <button className={activeSection === 'passport' ? 'active' : ''} onClick={() => setActiveSection('passport')} type="button">Passports</button>}
-        {!isHOD && !isHR && <button className={activeSection === 'tripreq' ? 'active' : ''} onClick={() => setActiveSection('tripreq')} type="button">Trip Req</button>}
+        {/* Trip Req: visible to non-HOD/HR staff AND to the designated Trip Req approver (ali41966) */}
+        {(!isHOD || isTripReqApprover) && !isHR && <button className={activeSection === 'tripreq' ? 'active' : ''} onClick={() => setActiveSection('tripreq')} type="button">Trip Req</button>}
         {!isHOD && !isHR && <button className={activeSection === 'inventory' ? 'active' : ''} onClick={() => setActiveSection('inventory')} type="button">Inventory</button>}
       </div>
       {activeSection === 'requests' && <RequestsSection records={scopedStaffRequests} employees={employees} onUpdate={setStaffRequests} onBack={() => {}} isHOD={isHOD} />}
       {activeSection === 'visits' && <VisitsSection records={scopedVisitRecords} employees={employees} onUpdate={setVisitRecords} onBack={() => {}} />}
       {!isHOD && activeSection === 'incidents' && <IncidentsSection records={incidentRecords} employees={employees} onUpdate={setIncidentRecords} onBack={() => {}} />}
       {!isHOD && activeSection === 'passport' && <PassportTrackingSection records={passportHandovers} employees={employees} onUpdate={onUpdatePassport} />}
-      {!isHOD && !isHR && activeSection === 'tripreq' && <TripReqSection records={tripRequests} employees={employees} onUpdate={onUpdateTripRequests} currentUserName={currentUserName} />}
+      {(!isHOD || isTripReqApprover) && !isHR && activeSection === 'tripreq' && <TripReqSection records={tripRequests} employees={employees} onUpdate={onUpdateTripRequests} currentUserName={currentUserName} canApprove={isTripReqApprover} />}
       {!isHOD && !isHR && activeSection === 'inventory' && <InventorySection items={inventoryItems} usage={inventoryUsage} orders={inventoryOrders} onUpdateItems={onUpdateInventoryItems} onUpdateUsage={onUpdateInventoryUsage} onUpdateOrders={onUpdateInventoryOrders} employees={employees} />}
     </>
   )
@@ -12713,6 +12717,9 @@ function App() {
   const currentAppUser = currentProfile
   const isHOD = currentUserRole === 'HOD'
   const isHR  = currentUserRole === 'HR'
+  // AHMED ALI (ali41966) — designated Trip Req approver even as HOD
+  const TRIPREQ_APPROVER_USERNAME = 'ali41966'
+  const isTripReqApprover = currentAppUser?.username === TRIPREQ_APPROVER_USERNAME
   const currentUserSections = currentAppUser?.sections ?? []
   const inAssignedSection = (dept: string) => !isHOD || currentUserSections.includes(dept)
 
@@ -12809,7 +12816,7 @@ function App() {
           {activePage === 'employees' && <EmployeesPage employees={scopedEmployees} medicalCases={scopedMedicalCases} noticeTerminations={scopedNoticeTerminations} offSiteRecords={offSiteRecords} onUpdateOffSite={(fn) => setOffSiteRecords(fn)} onAdd={() => { setEmployeeMode('add'); setEmployeeForm(emptyEmployee); setShowEmployeeForm(true) }} onEdit={openEditEmployee} onDelete={deleteEmployee} onExport={exportCsv} onImport={importCsv} onTemplate={downloadTemplate} onShowTasks={() => setShowPendingTasks(true)} />}
           {activePage === 'leave' && <LeavePage employees={scopedEmployees} leaveRequests={scopedLeaveRequests} activeLeaves={scopedActiveLeaves} leaveHistory={scopedLeaveHistory} medicalCases={scopedMedicalCases} isHOD={isHOD} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onSetRequestStep={setLeaveRequestStep} onExtendLeave={extendActiveLeave} onEditActiveLeave={editActiveLeave} onHistoryConfirm={updateHistoryConfirmation} onUpdateMedical={(fn) => setMedicalCases(fn)} />}
           {activePage === 'operations' && <OperationsPage employees={employees} completedTerminations={completedTerminations} activeLeaves={activeLeaves} isHOD={isHOD} userRole={currentUserRole} />}
-          {activePage === 'activities' && <ActivitiesPage employees={scopedEmployees} passportHandovers={scopedPassportHandovers} onUpdatePassport={(fn) => setPassportHandovers(fn)} tripRequests={tripRequests} onUpdateTripRequests={(fn) => setTripRequests(fn)} inventoryItems={inventoryItems} inventoryUsage={inventoryUsage} inventoryOrders={inventoryOrders} onUpdateInventoryItems={(fn) => setInventoryItems(fn)} onUpdateInventoryUsage={(fn) => setInventoryUsage(fn)} onUpdateInventoryOrders={(fn) => setInventoryOrders(fn)} isHOD={isHOD} isHR={isHR} currentUserSections={currentUserSections} currentUserName={currentUserName} />}
+          {activePage === 'activities' && <ActivitiesPage employees={scopedEmployees} passportHandovers={scopedPassportHandovers} onUpdatePassport={(fn) => setPassportHandovers(fn)} tripRequests={tripRequests} onUpdateTripRequests={(fn) => setTripRequests(fn)} inventoryItems={inventoryItems} inventoryUsage={inventoryUsage} inventoryOrders={inventoryOrders} onUpdateInventoryItems={(fn) => setInventoryItems(fn)} onUpdateInventoryUsage={(fn) => setInventoryUsage(fn)} onUpdateInventoryOrders={(fn) => setInventoryOrders(fn)} isHOD={isHOD} isHR={isHR} isTripReqApprover={isTripReqApprover} currentUserSections={currentUserSections} currentUserName={currentUserName} />}
           {activePage === 'termination' && <TerminationPage noticeTerminations={scopedNoticeTerminations} completedTerminations={scopedCompletedTerminations} exitInterviews={scopedExitInterviews} employees={scopedEmployees} isHOD={isHOD} onAdd={openAddTermination} onEdit={openEditTermination} onSetStage={setTerminationStage} onDelete={deleteTermination} onViewDetails={(record) => setTerminationDetails(record)} onUpdateExitInterviews={(fn) => setExitInterviews(fn)} />}
           {activePage === 'settings' && <SettingsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} onReset={() => setResetStep(1)} currentUserName={currentUserName} loggedInUser={currentProfile} users={users} onUpdateUsers={(fn) => setUsers(fn)} />}
         </main>
