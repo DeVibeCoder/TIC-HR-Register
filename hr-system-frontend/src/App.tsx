@@ -3112,7 +3112,7 @@ function printTripRequest(record: TripRequest, sigRequester: string, sigAhmedAli
 <title>Trip Requisition — ${esc(record.requesterName) || 'Trip Request'}</title>
 <style>
   /* Force A4 — content scales to fit one page */
-  @page { size: A4 portrait; margin: 10mm 12mm; }
+  @page { size: A4 portrait; margin: 10mm 22mm; }
   *, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
   html { font-size: 9.5pt; }
   body { font-family: Arial, Helvetica, sans-serif; color: #000;
@@ -3130,7 +3130,7 @@ function printTripRequest(record: TripRequest, sigRequester: string, sigAhmedAli
   /* A4 page wrapper */
   .wrap { max-width:210mm; margin:20px auto 40px; }
   .page { background:#fff; box-shadow:0 3px 16px rgba(0,0,0,.14);
-          padding:14mm 14mm 12mm; min-height:277mm; position:relative; }
+          padding:14mm 20mm 12mm; min-height:277mm; position:relative; }
 
   /* Typography */
   .t1 { text-align:center; font-size:12pt; font-weight:700; margin-bottom:2pt; }
