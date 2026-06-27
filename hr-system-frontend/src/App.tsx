@@ -2889,12 +2889,21 @@ function TripReqSection({ records, employees, onUpdate, currentUserName = '', ca
 
   const approve = () => {
     if (!approving) return
-    onUpdate(prev => prev.map(r => r.id===approving.id ? { ...r, status:'Approved', approvedDate:new Date().toISOString().slice(0,10) } : r))
+    const approvedDate = new Date().toISOString().slice(0,10)
+    const updated = { ...approving, status: 'Approved' as TripRequestStatus, approvedDate }
+    onUpdate(prev => prev.map(r => r.id===approving.id ? updated : r))
+    // Explicit Supabase write — don't rely only on sync useEffect (race with refetch)
+    supabase.from('trip_requests').update({ status:'Approved', approved_date: approvedDate })
+      .eq('id', approving.id)
+      .then(({ error }) => { if (error) console.error('[approve trip]', error.message) })
     setApproving(null)
   }
   const reject = (r: TripRequest) => {
-    if (window.confirm(`Reject the trip request from ${r.requesterName || 'this requester'}?`))
+    if (window.confirm(`Reject the trip request from ${r.requesterName || 'this requester'}?`)) {
       onUpdate(prev => prev.map(x => x.id===r.id ? { ...x, status:'Rejected' } : x))
+      supabase.from('trip_requests').update({ status:'Rejected' }).eq('id', r.id)
+        .then(({ error }) => { if (error) console.error('[reject trip]', error.message) })
+    }
   }
 
   const handleSigUpload = (which: 'requester'|'ahmedali', file: File | null) => {
@@ -3041,9 +3050,9 @@ function printTripRequest(record: TripRequest, sigRequester: string, sigAhmedAli
     }
   }
 
-  // Signatures show on all prints (not just approved) when uploaded
-  const requesterSigHtml  = sigRequester ? `<img class="sig-img" src="${sigRequester}" alt="Signature" />` : ''
-  const authorizedSigHtml = sigAhmedAli  ? `<img class="sig-img" src="${sigAhmedAli}"  alt="Signature" />` : ''
+  // Signatures show on prints whenever uploaded
+  const reqSig  = sigRequester ? `<img class="sig-img" src="${sigRequester}" alt="sig">` : '&nbsp;'
+  const authSig = sigAhmedAli  ? `<img class="sig-img" src="${sigAhmedAli}"  alt="sig">` : '&nbsp;'
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -3051,46 +3060,53 @@ function printTripRequest(record: TripRequest, sigRequester: string, sigAhmedAli
 <meta charset="UTF-8">
 <title>Trip Requisition — ${esc(record.requesterName) || 'Trip Request'}</title>
 <style>
-  @page { size: A4 portrait; margin: 0; }
+  @page { size: A4 portrait; margin: 18mm 20mm 18mm 20mm; }
   *, *::before, *::after { box-sizing: border-box; }
-  body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #111; background: #f0f0f0; margin: 0; padding: 0; }
+  body { font-family: Arial, Helvetica, sans-serif; font-size: 10.5pt; color: #000; background: #f0f0f0; margin: 0; padding: 0; }
 
   .screen-bar { display:flex; align-items:center; gap:14px; padding:10px 20px; background:#1e1b4b; position:sticky; top:0; z-index:10; font-family:system-ui,sans-serif; font-size:13px; }
   .screen-bar button { padding:7px 20px; background:#6d28d9; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; }
-  .screen-bar button:hover { background:#5b21b6; }
   .screen-bar .ref-label { font-weight:700; color:#ddd6fe; }
   .screen-bar .meta-label { color:rgba(221,214,254,0.7); font-size:12px; }
 
   .a4-wrap { max-width:210mm; margin:24px auto; padding-bottom:40px; }
-  .a4-page { background:#fff; box-shadow:0 4px 20px rgba(30,27,75,0.16); min-height:297mm; padding:24pt 32pt; position:relative; }
+  .a4-page  { background:#fff; box-shadow:0 4px 20px rgba(0,0,0,0.15); padding:0; position:relative; }
 
-  .vmt-title    { text-align:center; font-size:14pt; font-weight:700; letter-spacing:0.5px; margin:10pt 0 2pt; }
-  .vmt-subtitle { text-align:center; font-size:11.5pt; font-weight:700; margin-bottom:12pt; }
+  /* ── Typography ────────────────────── */
+  .doc-title    { text-align:center; font-size:13pt; font-weight:700; margin:0 0 4pt; }
+  .doc-subtitle { text-align:center; font-size:11pt; font-weight:700; margin:0 0 12pt; }
+  .sec-hd       { font-weight:700; font-size:10.5pt; margin:10pt 0 3pt; }
 
-  .sec-label { font-weight:700; font-size:11pt; margin:8pt 0 3pt; }
+  /* ── Tables ────────────────────────── */
+  table { width:100%; border-collapse:collapse; margin-bottom:6pt; }
+  td, th { border:0.75pt solid #000; padding:3.5pt 6pt; font-size:10pt; vertical-align:middle; }
+  td.lbl { font-weight:700; width:38%; }
 
-  table.vmt-tbl { width:100%; border-collapse:collapse; margin-bottom:5pt; }
-  table.vmt-tbl td { border:1pt solid #333; padding:3.5pt 7pt; font-size:10.5pt; vertical-align:middle; }
-  table.vmt-tbl td.lbl { font-weight:700; width:160pt; background:#f8fafc; }
+  /* ── Tick boxes ────────────────────── */
+  .tick-row { display:flex; align-items:center; gap:10pt; font-size:10pt; margin-bottom:8pt; flex-wrap:wrap; }
+  .tick-box { display:inline-block; width:18pt; height:14pt; border:0.75pt solid #000; text-align:center; line-height:14pt; font-weight:700; font-size:11pt; vertical-align:middle; }
+  .return-cell { border:0.75pt solid #000; min-width:110pt; padding:1pt 5pt; display:inline-block; min-height:13pt; vertical-align:middle; }
 
-  .tick-row { display:flex; align-items:center; gap:8pt; font-size:10.5pt; flex-wrap:wrap; border:1pt solid #333; padding:5pt 8pt; margin-bottom:5pt; }
-  .tick-box { display:inline-flex; align-items:center; justify-content:center; width:22pt; height:15pt; border:1pt solid #333; font-weight:700; font-size:11pt; flex-shrink:0; }
-  .return-box { flex:1; min-width:100pt; border-bottom:1pt solid #333; padding:0 4pt; min-height:14pt; }
+  /* ── Signature table ───────────────── */
+  .sig-tbl td { vertical-align:top; padding:4pt 8pt; width:50%; }
+  .sig-tbl td:first-child { border-right:0.75pt solid #000; }
+  .sig-hd { font-weight:700; font-size:10pt; border-bottom:0.75pt solid #000; margin:-4pt -8pt 6pt; padding:3pt 8pt; }
+  .sig-row { font-size:10pt; margin-bottom:5pt; display:flex; align-items:flex-start; gap:4pt; }
+  .sig-lbl  { font-weight:400; white-space:nowrap; width:64pt; flex-shrink:0; }
+  .sig-line { flex:1; border-bottom:0.75pt solid #000; min-height:12pt; }
+  .sig-area { flex:1; min-height:80pt; border-bottom:0.75pt solid #000; display:flex; align-items:center; justify-content:flex-start; padding:4pt 0; }
+  .sig-img  { max-height:75pt; max-width:100%; object-fit:contain; display:block; }
 
-  /* ── Signature sections ─────────────────────── */
-  .sig-section { margin-top:10pt; }
-  .sig-section-title { font-weight:700; font-size:10.5pt; background:#f1f5f9; border:1pt solid #333; border-bottom:none; padding:4pt 8pt; }
-  .sig-grid { display:grid; grid-template-columns:1fr 1fr; border:1pt solid #333; }
-  .sig-col { padding:8pt 12pt 10pt; }
-  .sig-col:first-child { border-right:1pt solid #333; }
-  .sig-col-hdr { font-weight:700; font-size:10pt; border-bottom:1pt solid #ccc; margin-bottom:8pt; padding-bottom:4pt; color:#374151; }
-  .sig-row { font-size:10pt; margin-bottom:6pt; display:flex; align-items:flex-end; gap:6pt; }
-  .sig-lbl  { font-weight:600; white-space:nowrap; flex-shrink:0; }
-  .sig-line { flex:1; border-bottom:1pt solid #333; min-width:70pt; min-height:14pt; padding-left:4pt; }
-  .sig-img-wrap { flex:1; min-height:70pt; border-bottom:1pt solid #333; display:flex; align-items:center; padding:4pt 0; }
-  .sig-img { max-height:66pt; max-width:100%; width:auto; object-fit:contain; display:block; }
+  /* ── VMT bottom table ──────────────── */
+  .vmt-bot td { vertical-align:top; padding:4pt 8pt; width:50%; }
+  .vmt-bot td:first-child { border-right:0.75pt solid #000; }
+  .vmt-bot .bot-hd { font-weight:700; border-bottom:0.75pt solid #000; margin:-4pt -8pt 5pt; padding:3pt 8pt; }
+  .vmt-bot .bot-row { display:flex; align-items:flex-start; gap:4pt; font-size:10pt; margin-bottom:5pt; }
+  .vmt-bot .bot-lbl { white-space:nowrap; width:64pt; }
+  .vmt-bot .bot-line { flex:1; border-bottom:0.75pt solid #000; min-height:12pt; }
+  .vmt-bot .bot-area { flex:1; min-height:60pt; border-bottom:0.75pt solid #000; }
 
-  .status-stamp { position:absolute; top:46pt; right:36pt; font-family:system-ui,sans-serif; font-size:13pt; font-weight:800; letter-spacing:2px; text-transform:uppercase; padding:4pt 12pt; border:2pt solid; border-radius:4pt; transform:rotate(8deg); opacity:0.75; }
+  .status-stamp { position:absolute; top:54pt; right:26pt; font-family:system-ui,sans-serif; font-size:14pt; font-weight:800; letter-spacing:2px; text-transform:uppercase; padding:4pt 14pt; border:2pt solid; border-radius:4pt; transform:rotate(8deg); opacity:0.75; }
   .status-stamp.pending  { color:#b45309; border-color:#b45309; }
   .status-stamp.rejected { color:#b91c1c; border-color:#b91c1c; }
 
@@ -3098,7 +3114,7 @@ function printTripRequest(record: TripRequest, sigRequester: string, sigAhmedAli
     body { background:#fff; }
     .screen-bar { display:none !important; }
     .a4-wrap { max-width:none; margin:0; padding:0; }
-    .a4-page  { box-shadow:none; min-height:unset; }
+    .a4-page  { box-shadow:none; }
   }
 </style>
 </head>
@@ -3111,82 +3127,89 @@ function printTripRequest(record: TripRequest, sigRequester: string, sigAhmedAli
 </div>
 
 <div class="a4-wrap">
-  <div class="a4-page">
-    ${record.status !== 'Approved' ? `<div class="status-stamp ${record.status === 'Rejected' ? 'rejected' : 'pending'}">${esc(record.status)}</div>` : ''}
+<div class="a4-page" style="padding:24pt 28pt;">
+  ${record.status !== 'Approved' ? `<div class="status-stamp ${record.status === 'Rejected' ? 'rejected' : 'pending'}">${esc(record.status)}</div>` : ''}
 
-    <div class="vmt-title">VILLA MARINE TRANSPORT</div>
-    <div class="vmt-subtitle">Non-Routine Trip Requisition Form</div>
+  <p class="doc-title">VILLA MARINE TRANSPORT</p>
+  <p class="doc-subtitle">Non-Routine Trip Requisition Form</p>
 
-    <div class="sec-label" style="margin-top:2pt">Requester Details</div>
-    <table class="vmt-tbl">
-      <tr><td class="lbl">Requester Name</td><td>${esc(record.requesterName) || '&nbsp;'}</td></tr>
-      <tr><td class="lbl">Job Title / Designation</td><td>${esc(record.jobTitle) || '&nbsp;'}</td></tr>
-      <tr><td class="lbl">Department / Section</td><td>${esc(record.department) || '&nbsp;'}</td></tr>
-      <tr><td class="lbl">Business Unit</td><td>VHPL — Thilafushi Industrial Complex</td></tr>
-    </table>
+  <p class="sec-hd">Requester Details</p>
+  <table>
+    <tr><td class="lbl">Requester Name</td><td>${esc(record.requesterName) || '&nbsp;'}</td></tr>
+    <tr><td class="lbl">Job Title</td><td>${esc(record.jobTitle) || '&nbsp;'}</td></tr>
+    <tr><td class="lbl">Department</td><td>${esc(record.department) || '&nbsp;'}</td></tr>
+    <tr><td class="lbl">Business Unit</td><td>VHPL</td></tr>
+  </table>
 
-    <div class="sec-label">Trip Details</div>
-    <table class="vmt-tbl">
-      <tr><td class="lbl">Departing from:</td><td colspan="3">${esc(record.departingFrom) || '&nbsp;'}</td></tr>
-      <tr><td class="lbl">Destination:</td><td colspan="3">${esc(record.destination) || '&nbsp;'}</td></tr>
-      <tr><td class="lbl">Departure Date:</td><td>${record.departureDate ? formatDateDisplay(record.departureDate) : '&nbsp;'}</td>
-          <td class="lbl" style="width:120pt">Departure Time</td><td>${record.departureTime ? formatTimeHrs(record.departureTime) : '&nbsp;'}</td></tr>
-      <tr><td class="lbl">Purpose of Trip:</td><td colspan="3">${esc(record.purpose) || '&nbsp;'}</td></tr>
-      <tr><td class="lbl">No. of Passengers:</td><td colspan="3">${esc(String(record.passengers || '1'))}</td></tr>
-      <tr><td class="lbl">Trip to be Invoiced to:</td><td colspan="3">VHPL</td></tr>
-    </table>
+  <p class="sec-hd">Trip Details</p>
+  <table>
+    <tr><td class="lbl">Departing from:</td><td colspan="3">${esc(record.departingFrom) || '&nbsp;'}</td></tr>
+    <tr><td class="lbl">Destination:</td><td colspan="3">${esc(record.destination) || '&nbsp;'}</td></tr>
+    <tr>
+      <td class="lbl">Departure Date:</td>
+      <td>${record.departureDate ? formatDateDisplay(record.departureDate) : '&nbsp;'}</td>
+      <td class="lbl" style="width:22%">Departure Time</td>
+      <td>${record.departureTime ? formatTimeHrs(record.departureTime) : '&nbsp;'}</td>
+    </tr>
+    <tr><td class="lbl">Purpose of trip:</td><td colspan="3">${esc(record.purpose) || '&nbsp;'}</td></tr>
+    <tr><td class="lbl">Number of Passengers:</td><td colspan="3">${esc(String(record.passengers || '1'))}</td></tr>
+  </table>
 
-    <div class="sec-label">Trip Type</div>
-    <div class="tick-row">
-      <span>One-Way</span>&nbsp;<span class="tick-box">${oneWayChecked ? '✓' : ''}</span>
-      &nbsp;&nbsp;&nbsp;
-      <span>Round Trip</span>&nbsp;<span class="tick-box">${roundTripChecked ? '✓' : ''}</span>
-      &nbsp;&nbsp;&nbsp;
-      <span>Return Date &amp; Time:</span>
-      <span class="return-box">${esc(returnDisplay)}</span>
-    </div>
-
-    ${record.remarks ? `<table class="vmt-tbl" style="margin-top:5pt"><tr><td class="lbl">Remarks / Notes</td><td>${esc(record.remarks)}</td></tr></table>` : ''}
-
-    <!-- Requested by / Authorized by -->
-    <div class="sig-section">
-      <div class="sig-grid" style="margin-top:10pt">
-        <div class="sig-col">
-          <div class="sig-col-hdr">Requested by</div>
-          <div class="sig-row"><span class="sig-lbl">Name:</span><span class="sig-line">${esc(record.requesterName)}</span></div>
-          <div class="sig-row"><span class="sig-lbl">Signature:</span><span class="sig-img-wrap">${requesterSigHtml}</span></div>
-          <div class="sig-row"><span class="sig-lbl">Date:</span><span class="sig-line">${record.requestDate ? formatDateDisplay(record.requestDate) : ''}</span></div>
-        </div>
-        <div class="sig-col">
-          <div class="sig-col-hdr">Authorized by</div>
-          <div class="sig-row"><span class="sig-lbl">Name:</span><span class="sig-line">AHMED ALI</span></div>
-          <div class="sig-row"><span class="sig-lbl">Signature:</span><span class="sig-img-wrap">${authorizedSigHtml}</span></div>
-          <div class="sig-row"><span class="sig-lbl">Date:</span><span class="sig-line">${record.approvedDate ? formatDateDisplay(record.approvedDate) : ''}</span></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- For VMT use only -->
-    <div class="sig-section" style="margin-top:14pt">
-      <div class="sig-section-title">For VMT's Use Only</div>
-      <table class="vmt-tbl" style="border-top:none"><tr><td class="lbl">Cost of the Trip (MVR)</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr></table>
-      <div class="sig-grid">
-        <div class="sig-col">
-          <div class="sig-col-hdr">Reviewed by: Movement Controller</div>
-          <div class="sig-row"><span class="sig-lbl">Name:</span><span class="sig-line"></span></div>
-          <div class="sig-row"><span class="sig-lbl">Signature:</span><span class="sig-img-wrap"></span></div>
-          <div class="sig-row"><span class="sig-lbl">Date:</span><span class="sig-line"></span></div>
-        </div>
-        <div class="sig-col">
-          <div class="sig-col-hdr">Authorized by: Manager of Transport</div>
-          <div class="sig-row"><span class="sig-lbl">Name:</span><span class="sig-line"></span></div>
-          <div class="sig-row"><span class="sig-lbl">Signature:</span><span class="sig-img-wrap"></span></div>
-          <div class="sig-row"><span class="sig-lbl">Date:</span><span class="sig-line"></span></div>
-        </div>
-      </div>
-    </div>
-
+  <p class="sec-hd">Tick the appropriate box</p>
+  <div class="tick-row">
+    One-Way &nbsp;<span class="tick-box">${oneWayChecked ? '✓' : ''}</span>
+    &nbsp;&nbsp;&nbsp;&nbsp;
+    Round Trip &nbsp;<span class="tick-box">${roundTripChecked ? '✓' : ''}</span>
+    &nbsp;&nbsp;&nbsp;&nbsp;
+    Return Date &amp; Time &nbsp;<span class="return-cell">${esc(returnDisplay)}</span>
   </div>
+
+  <p class="sec-hd">Tick the appropriate box</p>
+  <table>
+    <tr><td class="lbl">Trip to be invoiced to:</td><td>VHPL</td></tr>
+  </table>
+
+  <!-- Requested by / Authorized by -->
+  <table class="sig-tbl" style="margin-top:12pt">
+    <tr>
+      <td>
+        <div class="sig-hd">Requested by:</div>
+        <div class="sig-row"><span class="sig-lbl">Name:</span><span class="sig-line">${esc(record.requesterName)}</span></div>
+        <div class="sig-row"><span class="sig-lbl">Signature:</span><span class="sig-area">${reqSig}</span></div>
+        <div class="sig-row"><span class="sig-lbl">Date:</span><span class="sig-line">${record.requestDate ? formatDateDisplay(record.requestDate) : '&nbsp;'}</span></div>
+      </td>
+      <td>
+        <div class="sig-hd">Authorized by:</div>
+        <div class="sig-row"><span class="sig-lbl">Name:</span><span class="sig-line">AHMED ALI</span></div>
+        <div class="sig-row"><span class="sig-lbl">Signature:</span><span class="sig-area">${authSig}</span></div>
+        <div class="sig-row"><span class="sig-lbl">Date:</span><span class="sig-line">${record.approvedDate ? formatDateDisplay(record.approvedDate) : '&nbsp;'}</span></div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- For VMT's use only -->
+  <p class="sec-hd">For VMT's use only</p>
+  <table>
+    <tr><td class="lbl">Cost of the trip</td><td>&nbsp;</td></tr>
+  </table>
+  <table class="vmt-bot">
+    <tr>
+      <td>
+        <div class="bot-hd">Reviewed by: Movement Controller</div>
+        <div class="bot-row"><span class="bot-lbl">Name:</span><span class="bot-line"></span></div>
+        <div class="bot-row"><span class="bot-lbl">Signature:</span><span class="bot-area"></span></div>
+        <div class="bot-row"><span class="bot-lbl">Date:</span><span class="bot-line"></span></div>
+      </td>
+      <td>
+        <div class="bot-hd">Authorized by: Manager of Transport</div>
+        <div class="bot-row"><span class="bot-lbl">Name:</span><span class="bot-line"></span></div>
+        <div class="bot-row"><span class="bot-lbl">Signature:</span><span class="bot-area"></span></div>
+        <div class="bot-row"><span class="bot-lbl">Date:</span><span class="bot-line"></span></div>
+      </td>
+    </tr>
+  </table>
+
+</div>
 </div>
 </body>
 </html>`
