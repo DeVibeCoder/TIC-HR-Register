@@ -8512,32 +8512,38 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/>
 <title>Briefing Meeting Minutes — ${esc(record.refNumber)}</title>
 <style>
-  @page { size:A4 portrait; margin:8mm 16mm 12mm 16mm; }
+  @page { size:A4 portrait; margin:7mm 15mm 10mm 15mm; }
   *,*::before,*::after { box-sizing:border-box; }
   body { font-family:Arial,Helvetica,sans-serif; font-size:8.5pt; color:#111; background:#e8e8e8; margin:0; padding:0; }
   .pbar { display:flex; align-items:center; gap:14px; padding:10px 20px; background:#1e1b4b; position:sticky; top:0; z-index:10; font-family:system-ui,sans-serif; font-size:13px; }
   .pbar button { padding:7px 18px; background:#6d28d9; color:#fff; border:none; border-radius:6px; font-size:13px; font-weight:700; cursor:pointer; }
   .pbar span { color:rgba(221,214,254,0.7); font-size:12px; }
   .wrap { max-width:210mm; margin:20px auto; display:flex; flex-direction:column; gap:18px; padding-bottom:40px; }
-  .page { background:#fff; box-shadow:0 4px 24px rgba(0,0,0,0.16); padding:8mm 16mm 12mm; }
+  .page { background:#fff; box-shadow:0 4px 24px rgba(0,0,0,0.16); padding:7mm 15mm 10mm; }
 
-  /* Info table */
-  .info-tbl { width:100%; border-collapse:collapse; margin-bottom:8pt; }
-  .info-tbl td { border:0.7pt solid #999; padding:3pt 7pt; font-size:8.5pt; vertical-align:top; }
+  /* Info table — auto-sizes based on content */
+  .info-tbl { width:100%; border-collapse:collapse; margin-bottom:6pt; }
+  .info-tbl td { border:0.6pt solid #999; padding:2.5pt 6pt; font-size:8.5pt; vertical-align:middle; }
   .info-tbl td.lbl { font-weight:700; white-space:nowrap; width:26mm; background:#f0f0f0; color:#111; font-size:8pt; }
+  /* Time value cells: light grey background like a box */
+  .time-val { background:#f7f7f7; color:#444; font-size:8.5pt; }
 
-  /* Participant tables — fixed layout ensures identical column widths */
+  /* Participant tables — fixed layout, consistent 2-line row height */
   .p-tbl { width:100%; border-collapse:collapse; table-layout:fixed; }
-  .p-tbl th { background:#f0f0f0; border:0.5pt solid #ccc; padding:2.5pt 5pt; font-size:7.5pt; font-weight:700; text-align:left; overflow:hidden; }
+  .p-tbl th { background:#f0f0f0; border:0.5pt solid #ccc; padding:2pt 5pt; font-size:7.5pt; font-weight:700; text-align:left; overflow:hidden; }
   .p-tbl th.ctr,.p-tbl td.ctr { text-align:center; }
-  .p-tbl td { border:0.5pt solid #ddd; padding:2pt 5pt; font-size:8pt; overflow:hidden; }
+  /* Fixed 2-line row height: line-height ~9pt × 2 lines + padding */
+  .p-tbl td { border:0.5pt solid #ddd; padding:3.5pt 5pt; font-size:8pt; overflow:hidden; line-height:1.35; height:20pt; vertical-align:middle; }
   .p-tbl .nc { width:46%; } .p-tbl .dc { width:44%; } .p-tbl .sc { width:10%; }
 
-  /* Headcount table */
+  /* Headcount table — compact fixed column widths */
   .hc-tbl { width:100%; border-collapse:collapse; }
-  .hc-tbl th { background:#4a7fb5; color:#fff; font-size:7.5pt; font-weight:700; padding:4pt 3pt; border:0.5pt solid #3a6f9f; text-align:center; }
+  .hc-tbl th { background:#4a7fb5; color:#fff; font-size:7pt; font-weight:700; padding:2.5pt 2pt; border:0.5pt solid #3a6f9f; text-align:center; }
   .hc-tbl th.lft { text-align:left; }
-  .hc-tbl td { padding:3pt; font-size:8pt; border:0.5pt solid #bbb; }
+  /* Number columns: equal fixed width so all values align */
+  .hc-tbl th:not(.lft),.hc-tbl td:not(:first-child) { width:13%; text-align:center; }
+  .hc-tbl th:first-child,.hc-tbl td:first-child { width:35%; }
+  .hc-tbl td { padding:2pt 3pt; font-size:7.5pt; border:0.5pt solid #bbb; }
   .hc-tbl .tot td { font-weight:800; background:#f0f0f0; }
 
   /* Discussion page */
@@ -8588,22 +8594,17 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   </div>
 
   <table class="info-tbl">
-    <!-- Date + Time on same row -->
+    <tr><td class="lbl">Date</td><td style="text-transform:uppercase;">${fmtMeetingDate(record.date)}</td></tr>
     <tr>
-      <td class="lbl">Date</td>
-      <td>
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <span style="text-transform:uppercase;font-weight:600;">${fmtMeetingDate(record.date)}</span>
-          <span style="color:#444;font-size:8pt;">
-            Time Started: <strong>${esc(record.timeStarted)} hrs.</strong>
-            &nbsp;&nbsp;
-            Time Ended: <strong>${esc(record.timeEnded ? record.timeEnded + ' hrs.' : '—')}</strong>
-          </span>
-        </div>
+      <td class="lbl">Time</td>
+      <td class="time-val">
+        Started:&nbsp;<strong>${esc(record.timeStarted)} hrs.</strong>
+        &nbsp;&nbsp;&nbsp;
+        Ended:&nbsp;<strong>${esc(record.timeEnded ? record.timeEnded + ' hrs.' : '—')}</strong>
       </td>
     </tr>
     <tr><td class="lbl">Venue</td><td style="text-transform:uppercase;">${esc(record.venue)}</td></tr>
-    <tr><td class="lbl">Chairperson</td><td style="font-weight:600;text-transform:uppercase;">${esc(record.chairperson)}</td></tr>
+    <tr><td class="lbl">Chairperson</td><td style="text-transform:uppercase;">${esc(record.chairperson)}</td></tr>
     <tr>
       <td class="lbl">Participants</td>
       <td style="padding:3pt 7pt;">
@@ -8633,10 +8634,10 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
     </tr>
   </table>
 
-  <div style="font-size:9pt;font-weight:800;margin-bottom:5pt;">Daily Headcount of Sections</div>
-  <table class="hc-tbl">
+  <div style="font-size:8.5pt;font-weight:800;margin-bottom:3pt;margin-top:5pt;">Daily Headcount of Sections</div>
+  <table class="hc-tbl" style="table-layout:fixed;">
     <thead><tr>
-      <th class="lft" style="width:32%;">Section</th>
+      <th class="lft">Section</th>
       <th>On Duty</th><th>Not in Site</th><th>Sick Leave</th><th>On Leave</th><th>Total</th>
     </tr></thead>
     <tbody>${hcRows}</tbody>
