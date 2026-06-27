@@ -8421,20 +8421,21 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
 
   const allAttended = [...attended, ...replacements]
 
-  // Participants — fixed-layout table so all rows have identical column widths
-  const pTableRows = allAttended.map(r => `<tr>
-    <td>${esc(r.name)}</td>
-    <td style="color:#444;">${esc(r.designation)}</td>
-    <td class="ctr" style="font-weight:700;">${esc(resolveSectionCode(r))}</td>
+  // Fixed row height on <tr> is the most reliable way to get identical heights in print
+  const PR_H = 'height:15pt;'  // participant row height — all rows same
+
+  const pTableRows = allAttended.map(r => `<tr style="${PR_H}">
+    <td class="nc">${esc(r.name)}</td>
+    <td class="dc" style="color:#555;">${esc(r.designation)}</td>
+    <td class="sc ctr" style="font-weight:700;">${esc(resolveSectionCode(r))}</td>
   </tr>`).join('')
 
-  // On Leave rows — show only leave type (remarks), no replacement info
   const repRows = (list: MeetingRep[], emptyRows = 1) => list.length === 0
-    ? Array(emptyRows).fill(`<tr><td colspan="3" style="padding:4pt;">&nbsp;</td></tr>`).join('')
-    : list.map(r => `<tr>
-        <td>${esc(r.name)}</td>
-        <td style="color:#444;">${esc(r.reason || (r.attendance === 'On Leave' ? 'Annual Leave' : r.attendance === 'Absent' ? 'Absent' : ''))}</td>
-        <td class="ctr" style="font-weight:700;">${esc(resolveSectionCode(r))}</td>
+    ? Array(emptyRows).fill(`<tr style="${PR_H}"><td colspan="3">&nbsp;</td></tr>`).join('')
+    : list.map(r => `<tr style="${PR_H}">
+        <td class="nc">${esc(r.name)}</td>
+        <td class="dc" style="color:#555;">${esc(r.reason || (r.attendance === 'On Leave' ? 'Annual Leave' : r.attendance === 'Absent' ? 'Absent' : ''))}</td>
+        <td class="sc ctr" style="font-weight:700;">${esc(resolveSectionCode(r))}</td>
       </tr>`).join('')
 
   const hcRows = HEADCOUNT_DEPTS.map(dept => {
@@ -8525,15 +8526,14 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   .info-tbl { width:100%; border-collapse:collapse; margin-bottom:6pt; }
   .info-tbl td { border:0.6pt solid #999; padding:2.5pt 6pt; font-size:8.5pt; vertical-align:middle; }
   .info-tbl td.lbl { font-weight:700; white-space:nowrap; width:26mm; background:#f0f0f0; color:#111; font-size:8pt; }
-  /* Time value cells: light grey background like a box */
-  .time-val { background:#f7f7f7; color:#444; font-size:8.5pt; }
+  /* Time value cells: same grey as .lbl label */
+  .time-val { background:#f0f0f0; color:#111; font-size:8pt; font-weight:700; }
 
-  /* Participant tables — fixed layout, consistent 2-line row height */
+  /* Participant tables — small, fixed layout, height controlled on <tr> */
   .p-tbl { width:100%; border-collapse:collapse; table-layout:fixed; }
-  .p-tbl th { background:#f0f0f0; border:0.5pt solid #ccc; padding:2pt 5pt; font-size:7.5pt; font-weight:700; text-align:left; overflow:hidden; }
+  .p-tbl th { background:#e8e8e8; border:0.5pt solid #bbb; padding:2pt 4pt; font-size:7pt; font-weight:700; text-align:left; overflow:hidden; }
   .p-tbl th.ctr,.p-tbl td.ctr { text-align:center; }
-  /* Fixed 2-line row height: line-height ~9pt × 2 lines + padding */
-  .p-tbl td { border:0.5pt solid #ddd; padding:3.5pt 5pt; font-size:8pt; overflow:hidden; line-height:1.35; height:20pt; vertical-align:middle; }
+  .p-tbl td { border:0.5pt solid #ddd; padding:0 4pt; font-size:7.5pt; overflow:hidden; vertical-align:middle; }
   .p-tbl .nc { width:46%; } .p-tbl .dc { width:44%; } .p-tbl .sc { width:10%; }
 
   /* Headcount table — compact fixed column widths */
@@ -8593,30 +8593,36 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
     <span style="font-size:9.5pt;font-weight:700;">REF: ${esc(record.refNumber)}</span>
   </div>
 
-  <table class="info-tbl">
-    <tr><td class="lbl">Date</td><td style="text-transform:uppercase;">${fmtMeetingDate(record.date)}</td></tr>
+  <table class="info-tbl" style="table-layout:fixed;">
+    <!-- Date + Time Started + Time Ended on one row, time labels same grey as Date -->
     <tr>
-      <td class="lbl">Time</td>
-      <td class="time-val">
-        Started:&nbsp;<strong>${esc(record.timeStarted)} hrs.</strong>
-        &nbsp;&nbsp;&nbsp;
-        Ended:&nbsp;<strong>${esc(record.timeEnded ? record.timeEnded + ' hrs.' : '—')}</strong>
-      </td>
+      <td class="lbl" style="width:22mm;">Date</td>
+      <td style="text-transform:uppercase;">${fmtMeetingDate(record.date)}</td>
+      <td class="lbl time-val" style="width:24mm;text-align:left;">Time Started</td>
+      <td class="time-val" style="width:18mm;">${esc(record.timeStarted)} hrs.</td>
+      <td class="lbl time-val" style="width:22mm;text-align:left;">Time Ended</td>
+      <td class="time-val" style="width:18mm;">${esc(record.timeEnded ? record.timeEnded + ' hrs.' : '—')}</td>
     </tr>
-    <tr><td class="lbl">Venue</td><td style="text-transform:uppercase;">${esc(record.venue)}</td></tr>
-    <tr><td class="lbl">Chairperson</td><td style="text-transform:uppercase;">${esc(record.chairperson)}</td></tr>
+    <tr>
+      <td class="lbl">Venue</td>
+      <td colspan="5" style="text-transform:uppercase;">${esc(record.venue)}</td>
+    </tr>
+    <tr>
+      <td class="lbl">Chairperson</td>
+      <td colspan="5" style="text-transform:uppercase;">${esc(record.chairperson)}</td>
+    </tr>
     <tr>
       <td class="lbl">Participants</td>
-      <td style="padding:3pt 7pt;">
+      <td colspan="5" style="padding:2pt 6pt;">
         <table class="p-tbl">
           <thead><tr><th class="nc">NAME</th><th class="dc">DESIGNATION</th><th class="sc ctr">SECTION</th></tr></thead>
-          <tbody>${pTableRows || '<tr><td colspan="3" style="padding:4pt;color:#aaa;">—</td></tr>'}</tbody>
+          <tbody>${pTableRows || '<tr style="height:15pt;"><td colspan="3" style="color:#aaa;">—</td></tr>'}</tbody>
         </table>
       </td>
     </tr>
     <tr>
       <td class="lbl">On Leave</td>
-      <td style="padding:3pt 7pt;">
+      <td colspan="5" style="padding:2pt 6pt;">
         <table class="p-tbl">
           <thead><tr><th class="nc">NAME</th><th class="dc">REMARKS</th><th class="sc ctr">SECTION</th></tr></thead>
           <tbody>${repRows(onLeaveR)}</tbody>
@@ -8625,7 +8631,7 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
     </tr>
     <tr>
       <td class="lbl">Absentees</td>
-      <td style="padding:3pt 7pt;">
+      <td colspan="5" style="padding:2pt 6pt;">
         <table class="p-tbl">
           <thead><tr><th class="nc">NAME</th><th class="dc">REASON</th><th class="sc ctr">SECTION</th></tr></thead>
           <tbody>${repRows(absentR)}</tbody>
