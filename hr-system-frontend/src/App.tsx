@@ -497,11 +497,21 @@ function useDeleteConfirm() {
   return { confirmDelete, deleteBar: <>{modal}{toastEl}</> }
 }
 
+// ── Department name normaliser (fixes legacy typos like "CAFE'" → "CAFE") ───
+const DEPT_ALIASES: Record<string, string> = {
+  "CAFE'": 'CAFE',
+  'CAFÉ':  'CAFE',
+}
+function normaliseDept(dept: string): string {
+  const upper = (dept ?? '').trim().toUpperCase()
+  return DEPT_ALIASES[upper] ?? upper
+}
+
 // ── Database row ↔ TypeScript type converters ──────────────────────────────
 type DbRow = Record<string, unknown>
 
-const empFromDb = (r: DbRow): Employee => ({ employeeId: r.employee_id as string, fullName: r.full_name as string, department: r.department as string, designation: r.designation as string, nationality: r.nationality as string, nicPassportNo: r.nic_passport_no as string, workPermitNo: r.work_permit_no as string, dateOfJoin: r.date_of_join as string, mobileNo: r.mobile_no as string, dateOfBirth: r.date_of_birth as string, passportStatus: r.passport_status as string, siteStatus: r.site_status as SiteStatus, gender: (r.gender as string) || '' })
-const empToDb = (e: Employee) => ({ employee_id: e.employeeId, full_name: e.fullName, department: e.department, designation: e.designation, nationality: e.nationality, nic_passport_no: e.nicPassportNo, work_permit_no: e.workPermitNo, date_of_join: e.dateOfJoin, mobile_no: e.mobileNo, date_of_birth: e.dateOfBirth, passport_status: e.passportStatus, site_status: e.siteStatus, gender: e.gender ?? '' })
+const empFromDb = (r: DbRow): Employee => ({ employeeId: r.employee_id as string, fullName: r.full_name as string, department: normaliseDept(r.department as string), designation: r.designation as string, nationality: r.nationality as string, nicPassportNo: r.nic_passport_no as string, workPermitNo: r.work_permit_no as string, dateOfJoin: r.date_of_join as string, mobileNo: r.mobile_no as string, dateOfBirth: r.date_of_birth as string, passportStatus: r.passport_status as string, siteStatus: r.site_status as SiteStatus, gender: (r.gender as string) || '' })
+const empToDb = (e: Employee) => ({ employee_id: e.employeeId, full_name: e.fullName, department: normaliseDept(e.department), designation: e.designation, nationality: e.nationality, nic_passport_no: e.nicPassportNo, work_permit_no: e.workPermitNo, date_of_join: e.dateOfJoin, mobile_no: e.mobileNo, date_of_birth: e.dateOfBirth, passport_status: e.passportStatus, site_status: e.siteStatus, gender: e.gender ?? '' })
 // NOTE: updated_at intentionally excluded — including it caused every employee to appear
 // "changed" in syncTable's JSON comparison (fresh timestamp on every call), triggering
 // unnecessary upserts of the full employees table on every sync cycle.
@@ -1361,8 +1371,11 @@ function OverviewPage({
   // ── Employees by section ─────────────────────────────────────────────────
   const deptCounts = useMemo(() => {
     const d: Record<string, number> = {}
-    employees.forEach(e => { d[e.department] = (d[e.department] ?? 0) + 1 })
-    return Object.entries(d).sort((a, b) => b[1] - a[1]).slice(0, 8)
+    employees.forEach(e => {
+      const dept = normaliseDept(e.department)
+      d[dept] = (d[dept] ?? 0) + 1
+    })
+    return Object.entries(d).sort((a, b) => b[1] - a[1])
   }, [employees])
   const maxDept = deptCounts[0]?.[1] ?? 1
 
