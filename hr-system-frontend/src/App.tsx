@@ -455,13 +455,27 @@ let _sigRequester = localStorage.getItem('tic_sig_requester') || ''
 let _sigAhmedAli  = localStorage.getItem('tic_sig_ahmedali')  || ''
 
 async function loadSigsFromDB() {
-  const { data } = await supabase.from('app_config')
+  const { data, error } = await supabase.from('app_config')
     .select('key, value').in('key', ['sig_requester', 'sig_ahmedali'])
-  if (!data) return
-  data.forEach(({ key, value }) => {
-    if (key === 'sig_requester') { _sigRequester = value; localStorage.setItem('tic_sig_requester', value) }
-    if (key === 'sig_ahmedali')  { _sigAhmedAli  = value; localStorage.setItem('tic_sig_ahmedali',  value) }
+  if (error) { console.error('[Sigs] load error:', error.message); }
+
+  const dbKeys = new Set((data ?? []).map((d: { key: string }) => d.key))
+
+  // Apply DB values → local cache + localStorage
+  ;(data ?? []).forEach((row: { key: string; value: string }) => {
+    if (row.key === 'sig_requester') { _sigRequester = row.value; localStorage.setItem('tic_sig_requester', row.value) }
+    if (row.key === 'sig_ahmedali')  { _sigAhmedAli  = row.value; localStorage.setItem('tic_sig_ahmedali',  row.value) }
   })
+
+  // Migrate: if DB is empty but localStorage has signatures (e.g. uploaded before
+  // Supabase was set up), push them to DB now so all users can see them.
+  // saveSigToDB only succeeds for Admin (RLS); silently ignored for other roles.
+  const lsReq  = localStorage.getItem('tic_sig_requester')
+  const lsAuth = localStorage.getItem('tic_sig_ahmedali')
+  if (!dbKeys.has('sig_requester') && lsReq)  { _sigRequester = lsReq;  saveSigToDB('sig_requester', lsReq).catch(() => {}) }
+  if (!dbKeys.has('sig_ahmedali')  && lsAuth) { _sigAhmedAli  = lsAuth; saveSigToDB('sig_ahmedali', lsAuth).catch(() => {}) }
+
+  console.log('[Sigs] loaded — requester:', !!_sigRequester, '| authorized:', !!_sigAhmedAli)
 }
 
 async function saveSigToDB(key: 'sig_requester' | 'sig_ahmedali', value: string) {
@@ -11450,7 +11464,11 @@ function TripSigManager() {
 
   return (
     <>
-      {saving && <p style={{ fontSize:'0.78rem', color:'#7c3aed', marginBottom:8 }}>⏳ Saving signature to database…</p>}
+      {saving && <p style={{ fontSize:'0.78rem', color:'#7c3aed', marginBottom:8 }}>⏳ Saving to database…</p>}
+      <p style={{ fontSize:'0.75rem', color:'#64748b', marginBottom:10, lineHeight:1.5 }}>
+        Signatures saved here are stored in Supabase — all users (including HOD) will see them automatically on prints.
+        {(sigReq || sigAuth) && <> <button type="button" onClick={async () => { setSaving(true); if (sigReq) await saveSigToDB('sig_requester', sigReq); if (sigAuth) await saveSigToDB('sig_ahmedali', sigAuth); setSaving(false); alert('Signatures pushed to database.') }} style={{ marginLeft:8, padding:'2px 10px', fontSize:'0.72rem', borderRadius:6, border:'1px solid #7c3aed', background:'#ede9fe', color:'#6d28d9', cursor:'pointer', fontWeight:700 }}>Sync to Database</button></>}
+      </p>
       <div className="tr-sig-grid">
         {[
           { key: 'req'  as const, label: 'Requested By — Arushulla Rashid', sig: sigReq  },
