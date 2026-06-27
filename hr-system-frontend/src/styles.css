@@ -9986,6 +9986,197 @@ html { overflow-x: hidden; }
   .ov-card-presence,.ov-card-leave,.ov-card-depts,.ov-card-medical,.ov-card-term { grid-column:1; grid-row:auto; }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   OVERVIEW v2 — Clean executive dashboard
+   ═══════════════════════════════════════════════════════════════════════════ */
+.ov2-wrap {
+  padding: 18px 22px 12px;
+  background: #F8FAFC;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Header */
+.ov2-header { flex-shrink: 0; }
+.ov2-title  { font-size: 1.1rem; font-weight: 800; color: #0F172A; margin: 0 0 2px; }
+.ov2-sub    { font-size: 0.74rem; color: #94A3B8; margin: 0; }
+
+/* ── Metric strip ─────────────────────────────────────────── */
+.ov2-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  flex-shrink: 0;
+}
+.ov2-metric {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #E8ECF0;
+  border-top: 3px solid #E8ECF0;
+  padding: 14px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  box-shadow: 0 1px 3px rgba(15,23,42,.04);
+  transition: transform .15s, box-shadow .15s;
+}
+.ov2-metric:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(15,23,42,.08); }
+.ov2-metric-val { font-size: 2rem; font-weight: 800; line-height: 1; }
+.ov2-metric-lbl { font-size: 0.72rem; font-weight: 700; color: #374151; text-transform: uppercase; letter-spacing: .06em; }
+.ov2-metric-sub { font-size: 0.68rem; color: #94A3B8; }
+
+/* ── Card base ────────────────────────────────────────────── */
+.ov2-card {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #E8ECF0;
+  padding: 14px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(15,23,42,.04);
+}
+.ov2-card-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.ov2-card-ttl { font-size: 0.8rem; font-weight: 800; color: #0F172A; }
+.ov2-hd-actions { display: flex; align-items: center; gap: 8px; }
+.ov2-link { font-size: 0.7rem; font-weight: 700; color: #6366F1; background: none; border: none; cursor: pointer; padding: 0; white-space: nowrap; }
+.ov2-link:hover { color: #4F46E5; }
+.ov2-empty { font-size: 0.75rem; color: #CBD5E1; font-style: italic; margin: 4px 0; }
+.ov2-more  { width: 100%; padding: 6px 10px; background: #F8FAFC; border: 1px dashed #CBD5E1; border-radius: 8px; color: #6366F1; font-size: 0.7rem; font-weight: 700; cursor: pointer; text-align: center; transition: background .12s; margin-top: 2px; }
+.ov2-more:hover { background: #EEF2FF; }
+.ov2-sublbl { font-size: 0.63rem; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: .07em; flex-shrink: 0; }
+
+/* Pills */
+.ov2-pill { font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+.ov2-pill-blue  { background: #DBEAFE; color: #1D4ED8; }
+.ov2-pill-slate { background: #F1F5F9; color: #475569; }
+.ov2-pill-red   { background: #FEE2E2; color: #B91C1C; }
+
+/* Tags */
+.ov2-tag { font-size: 0.54rem; font-weight: 800; padding: 1px 4px; border-radius: 4px; margin-left: 4px; text-transform: uppercase; flex-shrink: 0; }
+.ov2-tag-red   { background: #FEE2E2; color: #B91C1C; }
+.ov2-tag-amber { background: #FEF3C7; color: #92400E; }
+
+/* Avatars */
+.ov2-av { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 0.72rem; font-weight: 800; flex-shrink: 0; }
+.ov2-av-red { background: #FEE2E2; color: #B91C1C; }
+
+/* ── Row 2 ────────────────────────────────────────────────── */
+.ov2-row2 {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 10px;
+  flex: 0 0 230px;
+  min-height: 0;
+}
+
+/* Presence card */
+.ov2-presence { }
+.ov2-donut-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+  height: 110px;
+}
+.ov2-donut-mid {
+  position: absolute;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.ov2-donut-n { font-size: 1.4rem; font-weight: 800; color: #0F172A; line-height: 1; }
+.ov2-donut-l { font-size: 0.58rem; color: #94A3B8; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+.ov2-legend { display: flex; flex-direction: column; gap: 5px; }
+.ov2-legend-row { display: flex; align-items: center; gap: 6px; }
+.ov2-legend-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.ov2-legend-lbl { flex: 1; font-size: 0.72rem; color: #64748B; }
+.ov2-legend-n   { font-size: 0.78rem; font-weight: 800; color: #0F172A; }
+.ov2-legend-p   { font-size: 0.66rem; color: #94A3B8; width: 30px; text-align: right; }
+
+/* Leave table */
+.ov2-leave { flex: 1; }
+.ov2-tbl-head {
+  display: grid;
+  grid-template-columns: 2.2fr 1.4fr 38px 1fr 1fr;
+  gap: 0 8px;
+  padding: 5px 8px;
+  background: #F8FAFC;
+  border-radius: 8px;
+  font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #94A3B8;
+  flex-shrink: 0;
+}
+.ov2-tbl-row {
+  display: grid;
+  grid-template-columns: 2.2fr 1.4fr 38px 1fr 1fr;
+  gap: 0 8px;
+  align-items: center;
+  padding: 7px 8px;
+  border-radius: 8px;
+  transition: background .1s;
+}
+.ov2-tbl-row:hover   { background: #F8FAFC; }
+.ov2-row-soon        { background: #FFF7ED !important; }
+.ov2-row-upcoming    { }
+.ov2-emp { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.ov2-emp-name { font-size: 0.78rem; font-weight: 600; color: #0F172A; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; align-items: center; }
+.ov2-cell-sm { font-size: 0.7rem; color: #64748B; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ov2-type { font-size: 0.6rem; font-weight: 800; color: #1D4ED8; background: #DBEAFE; padding: 2px 5px; border-radius: 5px; text-align: center; width: fit-content; }
+.ov2-date { font-size: 0.72rem; color: #475569; white-space: nowrap; }
+
+/* ── Row 3 ────────────────────────────────────────────────── */
+.ov2-row3 {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1.5fr;
+  gap: 10px;
+  flex: 0 0 220px;
+  min-height: 0;
+}
+
+/* Department bars */
+.ov2-depts  { }
+.ov2-bars   { display: flex; flex-direction: column; gap: 6px; overflow: hidden; }
+.ov2-bars-sm { gap: 5px; }
+.ov2-bar-row { display: grid; grid-template-columns: 1.4fr 1fr 24px 28px; gap: 0 6px; align-items: center; }
+.ov2-bar-lbl { font-size: 0.7rem; color: #475569; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ov2-bar-track { height: 5px; background: #F1F5F9; border-radius: 4px; overflow: hidden; }
+.ov2-bar-fill  { height: 100%; background: linear-gradient(90deg, #6366F1, #8B5CF6); border-radius: 4px; transition: width .5s ease; }
+.ov2-bar-val { font-size: 0.7rem; font-weight: 700; color: #0F172A; text-align: right; }
+.ov2-bar-pct { font-size: 0.65rem; color: #94A3B8; text-align: right; }
+
+/* Medical */
+.ov2-medical { }
+.ov2-med-kpis { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; flex-shrink: 0; }
+.ov2-med-kpi {
+  background: #F8FAFC; border: 1px solid #E8ECF0; border-radius: 10px;
+  padding: 8px 6px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.ov2-med-alert { border-color: #FECACA; background: #FFF5F5; }
+.ov2-med-n { font-size: 1.5rem; font-weight: 800; line-height: 1; }
+.ov2-med-l { font-size: 0.6rem; color: #94A3B8; font-weight: 600; }
+
+/* Termination */
+.ov2-term { }
+.ov2-term-row { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid #F1F5F9; }
+.ov2-term-row:last-of-type { border-bottom: none; }
+.ov2-term-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.ov2-term-name { font-size: 0.78rem; font-weight: 700; color: #0F172A; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ov2-term-role { font-size: 0.65rem; color: #94A3B8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ov2-term-lwd  { font-size: 0.63rem; color: #DC2626; font-weight: 600; }
+.ov2-stage { font-size: 0.6rem; font-weight: 700; padding: 2px 7px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; margin-top: 1px; }
+.ov2-term-footer { font-size: 0.7rem; color: #22C55E; font-weight: 700; padding-top: 6px; border-top: 1px solid #F1F5F9; flex-shrink: 0; margin-top: auto; }
+
 /* Hero bar */
 .dash-hero {
   display: flex;
