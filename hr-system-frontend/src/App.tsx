@@ -1504,211 +1504,238 @@ function OverviewPage({
   const dLeave = (onLeave / tot) * donutC
   const off2 = dSite, off3 = off2 + dOff
 
-  return (
-    <div className="pdb-shell">
+  // Donut ring (dark theme, larger)
+  const dkR = 90, dkSW = 14
+  const dkC = 2 * Math.PI * dkR
+  const dkT = employees.length || 1
+  const dkSite  = (onSite  / dkT) * dkC
+  const dkOff   = (offSite / dkT) * dkC
+  const dkLeave = (onLeave / dkT) * dkC
+  const dkOff2 = dkSite, dkOff3 = dkOff2 + dkOff
 
-      {/* ── HERO ─────────────────────────────────────────────────────── */}
-      <div className="pdb-hero">
-        <div className="pdb-hero-left">
-          <p className="pdb-greeting">{greeting}, <span className="pdb-name">{firstName}</span> 👋</p>
-          <p className="pdb-org">Thilafushi Industrial Complex · {todayStr}</p>
+  // Stage colours for dark theme
+  const dkStage: Record<string, string> = {
+    'Letter Submitted':  '#F59E0B',
+    'Exit Interview':    '#A78BFA',
+    'Ticket':            '#60A5FA',
+    'Pending Departure': '#F87171',
+  }
+
+  return (
+    <div className="dk-shell">
+
+      {/* ── HEADER ──────────────────────────────────────────────────── */}
+      <div className="dk-header">
+        <div>
+          <h1 className="dk-greet">{greeting}, <span className="dk-greet-name">{firstName}!</span> 👋</h1>
+          <p className="dk-greet-sub">Here's what's happening in your organization today.</p>
         </div>
-        <div className="pdb-hero-actions">
-          <button className="pdb-btn-ghost" onClick={()=>onNavigate?.('employees')} type="button">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            Employees
-          </button>
-          <button className="pdb-btn-ghost" onClick={()=>onNavigate?.('leave')} type="button">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            Leave
-          </button>
+        <div className="dk-header-right">
+          <span className="dk-date-badge">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            {todayStr}
+          </span>
         </div>
       </div>
 
-      {/* ── KPI CARDS ────────────────────────────────────────────────── */}
-      <div className="pdb-kpis">
+      {/* ── KPI CARDS ───────────────────────────────────────────────── */}
+      <div className="dk-kpis">
         {([
-          { label:'Total Employees', val:cTotal,   raw:employees.length, note:`${deptCounts.length} sections`, icon:'👥', g:'#6D5DF6,#8B5CF6', light:'#EDE9FE' },
-          { label:'Present Today',   val:cOnSite,  raw:onSite,           note:`${onSitePct}% on site`,         icon:'🏢', g:'#059669,#10B981', light:'#D1FAE5' },
-          { label:'On Leave',        val:cLeave,   raw:onLeave,          note:`${employees.length?Math.round(onLeave/employees.length*100):0}% away`,  icon:'✈️', g:'#2563EB,#3B82F6', light:'#DBEAFE' },
-          { label:'Off Site',        val:cOffSite, raw:offSite,          note:`${employees.length?Math.round(offSite/employees.length*100):0}% offsite`, icon:'🏠', g:'#D97706,#F59E0B', light:'#FEF3C7' },
-          { label:'New Joiners',     val:cNew,     raw:newJoiners,       note:'last 30 days',                  icon:'🌱', g:'#7C3AED,#A855F7', light:'#F3E8FF' },
-          { label:'Pending Approvals',val:cPending,raw:pendingApprovals, note:'awaiting action',               icon:'⏳', g:'#BE185D,#EC4899', light:'#FCE7F3' },
+          { label:'TOTAL STAFF',   val:cTotal,   note:`${deptCounts.length} sections`,   icon:'👥', c:'#A78BFA', gc:'rgba(167,139,250,0.15)' },
+          { label:'ON SITE',       val:cOnSite,  note:`${onSitePct}% of total staff`,    icon:'📍', c:'#34D399', gc:'rgba(52,211,153,0.15)'  },
+          { label:'OFF SITE',      val:cOffSite, note:`${employees.length?Math.round(offSite/employees.length*100):0}% of total staff`, icon:'🏠', c:'#FB923C', gc:'rgba(251,146,60,0.15)'  },
+          { label:'ON LEAVE',      val:cLeave,   note:`${employees.length?Math.round(onLeave/employees.length*100):0}% of total staff`, icon:'✈️', c:'#60A5FA', gc:'rgba(96,165,250,0.15)'  },
         ] as const).map(k=>(
-          <div key={k.label} className="pdb-kpi" style={{ '--kg': k.g, '--kl': k.light } as React.CSSProperties}>
-            <div className="pdb-kpi-icon">{k.icon}</div>
-            <div className="pdb-kpi-num">{k.val}</div>
-            <div className="pdb-kpi-lbl">{k.label}</div>
-            <div className="pdb-kpi-note">{k.note}</div>
+          <div key={k.label} className="dk-kpi" style={{ '--kc':k.c,'--kgc':k.gc } as React.CSSProperties}>
+            <div className="dk-kpi-icon-wrap"><span style={{ fontSize:'1.4rem' }}>{k.icon}</span></div>
+            <div>
+              <div className="dk-kpi-label">{k.label}</div>
+              <div className="dk-kpi-num">{k.val}</div>
+              <div className="dk-kpi-note">{k.note}</div>
+            </div>
           </div>
         ))}
       </div>
 
-      {/* ── MAIN GRID ────────────────────────────────────────────────── */}
-      <div className="pdb-main">
-
-        {/* Presence donut */}
-        <div className="pdb-card pdb-presence">
-          <div className="pdb-card-hd">
-            <span className="pdb-ttl">Staff Presence</span>
-            <span className="pdb-badge pdb-badge-g">{onSitePct}% on site</span>
+      {/* ── HEADCOUNT BY SECTION ────────────────────────────────────── */}
+      <div className="dk-section-card">
+        <div className="dk-section-hd">
+          <div className="dk-section-hd-left">
+            <span className="dk-section-icon-wrap">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </span>
+            <span className="dk-section-ttl">HEADCOUNT BY SECTION</span>
           </div>
-          <div className="pdb-donut">
-            <svg width="130" height="130" viewBox="0 0 130 130" className="pdb-donut-svg" style={{ transform:'rotate(-90deg)' }}>
-              <circle cx="65" cy="65" r={donutR} fill="none" stroke="#EDE9FE" strokeWidth={donutSW}/>
-              {onSite  > 0 && <circle cx="65" cy="65" r={donutR} fill="none" stroke="#059669" strokeWidth={donutSW} strokeDasharray={`${dSite}  ${donutC-dSite}`}  strokeDashoffset={0}    className="pdb-arc"/>}
-              {offSite > 0 && <circle cx="65" cy="65" r={donutR} fill="none" stroke="#D97706" strokeWidth={donutSW} strokeDasharray={`${dOff}   ${donutC-dOff}`}   strokeDashoffset={-off2} className="pdb-arc"/>}
-              {onLeave > 0 && <circle cx="65" cy="65" r={donutR} fill="none" stroke="#6D5DF6" strokeWidth={donutSW} strokeDasharray={`${dLeave} ${donutC-dLeave}`} strokeDashoffset={-off3} className="pdb-arc"/>}
-            </svg>
-            <div className="pdb-donut-center">
-              <span className="pdb-donut-n">{cTotal}</span>
-              <span className="pdb-donut-l">total</span>
-            </div>
-          </div>
-          <div className="pdb-legend">
-            {([['#059669','On Site',onSite],['#D97706','Off Site',offSite],['#6D5DF6','On Leave',onLeave]] as const).map(([c,l,v])=>(
-              <div key={l} className="pdb-leg-row">
-                <span className="pdb-leg-dot" style={{ background:c }}/>
-                <span className="pdb-leg-l">{l}</span>
-                <span className="pdb-leg-n">{v}</span>
-                <span className="pdb-leg-p">{employees.length?Math.round((v as number)/employees.length*100):0}%</span>
-              </div>
-            ))}
-          </div>
+          <span className="dk-this-month">This Month</span>
         </div>
 
-        {/* Leave table */}
-        <div className="pdb-card pdb-leave">
-          <div className="pdb-card-hd">
-            <span className="pdb-ttl">Leave &amp; Upcoming</span>
+        <div className="dk-section-body">
+          {/* Left: Donut circle */}
+          <div className="dk-circle-wrap">
+            <div className="dk-circle-outer">
+              <svg width="200" height="200" viewBox="0 0 200 200" style={{ transform:'rotate(-90deg)', position:'absolute', inset:0 }}>
+                <circle cx="100" cy="100" r={dkR} fill="none" stroke="rgba(109,93,246,0.15)" strokeWidth={dkSW}/>
+                {onSite  > 0 && <circle cx="100" cy="100" r={dkR} fill="none" stroke="url(#dkG1)" strokeWidth={dkSW} strokeDasharray={`${dkSite}  ${dkC-dkSite}`}  strokeDashoffset={0} strokeLinecap="round"/>}
+                {offSite > 0 && <circle cx="100" cy="100" r={dkR} fill="none" stroke="#FB923C" strokeWidth={dkSW} strokeDasharray={`${dkOff}   ${dkC-dkOff}`}   strokeDashoffset={-dkOff2} strokeLinecap="round"/>}
+                {onLeave > 0 && <circle cx="100" cy="100" r={dkR} fill="none" stroke="#60A5FA" strokeWidth={dkSW} strokeDasharray={`${dkLeave} ${dkC-dkLeave}`} strokeDashoffset={-dkOff3} strokeLinecap="round"/>}
+                <defs>
+                  <linearGradient id="dkG1" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#7B5CF6"/>
+                    <stop offset="100%" stopColor="#A78BFA"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div className="dk-circle-center">
+                <span className="dk-circle-n">{cTotal}</span>
+                <span className="dk-circle-l">TOTAL HEADCOUNT</span>
+              </div>
+            </div>
+            <div className="dk-circle-stat">
+              <span className="dk-circle-pct">100%</span>
+              <span className="dk-circle-pct-l">Total Employees</span>
+            </div>
+          </div>
+
+          {/* Right: Section table */}
+          <div className="dk-dept-table">
+            <div className="dk-dept-thead">
+              <span>SECTION</span>
+              <span>HEADCOUNT</span>
+              <span style={{ textAlign:'right' }}>% OF TOTAL</span>
+            </div>
+            <div className="dk-dept-tbody">
+              {deptCounts.length === 0
+                ? <div className="dk-empty">No sections yet.</div>
+                : deptCounts.map(([dept,cnt],i)=>(
+                    <div key={dept} className="dk-dept-row" style={{ animationDelay: `${i*30}ms` }}>
+                      <div className="dk-dept-name-cell">
+                        <span className="dk-dept-icon">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                        </span>
+                        <span className="dk-dept-name">{dept}</span>
+                      </div>
+                      <div className="dk-dept-bar-cell">
+                        <div className="dk-dept-track">
+                          <div className="dk-dept-fill" style={{ width:Math.round(cnt/maxDept*100)+'%' }}/>
+                        </div>
+                        <span className="dk-dept-cnt">{cnt}</span>
+                      </div>
+                      <span className="dk-dept-pct">{employees.length?Math.round(cnt/employees.length*100).toFixed(1):0}%</span>
+                    </div>
+                  ))
+              }
+            </div>
+            {employees.length > 0 && (
+              <div className="dk-dept-total-row">
+                <span className="dk-dept-total-lbl">TOTAL</span>
+                <span className="dk-dept-total-n">{employees.length}</span>
+                <span className="dk-dept-total-p">100%</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── BOTTOM: Leave · Termination · Medical ───────────────────── */}
+      <div className="dk-bottom">
+
+        {/* Active & Upcoming Leave */}
+        <div className="dk-card dk-leave">
+          <div className="dk-card-hd">
+            <span className="dk-card-ttl">Active &amp; Upcoming Leave</span>
             <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-              <span className="pdb-badge pdb-badge-b">{activeLeaves.length} active</span>
-              <span className="pdb-badge pdb-badge-n">{upcomingRows.length} upcoming</span>
-              <button className="pdb-va" onClick={()=>onNavigate?.('leave')} type="button">View all →</button>
+              <span className="dk-chip dk-chip-b">{activeLeaves.length} active</span>
+              <span className="dk-chip dk-chip-n">{upcomingRows.length} upcoming</span>
+              <button className="dk-va" onClick={()=>onNavigate?.('leave')} type="button">View all →</button>
             </div>
           </div>
           {allLeaveRows.length === 0
-            ? <p className="pdb-empty">No active or upcoming leave.</p>
+            ? <p className="dk-empty">No active or upcoming leave.</p>
             : <>
-                <div className="pdb-tbl-head">
+                <div className="dk-tbl-head">
                   <span>Employee</span><span>Section</span><span>Type</span><span>Departs</span><span>Returns</span>
                 </div>
-                <div className="pdb-tbl-body">
-                  {leavePreview.map(r=>(
-                    <div key={r.id} className={`pdb-tbl-row${r._soon?' pdb-row-soon':''}`}>
-                      <div className="pdb-emp">
-                        <span className="pdb-av pdb-av-b">{r.name.charAt(0)}</span>
-                        <span className="pdb-emp-n">
-                          {r.name}
-                          {r._soon   && <span className="pdb-tag pdb-tag-r">7d</span>}
-                          {r._notice && <span className="pdb-tag pdb-tag-a">Notice</span>}
-                        </span>
-                      </div>
-                      <span className="pdb-tc-m">{r.department}</span>
-                      <span className="pdb-type">{r.leaveTypeCode}</span>
-                      <span className="pdb-tc-d">{formatDateDisplay(r.departureDate)}</span>
-                      <span className="pdb-tc-d">{r.returnDate?formatDateDisplay(r.returnDate):'—'}</span>
+                {allLeaveRows.slice(0,8).map(r=>(
+                  <div key={r.id} className={`dk-tbl-row${r._soon?' dk-row-soon':''}`}>
+                    <div className="dk-emp">
+                      <span className="dk-av">{r.name.charAt(0)}</span>
+                      <span className="dk-emp-n">
+                        {r.name}
+                        {r._soon   && <span className="dk-tag dk-tag-r">7d</span>}
+                        {r._notice && <span className="dk-tag dk-tag-a">Notice</span>}
+                      </span>
                     </div>
-                  ))}
-                </div>
-                {leaveExtra > 0 && <button className="pdb-more-btn" onClick={()=>onNavigate?.('leave')} type="button">+{leaveExtra} more employees → View All Leave</button>}
+                    <span className="dk-tc-m">{r.department}</span>
+                    <span className="dk-type">{r.leaveTypeCode}</span>
+                    <span className="dk-tc-d">{formatDateDisplay(r.departureDate)}</span>
+                    <span className="dk-tc-d">{r.returnDate?formatDateDisplay(r.returnDate):'—'}</span>
+                  </div>
+                ))}
+                {allLeaveRows.length > 8 && <button className="dk-more" onClick={()=>onNavigate?.('leave')} type="button">+{allLeaveRows.length-8} more → View All Leave</button>}
               </>
           }
         </div>
 
-      </div>
-
-      {/* ── BOTTOM GRID ──────────────────────────────────────────────── */}
-      <div className="pdb-bottom">
-
-        {/* ALL Sections */}
-        <div className="pdb-card pdb-depts">
-          <div className="pdb-card-hd">
-            <span className="pdb-ttl">Headcount by Section</span>
-            <span className="pdb-badge pdb-badge-p">{employees.length} total · {deptCounts.length} sections</span>
+        {/* Notice Period */}
+        <div className="dk-card dk-term">
+          <div className="dk-card-hd">
+            <span className="dk-card-ttl">Notice Period</span>
+            <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+              {noticeTerminations.length > 0 && <span className="dk-chip dk-chip-r">{noticeTerminations.length} active</span>}
+              {noticeTerminations.length > 0 && <button className="dk-va" onClick={()=>onNavigate?.('termination')} type="button">View all →</button>}
+            </div>
           </div>
-          {deptCounts.length === 0
-            ? <p className="pdb-empty">No sections yet.</p>
-            : <div className="pdb-dept-list">
-                {deptCounts.map(([dept,cnt])=>(
-                  <div key={dept} className="pdb-dept-row">
-                    <span className="pdb-dept-lbl">{dept}</span>
-                    <div className="pdb-dept-track">
-                      <div className="pdb-dept-fill" style={{ width:Math.round(cnt/maxDept*100)+'%' }}/>
+          {noticeTerminations.length === 0
+            ? <p className="dk-empty">No staff in notice period.</p>
+            : <>
+                {noticeTerminations.slice(0,5).map(t=>(
+                  <div key={t.id} className="dk-term-row">
+                    <span className="dk-av dk-av-r">{t.name.charAt(0)}</span>
+                    <div className="dk-term-info">
+                      <span className="dk-term-n">{t.name}</span>
+                      <span className="dk-term-m">{t.designation} · {t.department}</span>
+                      {t.lastWorkingDate && <span className="dk-term-lwd">LWD {formatDateDisplay(t.lastWorkingDate)}</span>}
                     </div>
-                    <span className="pdb-dept-n">{cnt}</span>
-                    <span className="pdb-dept-p">{employees.length?Math.round(cnt/employees.length*100):0}%</span>
+                    <span className="dk-stage" style={{ color: dkStage[t.currentStage] ?? '#9CA3AF' }}>{t.currentStage}</span>
                   </div>
                 ))}
-              </div>
+                {noticeTerminations.length > 5 && <button className="dk-more" onClick={()=>onNavigate?.('termination')} type="button">+{noticeTerminations.length-5} more →</button>}
+              </>
           }
+          <div className="dk-term-foot">✓ {completedTerminations.length} completed</div>
         </div>
 
-        {/* Medical */}
-        <div className="pdb-card pdb-medical">
-          <div className="pdb-card-hd">
-            <span className="pdb-ttl">Medical Leave</span>
-            <span className="pdb-badge pdb-badge-n">{medicalCases.length} total</span>
+        {/* Medical Leave */}
+        <div className="dk-card dk-medical">
+          <div className="dk-card-hd">
+            <span className="dk-card-ttl">Medical Leave</span>
+            <span className="dk-chip dk-chip-n">{medicalCases.length} total</span>
           </div>
-          <div className="pdb-med-grid">
+          <div className="dk-med-stats">
             {([
-              { l:'This Month', v:thisMonthMed, c:'#111827', bg:'#F8FAFC', alert:false },
-              { l:'Urgent',     v:urgentMed,    c:urgentMed?'#DC2626':'#9CA3AF',   bg:urgentMed?'#FEF2F2':'#F8FAFC', alert:urgentMed>0 },
-              { l:'Admitted',   v:admittedMed,  c:admittedMed?'#7C3AED':'#9CA3AF', bg:admittedMed?'#F5F3FF':'#F8FAFC', alert:admittedMed>0 },
+              { l:'This Month', v:thisMonthMed, c:'#E2E8F0', alert:false },
+              { l:'Urgent',     v:urgentMed,    c:urgentMed?'#F87171':'#4B5563',   alert:urgentMed>0 },
+              { l:'Admitted',   v:admittedMed,  c:admittedMed?'#A78BFA':'#4B5563', alert:admittedMed>0 },
             ] as const).map(s=>(
-              <div key={s.l} className={`pdb-med-stat${s.alert?' pdb-med-alert':''}`} style={{ background:s.bg }}>
-                <span className="pdb-med-n" style={{ color:s.c }}>{s.v}</span>
-                <span className="pdb-med-l">{s.l}</span>
+              <div key={s.l} className={`dk-med-stat${s.alert?' dk-med-alert':''}`}>
+                <span className="dk-med-n" style={{ color:s.c }}>{s.v}</span>
+                <span className="dk-med-l">{s.l}</span>
               </div>
             ))}
           </div>
           {medByDept.length > 0 && <>
-            <p className="pdb-sec-lbl">Top Sections</p>
-            <div className="pdb-dept-list pdb-dept-sm">
-              {medByDept.slice(0,4).map(([dept,cnt])=>(
-                <div key={dept} className="pdb-dept-row">
-                  <span className="pdb-dept-lbl">{dept}</span>
-                  <div className="pdb-dept-track">
-                    <div className="pdb-dept-fill" style={{ width:Math.round(cnt/maxMedDept*100)+'%', background:'#0EA5E9' }}/>
-                  </div>
-                  <span className="pdb-dept-n">{cnt}</span>
+            <p className="dk-sec-lbl">By Section</p>
+            {medByDept.slice(0,5).map(([dept,cnt])=>(
+              <div key={dept} className="dk-med-bar-row">
+                <span className="dk-med-dept">{dept}</span>
+                <div className="dk-med-track">
+                  <div className="dk-med-fill" style={{ width:Math.round(cnt/maxMedDept*100)+'%' }}/>
                 </div>
-              ))}
-            </div>
-          </>}
-          {medicalCases.length===0 && <p className="pdb-empty">No medical cases on record.</p>}
-        </div>
-
-        {/* Notice Period */}
-        <div className="pdb-card pdb-term">
-          <div className="pdb-card-hd">
-            <span className="pdb-ttl">Notice Period</span>
-            <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-              {noticeTerminations.length > 0 && <span className="pdb-badge pdb-badge-r">{noticeTerminations.length} active</span>}
-              {noticeTerminations.length > 0 && <button className="pdb-va" onClick={()=>onNavigate?.('termination')} type="button">View all →</button>}
-            </div>
-          </div>
-          {noticeTerminations.length === 0
-            ? <p className="pdb-empty">No staff in notice period.</p>
-            : <div className="pdb-term-list">
-                {termPreview.map(t=>{
-                  const sc = stageStyle[t.currentStage] ?? { color:'#6B7280', bg:'#F9FAFB' }
-                  return (
-                    <div key={t.id} className="pdb-term-row">
-                      <span className="pdb-av pdb-av-r">{t.name.charAt(0)}</span>
-                      <div className="pdb-term-info">
-                        <span className="pdb-term-n">{t.name}</span>
-                        <span className="pdb-term-m">{t.designation}</span>
-                        {t.lastWorkingDate && <span className="pdb-term-lwd">LWD {formatDateDisplay(t.lastWorkingDate)}</span>}
-                      </div>
-                      <span className="pdb-stage" style={{ color:sc.color, background:sc.bg }}>{t.currentStage}</span>
-                    </div>
-                  )
-                })}
-                {termExtra > 0 && <button className="pdb-more-btn" onClick={()=>onNavigate?.('termination')} type="button">+{termExtra} more →</button>}
+                <span className="dk-med-cnt">{cnt}</span>
               </div>
-          }
-          <div className="pdb-term-foot">✓ {completedTerminations.length} completed</div>
+            ))}
+          </>}
+          {medicalCases.length===0 && <p className="dk-empty">No medical cases on record.</p>}
         </div>
 
       </div>
