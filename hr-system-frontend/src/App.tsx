@@ -3135,15 +3135,15 @@ function printTripRequest(record: TripRequest, sigRequester: string, sigAhmedAli
   /* Typography */
   .t1 { text-align:center; font-size:12pt; font-weight:700; margin-bottom:2pt; }
   .t2 { text-align:center; font-size:10.5pt; font-weight:700; margin-bottom:10pt; }
-  .sh { font-weight:700; font-size:10pt; margin:7pt 0 2pt; }
+  .sh { font-weight:700; font-size:10pt; margin:11pt 0 3pt; }
 
   /* All tables share these base styles */
-  table { width:100%; border-collapse:collapse; margin-bottom:5pt; font-size:9.5pt; }
+  table { width:100%; border-collapse:collapse; margin-bottom:8pt; font-size:9.5pt; }
   td    { border:0.7pt solid #000; padding:2.5pt 5pt; vertical-align:middle; }
   td.L  { font-weight:700; width:37%; background:#f0f0f0; }
 
   /* Tick row */
-  .tr { display:flex; align-items:center; gap:8pt; margin-bottom:6pt; flex-wrap:wrap; }
+  .tr { display:flex; align-items:center; gap:8pt; margin-bottom:9pt; flex-wrap:wrap; }
   .tb { display:inline-block; width:20pt; height:16pt; border:0.7pt solid #000;
         text-align:center; line-height:16pt; font-weight:700; font-size:12pt; }
   .rc { border:0.7pt solid #000; min-width:130pt; padding:1.5pt 6pt;
@@ -3169,7 +3169,7 @@ function printTripRequest(record: TripRequest, sigRequester: string, sigAhmedAli
   .br  { border-bottom:0.7pt solid #000; padding:2pt 6pt; font-size:9.5pt; }
   .br:last-child { border-bottom:none; }
   .br.hd { font-weight:700; background:#f0f0f0; }
-  .br.sig { min-height:36pt; }
+  .br.sig { min-height:60pt; vertical-align:top; padding:2pt 6pt; }
 
   /* Status stamp (non-approved) */
   .stamp { position:absolute; top:40pt; right:20pt;
@@ -3275,7 +3275,7 @@ function printTripRequest(record: TripRequest, sigRequester: string, sigAhmedAli
       <td><div class="br">Name:</div></td>
     </tr>
     <tr>
-      <td><div class="br sig"></div></td>
+      <td><div class="br sig">Signature:</div></td>
       <td><div class="br sig">Signature:</div></td>
     </tr>
     <tr>
