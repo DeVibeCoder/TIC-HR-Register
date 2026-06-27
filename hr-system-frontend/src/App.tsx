@@ -1379,7 +1379,7 @@ function LeaveTypeBadge({ code }: { code: LeaveTypeCode }) {
 
 function OverviewPage({
   employees,
-  leaveRequests: _leaveRequests,
+  leaveRequests,
   activeLeaves,
   leaveHistory: _leaveHistory,
   noticeTerminations,
@@ -1545,32 +1545,46 @@ function OverviewPage({
         {/* RIGHT COLUMN */}
         <div className="dash-col">
 
-          {/* Active Leaves + Notice Period staff who are on AL */}
+          {/* Active Leaves + Notice Period staff on active/requested leave */}
           {(() => {
             const noticeEmpIds = new Set(noticeTerminations.map(t => t.employeeId))
-            type Row = typeof activeLeaves[0] & { _notice?: boolean }
+            // Leave requests from notice period staff (pending — not yet departed)
+            const noticeLeaveReqs = leaveRequests
+              .filter(r => noticeEmpIds.has(r.employeeId))
+              .map(r => ({
+                id: `req-${r.id}`, employeeId: r.employeeId, name: r.name,
+                department: r.department, nationality: r.nationality,
+                leaveTypeCode: r.leaveTypeCode,
+                departureDate: r.departureDate, returnDate: r.returnDate,
+                days: r.days, remarks: r.remarks,
+                _notice: true as const, _pending: true as const,
+              }))
+            type Row = { id:string; name:string; department:string; leaveTypeCode:LeaveTypeCode; departureDate:string; returnDate:string; _notice?:boolean; _pending?:boolean }
             const rows: Row[] = [
-              ...activeLeaves.filter(r => !noticeEmpIds.has(r.employeeId)),
-              ...activeLeaves.filter(r => noticeEmpIds.has(r.employeeId)).map(r => ({ ...r, _notice: true as const })),
+              ...activeLeaves.filter(r => !noticeEmpIds.has(r.employeeId)).map(r => ({ ...r, _notice: false, _pending: false })),
+              ...activeLeaves.filter(r => noticeEmpIds.has(r.employeeId)).map(r => ({ ...r, _notice: true, _pending: false })),
+              ...noticeLeaveReqs,
             ]
+            const totalCount = activeLeaves.length + noticeLeaveReqs.length
             return (
               <article className="dash-panel">
                 <div className="dash-panel-hd">
-                  <span className="dash-panel-ttl">Leave — Currently Active</span>
-                  <span className="dash-chip" style={{ background:'#dbeafe', color:'#1d4ed8' }}>{activeLeaves.length} on leave</span>
+                  <span className="dash-panel-ttl">Leave — Active &amp; Upcoming</span>
+                  <span className="dash-chip" style={{ background:'#dbeafe', color:'#1d4ed8' }}>{totalCount} total</span>
                 </div>
                 {rows.length === 0
-                  ? <p className="dash-empty">No staff currently on leave.</p>
+                  ? <p className="dash-empty">No staff currently on or pending leave.</p>
                   : <>
                       <div className="dash-al-head">
                         <span>Name</span><span>Section</span><span>Type</span><span>Departed</span><span>Due Back</span>
                       </div>
                       <div className="dash-al-list">
                         {rows.slice(0, 10).map(r => (
-                          <div key={r.id} className="dash-al-row">
+                          <div key={r.id} className={`dash-al-row${r._notice ? ' dash-al-row-notice' : ''}`}>
                             <span className="dash-al-name">
                               {r.name}
-                              {r._notice && <span className="dash-al-notice-tag">Notice</span>}
+                              {r._notice && !r._pending && <span className="dash-al-notice-tag">Notice</span>}
+                              {r._pending && <span className="dash-al-notice-tag" style={{ background:'#fee2e2', color:'#b91c1c' }}>Pending</span>}
                             </span>
                             <span className="dash-al-dept">{r.department}</span>
                             <span className="dash-al-code">{r.leaveTypeCode}</span>

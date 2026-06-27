@@ -10095,7 +10095,7 @@ html { overflow-x: hidden; }
 .dash-al-dept { font-size: 0.68rem; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dash-al-date { font-size: 0.7rem; color: #475569; white-space: nowrap; }
 /* Compact type code — replaces the big LeaveTypeBadge in the overview */
-.dash-al-code { font-size: 0.68rem; font-weight: 700; color: #1d4ed8; background: #dbeafe; padding: 1px 6px; border-radius: 10px; white-space: nowrap; flex-shrink: 0; }
+.dash-al-code { font-size: 0.6rem; font-weight: 700; color: #1d4ed8; background: #dbeafe; padding: 1px 5px; border-radius: 8px; white-space: nowrap; flex-shrink: 0; letter-spacing: 0.02em; }
 /* Notice period indicator tag */
 .dash-al-notice-tag { font-size: 0.58rem; font-weight: 800; color: #92400e; background: #fef3c7; padding: 1px 5px; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.04em; flex-shrink: 0; }
 .dash-al-row-notice { background: #fffbeb; }
