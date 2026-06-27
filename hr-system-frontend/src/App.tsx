@@ -8407,9 +8407,18 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
     const months = ['January','February','March','April','May','June','July','August','September','October','November','December']
     const days   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
     const dt  = new Date(d + 'T12:00:00')
-    const day = dt.getDate()
-    const ord = (day===1||day===21||day===31)?'st':(day===2||day===22)?'nd':(day===3||day===23)?'rd':'th'
-    return `${day}<sup style="font-size:0.65em;vertical-align:super;">${ord}</sup> ${months[dt.getMonth()]} ${dt.getFullYear()}, ${days[dt.getDay()]}`
+    // No ordinal suffix ("TH") — just plain date
+    return `${dt.getDate()} ${months[dt.getMonth()]} ${dt.getFullYear()}, ${days[dt.getDay()]}`
+  }
+
+  // Resolve section code from employee record (fixes DGM showing as 'DGM' instead of 'ADM')
+  const resolveSectionCode = (r: { name: string; deptCode: string }) => {
+    const emp = employees.find(e => e.fullName === r.name)
+    if (emp) {
+      const md = MEETING_DEPTS.find(d => d.appDepts.some(a => a.toLowerCase() === emp.department?.toLowerCase()))
+      if (md) return md.code
+    }
+    return r.deptCode
   }
 
   const attended   = record.reps.filter(r => r.attendance === 'Attended' && r.name.trim())
@@ -8423,19 +8432,20 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
 
   const allAttended = [...attended, ...replacements]
 
-  // Participants table — 3 columns: Name (46%) | Designation (44%) | Section code (10%)
+  // Participants — fixed-layout table so all rows have identical column widths
   const pTableRows = allAttended.map(r => `<tr>
-    <td style="padding:2.5pt 5pt;border:0.5pt solid #ddd;width:46%;font-size:8pt;">${esc(r.name)}</td>
-    <td style="padding:2.5pt 5pt;border:0.5pt solid #ddd;width:44%;font-size:7.5pt;color:#444;">${esc(r.designation)}</td>
-    <td style="padding:2.5pt 4pt;border:0.5pt solid #ddd;width:10%;text-align:center;font-weight:700;font-size:8pt;">${esc(r.deptCode)}</td>
+    <td>${esc(r.name)}</td>
+    <td style="color:#444;">${esc(r.designation)}</td>
+    <td class="ctr" style="font-weight:700;">${esc(resolveSectionCode(r))}</td>
   </tr>`).join('')
 
-  const repRows = (list: MeetingRep[], emptyRows = 2) => list.length === 0
-    ? Array(emptyRows).fill(`<tr><td colspan="3" style="padding:5pt;">&nbsp;</td></tr>`).join('')
+  // On Leave rows — show only leave type (remarks), no replacement info
+  const repRows = (list: MeetingRep[], emptyRows = 1) => list.length === 0
+    ? Array(emptyRows).fill(`<tr><td colspan="3" style="padding:4pt;">&nbsp;</td></tr>`).join('')
     : list.map(r => `<tr>
-        <td style="padding:2.5pt 5pt;border:0.5pt solid #ddd;width:46%;font-size:8pt;">${esc(r.name)}</td>
-        <td style="padding:2.5pt 5pt;border:0.5pt solid #ddd;width:44%;font-size:7.5pt;color:#444;">${esc(r.reason || (r.attendance === 'On Leave' ? 'Annual Leave' : ''))}${r.replacementName?.trim() ? ` <em style="color:#666;">(Replacement: ${esc(r.replacementName)})</em>` : ''}</td>
-        <td style="padding:2.5pt 4pt;border:0.5pt solid #ddd;width:10%;text-align:center;font-weight:700;font-size:8pt;">${esc(r.deptCode)}</td>
+        <td>${esc(r.name)}</td>
+        <td style="color:#444;">${esc(r.reason || (r.attendance === 'On Leave' ? 'Annual Leave' : r.attendance === 'Absent' ? 'Absent' : ''))}</td>
+        <td class="ctr" style="font-weight:700;">${esc(resolveSectionCode(r))}</td>
       </tr>`).join('')
 
   const hcRows = HEADCOUNT_DEPTS.map(dept => {
@@ -8513,24 +8523,55 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/>
 <title>Briefing Meeting Minutes — ${esc(record.refNumber)}</title>
 <style>
-  @page { size:A4 portrait; margin:5mm 18mm 14mm 18mm; }
+  @page { size:A4 portrait; margin:8mm 16mm 12mm 16mm; }
   *,*::before,*::after { box-sizing:border-box; }
-  body { font-family:Arial,Helvetica,sans-serif; font-size:9pt; color:#111; background:#e8e8e8; margin:0; padding:0; }
+  body { font-family:Arial,Helvetica,sans-serif; font-size:8.5pt; color:#111; background:#e8e8e8; margin:0; padding:0; }
   .pbar { display:flex; align-items:center; gap:14px; padding:10px 20px; background:#1e1b4b; position:sticky; top:0; z-index:10; font-family:system-ui,sans-serif; font-size:13px; }
   .pbar button { padding:7px 18px; background:#6d28d9; color:#fff; border:none; border-radius:6px; font-size:13px; font-weight:700; cursor:pointer; }
   .pbar span { color:rgba(221,214,254,0.7); font-size:12px; }
   .wrap { max-width:210mm; margin:20px auto; display:flex; flex-direction:column; gap:18px; padding-bottom:40px; }
-  .page { background:#fff; box-shadow:0 4px 24px rgba(0,0,0,0.16); padding:5mm 18mm 14mm; }
-  .info-tbl { width:100%; border-collapse:collapse; margin-bottom:12pt; }
-  .info-tbl td { border:0.8pt solid #999; padding:4pt 8pt; font-size:9pt; vertical-align:top; }
-  .info-tbl td.lbl { font-weight:700; white-space:nowrap; width:28mm; background:#f0f0f0; color:#111; font-size:8.5pt; }
-  .p-tbl { width:100%; border-collapse:collapse; }
-  .p-tbl th { background:#f0f0f0; border:0.5pt solid #ccc; padding:3pt 6pt; font-size:8pt; font-weight:700; text-align:left; }
-  .p-tbl th.ctr { text-align:center; }
+  .page { background:#fff; box-shadow:0 4px 24px rgba(0,0,0,0.16); padding:8mm 16mm 12mm; }
+
+  /* Info table */
+  .info-tbl { width:100%; border-collapse:collapse; margin-bottom:8pt; }
+  .info-tbl td { border:0.7pt solid #999; padding:3pt 7pt; font-size:8.5pt; vertical-align:top; }
+  .info-tbl td.lbl { font-weight:700; white-space:nowrap; width:26mm; background:#f0f0f0; color:#111; font-size:8pt; }
+
+  /* Participant tables — fixed layout ensures identical column widths */
+  .p-tbl { width:100%; border-collapse:collapse; table-layout:fixed; }
+  .p-tbl th { background:#f0f0f0; border:0.5pt solid #ccc; padding:2.5pt 5pt; font-size:7.5pt; font-weight:700; text-align:left; overflow:hidden; }
+  .p-tbl th.ctr,.p-tbl td.ctr { text-align:center; }
+  .p-tbl td { border:0.5pt solid #ddd; padding:2pt 5pt; font-size:8pt; overflow:hidden; }
+  .p-tbl .nc { width:46%; } .p-tbl .dc { width:44%; } .p-tbl .sc { width:10%; }
+
+  /* Headcount table */
   .hc-tbl { width:100%; border-collapse:collapse; }
-  .hc-tbl th { background:#4a7fb5; color:#fff; font-size:8pt; font-weight:700; padding:5pt 4pt; border:0.5pt solid #3a6f9f; text-align:center; }
+  .hc-tbl th { background:#4a7fb5; color:#fff; font-size:7.5pt; font-weight:700; padding:4pt 3pt; border:0.5pt solid #3a6f9f; text-align:center; }
   .hc-tbl th.lft { text-align:left; }
+  .hc-tbl td { padding:3pt; font-size:8pt; border:0.5pt solid #bbb; }
   .hc-tbl .tot td { font-weight:800; background:#f0f0f0; }
+
+  /* Discussion page */
+  .disc-intro { font-size:8.5pt; font-weight:700; margin-bottom:8pt; padding-bottom:6pt; border-bottom:0.5pt solid #ccc; }
+  .disc-section-hd { font-size:8.5pt; font-weight:800; text-decoration:underline; text-transform:uppercase; margin:0 0 5pt; }
+  .disc-subsection { margin-bottom:10pt; padding-left:14pt; }
+  .disc-label { display:flex; align-items:baseline; gap:6pt; margin-bottom:5pt; }
+  .disc-label strong { font-size:8.5pt; text-transform:uppercase; letter-spacing:0.3pt; }
+  .disc-dept-hd { font-size:8pt; font-weight:700; text-decoration:underline; margin-bottom:3pt; }
+  .disc-dept-nil { font-size:8pt; color:#888; }
+  .disc-text { font-size:8.5pt; line-height:1.5; }
+  .disc-ul { margin:0; padding-left:14pt; }
+  .disc-ul li { font-size:8pt; margin-bottom:2pt; }
+
+  /* Closing */
+  .closing-note { text-align:center; border:0.7pt solid #aaa; padding:4pt 8pt; margin:10pt 0 8pt; font-size:8pt; color:#555; font-style:italic; }
+  .sig-grid { display:grid; grid-template-columns:1fr 1fr; gap:32pt; margin-top:6pt; }
+  .sig-box { border:0.7pt solid #aaa; padding:8pt 12pt 7pt; }
+  .sig-by { font-size:8pt; margin-bottom:12pt; }
+  .sig-line { border-bottom:0.7pt solid #888; margin-bottom:4pt; height:12pt; }
+  .sig-name { font-size:8pt; font-weight:700; }
+  .sig-role { font-size:8pt; }
+
   @media print {
     body { background:#fff; }
     .pbar { display:none !important; }
@@ -8545,128 +8586,137 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
 </div>
 <div class="wrap">
 
+<!-- PAGE 1 -->
 <div class="page">
-  <div style="text-align:center;margin-top:0;margin-bottom:8pt;padding-bottom:6pt;border-bottom:1pt solid #d0d8ee;">
-    <img src="${letterheadUrl}" alt="Villa Hakatha Pvt. Ltd. Letterhead"
-         style="max-width:100%;width:auto;height:auto;max-height:110pt;display:inline-block;vertical-align:top;mix-blend-mode:multiply;"
+  <div style="text-align:center;margin-bottom:6pt;padding-bottom:5pt;border-bottom:1pt solid #d0d8ee;">
+    <img src="${letterheadUrl}" alt="Letterhead"
+         style="max-width:100%;max-height:100pt;display:inline-block;mix-blend-mode:multiply;"
          onerror="this.style.display='none'"/>
   </div>
-  <div style="display:flex;justify-content:space-between;align-items:baseline;padding-bottom:5pt;margin-bottom:0;">
-    <span style="font-size:11pt;font-weight:900;text-transform:uppercase;letter-spacing:0.5pt;">Briefing Meeting Minutes</span>
-    <span style="font-size:10pt;font-weight:700;">Ref: ${esc(record.refNumber)}</span>
+  <div style="display:flex;justify-content:space-between;align-items:baseline;padding-bottom:4pt;margin-bottom:5pt;">
+    <span style="font-size:10.5pt;font-weight:900;text-transform:uppercase;letter-spacing:0.5pt;">Briefing Meeting Minutes</span>
+    <span style="font-size:9.5pt;font-weight:700;">REF: ${esc(record.refNumber)}</span>
   </div>
+
   <table class="info-tbl">
-    <tr><td class="lbl">Date</td><td style="text-transform:uppercase;">${fmtMeetingDate(record.date)}</td></tr>
-    <tr><td class="lbl">Time Started</td><td style="text-transform:uppercase;">${esc(record.timeStarted)} hrs.</td></tr>
-    <tr><td class="lbl">Time Ended</td><td style="text-transform:uppercase;">${esc(record.timeEnded ? record.timeEnded + ' hrs.' : '—')}</td></tr>
+    <!-- Date + Time on same row -->
+    <tr>
+      <td class="lbl">Date</td>
+      <td>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="text-transform:uppercase;font-weight:600;">${fmtMeetingDate(record.date)}</span>
+          <span style="color:#444;font-size:8pt;">
+            Time Started: <strong>${esc(record.timeStarted)} hrs.</strong>
+            &nbsp;&nbsp;
+            Time Ended: <strong>${esc(record.timeEnded ? record.timeEnded + ' hrs.' : '—')}</strong>
+          </span>
+        </div>
+      </td>
+    </tr>
     <tr><td class="lbl">Venue</td><td style="text-transform:uppercase;">${esc(record.venue)}</td></tr>
     <tr><td class="lbl">Chairperson</td><td style="font-weight:600;text-transform:uppercase;">${esc(record.chairperson)}</td></tr>
     <tr>
       <td class="lbl">Participants</td>
-      <td style="padding:4pt 8pt;">
+      <td style="padding:3pt 7pt;">
         <table class="p-tbl">
-          <thead><tr>
-            <th style="width:46%;">NAME</th>
-            <th style="width:44%;">DESIGNATION</th>
-            <th class="ctr" style="width:10%;">SECTION</th>
-          </tr></thead>
-          <tbody>${pTableRows || '<tr><td colspan="3" style="padding:5pt;color:#aaa;">—</td></tr>'}</tbody>
+          <thead><tr><th class="nc">NAME</th><th class="dc">DESIGNATION</th><th class="sc ctr">SECTION</th></tr></thead>
+          <tbody>${pTableRows || '<tr><td colspan="3" style="padding:4pt;color:#aaa;">—</td></tr>'}</tbody>
         </table>
       </td>
     </tr>
     <tr>
       <td class="lbl">On Leave</td>
-      <td style="padding:4pt 8pt;">
+      <td style="padding:3pt 7pt;">
         <table class="p-tbl">
-          <thead><tr><th style="width:46%;">NAME</th><th style="width:44%;">REASON / REPLACEMENT</th><th class="ctr" style="width:10%;">SECTION</th></tr></thead>
+          <thead><tr><th class="nc">NAME</th><th class="dc">REMARKS</th><th class="sc ctr">SECTION</th></tr></thead>
           <tbody>${repRows(onLeaveR)}</tbody>
         </table>
       </td>
     </tr>
     <tr>
       <td class="lbl">Absentees</td>
-      <td style="padding:4pt 8pt;">
+      <td style="padding:3pt 7pt;">
         <table class="p-tbl">
-          <thead><tr><th style="width:46%;">NAME</th><th style="width:44%;">REASON</th><th class="ctr" style="width:10%;">SECTION</th></tr></thead>
+          <thead><tr><th class="nc">NAME</th><th class="dc">REASON</th><th class="sc ctr">SECTION</th></tr></thead>
           <tbody>${repRows(absentR)}</tbody>
         </table>
       </td>
     </tr>
   </table>
-  <div style="font-size:10pt;font-weight:800;margin-bottom:7pt;">Daily Headcount of Sections</div>
+
+  <div style="font-size:9pt;font-weight:800;margin-bottom:5pt;">Daily Headcount of Sections</div>
   <table class="hc-tbl">
     <thead><tr>
-      <th class="lft">Section</th>
-      <th>On Duty</th><th>Not in Site</th><th>Sick Leave</th><th>On Leave</th>
-      <th>Total</th>
+      <th class="lft" style="width:32%;">Section</th>
+      <th>On Duty</th><th>Not in Site</th><th>Sick Leave</th><th>On Leave</th><th>Total</th>
     </tr></thead>
     <tbody>${hcRows}</tbody>
     <tfoot><tr class="tot">
-      <td style="padding:4pt 6pt;font-size:9pt;border:0.5pt solid #bbb;font-weight:800;">TOTAL</td>
-      <td style="text-align:center;padding:4pt;font-size:9pt;border:0.5pt solid #bbb;">${pad2(totOnDuty)}</td>
-      <td style="text-align:center;padding:4pt;font-size:9pt;border:0.5pt solid #bbb;">${pad2(totNotInSite)}</td>
-      <td style="text-align:center;padding:4pt;font-size:9pt;border:0.5pt solid #bbb;">00</td>
-      <td style="text-align:center;padding:4pt;font-size:9pt;border:0.5pt solid #bbb;">${pad2(totOnLeave)}</td>
-      <td style="text-align:center;padding:4pt;font-size:9pt;border:0.5pt solid #bbb;font-weight:800;">${pad2(grandTotal)}</td>
+      <td style="padding:3pt 5pt;font-weight:800;">TOTAL</td>
+      <td style="text-align:center;padding:3pt;">${pad2(totOnDuty)}</td>
+      <td style="text-align:center;padding:3pt;">${pad2(totNotInSite)}</td>
+      <td style="text-align:center;padding:3pt;">00</td>
+      <td style="text-align:center;padding:3pt;">${pad2(totOnLeave)}</td>
+      <td style="text-align:center;padding:3pt;font-weight:800;">${pad2(grandTotal)}</td>
     </tr></tfoot>
   </table>
   ${pgFooter(1)}
 </div>
 
+<!-- PAGE 2 -->
 <div class="page pgbrk">
-  <div style="font-size:9pt;font-weight:700;margin-bottom:12pt;padding-bottom:8pt;border-bottom:0.5pt solid #ccc;">The discussions and action points agreed during the meeting are as follows.</div>
+  <p class="disc-intro">The discussions and action points agreed during the meeting are as follows.</p>
 
-  <div style="margin-bottom:14pt;">
-    <div style="display:flex;align-items:baseline;gap:8pt;margin-bottom:6pt;">
-      <span style="font-size:10pt;">&#9675;</span>
-      <strong style="font-size:9pt;text-transform:uppercase;letter-spacing:0.3pt;">Agenda:</strong>
-    </div>
+  <!-- Agenda -->
+  <div style="margin-bottom:10pt;">
+    <div class="disc-label"><span style="font-size:9.5pt;">&#9675;</span><strong>Agenda:</strong></div>
     ${agendaHtml}
   </div>
 
-  <div style="margin-bottom:14pt;">
-    <div style="display:flex;align-items:baseline;gap:8pt;margin-bottom:10pt;">
-      <span style="font-size:10pt;">&#9675;</span>
-      <strong style="font-size:9pt;text-transform:uppercase;letter-spacing:0.3pt;">Discussion:</strong>
+  <!-- Discussion -->
+  <div>
+    <div class="disc-label" style="margin-bottom:6pt;"><span style="font-size:9.5pt;">&#9675;</span><strong>Discussion:</strong></div>
+
+    <div class="disc-subsection">
+      <p class="disc-section-hd">1. Review of Minutes from the Previous Meeting Held on ${fmtAgendaDate(record.prevMeetingDate)}.</p>
+      <p class="disc-text">${record.reviewNotes?.trim() ? esc(record.reviewNotes.trim()) : 'Highlighted: The minutes from the previous meeting were reviewed and accepted without any changes.'}</p>
     </div>
 
-    <div style="margin-bottom:14pt;padding-left:18pt;">
-      <div style="font-size:9pt;font-weight:800;text-decoration:underline;text-transform:uppercase;margin-bottom:6pt;">
-        1. Review of Minutes from the Previous Meeting Held on ${fmtAgendaDate(record.prevMeetingDate)}.
-      </div>
-      <div style="font-size:9pt;line-height:1.6;">${record.reviewNotes?.trim() ? esc(record.reviewNotes.trim()) : 'Highlighted: The minutes from the previous meeting were reviewed and accepted without any changes.'}</div>
+    <div class="disc-subsection">
+      <p class="disc-section-hd">2. Discussion of Issues, Updates and Challenges Faced by Each Section:</p>
+      ${MEETING_DEPTS.filter(md => !new Set(['ADMINISTRATION','HUMAN RESOURCES']).has(md.label)).map(md => {
+        const update = record.deptUpdates.find(d => d.dept === md.label)
+        const bullets = (update?.points ?? '').split('\n').filter(p => p.trim())
+          .map(p => `<li>${esc(p.trim())}</li>`).join('')
+        return `<div style="margin-bottom:7pt;">
+          <p class="disc-dept-hd">${esc(md.label)}</p>
+          ${bullets ? `<ul class="disc-ul">${bullets}</ul>` : `<p class="disc-dept-nil">Nil</p>`}
+        </div>`
+      }).join('')}
+      ${record.additionalSectionNotes?.trim() ? `<div style="margin-bottom:7pt;"><p class="disc-dept-hd">ADDITIONAL</p><ul class="disc-ul">${record.additionalSectionNotes.trim().split('\n').filter(l=>l.trim()).map(l=>`<li>${esc(l.trim())}</li>`).join('')}</ul></div>` : ''}
     </div>
 
-    <div style="margin-bottom:14pt;padding-left:18pt;">
-      <div style="font-size:9pt;font-weight:800;text-decoration:underline;text-transform:uppercase;margin-bottom:10pt;">
-        2. Discussion of Issues, Updates and Challenges Faced by Each Section:
-      </div>
-      ${deptHtml}
-      ${additionalHtml ? `<div style="margin-bottom:12pt;"><div style="font-size:9pt;font-weight:700;text-decoration:underline;margin-bottom:4pt;">ADDITIONAL</div><ul style="margin:0;padding-left:16pt;">${additionalHtml}</ul></div>` : ''}
-    </div>
-
-    <div style="padding-left:18pt;">
-      <div style="font-size:9pt;font-weight:800;text-decoration:underline;text-transform:uppercase;margin-bottom:8pt;">
-        3. Any Other Matters That Need to Be Addressed:
-      </div>
-      <div style="font-size:9pt;white-space:pre-line;line-height:1.6;">${record.otherMatters.trim() ? esc(record.otherMatters) : '<span style="color:#888;font-style:italic;">None.</span>'}</div>
+    <div class="disc-subsection">
+      <p class="disc-section-hd">3. Any Other Matters That Need to Be Addressed:</p>
+      <p class="disc-text" style="white-space:pre-line;">${record.otherMatters.trim() ? esc(record.otherMatters) : '<span style="color:#888;font-style:italic;">None.</span>'}</p>
     </div>
   </div>
 
-  <div style="page-break-inside:avoid;break-inside:avoid;">
-    <div style="text-align:center;border:0.8pt solid #888;padding:7pt;margin:18pt 0;font-size:9pt;color:#555;font-style:italic;">We&rsquo;ll end the meeting if there&rsquo;s nothing else to discuss.</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:40pt;margin-top:12pt;">
-      <div style="border:0.8pt solid #888;padding:12pt 14pt;">
-        <div style="font-size:9pt;margin-bottom:22pt;">Prepared by:</div>
-        <div style="border-bottom:0.8pt solid #888;margin-bottom:6pt;height:16pt;"></div>
-        <div style="font-size:9pt;font-weight:700;">${esc(record.preparedBy)}</div>
-        <div style="font-size:9pt;">Administrator</div>
+  <!-- Closing -->
+  <div style="page-break-inside:avoid;break-inside:avoid;margin-top:10pt;">
+    <div class="closing-note">We&rsquo;ll end the meeting if there&rsquo;s nothing else to discuss.</div>
+    <div class="sig-grid">
+      <div class="sig-box">
+        <p class="sig-by">Prepared by:</p>
+        <div class="sig-line"></div>
+        <p class="sig-name">${esc(record.preparedBy)}</p>
+        <p class="sig-role">Administrator</p>
       </div>
-      <div style="border:0.8pt solid #888;padding:12pt 14pt;">
-        <div style="font-size:9pt;margin-bottom:22pt;">Approved by:</div>
-        <div style="border-bottom:0.8pt solid #888;margin-bottom:6pt;height:16pt;"></div>
-        <div style="font-size:9pt;font-weight:700;">${esc(record.approvedBy)}</div>
-        <div style="font-size:9pt;">${approvedByRole}</div>
+      <div class="sig-box">
+        <p class="sig-by">Approved by:</p>
+        <div class="sig-line"></div>
+        <p class="sig-name">${esc(record.approvedBy)}</p>
+        <p class="sig-role">${approvedByRole}</p>
       </div>
     </div>
   </div>
