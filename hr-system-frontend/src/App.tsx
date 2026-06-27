@@ -3216,7 +3216,7 @@ function printTripRequest(record: TripRequest, sigRequester: string, sigAhmedAli
     <tr>
       <td class="L">Departure Date:</td>
       <td>${record.departureDate ? formatDateDisplay(record.departureDate) : '&nbsp;'}</td>
-      <td class="L" style="width:22%"><b>Departure Time</b></td>
+      <td class="L" style="width:22%">Departure Time</td>
       <td>${record.departureTime ? formatTimeHrs(record.departureTime) : '&nbsp;'}</td>
     </tr>
     <tr><td class="L">Purpose of trip:</td><td colspan="3">${esc(record.purpose)||'&nbsp;'}</td></tr>
