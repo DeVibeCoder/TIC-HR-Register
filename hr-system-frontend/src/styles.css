@@ -9770,30 +9770,31 @@ html { overflow-x: hidden; }
    OVERVIEW — Premium 2026 redesign
    ═══════════════════════════════════════════════════════════════════════════ */
 .ov-wrap {
-  padding: 20px 24px 32px;
+  padding: 16px 22px 16px;
   background: #F8FAFC;
-  min-height: 100%;
+  height: 100%;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 /* Header */
 .ov-header {
   display: flex; align-items: flex-start; justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 14px;
 }
 .ov-greeting {
-  font-size: 1.35rem; font-weight: 800; color: #0F172A;
-  margin: 0 0 3px; letter-spacing: -0.02em;
+  font-size: 1.2rem; font-weight: 800; color: #0F172A;
+  margin: 0 0 2px; letter-spacing: -0.02em;
 }
 .ov-greeting-wave { font-style: normal; }
-.ov-subtitle { font-size: 0.8rem; color: #64748B; margin: 0; }
+.ov-subtitle { font-size: 0.76rem; color: #64748B; margin: 0; }
 
 /* KPI row */
 .ov-kpi-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-  margin-bottom: 18px;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 .ov-kpi-card {
   background: #fff;
@@ -9847,22 +9848,52 @@ html { overflow-x: hidden; }
 .ov-badge-amber  { background: #FEF3C7; color: #92400E; }
 
 /* Tags inside rows */
-.ov-tag { font-size: 0.58rem; font-weight: 800; padding: 1px 5px; border-radius: 6px; margin-left: 5px; text-transform: uppercase; letter-spacing: 0.03em; }
+.ov-tag { font-size: 0.56rem; font-weight: 800; padding: 1px 4px; border-radius: 5px; margin-left: 4px; text-transform: uppercase; letter-spacing: 0.02em; flex-shrink: 0; }
 .ov-tag-blue  { background: #E0F2FE; color: #0369A1; }
 .ov-tag-amber { background: #FEF3C7; color: #92400E; }
+.ov-tag-red   { background: #FEE2E2; color: #B91C1C; }
 
-/* Main grid */
-.ov-main-grid {
-  display: grid;
-  grid-template-columns: 220px 1fr 1fr;
-  grid-template-rows: auto auto;
-  gap: 14px;
+/* View All button */
+.ov-viewall {
+  font-size: 0.68rem; font-weight: 700; color: #6D5DF6;
+  background: none; border: none; cursor: pointer; padding: 0;
+  white-space: nowrap; transition: color 0.15s;
 }
-.ov-card-presence { grid-column: 1; grid-row: 1; }
-.ov-card-leave    { grid-column: 2 / 4; grid-row: 1; }
-.ov-card-depts    { grid-column: 1; grid-row: 2; }
-.ov-card-medical  { grid-column: 2; grid-row: 2; }
-.ov-card-term     { grid-column: 3; grid-row: 2; }
+.ov-viewall:hover { color: #5B21B6; }
+
+/* More button (bottom of card) */
+.ov-more-btn {
+  width: 100%; padding: 6px; border: 1px dashed #E2E8F0; border-radius: 8px;
+  background: #F8FAFC; color: #6D5DF6; font-size: 0.72rem; font-weight: 700;
+  cursor: pointer; text-align: center; transition: background 0.15s;
+  margin-top: 4px;
+}
+.ov-more-btn:hover { background: #EDE9FE; }
+
+/* Leave table with internal fixed body */
+.ov-lt-body { overflow: hidden; flex: 1; }
+.ov-lt-name-text { display: flex; align-items: center; flex-wrap: nowrap; overflow: hidden; }
+
+/* Row 2: Presence 25% + Leave 75% — fixed height */
+.ov-row2 {
+  display: grid;
+  grid-template-columns: minmax(200px, 22%) 1fr;
+  gap: 14px;
+  height: 252px;
+  margin-bottom: 14px;
+}
+/* Row 3: Depts 40% + Medical 30% + Termination 30% — fixed height */
+.ov-row3 {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1.5fr;
+  gap: 14px;
+  height: 256px;
+}
+.ov-card-presence { overflow: hidden; }
+.ov-card-leave    { overflow: hidden; display: flex; flex-direction: column; }
+.ov-card-depts    { overflow: hidden; }
+.ov-card-medical  { overflow: hidden; }
+.ov-card-term     { overflow: hidden; display: flex; flex-direction: column; }
 
 /* Donut chart */
 .ov-donut-wrap {

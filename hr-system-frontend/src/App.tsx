@@ -1378,16 +1378,10 @@ function LeaveTypeBadge({ code }: { code: LeaveTypeCode }) {
 }
 
 function OverviewPage({
-  employees,
-  leaveRequests,
-  activeLeaves,
-  leaveHistory: _leaveHistory,
-  noticeTerminations,
-  completedTerminations,
-  exitInterviews: _exitInterviews,
-  medicalCases,
-  inventoryItems: _inventoryItems,
-  passportHandovers: _passportHandovers,
+  employees, leaveRequests, activeLeaves, leaveHistory: _leaveHistory,
+  noticeTerminations, completedTerminations, exitInterviews: _exitInterviews,
+  medicalCases, inventoryItems: _inventoryItems, passportHandovers: _passportHandovers,
+  onNavigate,
 }: {
   employees: Employee[]
   leaveRequests: LeaveRequestRecord[]
@@ -1399,6 +1393,7 @@ function OverviewPage({
   medicalCases: MedicalCaseRecord[]
   inventoryItems: InventoryItem[]
   passportHandovers: PassportHandoverRecord[]
+  onNavigate?: (page: Page) => void
 }) {
   // ── Staff presence ───────────────────────────────────────────────────────
   const onSite    = employees.filter(e => e.siteStatus === 'On Site').length
@@ -1444,33 +1439,49 @@ function OverviewPage({
 
   const todayStr = new Date().toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })
 
-  // SVG donut chart values
-  const donutR = 54, donutSW = 12
-  const donutC = 2 * Math.PI * donutR
-  const donutTotal = employees.length || 1
-  const donutSite   = (onSite  / donutTotal) * donutC
-  const donutOff    = (offSite / donutTotal) * donutC
-  const donutLeave  = (onLeave / donutTotal) * donutC
-  const donutGap    = 0
-  const off1 = 0
-  const off2 = donutSite  + donutGap
-  const off3 = off2 + donutOff + donutGap
-
-  // Leave rows
+  // ── Data limits (executive preview) ─────────────────────────────────────
   const noticeEmpIds2 = new Set(noticeTerminations.map(t => t.employeeId))
+  const in7days = new Date(Date.now() + 7*86400000).toISOString().slice(0,10)
+
+  // Leave: active first, then upcoming sorted by date — max 5 rows
   const upcomingRows = [...leaveRequests]
-    .sort((a, b) => a.departureDate.localeCompare(b.departureDate))
-    .map(r => ({ id:`req-${r.id}`, name:r.name, department:r.department, leaveTypeCode:r.leaveTypeCode, departureDate:r.departureDate, returnDate:r.returnDate, _upcoming:true, _notice:noticeEmpIds2.has(r.employeeId) }))
-  type LRow = { id:string; name:string; department:string; leaveTypeCode:LeaveTypeCode; departureDate:string; returnDate:string; _notice?:boolean; _upcoming?:boolean }
-  const leaveRows: LRow[] = [
-    ...activeLeaves.map(r => ({ ...r, _notice:noticeEmpIds2.has(r.employeeId), _upcoming:false })),
+    .sort((a,b) => a.departureDate.localeCompare(b.departureDate))
+    .map(r => ({ id:`req-${r.id}`, name:r.name, department:r.department,
+                  leaveTypeCode:r.leaveTypeCode, departureDate:r.departureDate,
+                  returnDate:r.returnDate, _upcoming:true, _notice:noticeEmpIds2.has(r.employeeId),
+                  _soon: r.departureDate <= in7days }))
+  type LRow = { id:string; name:string; department:string; leaveTypeCode:LeaveTypeCode; departureDate:string; returnDate:string; _notice?:boolean; _upcoming?:boolean; _soon?:boolean }
+  const allLeaveRows: LRow[] = [
+    ...activeLeaves.map(r => ({ ...r, _notice:noticeEmpIds2.has(r.employeeId), _upcoming:false, _soon:false })),
     ...upcomingRows,
   ]
+  const LEAVE_LIMIT = 5
+  const leavePreview = allLeaveRows.slice(0, LEAVE_LIMIT)
+  const leaveExtra   = allLeaveRows.length - LEAVE_LIMIT
+
+  // Departments: top 8 only
+  const DEPT_LIMIT = 8
+  const deptPreview = deptCounts.slice(0, DEPT_LIMIT)
+  const deptExtra   = deptCounts.length - DEPT_LIMIT
+
+  // Termination: max 3
+  const TERM_LIMIT = 3
+  const termPreview = noticeTerminations.slice(0, TERM_LIMIT)
+  const termExtra   = noticeTerminations.length - TERM_LIMIT
+
+  // SVG donut chart
+  const donutR = 50, donutSW = 11
+  const donutC = 2 * Math.PI * donutR
+  const donutTotal = employees.length || 1
+  const donutSite  = (onSite  / donutTotal) * donutC
+  const donutOff   = (offSite / donutTotal) * donutC
+  const donutLeave = (onLeave / donutTotal) * donutC
+  const off2 = donutSite, off3 = off2 + donutOff
 
   return (
     <section className="ov-wrap">
 
-      {/* ── Page header ──────────────────────────────────────────────── */}
+      {/* ── Header ─────────────────────────────────────────────────── */}
       <div className="ov-header">
         <div>
           <h1 className="ov-greeting">HR Dashboard <span className="ov-greeting-wave">👋</span></h1>
@@ -1478,17 +1489,17 @@ function OverviewPage({
         </div>
       </div>
 
-      {/* ── KPI cards ────────────────────────────────────────────────── */}
+      {/* ── Row 1: KPI cards ────────────────────────────────────────── */}
       <div className="ov-kpi-row">
         {([
-          { icon:'👥', label:'Total Staff',  val:employees.length, sub:`${employees.length} registered`,   grad:'#6D5DF6,#8B5CF6', light:'#EDE9FE', tc:'#5B21B6' },
-          { icon:'📍', label:'On Site',      val:onSite,           sub:`${onSitePct}% of total staff`,     grad:'#10B981,#34D399', light:'#D1FAE5', tc:'#065F46' },
-          { icon:'🏠', label:'Off Site',     val:offSite,          sub:`${employees.length ? Math.round(offSite/employees.length*100) : 0}% of total staff`,  grad:'#F59E0B,#FBBF24', light:'#FEF3C7', tc:'#92400E' },
-          { icon:'✈️', label:'On Leave',     val:onLeave,          sub:`${employees.length ? Math.round(onLeave/employees.length*100) : 0}% of total staff`,  grad:'#3B82F6,#60A5FA', light:'#DBEAFE', tc:'#1D4ED8' },
+          { icon:'👥', label:'Total Staff', val:employees.length, sub:`${employees.length} registered`,  grad:'#6D5DF6,#8B5CF6' },
+          { icon:'📍', label:'On Site',     val:onSite,  sub:`${onSitePct}% of total staff`,             grad:'#10B981,#34D399' },
+          { icon:'🏠', label:'Off Site',    val:offSite, sub:`${employees.length ? Math.round(offSite/employees.length*100) : 0}% of total staff`, grad:'#F59E0B,#FBBF24' },
+          { icon:'✈️', label:'On Leave',    val:onLeave, sub:`${employees.length ? Math.round(onLeave/employees.length*100) : 0}% of total staff`, grad:'#3B82F6,#60A5FA' },
         ] as const).map(k => (
           <div key={k.label} className="ov-kpi-card">
             <div className="ov-kpi-icon" style={{ background:`linear-gradient(135deg,${k.grad})` }}>
-              <span style={{ fontSize:'1.25rem' }}>{k.icon}</span>
+              <span style={{ fontSize:'1.2rem' }}>{k.icon}</span>
             </div>
             <div className="ov-kpi-body">
               <span className="ov-kpi-val">{k.val}</span>
@@ -1499,25 +1510,22 @@ function OverviewPage({
         ))}
       </div>
 
-      {/* ── Main grid ────────────────────────────────────────────────── */}
-      <div className="ov-main-grid">
+      {/* ── Row 2: Presence (25%) + Leave (75%) ─────────────────────── */}
+      <div className="ov-row2">
 
-        {/* Staff Presence — donut */}
+        {/* Staff Presence */}
         <div className="ov-card ov-card-presence">
           <div className="ov-card-hd">
             <span className="ov-card-ttl">Staff Presence</span>
-            <span className="ov-badge ov-badge-green">{onSitePct}% on site</span>
+            <span className="ov-badge ov-badge-green">{onSitePct}%</span>
           </div>
           <div className="ov-donut-wrap">
-            <svg width="132" height="132" viewBox="0 0 132 132" style={{ transform:'rotate(-90deg)' }}>
-              <circle cx="66" cy="66" r={donutR} fill="none" stroke="#EEF2F7" strokeWidth={donutSW} />
+            <svg width="120" height="120" viewBox="0 0 120 120" style={{ transform:'rotate(-90deg)' }}>
+              <circle cx="60" cy="60" r={donutR} fill="none" stroke="#EEF2F7" strokeWidth={donutSW} />
               {employees.length > 0 && <>
-                {onSite > 0 && <circle cx="66" cy="66" r={donutR} fill="none" stroke="#10B981" strokeWidth={donutSW}
-                  strokeDasharray={`${donutSite} ${donutC - donutSite}`} strokeDashoffset={-off1} strokeLinecap="round" />}
-                {offSite > 0 && <circle cx="66" cy="66" r={donutR} fill="none" stroke="#F59E0B" strokeWidth={donutSW}
-                  strokeDasharray={`${donutOff} ${donutC - donutOff}`} strokeDashoffset={-off2} strokeLinecap="round" />}
-                {onLeave > 0 && <circle cx="66" cy="66" r={donutR} fill="none" stroke="#3B82F6" strokeWidth={donutSW}
-                  strokeDasharray={`${donutLeave} ${donutC - donutLeave}`} strokeDashoffset={-off3} strokeLinecap="round" />}
+                {onSite > 0  && <circle cx="60" cy="60" r={donutR} fill="none" stroke="#10B981" strokeWidth={donutSW} strokeDasharray={`${donutSite} ${donutC - donutSite}`} strokeDashoffset={0} strokeLinecap="round" />}
+                {offSite > 0 && <circle cx="60" cy="60" r={donutR} fill="none" stroke="#F59E0B" strokeWidth={donutSW} strokeDasharray={`${donutOff} ${donutC - donutOff}`} strokeDashoffset={-off2} strokeLinecap="round" />}
+                {onLeave > 0 && <circle cx="60" cy="60" r={donutR} fill="none" stroke="#3B82F6" strokeWidth={donutSW} strokeDasharray={`${donutLeave} ${donutC - donutLeave}`} strokeDashoffset={-off3} strokeLinecap="round" />}
               </>}
             </svg>
             <div className="ov-donut-center">
@@ -1537,57 +1545,79 @@ function OverviewPage({
           </div>
         </div>
 
-        {/* Leave table */}
+        {/* Leave preview — fixed 5 rows */}
         <div className="ov-card ov-card-leave">
           <div className="ov-card-hd">
             <span className="ov-card-ttl">Leave — Active &amp; Upcoming</span>
-            <span className="ov-badge ov-badge-blue">{activeLeaves.length} active · {upcomingRows.length} upcoming</span>
+            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+              <span className="ov-badge ov-badge-blue">{activeLeaves.length} active · {upcomingRows.length} upcoming</span>
+              <button className="ov-viewall" onClick={() => onNavigate?.('leave')} type="button">View All →</button>
+            </div>
           </div>
-          {leaveRows.length === 0
+          {allLeaveRows.length === 0
             ? <p className="ov-empty">No active or upcoming leave.</p>
             : <div className="ov-leave-tbl">
                 <div className="ov-lt-head">
                   <span>Employee</span><span>Department</span><span>Type</span><span>Departs</span><span>Returns</span>
                 </div>
-                {leaveRows.slice(0,10).map(r => (
-                  <div key={r.id} className={`ov-lt-row${r._upcoming?' ov-lt-upcoming':''}${r._notice?' ov-lt-notice':''}`}>
-                    <span className="ov-lt-name">
-                      <span className="ov-lt-avatar">{r.name.charAt(0)}</span>
-                      <span>
-                        {r.name}
-                        {r._upcoming && <span className="ov-tag ov-tag-blue">Soon</span>}
-                        {r._notice  && <span className="ov-tag ov-tag-amber">Notice</span>}
+                <div className="ov-lt-body">
+                  {leavePreview.map(r => (
+                    <div key={r.id} className={`ov-lt-row${r._upcoming?' ov-lt-upcoming':''}${r._notice?' ov-lt-notice':''}${r._soon?' ov-lt-soon':''}`}>
+                      <span className="ov-lt-name">
+                        <span className="ov-lt-avatar">{r.name.charAt(0)}</span>
+                        <span className="ov-lt-name-text">
+                          {r.name}
+                          {r._soon    && <span className="ov-tag ov-tag-red">7d</span>}
+                          {r._upcoming && !r._soon && <span className="ov-tag ov-tag-blue">Soon</span>}
+                          {r._notice  && <span className="ov-tag ov-tag-amber">Notice</span>}
+                        </span>
                       </span>
-                    </span>
-                    <span className="ov-lt-dept">{r.department}</span>
-                    <span className="ov-lt-type">{r.leaveTypeCode}</span>
-                    <span className="ov-lt-date">{formatDateDisplay(r.departureDate)}</span>
-                    <span className="ov-lt-date">{r.returnDate ? formatDateDisplay(r.returnDate) : '—'}</span>
-                  </div>
-                ))}
-                {leaveRows.length > 10 && <p className="ov-more">+{leaveRows.length-10} more</p>}
+                      <span className="ov-lt-dept">{r.department}</span>
+                      <span className="ov-lt-type">{r.leaveTypeCode}</span>
+                      <span className="ov-lt-date">{formatDateDisplay(r.departureDate)}</span>
+                      <span className="ov-lt-date">{r.returnDate ? formatDateDisplay(r.returnDate) : '—'}</span>
+                    </div>
+                  ))}
+                </div>
+                {leaveExtra > 0 && (
+                  <button className="ov-more-btn" onClick={() => onNavigate?.('leave')} type="button">
+                    +{leaveExtra} more · View All →
+                  </button>
+                )}
               </div>
           }
         </div>
+      </div>
 
-        {/* Employees by section */}
+      {/* ── Row 3: Depts (40%) + Medical (30%) + Termination (30%) ─── */}
+      <div className="ov-row3">
+
+        {/* Employees by Section — top 8 */}
         <div className="ov-card ov-card-depts">
           <div className="ov-card-hd">
             <span className="ov-card-ttl">Employees by Section</span>
-            <span className="ov-badge ov-badge-purple">{employees.length} total</span>
+            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+              <span className="ov-badge ov-badge-purple">{employees.length} total</span>
+              <button className="ov-viewall" onClick={() => onNavigate?.('employees')} type="button">View All →</button>
+            </div>
           </div>
-          {deptCounts.length === 0
+          {deptPreview.length === 0
             ? <p className="ov-empty">No employees yet.</p>
             : <div className="ov-dept-list">
-                {deptCounts.map(([dept, cnt]) => (
+                {deptPreview.map(([dept, cnt]) => (
                   <div key={dept} className="ov-dept-row">
                     <span className="ov-dept-name">{dept}</span>
                     <div className="ov-dept-bar-wrap">
                       <div className="ov-dept-bar" style={{ width: Math.round((cnt/maxDept)*100)+'%' }} />
                     </div>
-                    <span className="ov-dept-cnt">{cnt} <em>{employees.length ? Math.round(cnt/employees.length*100) : 0}%</em></span>
+                    <span className="ov-dept-cnt">{cnt}<em> {employees.length ? Math.round(cnt/employees.length*100) : 0}%</em></span>
                   </div>
                 ))}
+                {deptExtra > 0 && (
+                  <button className="ov-more-btn" onClick={() => onNavigate?.('employees')} type="button">
+                    +{deptExtra} more sections →
+                  </button>
+                )}
               </div>
           }
         </div>
@@ -1600,21 +1630,21 @@ function OverviewPage({
           </div>
           <div className="ov-med-stats">
             {([
-              { lbl:'This Month', val:thisMonthMed,  icon:'📅', col:'#0F172A', bg:'#F8FAFC' },
-              { lbl:'Urgent',     val:urgentMed,     icon:'🚨', col:urgentMed?'#DC2626':'#94A3B8',   bg:urgentMed?'#FEF2F2':'#F8FAFC' },
-              { lbl:'Admitted',   val:admittedMed,   icon:'🏥', col:admittedMed?'#7C3AED':'#94A3B8', bg:admittedMed?'#F5F3FF':'#F8FAFC' },
+              { lbl:'This Month', val:thisMonthMed, icon:'📅', col:'#0F172A', bg:'#F8FAFC' },
+              { lbl:'Urgent',     val:urgentMed,    icon:'🚨', col:urgentMed?'#DC2626':'#94A3B8',   bg:urgentMed?'#FEF2F2':'#F8FAFC' },
+              { lbl:'Admitted',   val:admittedMed,  icon:'🏥', col:admittedMed?'#7C3AED':'#94A3B8', bg:admittedMed?'#F5F3FF':'#F8FAFC' },
             ] as const).map(s => (
               <div key={s.lbl} className="ov-med-stat" style={{ background:s.bg }}>
-                <span style={{ fontSize:'1.1rem' }}>{s.icon}</span>
+                <span style={{ fontSize:'1rem' }}>{s.icon}</span>
                 <span className="ov-med-val" style={{ color:s.col }}>{s.val}</span>
                 <span className="ov-med-lbl">{s.lbl}</span>
               </div>
             ))}
           </div>
           {medByDept.length > 0 && <>
-            <p className="ov-sec-lbl">Visits by Section</p>
-            <div className="ov-dept-list" style={{ gap:6 }}>
-              {medByDept.map(([dept, cnt]) => (
+            <p className="ov-sec-lbl">Top Affected Sections</p>
+            <div className="ov-dept-list">
+              {medByDept.slice(0,4).map(([dept, cnt]) => (
                 <div key={dept} className="ov-dept-row">
                   <span className="ov-dept-name">{dept}</span>
                   <div className="ov-dept-bar-wrap">
@@ -1628,29 +1658,37 @@ function OverviewPage({
           {medicalCases.length === 0 && <p className="ov-empty">No medical cases recorded.</p>}
         </div>
 
-        {/* Termination — Notice Period */}
+        {/* Termination — max 3 */}
         <div className="ov-card ov-card-term">
           <div className="ov-card-hd">
-            <span className="ov-card-ttl">Termination — Notice Period</span>
-            <span className="ov-badge ov-badge-amber">{noticeTerminations.length} active</span>
+            <span className="ov-card-ttl">Notice Period</span>
+            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+              <span className="ov-badge ov-badge-amber">{noticeTerminations.length} active</span>
+              {noticeTerminations.length > 0 && <button className="ov-viewall" onClick={() => onNavigate?.('termination')} type="button">View All →</button>}
+            </div>
           </div>
           {noticeTerminations.length === 0
             ? <p className="ov-empty">No staff in notice period.</p>
             : <div className="ov-term-list">
-                {noticeTerminations.map(t => {
+                {termPreview.map(t => {
                   const sc = stageStyle[t.currentStage] ?? { color:'#64748b', bg:'#f8fafc' }
                   return (
                     <div key={t.id} className="ov-term-row">
                       <span className="ov-term-avatar">{t.name.charAt(0)}</span>
                       <div className="ov-term-info">
                         <span className="ov-term-name">{t.name}</span>
-                        <span className="ov-term-meta">{t.designation} · {t.department}</span>
+                        <span className="ov-term-meta">{t.designation}</span>
                         {t.lastWorkingDate && <span className="ov-term-lwd">LWD: {formatDateDisplay(t.lastWorkingDate)}</span>}
                       </div>
                       <span className="ov-term-badge" style={{ color:sc.color, background:sc.bg }}>{t.currentStage}</span>
                     </div>
                   )
                 })}
+                {termExtra > 0 && (
+                  <button className="ov-more-btn" onClick={() => onNavigate?.('termination')} type="button">
+                    +{termExtra} more →
+                  </button>
+                )}
               </div>
           }
           <div className="ov-term-footer">✓ {completedTerminations.length} completed</div>
@@ -12960,7 +12998,7 @@ function App() {
           <span className="topbar-page-title">{pages.find((p) => p.id === activePage)?.label}</span>
         </div>
         <main className="workspace-inner" id="top">
-          {activePage === 'overview' && <OverviewPage employees={scopedEmployees} leaveRequests={scopedLeaveRequests} activeLeaves={scopedActiveLeaves} leaveHistory={scopedLeaveHistory} noticeTerminations={scopedNoticeTerminations} completedTerminations={scopedCompletedTerminations} exitInterviews={scopedExitInterviews} medicalCases={scopedMedicalCases} inventoryItems={inventoryItems} passportHandovers={scopedPassportHandovers} />}
+          {activePage === 'overview' && <OverviewPage employees={scopedEmployees} leaveRequests={scopedLeaveRequests} activeLeaves={scopedActiveLeaves} leaveHistory={scopedLeaveHistory} noticeTerminations={scopedNoticeTerminations} completedTerminations={scopedCompletedTerminations} exitInterviews={scopedExitInterviews} medicalCases={scopedMedicalCases} inventoryItems={inventoryItems} passportHandovers={scopedPassportHandovers} onNavigate={setActivePage} />}
           {activePage === 'employees' && <EmployeesPage employees={scopedEmployees} medicalCases={scopedMedicalCases} noticeTerminations={scopedNoticeTerminations} offSiteRecords={scopedOffSiteRecords} onUpdateOffSite={(fn) => setOffSiteRecords(fn)} onAdd={() => { setEmployeeMode('add'); setEmployeeForm(emptyEmployee); setShowEmployeeForm(true) }} onEdit={openEditEmployee} onDelete={deleteEmployee} onExport={exportCsv} onImport={importCsv} onTemplate={downloadTemplate} onShowTasks={() => setShowPendingTasks(true)} isHOD={isHOD} />}
           {activePage === 'leave' && <LeavePage employees={scopedEmployees} leaveRequests={scopedLeaveRequests} activeLeaves={scopedActiveLeaves} leaveHistory={scopedLeaveHistory} medicalCases={scopedMedicalCases} isHOD={isHOD} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onSetRequestStep={setLeaveRequestStep} onExtendLeave={extendActiveLeave} onEditActiveLeave={editActiveLeave} onHistoryConfirm={updateHistoryConfirmation} onUpdateMedical={(fn) => setMedicalCases(fn)} />}
           {activePage === 'operations' && <OperationsPage employees={employees} completedTerminations={completedTerminations} activeLeaves={activeLeaves} isHOD={isHOD} userRole={currentUserRole} />}
