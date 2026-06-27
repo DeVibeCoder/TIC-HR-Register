@@ -1545,46 +1545,44 @@ function OverviewPage({
         {/* RIGHT COLUMN */}
         <div className="dash-col">
 
-          {/* Active Leaves + Notice Period staff on active/requested leave */}
+          {/* Active Leaves + All upcoming leave requests */}
           {(() => {
             const noticeEmpIds = new Set(noticeTerminations.map(t => t.employeeId))
-            // Leave requests from notice period staff (pending — not yet departed)
-            const noticeLeaveReqs = leaveRequests
-              .filter(r => noticeEmpIds.has(r.employeeId))
+            // All pending leave requests (upcoming — not yet departed)
+            const upcoming = [...leaveRequests]
+              .sort((a, b) => a.departureDate.localeCompare(b.departureDate))
               .map(r => ({
-                id: `req-${r.id}`, employeeId: r.employeeId, name: r.name,
-                department: r.department, nationality: r.nationality,
-                leaveTypeCode: r.leaveTypeCode,
-                departureDate: r.departureDate, returnDate: r.returnDate,
-                days: r.days, remarks: r.remarks,
-                _notice: true as const, _pending: true as const,
+                id: `req-${r.id}`, name: r.name, department: r.department,
+                leaveTypeCode: r.leaveTypeCode, departureDate: r.departureDate,
+                returnDate: r.returnDate, _upcoming: true,
+                _notice: noticeEmpIds.has(r.employeeId),
               }))
-            type Row = { id:string; name:string; department:string; leaveTypeCode:LeaveTypeCode; departureDate:string; returnDate:string; _notice?:boolean; _pending?:boolean }
+            type Row = { id:string; name:string; department:string; leaveTypeCode:LeaveTypeCode; departureDate:string; returnDate:string; _notice?:boolean; _upcoming?:boolean }
             const rows: Row[] = [
-              ...activeLeaves.filter(r => !noticeEmpIds.has(r.employeeId)).map(r => ({ ...r, _notice: false, _pending: false })),
-              ...activeLeaves.filter(r => noticeEmpIds.has(r.employeeId)).map(r => ({ ...r, _notice: true, _pending: false })),
-              ...noticeLeaveReqs,
+              ...activeLeaves.map(r => ({ ...r, _notice: noticeEmpIds.has(r.employeeId), _upcoming: false })),
+              ...upcoming,
             ]
-            const totalCount = activeLeaves.length + noticeLeaveReqs.length
             return (
               <article className="dash-panel">
                 <div className="dash-panel-hd">
                   <span className="dash-panel-ttl">Leave — Active &amp; Upcoming</span>
-                  <span className="dash-chip" style={{ background:'#dbeafe', color:'#1d4ed8' }}>{totalCount} total</span>
+                  <span className="dash-chip" style={{ background:'#dbeafe', color:'#1d4ed8' }}>
+                    {activeLeaves.length} active · {upcoming.length} upcoming
+                  </span>
                 </div>
                 {rows.length === 0
-                  ? <p className="dash-empty">No staff currently on or pending leave.</p>
+                  ? <p className="dash-empty">No active or upcoming leave.</p>
                   : <>
                       <div className="dash-al-head">
-                        <span>Name</span><span>Section</span><span>Type</span><span>Departed</span><span>Due Back</span>
+                        <span>Name</span><span>Section</span><span>Type</span><span>Departs</span><span>Returns</span>
                       </div>
                       <div className="dash-al-list">
                         {rows.slice(0, 10).map(r => (
-                          <div key={r.id} className={`dash-al-row${r._notice ? ' dash-al-row-notice' : ''}`}>
+                          <div key={r.id} className={`dash-al-row${r._notice ? ' dash-al-row-notice' : ''}${r._upcoming ? ' dash-al-row-upcoming' : ''}`}>
                             <span className="dash-al-name">
                               {r.name}
-                              {r._notice && !r._pending && <span className="dash-al-notice-tag">Notice</span>}
-                              {r._pending && <span className="dash-al-notice-tag" style={{ background:'#fee2e2', color:'#b91c1c' }}>Pending</span>}
+                              {r._upcoming && <span className="dash-al-notice-tag" style={{ background:'#e0f2fe', color:'#0369a1' }}>Soon</span>}
+                              {r._notice && <span className="dash-al-notice-tag">Notice</span>}
                             </span>
                             <span className="dash-al-dept">{r.department}</span>
                             <span className="dash-al-code">{r.leaveTypeCode}</span>
