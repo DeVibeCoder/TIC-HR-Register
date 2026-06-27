@@ -1479,194 +1479,202 @@ function OverviewPage({
   const off2 = donutSite, off3 = off2 + donutOff
 
   return (
-    <section className="ov2-wrap">
+    <div className="hd-page">
 
-      {/* ── Header ─────────────────────────────────────────────────── */}
-      <div className="ov2-header">
+      {/* header */}
+      <div className="hd-top">
         <div>
-          <h1 className="ov2-title">HR Overview</h1>
-          <p className="ov2-sub">Thilafushi Industrial Complex · {todayStr}</p>
+          <div className="hd-title">HR Dashboard</div>
+          <div className="hd-sub">Thilafushi Industrial Complex &nbsp;·&nbsp; {todayStr}</div>
         </div>
       </div>
 
-      {/* ── Row 1: 4 KPI metrics ─────────────────────────────────────── */}
-      <div className="ov2-metrics">
+      {/* KPI row */}
+      <div className="hd-kpis">
         {([
-          { accent:'#6366F1', label:'Total Staff', val:employees.length,  sub:`${deptCounts.length} sections` },
-          { accent:'#10B981', label:'On Site',     val:onSite,            sub:`${onSitePct}% of workforce` },
-          { accent:'#F59E0B', label:'Off Site',    val:offSite,           sub:`${employees.length ? Math.round(offSite/employees.length*100) : 0}% of workforce` },
-          { accent:'#3B82F6', label:'On Leave',    val:onLeave,           sub:`${employees.length ? Math.round(onLeave/employees.length*100) : 0}% of workforce` },
-        ] as const).map(k => (
-          <div key={k.label} className="ov2-metric" style={{ borderTopColor: k.accent }}>
-            <span className="ov2-metric-val" style={{ color: k.accent }}>{k.val}</span>
-            <span className="ov2-metric-lbl">{k.label}</span>
-            <span className="ov2-metric-sub">{k.sub}</span>
+          { c:'#6366f1', label:'Total Staff', val:employees.length,  note:`${deptCounts.length} sections` },
+          { c:'#059669', label:'On Site',     val:onSite,            note:`${onSitePct}% on site` },
+          { c:'#d97706', label:'Off Site',    val:offSite,           note:`${employees.length?Math.round(offSite/employees.length*100):0}% away` },
+          { c:'#2563eb', label:'On Leave',    val:onLeave,           note:`${employees.length?Math.round(onLeave/employees.length*100):0}% on leave` },
+        ] as const).map(k=>(
+          <div key={k.label} className="hd-kpi" style={{ '--kc': k.c } as React.CSSProperties}>
+            <span className="hd-kpi-n">{k.val}</span>
+            <span className="hd-kpi-l">{k.label}</span>
+            <span className="hd-kpi-s">{k.note}</span>
           </div>
         ))}
       </div>
 
-      {/* ── Row 2: Presence + Leave ──────────────────────────────────── */}
-      <div className="ov2-row2">
+      {/* Middle row: Presence + Leave */}
+      <div className="hd-mid">
 
-        {/* Staff Presence — donut */}
-        <div className="ov2-card ov2-presence">
-          <div className="ov2-card-hd">
-            <span className="ov2-card-ttl">Staff Presence</span>
-          </div>
-          <div className="ov2-donut-area">
-            <svg width="110" height="110" viewBox="0 0 110 110" style={{ transform:'rotate(-90deg)', flexShrink:0 }}>
-              <circle cx="55" cy="55" r={donutR} fill="none" stroke="#F1F5F9" strokeWidth={donutSW} />
-              {employees.length > 0 && <>
-                {onSite  > 0 && <circle cx="55" cy="55" r={donutR} fill="none" stroke="#10B981" strokeWidth={donutSW} strokeDasharray={`${donutSite}  ${donutC-donutSite}`}  strokeDashoffset={0}    strokeLinecap="butt" />}
-                {offSite > 0 && <circle cx="55" cy="55" r={donutR} fill="none" stroke="#F59E0B" strokeWidth={donutSW} strokeDasharray={`${donutOff}   ${donutC-donutOff}`}   strokeDashoffset={-off2} strokeLinecap="butt" />}
-                {onLeave > 0 && <circle cx="55" cy="55" r={donutR} fill="none" stroke="#3B82F6" strokeWidth={donutSW} strokeDasharray={`${donutLeave} ${donutC-donutLeave}`} strokeDashoffset={-off3} strokeLinecap="butt" />}
-              </>}
+        {/* Presence */}
+        <div className="hd-card hd-presence">
+          <div className="hd-card-ttl">Staff Presence</div>
+          <div style={{ position:'relative', width:120, height:120, margin:'8px auto' }}>
+            <svg width="120" height="120" viewBox="0 0 120 120" style={{ transform:'rotate(-90deg)' }}>
+              <circle cx="60" cy="60" r={donutR} fill="none" stroke="#f1f5f9" strokeWidth={donutSW}/>
+              {onSite  > 0 && <circle cx="60" cy="60" r={donutR} fill="none" stroke="#059669" strokeWidth={donutSW} strokeDasharray={`${donutSite} ${donutC-donutSite}`} strokeDashoffset={0} />}
+              {offSite > 0 && <circle cx="60" cy="60" r={donutR} fill="none" stroke="#d97706" strokeWidth={donutSW} strokeDasharray={`${donutOff} ${donutC-donutOff}`} strokeDashoffset={-off2} />}
+              {onLeave > 0 && <circle cx="60" cy="60" r={donutR} fill="none" stroke="#2563eb" strokeWidth={donutSW} strokeDasharray={`${donutLeave} ${donutC-donutLeave}`} strokeDashoffset={-off3} />}
             </svg>
-            <div className="ov2-donut-mid">
-              <span className="ov2-donut-n">{employees.length}</span>
-              <span className="ov2-donut-l">employees</span>
+            <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center' }}>
+              <span style={{ fontSize:'1.5rem', fontWeight:800, color:'#111827', lineHeight:1 }}>{employees.length}</span>
+              <span style={{ fontSize:'0.6rem', color:'#9ca3af', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.05em' }}>staff</span>
             </div>
           </div>
-          <div className="ov2-legend">
-            {([['#10B981','On Site',onSite],['#F59E0B','Off Site',offSite],['#3B82F6','On Leave',onLeave]] as const).map(([c,l,v])=>(
-              <div key={l} className="ov2-legend-row">
-                <span className="ov2-legend-dot" style={{ background:c }}/>
-                <span className="ov2-legend-lbl">{l}</span>
-                <span className="ov2-legend-n">{v}</span>
-                <span className="ov2-legend-p">{employees.length ? Math.round((v as number)/employees.length*100) : 0}%</span>
+          <div className="hd-legend">
+            {([['#059669','On Site',onSite],['#d97706','Off Site',offSite],['#2563eb','On Leave',onLeave]] as const).map(([c,l,v])=>(
+              <div key={l} className="hd-leg-row">
+                <span style={{ width:8, height:8, borderRadius:'50%', background:c, flexShrink:0, display:'block' }}/>
+                <span style={{ flex:1, fontSize:'0.74rem', color:'#6b7280' }}>{l}</span>
+                <span style={{ fontWeight:700, fontSize:'0.8rem', color:'#111827' }}>{v}</span>
+                <span style={{ fontSize:'0.66rem', color:'#9ca3af', width:28, textAlign:'right' }}>{employees.length?Math.round((v as number)/employees.length*100):0}%</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Leave — active & upcoming, max 6 rows */}
-        <div className="ov2-card ov2-leave">
-          <div className="ov2-card-hd">
-            <span className="ov2-card-ttl">Leave &amp; Upcoming Departures</span>
-            <div className="ov2-hd-actions">
-              <span className="ov2-pill ov2-pill-blue">{activeLeaves.length} active</span>
-              <span className="ov2-pill ov2-pill-slate">{upcomingRows.length} upcoming</span>
-              <button className="ov2-link" onClick={()=>onNavigate?.('leave')} type="button">View all →</button>
+        {/* Leave table */}
+        <div className="hd-card hd-leave">
+          <div className="hd-card-hd">
+            <span className="hd-card-ttl">Leave — Active &amp; Upcoming</span>
+            <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+              <span className="hd-chip hd-chip-blue">{activeLeaves.length} active</span>
+              <span className="hd-chip hd-chip-grey">{upcomingRows.length} upcoming</span>
+              <button className="hd-va" onClick={()=>onNavigate?.('leave')} type="button">View all →</button>
             </div>
           </div>
           {allLeaveRows.length === 0
-            ? <p className="ov2-empty">No active or upcoming leave requests.</p>
-            : <>
-                <div className="ov2-tbl-head">
-                  <span>Employee</span><span>Section</span><span>Type</span><span>Departs</span><span>Returns</span>
-                </div>
-                {leavePreview.map(r => (
-                  <div key={r.id} className={`ov2-tbl-row${r._soon?' ov2-row-soon':r._upcoming?' ov2-row-upcoming':''}`}>
-                    <span className="ov2-emp">
-                      <span className="ov2-av" style={{ background: r._upcoming?'#DBEAFE':'#D1FAE5', color: r._upcoming?'#1D4ED8':'#065F46' }}>{r.name.charAt(0)}</span>
-                      <span className="ov2-emp-name">{r.name}
-                        {r._soon   && <span className="ov2-tag ov2-tag-red">7d</span>}
-                        {r._notice && <span className="ov2-tag ov2-tag-amber">Notice</span>}
-                      </span>
-                    </span>
-                    <span className="ov2-cell-sm">{r.department}</span>
-                    <span className="ov2-type">{r.leaveTypeCode}</span>
-                    <span className="ov2-date">{formatDateDisplay(r.departureDate)}</span>
-                    <span className="ov2-date">{r.returnDate ? formatDateDisplay(r.returnDate) : '—'}</span>
-                  </div>
-                ))}
-                {leaveExtra > 0 && <button className="ov2-more" onClick={()=>onNavigate?.('leave')} type="button">+{leaveExtra} more employees on leave</button>}
-              </>
+            ? <p className="hd-empty">No active or upcoming leave.</p>
+            : <table className="hd-tbl">
+                <thead>
+                  <tr>
+                    <th>Employee</th><th>Section</th><th>Type</th><th>Departs</th><th>Returns</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {leavePreview.map(r=>(
+                    <tr key={r.id} className={r._soon?'hd-row-soon':''}>
+                      <td>
+                        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                          <span className="hd-av" style={{ background:r._upcoming?'#dbeafe':'#d1fae5', color:r._upcoming?'#1d4ed8':'#065f46' }}>{r.name.charAt(0)}</span>
+                          <span className="hd-empname">
+                            {r.name}
+                            {r._soon   && <span className="hd-tag hd-tag-red">7d</span>}
+                            {r._notice && <span className="hd-tag hd-tag-amber">Notice</span>}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="hd-tc-muted">{r.department}</td>
+                      <td><span className="hd-type-chip">{r.leaveTypeCode}</span></td>
+                      <td className="hd-tc-date">{formatDateDisplay(r.departureDate)}</td>
+                      <td className="hd-tc-date">{r.returnDate?formatDateDisplay(r.returnDate):'—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
           }
+          {leaveExtra > 0 && <button className="hd-more" onClick={()=>onNavigate?.('leave')} type="button">+{leaveExtra} more · View all leave →</button>}
         </div>
       </div>
 
-      {/* ── Row 3: Departments · Medical · Termination ───────────────── */}
-      <div className="ov2-row3">
+      {/* Bottom row: Depts + Medical + Termination */}
+      <div className="hd-bot">
 
-        {/* Employees by Section */}
-        <div className="ov2-card ov2-depts">
-          <div className="ov2-card-hd">
-            <span className="ov2-card-ttl">Headcount by Section</span>
-            <button className="ov2-link" onClick={()=>onNavigate?.('employees')} type="button">View all →</button>
+        {/* Departments */}
+        <div className="hd-card">
+          <div className="hd-card-hd">
+            <span className="hd-card-ttl">Headcount by Section</span>
+            <button className="hd-va" onClick={()=>onNavigate?.('employees')} type="button">View all →</button>
           </div>
-          {deptPreview.length === 0 ? <p className="ov2-empty">No data yet.</p> :
-            <div className="ov2-bars">
-              {deptPreview.map(([dept,cnt])=>(
-                <div key={dept} className="ov2-bar-row">
-                  <span className="ov2-bar-lbl">{dept}</span>
-                  <div className="ov2-bar-track"><div className="ov2-bar-fill" style={{ width:Math.round(cnt/maxDept*100)+'%' }}/></div>
-                  <span className="ov2-bar-val">{cnt}</span>
-                  <span className="ov2-bar-pct">{employees.length?Math.round(cnt/employees.length*100):0}%</span>
-                </div>
-              ))}
-              {deptExtra > 0 && <button className="ov2-more" onClick={()=>onNavigate?.('employees')} type="button">+{deptExtra} more sections</button>}
-            </div>
+          {deptPreview.length === 0
+            ? <p className="hd-empty">No departments yet.</p>
+            : <div className="hd-depts">
+                {deptPreview.map(([dept,cnt])=>(
+                  <div key={dept} className="hd-dept-row">
+                    <span className="hd-dept-lbl">{dept}</span>
+                    <div className="hd-dept-track">
+                      <div className="hd-dept-fill" style={{ width:Math.round(cnt/maxDept*100)+'%' }}/>
+                    </div>
+                    <span className="hd-dept-n">{cnt}</span>
+                    <span className="hd-dept-p">{employees.length?Math.round(cnt/employees.length*100):0}%</span>
+                  </div>
+                ))}
+                {deptExtra > 0 && <button className="hd-more" onClick={()=>onNavigate?.('employees')} type="button">+{deptExtra} more sections</button>}
+              </div>
           }
         </div>
 
-        {/* Medical Leave */}
-        <div className="ov2-card ov2-medical">
-          <div className="ov2-card-hd">
-            <span className="ov2-card-ttl">Medical Leave</span>
-            <span className="ov2-pill ov2-pill-slate">{medicalCases.length} total</span>
+        {/* Medical */}
+        <div className="hd-card">
+          <div className="hd-card-hd">
+            <span className="hd-card-ttl">Medical Leave</span>
+            <span className="hd-chip hd-chip-grey">{medicalCases.length} total</span>
           </div>
-          <div className="ov2-med-kpis">
+          <div className="hd-med-stats">
             {([
-              { label:'This Month', val:thisMonthMed, color:'#0F172A', alert:false },
-              { label:'Urgent',     val:urgentMed,    color:urgentMed?'#DC2626':'#94A3B8',   alert:urgentMed>0 },
-              { label:'Admitted',   val:admittedMed,  color:admittedMed?'#7C3AED':'#94A3B8', alert:admittedMed>0 },
+              { l:'This Month', v:thisMonthMed, c:'#111827', alert:false },
+              { l:'Urgent',     v:urgentMed,    c:urgentMed?'#dc2626':'#d1d5db',   alert:urgentMed>0 },
+              { l:'Admitted',   v:admittedMed,  c:admittedMed?'#7c3aed':'#d1d5db', alert:admittedMed>0 },
             ] as const).map(s=>(
-              <div key={s.label} className={`ov2-med-kpi${s.alert?' ov2-med-alert':''}`}>
-                <span className="ov2-med-n" style={{ color:s.color }}>{s.val}</span>
-                <span className="ov2-med-l">{s.label}</span>
+              <div key={s.l} className={`hd-med-stat${s.alert?' hd-med-alert':''}`}>
+                <span style={{ fontSize:'1.8rem', fontWeight:800, color:s.c, lineHeight:1 }}>{s.v}</span>
+                <span style={{ fontSize:'0.65rem', color:'#9ca3af', fontWeight:600 }}>{s.l}</span>
               </div>
             ))}
           </div>
           {medByDept.length > 0 && <>
-            <p className="ov2-sublbl">By Section</p>
-            <div className="ov2-bars ov2-bars-sm">
+            <div style={{ fontSize:'0.63rem', fontWeight:700, color:'#9ca3af', textTransform:'uppercase', letterSpacing:'0.06em', marginTop:10 }}>By Section</div>
+            <div className="hd-depts" style={{ marginTop:6 }}>
               {medByDept.slice(0,4).map(([dept,cnt])=>(
-                <div key={dept} className="ov2-bar-row">
-                  <span className="ov2-bar-lbl">{dept}</span>
-                  <div className="ov2-bar-track"><div className="ov2-bar-fill" style={{ width:Math.round(cnt/maxMedDept*100)+'%', background:'#0EA5E9' }}/></div>
-                  <span className="ov2-bar-val">{cnt}</span>
+                <div key={dept} className="hd-dept-row">
+                  <span className="hd-dept-lbl">{dept}</span>
+                  <div className="hd-dept-track">
+                    <div className="hd-dept-fill" style={{ width:Math.round(cnt/maxMedDept*100)+'%', background:'#0ea5e9' }}/>
+                  </div>
+                  <span className="hd-dept-n">{cnt}</span>
                 </div>
               ))}
             </div>
           </>}
-          {medicalCases.length===0 && <p className="ov2-empty">No medical cases on record.</p>}
+          {medicalCases.length===0 && <p className="hd-empty">No medical cases on record.</p>}
         </div>
 
         {/* Notice Period */}
-        <div className="ov2-card ov2-term">
-          <div className="ov2-card-hd">
-            <span className="ov2-card-ttl">Notice Period</span>
-            <div className="ov2-hd-actions">
-              {noticeTerminations.length > 0 && <span className="ov2-pill ov2-pill-red">{noticeTerminations.length} active</span>}
-              {noticeTerminations.length > 0 && <button className="ov2-link" onClick={()=>onNavigate?.('termination')} type="button">View all →</button>}
+        <div className="hd-card">
+          <div className="hd-card-hd">
+            <span className="hd-card-ttl">Notice Period</span>
+            <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+              {noticeTerminations.length > 0 && <span className="hd-chip hd-chip-red">{noticeTerminations.length} active</span>}
+              {noticeTerminations.length > 0 && <button className="hd-va" onClick={()=>onNavigate?.('termination')} type="button">View all →</button>}
             </div>
           </div>
           {noticeTerminations.length === 0
-            ? <p className="ov2-empty">No staff currently in notice period.</p>
-            : <>
+            ? <p className="hd-empty">No staff in notice period.</p>
+            : <div className="hd-terms">
                 {termPreview.map(t=>{
-                  const sc = stageStyle[t.currentStage] ?? { color:'#64748b', bg:'#f8fafc' }
+                  const sc = stageStyle[t.currentStage] ?? { color:'#6b7280', bg:'#f9fafb' }
                   return (
-                    <div key={t.id} className="ov2-term-row">
-                      <span className="ov2-av ov2-av-red">{t.name.charAt(0)}</span>
-                      <div className="ov2-term-info">
-                        <span className="ov2-term-name">{t.name}</span>
-                        <span className="ov2-term-role">{t.designation} · {t.department}</span>
-                        {t.lastWorkingDate && <span className="ov2-term-lwd">LWD {formatDateDisplay(t.lastWorkingDate)}</span>}
+                    <div key={t.id} className="hd-term-row">
+                      <span className="hd-av" style={{ background:'#fee2e2', color:'#b91c1c' }}>{t.name.charAt(0)}</span>
+                      <div style={{ flex:1, minWidth:0 }}>
+                        <div style={{ fontSize:'0.78rem', fontWeight:700, color:'#111827', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{t.name}</div>
+                        <div style={{ fontSize:'0.65rem', color:'#9ca3af', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{t.designation}</div>
+                        {t.lastWorkingDate && <div style={{ fontSize:'0.63rem', color:'#dc2626', fontWeight:600 }}>LWD {formatDateDisplay(t.lastWorkingDate)}</div>}
                       </div>
-                      <span className="ov2-stage" style={{ color:sc.color, background:sc.bg }}>{t.currentStage}</span>
+                      <span style={{ fontSize:'0.62rem', fontWeight:700, padding:'2px 8px', borderRadius:20, color:sc.color, background:sc.bg, flexShrink:0 }}>{t.currentStage}</span>
                     </div>
                   )
                 })}
-                {termExtra > 0 && <button className="ov2-more" onClick={()=>onNavigate?.('termination')} type="button">+{termExtra} more →</button>}
-              </>
+                {termExtra > 0 && <button className="hd-more" onClick={()=>onNavigate?.('termination')} type="button">+{termExtra} more →</button>}
+              </div>
           }
-          <div className="ov2-term-footer">✓ {completedTerminations.length} completed</div>
+          <div style={{ fontSize:'0.7rem', color:'#059669', fontWeight:700, paddingTop:8, borderTop:'1px solid #f3f4f6', marginTop:'auto' }}>✓ {completedTerminations.length} completed</div>
         </div>
 
       </div>
-    </section>
+    </div>
   )
 }
 
