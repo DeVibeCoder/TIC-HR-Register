@@ -2887,22 +2887,35 @@ function TripReqSection({ records, employees, onUpdate, currentUserName = '', ca
     }
   }
 
-  const approve = () => {
+  const approve = async () => {
     if (!approving) return
     const approvedDate = new Date().toISOString().slice(0,10)
-    const updated = { ...approving, status: 'Approved' as TripRequestStatus, approvedDate }
-    onUpdate(prev => prev.map(r => r.id===approving.id ? updated : r))
-    // Explicit Supabase write — don't rely only on sync useEffect (race with refetch)
-    supabase.from('trip_requests').update({ status:'Approved', approved_date: approvedDate })
-      .eq('id', approving.id)
-      .then(({ error }) => { if (error) console.error('[approve trip]', error.message) })
+    const id = approving.id
+    // Close modal first so no window-focus event fires during the await
     setApproving(null)
+    // Optimistic local update
+    onUpdate(prev => prev.map(r => r.id===id ? { ...r, status:'Approved' as TripRequestStatus, approvedDate } : r))
+    // Await the Supabase write — then re-read so any concurrent refetch is corrected
+    const { error } = await supabase.from('trip_requests')
+      .update({ status:'Approved', approved_date: approvedDate })
+      .eq('id', id)
+    if (error) {
+      console.error('[approve trip]', error.message)
+    } else {
+      // Re-read all trips from Supabase to guarantee local state matches DB
+      const { data } = await supabase.from('trip_requests').select('*')
+      if (data) onUpdate(() => data.map(tripReqFromDb))
+    }
   }
-  const reject = (r: TripRequest) => {
-    if (window.confirm(`Reject the trip request from ${r.requesterName || 'this requester'}?`)) {
-      onUpdate(prev => prev.map(x => x.id===r.id ? { ...x, status:'Rejected' } : x))
-      supabase.from('trip_requests').update({ status:'Rejected' }).eq('id', r.id)
-        .then(({ error }) => { if (error) console.error('[reject trip]', error.message) })
+  const reject = async (r: TripRequest) => {
+    if (!window.confirm(`Reject the trip request from ${r.requesterName || 'this requester'}?`)) return
+    onUpdate(prev => prev.map(x => x.id===r.id ? { ...x, status:'Rejected' } : x))
+    const { error } = await supabase.from('trip_requests').update({ status:'Rejected' }).eq('id', r.id)
+    if (error) {
+      console.error('[reject trip]', error.message)
+    } else {
+      const { data } = await supabase.from('trip_requests').select('*')
+      if (data) onUpdate(() => data.map(tripReqFromDb))
     }
   }
 
@@ -2985,7 +2998,7 @@ function TripReqSection({ records, employees, onUpdate, currentUserName = '', ca
                       {r.status === 'Pending Approval' && <button className={`action-glyph approve${canApprove ? '' : ' vwh'}`} title="Approve" onClick={()=>setApproving(r)} type="button">✓</button>}
                       {r.status === 'Pending Approval' && <button className={`action-glyph delete${canApprove ? '' : ' vwh'}`} title="Reject" onClick={()=>reject(r)} type="button">✕</button>}
                       <button className="action-glyph edit vwh" title="Edit" onClick={()=>setEditing(r)} type="button">✎</button>
-                      <button className="action-glyph print" title="Print" onClick={()=>printTripRequest(r, sigRequester, sigAhmedAli)} type="button">🖶</button>
+                      <button className="action-glyph print" title="Print" onClick={()=>printTripRequest(r, localStorage.getItem('tic_sig_requester')||'', localStorage.getItem('tic_sig_ahmedali')||'')} type="button">🖶</button>
                       <button className="action-glyph delete vwh" title="Delete" onClick={()=>del(r.id)} type="button">🗑</button>
                     </div>
                   </td>
