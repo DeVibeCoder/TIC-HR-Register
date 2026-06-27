@@ -3140,14 +3140,14 @@ function printTripRequest(record: TripRequest, sigRequester: string, sigAhmedAli
   /* All tables share these base styles */
   table { width:100%; border-collapse:collapse; margin-bottom:5pt; font-size:9.5pt; }
   td    { border:0.7pt solid #000; padding:2.5pt 5pt; vertical-align:middle; }
-  td.L  { font-weight:700; width:37%; }
+  td.L  { font-weight:700; width:37%; background:#f0f0f0; }
 
   /* Tick row */
   .tr { display:flex; align-items:center; gap:8pt; margin-bottom:6pt; flex-wrap:wrap; }
-  .tb { display:inline-block; width:16pt; height:13pt; border:0.7pt solid #000;
-        text-align:center; line-height:13pt; font-weight:700; font-size:10.5pt; }
-  .rc { border:0.7pt solid #000; min-width:100pt; padding:1pt 5pt;
-        display:inline-block; min-height:12pt; vertical-align:middle; }
+  .tb { display:inline-block; width:20pt; height:16pt; border:0.7pt solid #000;
+        text-align:center; line-height:16pt; font-weight:700; font-size:12pt; }
+  .rc { border:0.7pt solid #000; min-width:130pt; padding:1.5pt 6pt;
+        display:inline-block; min-height:14pt; vertical-align:middle; font-weight:700; }
 
   /* ── Main signature table: rows span full cell width ────────────── */
   /* Structure:  header row | name row | signature row | date row     */
@@ -3158,7 +3158,7 @@ function printTripRequest(record: TripRequest, sigRequester: string, sigAhmedAli
   /* Each row inside a cell */
   .sr  { border-bottom:0.7pt solid #000; padding:2.5pt 6pt; font-size:9.5pt; }
   .sr:last-child { border-bottom:none; }
-  .sr.hd { font-weight:700; }
+  .sr.hd { font-weight:700; background:#f0f0f0; }
   .sr.sig { min-height:78pt; display:flex; align-items:center; padding:3pt 6pt; }
   .sig-img { max-height:72pt; max-width:96%; object-fit:contain; display:block; }
 
@@ -3168,7 +3168,7 @@ function printTripRequest(record: TripRequest, sigRequester: string, sigAhmedAli
   .bt td:first-child { border-right:0.7pt solid #000; }
   .br  { border-bottom:0.7pt solid #000; padding:2pt 6pt; font-size:9.5pt; }
   .br:last-child { border-bottom:none; }
-  .br.hd { font-weight:700; }
+  .br.hd { font-weight:700; background:#f0f0f0; }
   .br.sig { min-height:36pt; }
 
   /* Status stamp (non-approved) */
@@ -3229,7 +3229,7 @@ function printTripRequest(record: TripRequest, sigRequester: string, sigAhmedAli
     &nbsp;&nbsp;&nbsp;
     Round Trip &nbsp;<span class="tb">${roundTripChecked?'✓':''}</span>
     &nbsp;&nbsp;&nbsp;
-    Return Date &amp; Time &nbsp;<span class="rc">${esc(returnDisplay)}</span>
+    Return Date &amp; Time &nbsp;<span class="rc" style="${roundTripChecked ? 'font-weight:700' : ''}">${esc(returnDisplay)}</span>
   </div>
 
   <p class="sh">Tick the appropriate box</p>
@@ -3263,7 +3263,7 @@ function printTripRequest(record: TripRequest, sigRequester: string, sigAhmedAli
 
   <!-- ── For VMT's use only ──────────────────────────────────── -->
   <p class="sh">For VMT's use only</p>
-  <table><tr><td class="L">Cost of the trip</td><td>&nbsp;</td></tr></table>
+  <table><tr><td style="font-weight:700;background:#f0f0f0;width:37%;border:0.7pt solid #000;padding:2.5pt 5pt">Cost of the trip</td><td style="border:0.7pt solid #000;padding:2.5pt 5pt">&nbsp;</td></tr></table>
 
   <table class="bt">
     <tr>
