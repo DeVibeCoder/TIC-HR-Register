@@ -449,6 +449,30 @@ function tryLoad<T>(key: string): T[] {
   try { return JSON.parse(localStorage.getItem(key) ?? '[]') as T[] } catch { return [] }
 }
 
+// ── Global signature cache — loaded from Supabase so all users share them ─────
+// Stored as base64 data-URLs in app_config table (key: sig_requester / sig_ahmedali)
+let _sigRequester = localStorage.getItem('tic_sig_requester') || ''
+let _sigAhmedAli  = localStorage.getItem('tic_sig_ahmedali')  || ''
+
+async function loadSigsFromDB() {
+  const { data } = await supabase.from('app_config')
+    .select('key, value').in('key', ['sig_requester', 'sig_ahmedali'])
+  if (!data) return
+  data.forEach(({ key, value }) => {
+    if (key === 'sig_requester') { _sigRequester = value; localStorage.setItem('tic_sig_requester', value) }
+    if (key === 'sig_ahmedali')  { _sigAhmedAli  = value; localStorage.setItem('tic_sig_ahmedali',  value) }
+  })
+}
+
+async function saveSigToDB(key: 'sig_requester' | 'sig_ahmedali', value: string) {
+  await supabase.from('app_config')
+    .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' })
+}
+
+async function clearSigFromDB(key: 'sig_requester' | 'sig_ahmedali') {
+  await supabase.from('app_config').delete().eq('key', key)
+}
+
 // ── Delete confirmation modal + success toast ─────────────────────────────────
 function useDeleteConfirm() {
   const [pending, setPending]   = useState<{ message: string; resolve: (v: boolean) => void } | null>(null)
@@ -2998,7 +3022,7 @@ function TripReqSection({ records, employees, onUpdate, currentUserName = '', ca
                       {r.status === 'Pending Approval' && <button className={`action-glyph approve${canApprove ? '' : ' vwh'}`} title="Approve" onClick={()=>setApproving(r)} type="button">✓</button>}
                       {r.status === 'Pending Approval' && <button className={`action-glyph delete${canApprove ? '' : ' vwh'}`} title="Reject" onClick={()=>reject(r)} type="button">✕</button>}
                       <button className="action-glyph edit vwh" title="Edit" onClick={()=>setEditing(r)} type="button">✎</button>
-                      <button className="action-glyph print" title="Print" onClick={()=>printTripRequest(r, localStorage.getItem('tic_sig_requester')||'', localStorage.getItem('tic_sig_ahmedali')||'')} type="button">🖶</button>
+                      <button className="action-glyph print" title="Print" onClick={()=>printTripRequest(r, _sigRequester || localStorage.getItem('tic_sig_requester')||'', _sigAhmedAli || localStorage.getItem('tic_sig_ahmedali')||'')} type="button">🖶</button>
                       <button className="action-glyph delete vwh" title="Delete" onClick={()=>del(r.id)} type="button">🗑</button>
                     </div>
                   </td>
@@ -3107,8 +3131,8 @@ function printTripRequest(record: TripRequest, sigRequester: string, sigAhmedAli
   .sig-row { font-size:10pt; margin-bottom:5pt; display:flex; align-items:flex-start; gap:4pt; }
   .sig-lbl  { font-weight:400; white-space:nowrap; width:64pt; flex-shrink:0; }
   .sig-line { flex:1; border-bottom:0.75pt solid #000; min-height:12pt; }
-  .sig-area { flex:1; min-height:80pt; border-bottom:0.75pt solid #000; display:flex; align-items:center; justify-content:flex-start; padding:4pt 0; }
-  .sig-img  { max-height:75pt; max-width:100%; object-fit:contain; display:block; }
+  .sig-area { flex:1; min-height:90pt; border-bottom:0.75pt solid #000; display:flex; align-items:center; justify-content:flex-start; padding:4pt 0; }
+  .sig-img  { max-height:86pt; max-width:98%; object-fit:contain; display:block; }
 
   /* ── VMT bottom table ──────────────── */
   .vmt-bot td { vertical-align:top; padding:4pt 8pt; width:50%; }
@@ -11384,53 +11408,75 @@ function UserFormModal({ user, employees, onClose, onSave }: {
   )
 }
 
-// ── Signature manager — self-contained, reads/writes localStorage ─────────────
+// ── Signature manager — saves to Supabase (shared) + localStorage (cache) ──────
 function TripSigManager() {
-  const [sigReq, setSigReq] = useState<string>(() => localStorage.getItem('tic_sig_requester') || '')
-  const [sigAuth, setSigAuth] = useState<string>(() => localStorage.getItem('tic_sig_ahmedali') || '')
+  const [sigReq,  setSigReq]  = useState<string>(() => _sigRequester || localStorage.getItem('tic_sig_requester') || '')
+  const [sigAuth, setSigAuth] = useState<string>(() => _sigAhmedAli  || localStorage.getItem('tic_sig_ahmedali')  || '')
+  const [saving, setSaving] = useState(false)
 
   const upload = (which: 'req' | 'auth', file: File | null) => {
     if (!file) return
+    setSaving(true)
     const reader = new FileReader()
-    reader.onload = () => {
+    reader.onload = async () => {
       const dataUrl = String(reader.result)
-      if (which === 'req') { setSigReq(dataUrl); localStorage.setItem('tic_sig_requester', dataUrl) }
-      else                 { setSigAuth(dataUrl); localStorage.setItem('tic_sig_ahmedali', dataUrl) }
+      if (which === 'req') {
+        setSigReq(dataUrl)
+        _sigRequester = dataUrl
+        localStorage.setItem('tic_sig_requester', dataUrl)
+        await saveSigToDB('sig_requester', dataUrl)
+      } else {
+        setSigAuth(dataUrl)
+        _sigAhmedAli = dataUrl
+        localStorage.setItem('tic_sig_ahmedali', dataUrl)
+        await saveSigToDB('sig_ahmedali', dataUrl)
+      }
+      setSaving(false)
     }
     reader.readAsDataURL(file)
   }
 
-  const clear = (which: 'req' | 'auth') => {
-    if (which === 'req') { setSigReq('');  localStorage.removeItem('tic_sig_requester') }
-    else                 { setSigAuth(''); localStorage.removeItem('tic_sig_ahmedali') }
+  const clear = async (which: 'req' | 'auth') => {
+    if (which === 'req') {
+      setSigReq('');  _sigRequester = ''
+      localStorage.removeItem('tic_sig_requester')
+      await clearSigFromDB('sig_requester')
+    } else {
+      setSigAuth(''); _sigAhmedAli = ''
+      localStorage.removeItem('tic_sig_ahmedali')
+      await clearSigFromDB('sig_ahmedali')
+    }
   }
 
   return (
-    <div className="tr-sig-grid">
-      {[
-        { key: 'req'  as const, label: 'Requested By — Arushulla Rashid', sig: sigReq  },
-        { key: 'auth' as const, label: 'Authorized By — Ahmed Ali',        sig: sigAuth },
-      ].map(({ key, label, sig }) => (
-        <div key={key} className="tr-sig-item">
-          <span className="tr-sig-label">{label}</span>
-          {sig
-            ? <img src={sig} alt={label} style={{ maxHeight:80, maxWidth:'100%', objectFit:'contain', borderRadius:6, border:'1px solid #e2e8f0', padding:4, background:'#f8fafc' }} />
-            : <div className="tr-sig-empty">No signature uploaded</div>
-          }
-          <div style={{ display:'flex', gap:6, marginTop:4 }}>
-            <label className="tr-sig-upload" style={{ flex:1 }}>
-              {sig ? 'Replace' : 'Upload'}
-              <input type="file" accept="image/png,image/jpeg" onChange={e => upload(key, e.target.files?.[0] ?? null)} />
-            </label>
-            {sig && (
-              <button type="button" onClick={() => clear(key)} style={{ padding:'4px 10px', fontSize:'0.75rem', borderRadius:6, border:'1px solid #fca5a5', background:'#fef2f2', color:'#b91c1c', cursor:'pointer', fontWeight:600 }}>
-                Clear
-              </button>
-            )}
+    <>
+      {saving && <p style={{ fontSize:'0.78rem', color:'#7c3aed', marginBottom:8 }}>⏳ Saving signature to database…</p>}
+      <div className="tr-sig-grid">
+        {[
+          { key: 'req'  as const, label: 'Requested By — Arushulla Rashid', sig: sigReq  },
+          { key: 'auth' as const, label: 'Authorized By — Ahmed Ali',        sig: sigAuth },
+        ].map(({ key, label, sig }) => (
+          <div key={key} className="tr-sig-item">
+            <span className="tr-sig-label">{label}</span>
+            {sig
+              ? <img src={sig} alt={label} style={{ maxHeight:100, maxWidth:'100%', objectFit:'contain', borderRadius:6, border:'1px solid #e2e8f0', padding:6, background:'#fff' }} />
+              : <div className="tr-sig-empty">No signature uploaded</div>
+            }
+            <div style={{ display:'flex', gap:6, marginTop:6 }}>
+              <label className="tr-sig-upload" style={{ flex:1 }}>
+                {sig ? 'Replace' : 'Upload Signature'}
+                <input type="file" accept="image/png,image/jpeg" onChange={e => upload(key, e.target.files?.[0] ?? null)} />
+              </label>
+              {sig && (
+                <button type="button" onClick={() => clear(key)} style={{ padding:'4px 10px', fontSize:'0.75rem', borderRadius:6, border:'1px solid #fca5a5', background:'#fef2f2', color:'#b91c1c', cursor:'pointer', fontWeight:600 }}>
+                  Clear
+                </button>
+              )}
+            </div>
           </div>
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+    </>
   )
 }
 
@@ -12111,6 +12157,11 @@ function App() {
   const [inventoryUsage,       setInventoryUsage]       = useState<InventoryUsageRecord[]>(() => loadStore('tic_inventory_usage', []))
   const [offSiteRecords,       setOffSiteRecords]       = useState<OffSiteRecord[]>(() => loadStore('tic_offsite', []))
   const [users, setUsers] = useState<AppUser[]>([])
+
+  // Load shared signatures from Supabase whenever logged in
+  useEffect(() => {
+    if (isLoggedIn) loadSigsFromDB()
+  }, [isLoggedIn])
 
   // Fetch all user profiles from Supabase whenever logged in
   useEffect(() => {
