@@ -2868,8 +2868,12 @@ function TripReqSection({ records, employees, onUpdate, currentUserName = '' }: 
   }
   const del = (id: string) => { if (window.confirm('Delete this trip request?')) onUpdate(prev=>prev.filter(r=>r.id!==id)) }
 
+  const DEFAULT_REQUESTER_ID = '50814' // ARUSHULLA RASHID
   const newRec = (): TripRequest => {
+    // Use the logged-in user if found in employees, otherwise fall back to
+    // the default requester (ARUSHULLA RASHID, ID 50814)
     const emp = employees.find(e => e.fullName === currentUserName)
+             ?? employees.find(e => e.employeeId === DEFAULT_REQUESTER_ID)
     return {
       id:'TR-new',
       requesterName: emp?.fullName ?? currentUserName,
@@ -2981,29 +2985,16 @@ function TripReqSection({ records, employees, onUpdate, currentUserName = '' }: 
         </table>
       </div>
 
-      {/* Signature management (admin / non-viewer only) */}
-      <div className="tr-sig-panel vwh">
-        <div className="tr-sig-hd">🖋 Print Signatures</div>
-        <p className="tr-sig-note">Upload each signature once — they will be embedded automatically on approved trip request printouts.</p>
-        <div className="tr-sig-grid">
-          <div className="tr-sig-item">
-            <span className="tr-sig-label">Requested By Signature</span>
-            {sigRequester ? <img src={sigRequester} alt="Requested by signature" /> : <div className="tr-sig-empty">No signature uploaded</div>}
-            <label className="tr-sig-upload">
-              {sigRequester ? 'Replace' : 'Upload'}
-              <input type="file" accept="image/png,image/jpeg" onChange={e=>handleSigUpload('requester', e.target.files?.[0] ?? null)} />
-            </label>
-          </div>
-          <div className="tr-sig-item">
-            <span className="tr-sig-label">Authorized By Signature — Ahmed Ali</span>
-            {sigAhmedAli ? <img src={sigAhmedAli} alt="Authorized by signature" /> : <div className="tr-sig-empty">No signature uploaded</div>}
-            <label className="tr-sig-upload">
-              {sigAhmedAli ? 'Replace' : 'Upload'}
-              <input type="file" accept="image/png,image/jpeg" onChange={e=>handleSigUpload('ahmedali', e.target.files?.[0] ?? null)} />
-            </label>
-          </div>
+      {/* Signature info banner — upload now managed in Settings → System */}
+      {(!sigRequester || !sigAhmedAli) && (
+        <div className="tr-sig-banner vwh">
+          <span>🖋</span>
+          <span>
+            {!sigRequester && !sigAhmedAli ? 'No print signatures uploaded yet.' : 'One signature is missing.'}
+            {' '}Go to <strong>Settings → System → Print Signatures</strong> to upload them — they will appear automatically on all trip request printouts.
+          </span>
         </div>
-      </div>
+      )}
 
       {editing && <TripRequestModal record={editing} employees={employees} onClose={()=>setEditing(null)} onSave={save} />}
       {approving && (
@@ -3049,8 +3040,9 @@ function printTripRequest(record: TripRequest, sigRequester: string, sigAhmedAli
     }
   }
 
-  const requesterSigHtml = isApproved && sigRequester ? `<img class="sig-img" src="${sigRequester}" alt="Signature" />` : '&nbsp;'
-  const authorizedSigHtml = isApproved && sigAhmedAli ? `<img class="sig-img" src="${sigAhmedAli}" alt="Signature" />` : '&nbsp;'
+  // Signatures show on all prints (not just approved) when uploaded
+  const requesterSigHtml  = sigRequester ? `<img class="sig-img" src="${sigRequester}" alt="Signature" />` : ''
+  const authorizedSigHtml = sigAhmedAli  ? `<img class="sig-img" src="${sigAhmedAli}"  alt="Signature" />` : ''
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -3062,51 +3054,50 @@ function printTripRequest(record: TripRequest, sigRequester: string, sigAhmedAli
   *, *::before, *::after { box-sizing: border-box; }
   body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #111; background: #f0f0f0; margin: 0; padding: 0; }
 
-  .screen-bar { display:flex; align-items:center; gap:14px; padding:10px 20px; background:#1e1b4b; position: sticky; top:0; z-index:10; font-family: system-ui, sans-serif; font-size:13px; }
+  .screen-bar { display:flex; align-items:center; gap:14px; padding:10px 20px; background:#1e1b4b; position:sticky; top:0; z-index:10; font-family:system-ui,sans-serif; font-size:13px; }
   .screen-bar button { padding:7px 20px; background:#6d28d9; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; }
   .screen-bar button:hover { background:#5b21b6; }
   .screen-bar .ref-label { font-weight:700; color:#ddd6fe; }
-  .screen-bar .meta-label { color: rgba(221,214,254,0.7); font-size:12px; }
+  .screen-bar .meta-label { color:rgba(221,214,254,0.7); font-size:12px; }
 
   .a4-wrap { max-width:210mm; margin:24px auto; padding-bottom:40px; }
-  .a4-page { background:#fff; box-shadow:0 4px 20px rgba(30,27,75,0.16); min-height:297mm; padding:30pt 36pt; position:relative; overflow:hidden; }
-  .accent-bar { position:absolute; top:0; left:0; right:0; height:5pt; background: linear-gradient(90deg,#4f46e5,#06b6d4); }
+  .a4-page { background:#fff; box-shadow:0 4px 20px rgba(30,27,75,0.16); min-height:297mm; padding:24pt 32pt; position:relative; }
 
-  .vmt-title { text-align:center; font-size:14pt; font-weight:700; letter-spacing:0.5px; margin:14pt 0 2pt; }
-  .vmt-subtitle { text-align:center; font-size:11.5pt; font-weight:700; margin-bottom:14pt; }
+  .vmt-title    { text-align:center; font-size:14pt; font-weight:700; letter-spacing:0.5px; margin:10pt 0 2pt; }
+  .vmt-subtitle { text-align:center; font-size:11.5pt; font-weight:700; margin-bottom:12pt; }
 
-  .sec-label { font-weight:700; font-size:11pt; margin:10pt 0 4pt; }
+  .sec-label { font-weight:700; font-size:11pt; margin:8pt 0 3pt; }
 
-  table.vmt-tbl { width:100%; border-collapse:collapse; margin-bottom:6pt; }
-  table.vmt-tbl td { border:1pt solid #333; padding:4pt 8pt; font-size:10.5pt; vertical-align:middle; }
-  table.vmt-tbl td.lbl { font-weight:700; width:170pt; }
+  table.vmt-tbl { width:100%; border-collapse:collapse; margin-bottom:5pt; }
+  table.vmt-tbl td { border:1pt solid #333; padding:3.5pt 7pt; font-size:10.5pt; vertical-align:middle; }
+  table.vmt-tbl td.lbl { font-weight:700; width:160pt; background:#f8fafc; }
 
-  .tick-row { display:flex; align-items:center; gap:8pt; font-size:10.5pt; flex-wrap:wrap; }
-  .tick-box { display:inline-flex; align-items:center; justify-content:center; width:24pt; height:16pt; border:1pt solid #333; font-weight:700; font-size:11pt; flex-shrink:0; }
-  .return-box { flex:1; min-width:120pt; border:1pt solid #333; padding:3pt 8pt; min-height:14pt; }
+  .tick-row { display:flex; align-items:center; gap:8pt; font-size:10.5pt; flex-wrap:wrap; border:1pt solid #333; padding:5pt 8pt; margin-bottom:5pt; }
+  .tick-box { display:inline-flex; align-items:center; justify-content:center; width:22pt; height:15pt; border:1pt solid #333; font-weight:700; font-size:11pt; flex-shrink:0; }
+  .return-box { flex:1; min-width:100pt; border-bottom:1pt solid #333; padding:0 4pt; min-height:14pt; }
 
-  .sig-grid { display:grid; grid-template-columns:1fr 1fr; border:1pt solid #333; margin-top:12pt; }
-  .sig-col { padding:8pt 12pt 12pt; border-right:1pt solid #333; }
-  .sig-col:last-child { border-right:none; }
-  .sig-col-hdr { font-weight:700; font-size:10.5pt; border-bottom:1pt solid #333; margin:-8pt -12pt 10pt; padding:6pt 12pt; background:#f8fafc; }
-  .sig-row { font-size:10.5pt; margin-bottom:8pt; display:flex; align-items:baseline; gap:6pt; }
-  .sig-line { flex:1; border-bottom:1pt solid #333; min-width:80pt; height:14pt; display:inline-block; vertical-align:bottom; padding-left:4pt; }
-  .sig-img-row { min-height:56pt; align-items:flex-end; padding-bottom:2pt; }
-  .sig-img-row .sig-line { height:54pt; border-bottom:1pt solid #333; display:flex; align-items:center; }
-  .sig-img { height:46pt; max-width:160pt; object-fit:contain; }
-  .sig-lbl { font-weight:600; white-space:nowrap; }
+  /* ── Signature sections ─────────────────────── */
+  .sig-section { margin-top:10pt; }
+  .sig-section-title { font-weight:700; font-size:10.5pt; background:#f1f5f9; border:1pt solid #333; border-bottom:none; padding:4pt 8pt; }
+  .sig-grid { display:grid; grid-template-columns:1fr 1fr; border:1pt solid #333; }
+  .sig-col { padding:8pt 12pt 10pt; }
+  .sig-col:first-child { border-right:1pt solid #333; }
+  .sig-col-hdr { font-weight:700; font-size:10pt; border-bottom:1pt solid #ccc; margin-bottom:8pt; padding-bottom:4pt; color:#374151; }
+  .sig-row { font-size:10pt; margin-bottom:6pt; display:flex; align-items:flex-end; gap:6pt; }
+  .sig-lbl  { font-weight:600; white-space:nowrap; flex-shrink:0; }
+  .sig-line { flex:1; border-bottom:1pt solid #333; min-width:70pt; min-height:14pt; padding-left:4pt; }
+  .sig-img-wrap { flex:1; min-height:70pt; border-bottom:1pt solid #333; display:flex; align-items:center; padding:4pt 0; }
+  .sig-img { max-height:66pt; max-width:100%; width:auto; object-fit:contain; display:block; }
 
-  .status-stamp { position:absolute; top:54pt; right:42pt; font-family: system-ui, sans-serif; font-size:13pt; font-weight:800; letter-spacing:2px; text-transform:uppercase; padding:4pt 12pt; border:2pt solid; border-radius:4pt; transform:rotate(8deg); opacity:0.8; }
-  .status-stamp.pending { color:#b45309; border-color:#b45309; }
+  .status-stamp { position:absolute; top:46pt; right:36pt; font-family:system-ui,sans-serif; font-size:13pt; font-weight:800; letter-spacing:2px; text-transform:uppercase; padding:4pt 12pt; border:2pt solid; border-radius:4pt; transform:rotate(8deg); opacity:0.75; }
+  .status-stamp.pending  { color:#b45309; border-color:#b45309; }
   .status-stamp.rejected { color:#b91c1c; border-color:#b91c1c; }
-
-  .vmt-footer { text-align:center; font-family: system-ui, sans-serif; font-size:7.5pt; color:#94a3b8; margin-top:16pt; letter-spacing:0.5px; }
 
   @media print {
     body { background:#fff; }
     .screen-bar { display:none !important; }
     .a4-wrap { max-width:none; margin:0; padding:0; }
-    .a4-page { box-shadow:none; min-height:unset; }
+    .a4-page  { box-shadow:none; min-height:unset; }
   }
 </style>
 </head>
@@ -3120,7 +3111,6 @@ function printTripRequest(record: TripRequest, sigRequester: string, sigAhmedAli
 
 <div class="a4-wrap">
   <div class="a4-page">
-    <div class="accent-bar"></div>
     ${record.status !== 'Approved' ? `<div class="status-stamp ${record.status === 'Rejected' ? 'rejected' : 'pending'}">${esc(record.status)}</div>` : ''}
 
     <div class="vmt-title">VILLA MARINE TRANSPORT</div>
@@ -3129,68 +3119,72 @@ function printTripRequest(record: TripRequest, sigRequester: string, sigAhmedAli
     <div class="sec-label" style="margin-top:2pt">Requester Details</div>
     <table class="vmt-tbl">
       <tr><td class="lbl">Requester Name</td><td>${esc(record.requesterName) || '&nbsp;'}</td></tr>
-      <tr><td class="lbl">Job Title</td><td>${esc(record.jobTitle) || '&nbsp;'}</td></tr>
-      <tr><td class="lbl">Department</td><td>${esc(record.department) || '&nbsp;'}</td></tr>
-      <tr><td class="lbl">Business Unit</td><td>VHPL</td></tr>
+      <tr><td class="lbl">Job Title / Designation</td><td>${esc(record.jobTitle) || '&nbsp;'}</td></tr>
+      <tr><td class="lbl">Department / Section</td><td>${esc(record.department) || '&nbsp;'}</td></tr>
+      <tr><td class="lbl">Business Unit</td><td>VHPL — Thilafushi Industrial Complex</td></tr>
     </table>
 
     <div class="sec-label">Trip Details</div>
     <table class="vmt-tbl">
       <tr><td class="lbl">Departing from:</td><td colspan="3">${esc(record.departingFrom) || '&nbsp;'}</td></tr>
       <tr><td class="lbl">Destination:</td><td colspan="3">${esc(record.destination) || '&nbsp;'}</td></tr>
-      <tr><td class="lbl">Departure Date:</td><td>${record.departureDate ? formatDateDisplay(record.departureDate) : '&nbsp;'}</td><td class="lbl">Departure Time</td><td>${record.departureTime ? formatTimeHrs(record.departureTime) : '&nbsp;'}</td></tr>
-      <tr><td class="lbl">Purpose of trip:</td><td colspan="3">${esc(record.purpose) || '&nbsp;'}</td></tr>
-      <tr><td class="lbl">Number of Passengers:</td><td colspan="3">${esc(String(record.passengers || '')) || '&nbsp;'}</td></tr>
+      <tr><td class="lbl">Departure Date:</td><td>${record.departureDate ? formatDateDisplay(record.departureDate) : '&nbsp;'}</td>
+          <td class="lbl" style="width:120pt">Departure Time</td><td>${record.departureTime ? formatTimeHrs(record.departureTime) : '&nbsp;'}</td></tr>
+      <tr><td class="lbl">Purpose of Trip:</td><td colspan="3">${esc(record.purpose) || '&nbsp;'}</td></tr>
+      <tr><td class="lbl">No. of Passengers:</td><td colspan="3">${esc(String(record.passengers || '1'))}</td></tr>
+      <tr><td class="lbl">Trip to be Invoiced to:</td><td colspan="3">VHPL</td></tr>
     </table>
 
-    <div class="sec-label">Tick the appropriate box</div>
+    <div class="sec-label">Trip Type</div>
     <div class="tick-row">
-      <span>One-Way</span><span class="tick-box">${oneWayChecked ? '✓' : ''}</span>
-      <span style="margin-left:10pt">Round Trip</span><span class="tick-box">${roundTripChecked ? '✓' : ''}</span>
-      <span style="margin-left:10pt">Return Date &amp; Time</span>
+      <span>One-Way</span>&nbsp;<span class="tick-box">${oneWayChecked ? '✓' : ''}</span>
+      &nbsp;&nbsp;&nbsp;
+      <span>Round Trip</span>&nbsp;<span class="tick-box">${roundTripChecked ? '✓' : ''}</span>
+      &nbsp;&nbsp;&nbsp;
+      <span>Return Date &amp; Time:</span>
       <span class="return-box">${esc(returnDisplay)}</span>
     </div>
 
-    <div class="sec-label">Tick the appropriate box</div>
-    <table class="vmt-tbl">
-      <tr><td class="lbl">Trip to be invoiced to:</td><td>VHPL</td></tr>
-    </table>
+    ${record.remarks ? `<table class="vmt-tbl" style="margin-top:5pt"><tr><td class="lbl">Remarks / Notes</td><td>${esc(record.remarks)}</td></tr></table>` : ''}
 
-    <div class="sig-grid">
-      <div class="sig-col">
-        <div class="sig-col-hdr">Requested by:</div>
-        <div class="sig-row"><span class="sig-lbl">Name:</span><span class="sig-line">${esc(record.requesterName) || ''}</span></div>
-        <div class="sig-row sig-img-row"><span class="sig-lbl">Signature:</span><span class="sig-line">${requesterSigHtml}</span></div>
-        <div class="sig-row"><span class="sig-lbl">Date:</span><span class="sig-line">${record.requestDate ? formatDateDisplay(record.requestDate) : ''}</span></div>
-      </div>
-      <div class="sig-col">
-        <div class="sig-col-hdr">Authorized by:</div>
-        <div class="sig-row"><span class="sig-lbl">Name:</span><span class="sig-line">AHMED ALI</span></div>
-        <div class="sig-row sig-img-row"><span class="sig-lbl">Signature:</span><span class="sig-line">${authorizedSigHtml}</span></div>
-        <div class="sig-row"><span class="sig-lbl">Date:</span><span class="sig-line">${record.approvedDate ? formatDateDisplay(record.approvedDate) : ''}</span></div>
+    <!-- Requested by / Authorized by -->
+    <div class="sig-section">
+      <div class="sig-grid" style="margin-top:10pt">
+        <div class="sig-col">
+          <div class="sig-col-hdr">Requested by</div>
+          <div class="sig-row"><span class="sig-lbl">Name:</span><span class="sig-line">${esc(record.requesterName)}</span></div>
+          <div class="sig-row"><span class="sig-lbl">Signature:</span><span class="sig-img-wrap">${requesterSigHtml}</span></div>
+          <div class="sig-row"><span class="sig-lbl">Date:</span><span class="sig-line">${record.requestDate ? formatDateDisplay(record.requestDate) : ''}</span></div>
+        </div>
+        <div class="sig-col">
+          <div class="sig-col-hdr">Authorized by</div>
+          <div class="sig-row"><span class="sig-lbl">Name:</span><span class="sig-line">AHMED ALI</span></div>
+          <div class="sig-row"><span class="sig-lbl">Signature:</span><span class="sig-img-wrap">${authorizedSigHtml}</span></div>
+          <div class="sig-row"><span class="sig-lbl">Date:</span><span class="sig-line">${record.approvedDate ? formatDateDisplay(record.approvedDate) : ''}</span></div>
+        </div>
       </div>
     </div>
 
-    <div class="sec-label">For VMT's use only</div>
-    <table class="vmt-tbl">
-      <tr><td class="lbl">Cost of the trip</td><td>&nbsp;</td></tr>
-    </table>
-    <div class="sig-grid">
-      <div class="sig-col">
-        <div class="sig-col-hdr">Reviewed by: Movement Controller</div>
-        <div class="sig-row"><span class="sig-lbl">Name:</span><span class="sig-line"></span></div>
-        <div class="sig-row sig-img-row"><span class="sig-lbl">Signature:</span><span class="sig-line"></span></div>
-        <div class="sig-row"><span class="sig-lbl">Date:</span><span class="sig-line"></span></div>
-      </div>
-      <div class="sig-col">
-        <div class="sig-col-hdr">Authorized by: Manager of Transport</div>
-        <div class="sig-row"><span class="sig-lbl">Name:</span><span class="sig-line"></span></div>
-        <div class="sig-row sig-img-row"><span class="sig-lbl">Signature:</span><span class="sig-line"></span></div>
-        <div class="sig-row"><span class="sig-lbl">Date:</span><span class="sig-line"></span></div>
+    <!-- For VMT use only -->
+    <div class="sig-section" style="margin-top:14pt">
+      <div class="sig-section-title">For VMT's Use Only</div>
+      <table class="vmt-tbl" style="border-top:none"><tr><td class="lbl">Cost of the Trip (MVR)</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr></table>
+      <div class="sig-grid">
+        <div class="sig-col">
+          <div class="sig-col-hdr">Reviewed by: Movement Controller</div>
+          <div class="sig-row"><span class="sig-lbl">Name:</span><span class="sig-line"></span></div>
+          <div class="sig-row"><span class="sig-lbl">Signature:</span><span class="sig-img-wrap"></span></div>
+          <div class="sig-row"><span class="sig-lbl">Date:</span><span class="sig-line"></span></div>
+        </div>
+        <div class="sig-col">
+          <div class="sig-col-hdr">Authorized by: Manager of Transport</div>
+          <div class="sig-row"><span class="sig-lbl">Name:</span><span class="sig-line"></span></div>
+          <div class="sig-row"><span class="sig-lbl">Signature:</span><span class="sig-img-wrap"></span></div>
+          <div class="sig-row"><span class="sig-lbl">Date:</span><span class="sig-line"></span></div>
+        </div>
       </div>
     </div>
 
-    <div class="vmt-footer">VHPL · Thilafushi Industrial Complex Pvt. Ltd. · Maldives</div>
   </div>
 </div>
 </body>
@@ -11350,6 +11344,56 @@ function UserFormModal({ user, employees, onClose, onSave }: {
   )
 }
 
+// ── Signature manager — self-contained, reads/writes localStorage ─────────────
+function TripSigManager() {
+  const [sigReq, setSigReq] = useState<string>(() => localStorage.getItem('tic_sig_requester') || '')
+  const [sigAuth, setSigAuth] = useState<string>(() => localStorage.getItem('tic_sig_ahmedali') || '')
+
+  const upload = (which: 'req' | 'auth', file: File | null) => {
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      const dataUrl = String(reader.result)
+      if (which === 'req') { setSigReq(dataUrl); localStorage.setItem('tic_sig_requester', dataUrl) }
+      else                 { setSigAuth(dataUrl); localStorage.setItem('tic_sig_ahmedali', dataUrl) }
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const clear = (which: 'req' | 'auth') => {
+    if (which === 'req') { setSigReq('');  localStorage.removeItem('tic_sig_requester') }
+    else                 { setSigAuth(''); localStorage.removeItem('tic_sig_ahmedali') }
+  }
+
+  return (
+    <div className="tr-sig-grid">
+      {[
+        { key: 'req'  as const, label: 'Requested By — Arushulla Rashid', sig: sigReq  },
+        { key: 'auth' as const, label: 'Authorized By — Ahmed Ali',        sig: sigAuth },
+      ].map(({ key, label, sig }) => (
+        <div key={key} className="tr-sig-item">
+          <span className="tr-sig-label">{label}</span>
+          {sig
+            ? <img src={sig} alt={label} style={{ maxHeight:80, maxWidth:'100%', objectFit:'contain', borderRadius:6, border:'1px solid #e2e8f0', padding:4, background:'#f8fafc' }} />
+            : <div className="tr-sig-empty">No signature uploaded</div>
+          }
+          <div style={{ display:'flex', gap:6, marginTop:4 }}>
+            <label className="tr-sig-upload" style={{ flex:1 }}>
+              {sig ? 'Replace' : 'Upload'}
+              <input type="file" accept="image/png,image/jpeg" onChange={e => upload(key, e.target.files?.[0] ?? null)} />
+            </label>
+            {sig && (
+              <button type="button" onClick={() => clear(key)} style={{ padding:'4px 10px', fontSize:'0.75rem', borderRadius:6, border:'1px solid #fca5a5', background:'#fef2f2', color:'#b91c1c', cursor:'pointer', fontWeight:600 }}>
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function SettingsPage({ employees, leaveRequests: _lr, activeLeaves: _al, onReset, currentUserName, loggedInUser, users, onUpdateUsers }: {
   employees: Employee[]
   leaveRequests: LeaveRequestRecord[]
@@ -11617,6 +11661,16 @@ function SettingsPage({ employees, leaveRequests: _lr, activeLeaves: _al, onRese
           {/* ── Tab: System ── */}
           {settingsTab === 'system' && (
             <div className="settings-tab-panel">
+
+              {/* ── Print Signatures ──────────────────────────────────── */}
+              <h2 style={{ fontSize:'0.88rem', fontWeight:700, color:'#374151', margin:'0 0 10px' }}>Print Signatures</h2>
+              <p style={{ fontSize:'0.8rem', color:'#64748b', margin:'0 0 14px' }}>
+                Upload signatures once here — they are saved and will appear automatically on all Trip Request printouts.
+              </p>
+              <TripSigManager />
+
+              <div style={{ margin:'24px 0 0', borderTop:'1px solid #f1f5f9', paddingTop:20 }} />
+
               {/* Role descriptions */}
               <h2 style={{ fontSize: '0.88rem', fontWeight: 700, color: '#374151', margin: '0 0 10px' }}>Role Permissions</h2>
               <div className="role-legend" style={{ marginBottom: 28 }}>
