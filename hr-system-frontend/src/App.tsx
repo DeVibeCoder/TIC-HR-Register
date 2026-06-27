@@ -8526,9 +8526,6 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   .info-tbl { width:100%; border-collapse:collapse; margin-bottom:6pt; }
   .info-tbl td { border:0.6pt solid #999; padding:2.5pt 6pt; font-size:8.5pt; vertical-align:middle; }
   .info-tbl td.lbl { font-weight:700; white-space:nowrap; width:26mm; background:#f0f0f0; color:#111; font-size:8pt; }
-  /* Time value cells: same grey as .lbl label */
-  .time-val { background:#f0f0f0; color:#111; font-size:8pt; font-weight:700; }
-
   /* Participant tables — small, fixed layout, height controlled on <tr> */
   .p-tbl { width:100%; border-collapse:collapse; table-layout:fixed; }
   .p-tbl th { background:#e8e8e8; border:0.5pt solid #bbb; padding:2pt 4pt; font-size:7pt; font-weight:700; text-align:left; overflow:hidden; }
@@ -8598,10 +8595,10 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
     <tr>
       <td class="lbl" style="width:22mm;">Date</td>
       <td style="text-transform:uppercase;">${fmtMeetingDate(record.date)}</td>
-      <td class="lbl time-val" style="width:24mm;text-align:left;">Time Started</td>
-      <td class="time-val" style="width:18mm;">${esc(record.timeStarted)} hrs.</td>
-      <td class="lbl time-val" style="width:22mm;text-align:left;">Time Ended</td>
-      <td class="time-val" style="width:18mm;">${esc(record.timeEnded ? record.timeEnded + ' hrs.' : '—')}</td>
+      <td class="lbl" style="width:24mm;">Time Started</td>
+      <td style="width:18mm;">${esc(record.timeStarted)} hrs.</td>
+      <td class="lbl" style="width:22mm;">Time Ended</td>
+      <td style="width:18mm;">${esc(record.timeEnded ? record.timeEnded + ' hrs.' : '—')}</td>
     </tr>
     <tr>
       <td class="lbl">Venue</td>
