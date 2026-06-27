@@ -9762,12 +9762,197 @@ html { overflow-x: hidden; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   DASHBOARD — complete redesign
+   DASHBOARD — legacy (kept for compatibility)
    ═══════════════════════════════════════════════════════════════════════════ */
-.dash-wrap {
-  padding: 18px 22px 28px;
-  max-width: 100%;
+.dash-wrap { padding: 18px 22px 28px; max-width: 100%; box-sizing: border-box; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   OVERVIEW — Premium 2026 redesign
+   ═══════════════════════════════════════════════════════════════════════════ */
+.ov-wrap {
+  padding: 20px 24px 32px;
+  background: #F8FAFC;
+  min-height: 100%;
   box-sizing: border-box;
+}
+
+/* Header */
+.ov-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 20px;
+}
+.ov-greeting {
+  font-size: 1.35rem; font-weight: 800; color: #0F172A;
+  margin: 0 0 3px; letter-spacing: -0.02em;
+}
+.ov-greeting-wave { font-style: normal; }
+.ov-subtitle { font-size: 0.8rem; color: #64748B; margin: 0; }
+
+/* KPI row */
+.ov-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.ov-kpi-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 18px 18px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 1px 3px rgba(15,23,42,0.06), 0 2px 8px rgba(15,23,42,0.04);
+  transition: transform 0.18s, box-shadow 0.18s;
+  border: 1px solid #EEF2F7;
+}
+.ov-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(15,23,42,0.1);
+}
+.ov-kpi-icon {
+  width: 48px; height: 48px; border-radius: 14px;
+  display: grid; place-items: center; flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.ov-kpi-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ov-kpi-val  { font-size: 1.8rem; font-weight: 800; color: #0F172A; line-height: 1; }
+.ov-kpi-lbl  { font-size: 0.72rem; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.05em; }
+.ov-kpi-sub  { font-size: 0.7rem; color: #94A3B8; }
+
+/* Card base */
+.ov-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 18px 18px 14px;
+  box-shadow: 0 1px 3px rgba(15,23,42,0.06), 0 2px 8px rgba(15,23,42,0.04);
+  border: 1px solid #EEF2F7;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ov-card-hd {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.ov-card-ttl { font-size: 0.84rem; font-weight: 800; color: #0F172A; }
+.ov-empty    { font-size: 0.78rem; color: #94A3B8; font-style: italic; margin: 0; }
+.ov-more     { font-size: 0.72rem; color: #94A3B8; margin: 4px 0 0; text-align: center; }
+.ov-sec-lbl  { font-size: 0.67rem; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.07em; margin: 4px 0 2px; }
+
+/* Badges */
+.ov-badge { font-size: 0.67rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+.ov-badge-green  { background: #D1FAE5; color: #065F46; }
+.ov-badge-blue   { background: #DBEAFE; color: #1D4ED8; }
+.ov-badge-purple { background: #EDE9FE; color: #5B21B6; }
+.ov-badge-amber  { background: #FEF3C7; color: #92400E; }
+
+/* Tags inside rows */
+.ov-tag { font-size: 0.58rem; font-weight: 800; padding: 1px 5px; border-radius: 6px; margin-left: 5px; text-transform: uppercase; letter-spacing: 0.03em; }
+.ov-tag-blue  { background: #E0F2FE; color: #0369A1; }
+.ov-tag-amber { background: #FEF3C7; color: #92400E; }
+
+/* Main grid */
+.ov-main-grid {
+  display: grid;
+  grid-template-columns: 220px 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 14px;
+}
+.ov-card-presence { grid-column: 1; grid-row: 1; }
+.ov-card-leave    { grid-column: 2 / 4; grid-row: 1; }
+.ov-card-depts    { grid-column: 1; grid-row: 2; }
+.ov-card-medical  { grid-column: 2; grid-row: 2; }
+.ov-card-term     { grid-column: 3; grid-row: 2; }
+
+/* Donut chart */
+.ov-donut-wrap {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  margin: 4px 0;
+}
+.ov-donut-center {
+  position: absolute;
+  display: flex; flex-direction: column; align-items: center;
+}
+.ov-donut-val { font-size: 1.4rem; font-weight: 800; color: #0F172A; line-height: 1; }
+.ov-donut-lbl { font-size: 0.62rem; color: #64748B; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+.ov-donut-legend { display: flex; flex-direction: column; gap: 7px; }
+.ov-legend-item  { display: flex; align-items: center; gap: 7px; font-size: 0.76rem; }
+.ov-legend-dot   { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.ov-legend-lbl   { flex: 1; color: #475569; font-size: 0.74rem; }
+.ov-legend-val   { font-weight: 800; color: #0F172A; }
+.ov-legend-pct   { font-size: 0.68rem; color: #94A3B8; min-width: 32px; text-align: right; }
+
+/* Leave table */
+.ov-leave-tbl { display: flex; flex-direction: column; }
+.ov-lt-head {
+  display: grid;
+  grid-template-columns: 2fr 1.2fr 44px 1fr 1fr;
+  gap: 0 8px;
+  padding: 6px 10px;
+  background: #F8FAFC;
+  border-radius: 8px;
+  margin-bottom: 2px;
+  font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.05em; color: #94A3B8;
+}
+.ov-lt-row {
+  display: grid;
+  grid-template-columns: 2fr 1.2fr 44px 1fr 1fr;
+  gap: 0 8px;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 8px;
+  transition: background 0.12s;
+}
+.ov-lt-row:hover   { background: #F8FAFC; }
+.ov-lt-upcoming   { background: #F0F9FF; }
+.ov-lt-notice     { background: #FFFBEB; }
+.ov-lt-name {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.8rem; font-weight: 600; color: #0F172A;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ov-lt-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, #6D5DF6, #8B5CF6);
+  color: #fff; font-size: 0.72rem; font-weight: 800;
+  display: grid; place-items: center; flex-shrink: 0;
+}
+.ov-lt-dept  { font-size: 0.72rem; color: #64748B; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ov-lt-type  { font-size: 0.62rem; font-weight: 700; color: #1D4ED8; background: #DBEAFE; padding: 2px 5px; border-radius: 5px; text-align: center; white-space: nowrap; width: fit-content; }
+.ov-lt-date  { font-size: 0.72rem; color: #475569; white-space: nowrap; }
+
+/* Dept bars */
+.ov-dept-list { display: flex; flex-direction: column; gap: 8px; }
+.ov-dept-row  { display: grid; grid-template-columns: 1fr 1.6fr auto; gap: 8px; align-items: center; }
+.ov-dept-name { font-size: 0.72rem; color: #475569; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ov-dept-bar-wrap { height: 6px; background: #EEF2F7; border-radius: 6px; overflow: hidden; }
+.ov-dept-bar  { height: 100%; background: linear-gradient(90deg,#6D5DF6,#8B5CF6); border-radius: 6px; transition: width 0.6s cubic-bezier(0.34,1.2,0.64,1); }
+.ov-dept-cnt  { font-size: 0.72rem; font-weight: 700; color: #0F172A; white-space: nowrap; text-align: right; }
+.ov-dept-cnt em { font-style: normal; font-weight: 500; color: #94A3B8; margin-left: 4px; }
+
+/* Medical */
+.ov-med-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+.ov-med-stat  { background: #F8FAFC; border-radius: 10px; padding: 10px 8px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 3px; border: 1px solid #EEF2F7; }
+.ov-med-val   { font-size: 1.4rem; font-weight: 800; line-height: 1; }
+.ov-med-lbl   { font-size: 0.62rem; color: #64748B; font-weight: 600; }
+
+/* Termination */
+.ov-term-list   { display: flex; flex-direction: column; gap: 8px; }
+.ov-term-row    { display: flex; align-items: flex-start; gap: 10px; padding: 10px; background: #FFF7ED; border: 1px solid #FED7AA; border-radius: 10px; }
+.ov-term-avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg,#EF4444,#F87171); color:#fff; font-size:0.85rem; font-weight:800; display:grid; place-items:center; flex-shrink:0; }
+.ov-term-info   { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.ov-term-name   { font-size: 0.8rem; font-weight: 700; color: #0F172A; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ov-term-meta   { font-size: 0.68rem; color: #64748B; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ov-term-lwd    { font-size: 0.65rem; color: #92400E; font-weight: 600; }
+.ov-term-badge  { font-size: 0.62rem; font-weight: 700; padding: 3px 8px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; margin-top: 1px; }
+.ov-term-footer { font-size: 0.72rem; color: #22C55E; font-weight: 700; padding-top: 8px; border-top: 1px solid #EEF2F7; }
+
+@media (max-width: 900px) {
+  .ov-kpi-row { grid-template-columns: repeat(2,1fr); }
+  .ov-main-grid { grid-template-columns: 1fr; }
+  .ov-card-presence,.ov-card-leave,.ov-card-depts,.ov-card-medical,.ov-card-term { grid-column:1; grid-row:auto; }
 }
 
 /* Hero bar */
