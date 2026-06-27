@@ -1596,42 +1596,31 @@ function OverviewPage({
             </div>
           </div>
 
-          {/* Right: Section table */}
-          <div className="dk-dept-table">
-            <div className="dk-dept-thead">
-              <span>SECTION</span>
-              <span>HEADCOUNT</span>
-              <span style={{ textAlign:'right' }}>% OF TOTAL</span>
-            </div>
-            <div className="dk-dept-tbody">
-              {deptCounts.length === 0
-                ? <div className="dk-empty">No sections yet.</div>
-                : deptCounts.map(([dept,cnt],i)=>(
-                    <div key={dept} className="dk-dept-row" style={{ animationDelay: `${i*30}ms` }}>
-                      <div className="dk-dept-name-cell">
-                        <span className="dk-dept-icon">
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-                        </span>
-                        <span className="dk-dept-name">{dept}</span>
+          {/* Right: 3-column section grid — no bars, no scroll */}
+          <div className="dk-sect-grid-wrap">
+            {deptCounts.length === 0
+              ? <p className="dk-empty">No sections yet.</p>
+              : <>
+                  <div className="dk-sect-grid">
+                    {[0, Math.ceil(deptCounts.length/3), Math.ceil(deptCounts.length/3)*2].map((start, col) => (
+                      <div key={col} className="dk-sect-col">
+                        {deptCounts.slice(start, start + Math.ceil(deptCounts.length/3)).map(([dept,cnt]) => (
+                          <div key={dept} className="dk-sect-row">
+                            <span className="dk-sect-name">{dept}</span>
+                            <span className="dk-sect-n">{cnt}</span>
+                            <span className="dk-sect-p">{employees.length?Math.round(cnt/employees.length*100):0}%</span>
+                          </div>
+                        ))}
                       </div>
-                      <div className="dk-dept-bar-cell">
-                        <div className="dk-dept-track">
-                          <div className="dk-dept-fill" style={{ width:Math.round(cnt/maxDept*100)+'%' }}/>
-                        </div>
-                        <span className="dk-dept-cnt">{cnt}</span>
-                      </div>
-                      <span className="dk-dept-pct">{employees.length?Math.round(cnt/employees.length*100).toFixed(1):0}%</span>
-                    </div>
-                  ))
-              }
-            </div>
-            {employees.length > 0 && (
-              <div className="dk-dept-total-row">
-                <span className="dk-dept-total-lbl">TOTAL</span>
-                <span className="dk-dept-total-n">{employees.length}</span>
-                <span className="dk-dept-total-p">100%</span>
-              </div>
-            )}
+                    ))}
+                  </div>
+                  <div className="dk-sect-total">
+                    <span>TOTAL</span>
+                    <span className="dk-sect-total-n">{employees.length}</span>
+                    <span>100%</span>
+                  </div>
+                </>
+            }
           </div>
         </div>
       </div>
