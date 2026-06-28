@@ -2291,10 +2291,12 @@ function EmployeesPage({ employees, onAdd, onEdit, onDelete, onExport, onImport,
       <PageHeader eyebrow="Employee register" title="Employees" subtitle="TIC Employee Details in one place with site status" />
       <section className="employee-workspace">
         <div className="table-actions">
-          <div className="table-actions-left">
-            <button className="primary-button vwh" onClick={onTemplate} type="button">Template</button>
-            <button className="primary-button vwh" onClick={onImport} type="button">Import</button>
-          </div>
+          {!isHOD && (
+            <div className="table-actions-left">
+              <button className="primary-button vwh" onClick={onTemplate} type="button">Template</button>
+              <button className="primary-button vwh" onClick={onImport} type="button">Import</button>
+            </div>
+          )}
           <div className="table-actions-right">
             {!isHOD && (
               <button className="primary-button" onClick={onShowTasks} type="button">
@@ -2305,7 +2307,7 @@ function EmployeesPage({ employees, onAdd, onEdit, onDelete, onExport, onImport,
               Off Site{offSiteRecords.filter(r => r.status === 'Out').length > 0 && <span className="pending-count-badge" style={{ marginLeft: '6px' }}>{offSiteRecords.filter(r => r.status === 'Out').length}</span>}
             </button>
             <button className="primary-button" onClick={onExport} type="button">Export</button>
-            <button className="primary-button vwh" onClick={onAdd} type="button">Add Employee</button>
+            {!isHOD && <button className="primary-button vwh" onClick={onAdd} type="button">Add Employee</button>}
           </div>
         </div>
         <div className="table-toolbar employee-toolbar">
@@ -2332,7 +2334,7 @@ function EmployeesPage({ employees, onAdd, onEdit, onDelete, onExport, onImport,
                 <th>Date of Birth</th>
                 <th>Age</th>
                 <SortTh col="siteStatus" label="Site Status" />
-                <th>Action</th>
+                {!isHOD && <th>Action</th>}
               </tr>
             </thead>
             <tbody>
@@ -2345,18 +2347,20 @@ function EmployeesPage({ employees, onAdd, onEdit, onDelete, onExport, onImport,
                   <td><div className="col-desig">{employee.designation}</div></td>
                   <td>{employee.nationality === employee.department ? <span style={{ color: '#ef4444', fontSize: '0.72rem', fontWeight: 700 }}>⚠ Fix needed</span> : employee.nationality}</td>
                   <td>{employee.nicPassportNo}</td>
-                  <td>{employee.nationality === 'MALDIVES' ? '—' : employee.workPermitNo || 'Pending'}</td>
+                  <td>{['MALDIVES','MALDIVIAN'].includes((employee.nationality||'').toUpperCase()) ? '—' : employee.workPermitNo || 'Pending'}</td>
                   <td>{formatDateDisplay(employee.dateOfJoin)}</td>
                   <td>{employee.mobileNo}</td>
                   <td>{employee.dateOfBirth ? formatDateDisplay(employee.dateOfBirth) : '—'}</td>
                   <td>{calculateAge(employee.dateOfBirth)}</td>
                   <td><StatusBadge status={employee.siteStatus} /></td>
-                  <td>
-                    <div className="row-actions">
-                      <button className="action-glyph edit vwh" onClick={() => onEdit(employee)} type="button" title="Edit">✎</button>
-                      <button className="action-glyph delete vwh" onClick={() => handleDelete(employee)} type="button" title="Delete employee">🗑</button>
-                    </div>
-                  </td>
+                  {!isHOD && (
+                    <td>
+                      <div className="row-actions">
+                        <button className="action-glyph edit vwh" onClick={() => onEdit(employee)} type="button" title="Edit">✎</button>
+                        <button className="action-glyph delete vwh" onClick={() => handleDelete(employee)} type="button" title="Delete employee">🗑</button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -4503,7 +4507,7 @@ function LeavePage({
                             {hasExt && <div style={{ fontSize: '0.66rem', color: '#64748b' }}>was {formatDateDisplay(record.originalReturnDate!)}</div>}
                           </td>
                           <td className="leave-days-cell">
-                            <div>{record.days}d</div>
+                            <div>{record.days}</div>
                             {hasExt && <div style={{ fontSize: '0.66rem', color: '#64748b' }}>{record.originalDays} + {ext!.additionalDays}</div>}
                           </td>
                           <td className="leave-remarks-cell">{record.remarks || <span className="muted-dash">—</span>}</td>
@@ -6377,7 +6381,10 @@ function BankAccountModal({ record, employees, onClose, onSave }: {
   const [status, setStatus] = useState<AccountStatus>(record.status)
   const [remarks, setRemarks] = useState(record.remarks ?? '')
 
-  const nonLocals = employees.filter((e) => e.nationality !== 'MALDIVIAN')
+  // Expatriates only (exclude all Maldivian nationals), sorted by name
+  const nonLocals = employees
+    .filter((e) => !['MALDIVES','MALDIVIAN'].includes((e.nationality || '').toUpperCase()))
+    .sort((a, b) => a.fullName.localeCompare(b.fullName))
   const selected = isNew
     ? (nonLocals.find((e) => e.employeeId === employeeId) ?? nonLocals[0])
     : employees.find((e) => e.employeeId === record.employeeId)
@@ -6422,8 +6429,11 @@ function BankAccountModal({ record, employees, onClose, onSave }: {
                   onChange={(e) => setEmployeeId(e.target.value)}
                   style={{ width: '100%', padding: '7px 10px', borderRadius: '7px', border: '1.5px solid rgba(124,58,237,0.2)', fontSize: '0.85rem', background: '#fff' }}
                 >
+                  <option value="">— Select employee —</option>
                   {nonLocals.map((emp) => (
-                    <option key={emp.employeeId} value={emp.employeeId}>{emp.employeeId} – {emp.fullName} ({emp.department})</option>
+                    <option key={emp.employeeId} value={emp.employeeId}>
+                      {emp.employeeId} · {emp.fullName.length > 22 ? emp.fullName.slice(0,22)+'…' : emp.fullName} · {emp.department}
+                    </option>
                   ))}
                 </select>
               ) : (
@@ -6569,9 +6579,9 @@ function BankAccountSection({ employees, records, onUpdate }: {
       <table className="data-table bank-table">
         <colgroup>
           <col style={{ width: '36px' }} />
-          <col style={{ width: '88px' }} />
-          <col />
-          <col style={{ width: '150px' }} />
+          <col style={{ width: '80px' }} />
+          <col style={{ width: '170px' }} />  {/* Full Name — capped width */}
+          <col style={{ width: '130px' }} />
           <col style={{ width: '110px' }} />
           <col style={{ width: '62px' }} />
           <col style={{ width: '120px' }} />
@@ -6602,7 +6612,7 @@ function BankAccountSection({ employees, records, onUpdate }: {
               <tr key={r.id}>
                 <td className="bank-td-num">{i + 1}</td>
                 <td>{r.employeeId}</td>
-                <td className="name-cell-plain">{r.fullName}</td>
+                <td className="name-cell-plain" style={{ maxWidth:170, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }} title={r.fullName}>{r.fullName}</td>
                 <td>{r.department}</td>
                 <td>{r.nationality}</td>
                 <td style={{ textAlign: 'center' }}><span className="bank-chip">{r.bank}</span></td>
@@ -9511,11 +9521,16 @@ function MeetingsSection({ records, onUpdate, employees, activeLeaves }: {
   }
 
   const save = (r: MeetingRecord) => {
+    const final = r.id.includes('-new-') ? { ...r, id: `MTG-${Date.now()}` } : r
     onUpdate(prev => {
-      const final = r.id.includes('-new-') ? { ...r, id: `MTG-${Date.now()}` } : r
       const idx = prev.findIndex(x => x.id === r.id)
       return idx >= 0 ? prev.map(x => x.id === r.id ? final : x) : [final, ...prev]
     })
+    // Explicit Supabase write — don't rely solely on sync useEffect
+    // (opsLoaded.current may be false if save happens before load completes)
+    supabase.from('meeting_records')
+      .upsert(meetingToDb(final), { onConflict: 'id' })
+      .then(({ error }) => { if (error) console.error('[save meeting]', error.message) })
     setEditing(null)
   }
 
@@ -9808,11 +9823,11 @@ function OperationsPage({ employees, completedTerminations, activeLeaves, isHOD 
       supabase.from('training_records').select('*'),
       supabase.from('bank_account_records').select('*'),
     ]).then(([mt, pf, ind, tr, bnk]) => {
-      if (mt.data?.length)  setMeetingRecords(mt.data.map(meetingFromDb))
-      if (pf.data?.length)  setPersonalFiles(pf.data.map(personalFileFromDb))
-      if (ind.data?.length) setInductionRecords(ind.data.map(inductionFromDb))
-      if (tr.data?.length)  setTrainingRecords(tr.data.map(trainingFromDb))
-      if (bnk.data?.length) setBankAccountRecords(bnk.data.map(bankAccFromDb))
+      if (mt.data  !== null) setMeetingRecords(mt.data.map(meetingFromDb))
+      if (pf.data  !== null) setPersonalFiles(pf.data.map(personalFileFromDb))   // null=error, []=empty (clears stale seed data)
+      if (ind.data !== null) setInductionRecords(ind.data.map(inductionFromDb))
+      if (tr.data  !== null) setTrainingRecords(tr.data.map(trainingFromDb))
+      if (bnk.data !== null) setBankAccountRecords(bnk.data.map(bankAccFromDb))
       opsLoaded.current = true
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps
