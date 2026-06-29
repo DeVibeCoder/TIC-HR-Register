@@ -1372,6 +1372,17 @@ function useCountUp(target: number) {
   return n
 }
 
+// Build a sparkline line-path + area-fill path from a series of values
+function dkSpark(vals: number[], w = 116, h = 32, pad = 3) {
+  const max = Math.max(...vals), min = Math.min(...vals)
+  const span = max - min || 1
+  const step = (w - pad * 2) / (vals.length - 1)
+  const pts = vals.map((v, i) => [pad + i * step, h - pad - ((v - min) / span) * (h - pad * 2)] as const)
+  const line = 'M ' + pts.map(p => `${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(' L ')
+  const area = `${line} L ${(w - pad).toFixed(1)} ${(h - pad).toFixed(1)} L ${pad.toFixed(1)} ${(h - pad).toFixed(1)} Z`
+  return { line, area, w, h }
+}
+
 function OverviewPage({
   employees, leaveRequests, activeLeaves, leaveHistory: _leaveHistory,
   noticeTerminations, completedTerminations, exitInterviews: _exitInterviews,
@@ -1500,13 +1511,13 @@ function OverviewPage({
   }
 
   const kpis = [
-    { label:'TOTAL STAFF', val:cTotal,   note:`${deptCounts.length} active sections`, c:'#9D7CFF', icon:(
+    { label:'TOTAL STAFF', val:cTotal,   note:`${deptCounts.length} active sections`, c:'#9D7CFF', spark:[6,7,6,8,9,8,10,11,10,12,13,14], icon:(
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>) },
-    { label:'ON SITE', val:cOnSite,  note:`${onSitePct}% of workforce`, c:'#22C55E', icon:(
+    { label:'ON SITE', val:cOnSite,  note:`${onSitePct}% of workforce`, c:'#22C55E', spark:[9,10,8,11,10,12,11,13,12,11,13,12], icon:(
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>) },
-    { label:'OFF SITE', val:cOffSite, note:`${employees.length?Math.round(offSite/employees.length*100):0}% of workforce`, c:'#F59E0B', icon:(
+    { label:'OFF SITE', val:cOffSite, note:`${employees.length?Math.round(offSite/employees.length*100):0}% of workforce`, c:'#F59E0B', spark:[5,4,6,5,7,6,5,7,6,8,7,9], icon:(
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>) },
-    { label:'ON LEAVE', val:cLeave,   note:`${employees.length?Math.round(onLeave/employees.length*100):0}% of workforce`, c:'#60A5FA', icon:(
+    { label:'ON LEAVE', val:cLeave,   note:`${employees.length?Math.round(onLeave/employees.length*100):0}% of workforce`, c:'#60A5FA', spark:[7,6,8,7,9,8,10,9,8,10,9,11], icon:(
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5c1.2-1.2 1.5-2.7.9-3.3-.6-.6-2.1-.3-3.3.9L13.5 8.5 5.5 6.5c-.4-.1-.8.1-1 .4l-.4.6c-.2.4-.1.8.3 1L9 11.5l-2 3H4.5l-1.2 1.2 3 1.8 1.8 3 1.2-1.2V17l3-2 2.5 4.2c.2.4.6.5 1 .3l.6-.4c.3-.2.5-.6.4-1z"/></svg>) },
   ]
 
@@ -1530,16 +1541,32 @@ function OverviewPage({
 
       {/* ── KPI CARDS ───────────────────────────────────────────────── */}
       <div className="dk-kpis">
-        {kpis.map((k,i)=>(
-          <div key={k.label} className="dk-kpi dk-anim" style={{ '--kc':k.c, '--dl':`${0.05+i*0.06}s` } as React.CSSProperties}>
-            <div className="dk-kpi-icon-wrap">{k.icon}</div>
-            <div className="dk-kpi-body">
-              <div className="dk-kpi-label">{k.label}</div>
-              <div className="dk-kpi-num">{k.val}</div>
-              <div className="dk-kpi-note">{k.note}</div>
+        {kpis.map((k,i)=>{
+          const sp = dkSpark(k.spark)
+          const gid = `dk-spark-${i}`
+          return (
+            <div key={k.label} className="dk-kpi dk-anim" style={{ '--kc':k.c, '--dl':`${0.05+i*0.06}s` } as React.CSSProperties}>
+              <div className="dk-kpi-top">
+                <div className="dk-kpi-icon-wrap">{k.icon}</div>
+                <div className="dk-kpi-body">
+                  <div className="dk-kpi-label">{k.label}</div>
+                  <div className="dk-kpi-num">{k.val}</div>
+                  <div className="dk-kpi-note">{k.note}</div>
+                </div>
+              </div>
+              <svg className="dk-spark" viewBox={`0 0 ${sp.w} ${sp.h}`} preserveAspectRatio="none" aria-hidden="true">
+                <defs>
+                  <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={k.c} stopOpacity="0.38"/>
+                    <stop offset="100%" stopColor={k.c} stopOpacity="0"/>
+                  </linearGradient>
+                </defs>
+                <path d={sp.area} fill={`url(#${gid})`}/>
+                <path d={sp.line} fill="none" stroke={k.c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       {/* ── MAIN GRID: Headcount (left) · Notice + Medical (right) ───── */}
@@ -1554,7 +1581,15 @@ function OverviewPage({
               </span>
               <span className="dk-section-ttl">Headcount by Section</span>
             </div>
-            <span className="dk-this-month">{deptCounts.length} sections</span>
+            <div className="dk-section-hd-right">
+              <span className="dk-this-month">
+                This Month
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </span>
+              <button className="dk-icon-btn" type="button" title="Export" aria-label="Export headcount">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              </button>
+            </div>
           </div>
 
           <div className="dk-section-body">
