@@ -10156,12 +10156,9 @@ html { overflow-x: hidden; }
 .dk-lg { display: inline-flex; align-items: center; gap: 6px; font-size: 0.68rem; color: var(--tx2); font-weight: 600; }
 .dk-lg i { width: 8px; height: 8px; border-radius: 3px; display: inline-block; }
 
-/* Sections list with bars (ALL sections; internal scroll only) */
+/* Sections list with bars (ALL sections; no scrollbar — every row visible) */
 .dk-sect-wrap { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-.dk-sect-list { display: flex; flex-direction: column; gap: 2px; max-height: 232px; overflow-y: auto; padding-right: 6px; }
-.dk-sect-list::-webkit-scrollbar { width: 6px; }
-.dk-sect-list::-webkit-scrollbar-thumb { background: rgba(124,92,255,.30); border-radius: 3px; }
-.dk-sect-list::-webkit-scrollbar-track { background: transparent; }
+.dk-sect-list { display: flex; flex-direction: column; gap: 2px; overflow: visible; }
 .dk-sect-row {
   display: grid; grid-template-columns: 130px 1fr 34px 40px;
   gap: 0 12px; align-items: center;
