@@ -2535,11 +2535,11 @@ button.step-pill:hover { filter: brightness(0.98); }
 
 .termination-table-shell {
   border: 1px solid rgba(148, 163, 184, 0.55);
-  border-radius: 0;
+  border-radius: 16px;
   background: var(--surface-strong);
   overflow: auto;
-  min-height: calc(100vh - 190px);
-  max-height: calc(100vh - 190px);
+  flex: 1;
+  min-height: 0;
 }
 
 .termination-table {
@@ -3817,8 +3817,8 @@ button.step-pill:hover { filter: brightness(0.98); }
   }
 
   .termination-table-shell {
-    min-height: calc(100vh - 230px);
-    max-height: calc(100vh - 230px);
+    min-height: 0;
+    flex: 1;
   }
 
   .detail-grid {
@@ -10755,3 +10755,15 @@ html { overflow-x: hidden; }
   border-color: rgba(255,255,255,.09);
   box-shadow: 0 14px 38px rgba(0,0,0,.40), inset 0 1px 0 rgba(255,255,255,.07);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Minutes & termination fill to bottom; uniform termination action icons
+   ═══════════════════════════════════════════════════════════════════════════ */
+.mtg-section { flex: 1; min-height: 0; }
+.mtg-list { flex: 1; min-height: 0; overflow: auto; }
+
+/* Termination action icons — match the plain icon style used elsewhere */
+.termination-row .action-glyph { background: transparent; border: none; border-radius: 6px; }
+[data-theme="dark"] .termination-row .action-glyph { background: transparent; border: none; color: #AAB3C5; }
+[data-theme="dark"] .termination-row .action-glyph:hover { background: rgba(124,92,255,.16); color: #FFFFFF; }
+[data-theme="dark"] .termination-row .action-glyph.delete:hover { background: rgba(239,68,68,.16); color: #FCA5A5; }

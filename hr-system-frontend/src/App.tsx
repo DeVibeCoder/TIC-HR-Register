@@ -9578,10 +9578,10 @@ function MeetingsSection({ records, onUpdate, employees, activeLeaves }: {
     : sortedDesc
 
   return (
-    <div style={{ display:'flex', flexDirection:'column', gap:10, padding:'12px 14px 8px' }}>
+    <div className="mtg-section" style={{ display:'flex', flexDirection:'column', gap:10, padding:'12px 14px 8px' }}>
       <div className="section-header">
         <div>
-          <h2 style={{ margin:0, fontSize:'0.9rem', fontWeight:800, color:'#1e1b4b' }}>HOD Meeting Minutes</h2>
+          <h2 style={{ margin:0, fontSize:'0.9rem', fontWeight:800, color:'var(--ink)' }}>HOD Meeting Minutes</h2>
           <p style={{ margin:'2px 0 0', fontSize:'0.73rem', color:'#64748b' }}>Briefing meeting records — headcount auto-calculated from employee database</p>
         </div>
         <div className="top-actions">
