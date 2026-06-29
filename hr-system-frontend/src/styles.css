@@ -10542,3 +10542,48 @@ html { overflow-x: hidden; }
 /* Tab counters */
 [data-theme="dark"] :is(.inv-tab-count, .bank-tab-count) { background: rgba(255,255,255,.12); color: #E6EAF2; }
 [data-theme="dark"] .inv-tab-count-warn { background: rgba(239,68,68,.20) !important; color: #FCA5A5 !important; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DARK MODE — Employees table refinements (final)
+   • Lighter frosted panel so it reads as glass above the near-black page
+   • Frozen (sticky) columns use the SAME tone as the rest of the table
+   • Highlighted status rows = uniform opaque tinted band, readable light text
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Frosted glass panel — clearly lighter than the page background */
+[data-theme="dark"] :is([class*="table-shell"], [class*="table-scroll"], .module-table-card) {
+  background: linear-gradient(180deg, #2A3041, #252B39) !important;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 18px;
+  box-shadow: 0 18px 44px rgba(0,0,0,.48), 0 0 80px -34px rgba(124,92,255,.32), inset 0 1px 0 rgba(255,255,255,.10);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+
+/* Header strip — uniform, including frozen columns */
+[data-theme="dark"] .data-table thead th { background: #313749 !important; color: #D2D8E4; border-bottom: 1px solid rgba(124,92,255,.32); }
+[data-theme="dark"] .employee-table thead th:nth-child(-n + 3),
+[data-theme="dark"] .bank-table thead th, [data-theme="dark"] .user-table thead th { background: #313749 !important; }
+
+/* Body — non-frozen cells transparent (show the panel); frozen cells = same tone */
+[data-theme="dark"] .data-table tbody td { background: transparent; color: var(--ink); border-bottom-color: rgba(255,255,255,.07); }
+[data-theme="dark"] .employee-table tbody td:nth-child(-n + 3),
+[data-theme="dark"] .employee-table tbody tr.pending-row td:nth-child(-n + 3) { background: #272D3C !important; }
+[data-theme="dark"] .data-table tbody tr:hover td { background: rgba(124,92,255,.11); }
+[data-theme="dark"] .employee-table tbody tr:hover td:nth-child(-n + 3) { background: #2D3346 !important; }
+
+/* Highlighted rows — uniform opaque tinted band (frozen matches), readable */
+[data-theme="dark"] .employee-table tbody tr.status-row-on-leave td,
+[data-theme="dark"] .employee-table tbody tr.status-row-on-leave td:nth-child(-n + 3) { background: #233A2D !important; color: #EAF7EF !important; }
+[data-theme="dark"] .employee-table tbody tr.status-row-on-leave:hover td,
+[data-theme="dark"] .employee-table tbody tr.status-row-on-leave:hover td:nth-child(-n + 3) { background: #2B4838 !important; }
+[data-theme="dark"] .employee-table tbody tr.status-row-on-leave td:first-child { box-shadow: inset 3px 0 0 #34D399; }
+
+[data-theme="dark"] .employee-table tbody tr.status-row-off-site td,
+[data-theme="dark"] .employee-table tbody tr.status-row-off-site td:nth-child(-n + 3) { background: #1E3145 !important; color: #E8F1FB !important; }
+[data-theme="dark"] .employee-table tbody tr.status-row-off-site:hover td,
+[data-theme="dark"] .employee-table tbody tr.status-row-off-site:hover td:nth-child(-n + 3) { background: #264062 !important; }
+[data-theme="dark"] .employee-table tbody tr.status-row-off-site td:first-child { box-shadow: inset 3px 0 0 #60A5FA; }
+
+/* Ensure all text in highlighted rows is light/readable */
+[data-theme="dark"] .employee-table tbody tr.status-row-on-leave :is(td,span,strong,div),
+[data-theme="dark"] .employee-table tbody tr.status-row-off-site :is(td,span,strong,div) { color: inherit; }
