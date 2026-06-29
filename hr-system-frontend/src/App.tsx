@@ -1499,18 +1499,30 @@ function OverviewPage({
     'Pending Departure': '#F87171',
   }
 
+  const kpis = [
+    { label:'TOTAL STAFF', val:cTotal,   note:`${deptCounts.length} active sections`, c:'#9D7CFF', icon:(
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>) },
+    { label:'ON SITE', val:cOnSite,  note:`${onSitePct}% of workforce`, c:'#22C55E', icon:(
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>) },
+    { label:'OFF SITE', val:cOffSite, note:`${employees.length?Math.round(offSite/employees.length*100):0}% of workforce`, c:'#F59E0B', icon:(
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>) },
+    { label:'ON LEAVE', val:cLeave,   note:`${employees.length?Math.round(onLeave/employees.length*100):0}% of workforce`, c:'#60A5FA', icon:(
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5c1.2-1.2 1.5-2.7.9-3.3-.6-.6-2.1-.3-3.3.9L13.5 8.5 5.5 6.5c-.4-.1-.8.1-1 .4l-.4.6c-.2.4-.1.8.3 1L9 11.5l-2 3H4.5l-1.2 1.2 3 1.8 1.8 3 1.2-1.2V17l3-2 2.5 4.2c.2.4.6.5 1 .3l.6-.4c.3-.2.5-.6.4-1z"/></svg>) },
+  ]
+
   return (
     <div className="dk-shell">
+      <div className="dk-ambient" aria-hidden="true" />
 
       {/* ── HEADER ──────────────────────────────────────────────────── */}
-      <div className="dk-header">
+      <div className="dk-header dk-anim" style={{ '--dl':'0s' } as React.CSSProperties}>
         <div>
-          <h1 className="dk-greet">{greeting}, <span className="dk-greet-name">{firstName}!</span> 👋</h1>
-          <p className="dk-greet-sub">Here's what's happening in your organization today.</p>
+          <h1 className="dk-greet">{greeting}, <span className="dk-greet-name">{firstName}</span> <span className="dk-wave">👋</span></h1>
+          <p className="dk-greet-sub">Here's what's happening across Thilafushi Industrial Complex today.</p>
         </div>
         <div className="dk-header-right">
           <span className="dk-date-badge">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             {todayStr}
           </span>
         </div>
@@ -1518,15 +1530,10 @@ function OverviewPage({
 
       {/* ── KPI CARDS ───────────────────────────────────────────────── */}
       <div className="dk-kpis">
-        {([
-          { label:'TOTAL STAFF',   val:cTotal,   note:`${deptCounts.length} sections`,   icon:'👥', c:'#A78BFA', gc:'rgba(167,139,250,0.15)' },
-          { label:'ON SITE',       val:cOnSite,  note:`${onSitePct}% of total staff`,    icon:'📍', c:'#34D399', gc:'rgba(52,211,153,0.15)'  },
-          { label:'OFF SITE',      val:cOffSite, note:`${employees.length?Math.round(offSite/employees.length*100):0}% of total staff`, icon:'🏠', c:'#FB923C', gc:'rgba(251,146,60,0.15)'  },
-          { label:'ON LEAVE',      val:cLeave,   note:`${employees.length?Math.round(onLeave/employees.length*100):0}% of total staff`, icon:'✈️', c:'#60A5FA', gc:'rgba(96,165,250,0.15)'  },
-        ] as const).map(k=>(
-          <div key={k.label} className="dk-kpi" style={{ '--kc':k.c,'--kgc':k.gc } as React.CSSProperties}>
-            <div className="dk-kpi-icon-wrap"><span style={{ fontSize:'1.4rem' }}>{k.icon}</span></div>
-            <div>
+        {kpis.map((k,i)=>(
+          <div key={k.label} className="dk-kpi dk-anim" style={{ '--kc':k.c, '--dl':`${0.05+i*0.06}s` } as React.CSSProperties}>
+            <div className="dk-kpi-icon-wrap">{k.icon}</div>
+            <div className="dk-kpi-body">
               <div className="dk-kpi-label">{k.label}</div>
               <div className="dk-kpi-num">{k.val}</div>
               <div className="dk-kpi-note">{k.note}</div>
@@ -1535,119 +1542,83 @@ function OverviewPage({
         ))}
       </div>
 
-      {/* ── HEADCOUNT BY SECTION ────────────────────────────────────── */}
-      <div className="dk-section-card">
-        <div className="dk-section-hd">
-          <div className="dk-section-hd-left">
-            <span className="dk-section-icon-wrap">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            </span>
-            <span className="dk-section-ttl">HEADCOUNT BY SECTION</span>
-          </div>
-          <span className="dk-this-month">This Month</span>
-        </div>
+      {/* ── MAIN GRID: Headcount (left) · Notice + Medical (right) ───── */}
+      <div className="dk-grid-main">
 
-        <div className="dk-section-body">
-          {/* Left: Donut circle */}
-          <div className="dk-circle-wrap">
-            <div className="dk-circle-outer">
-              <svg width="200" height="200" viewBox="0 0 200 200" style={{ transform:'rotate(-90deg)', position:'absolute', inset:0 }}>
-                <circle cx="100" cy="100" r={dkR} fill="none" stroke="rgba(109,93,246,0.15)" strokeWidth={dkSW}/>
-                {onSite  > 0 && <circle cx="100" cy="100" r={dkR} fill="none" stroke="url(#dkG1)" strokeWidth={dkSW} strokeDasharray={`${dkSite}  ${dkC-dkSite}`}  strokeDashoffset={0} strokeLinecap="round"/>}
-                {offSite > 0 && <circle cx="100" cy="100" r={dkR} fill="none" stroke="#FB923C" strokeWidth={dkSW} strokeDasharray={`${dkOff}   ${dkC-dkOff}`}   strokeDashoffset={-dkOff2} strokeLinecap="round"/>}
-                {onLeave > 0 && <circle cx="100" cy="100" r={dkR} fill="none" stroke="#60A5FA" strokeWidth={dkSW} strokeDasharray={`${dkLeave} ${dkC-dkLeave}`} strokeDashoffset={-dkOff3} strokeLinecap="round"/>}
-                <defs>
-                  <linearGradient id="dkG1" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#7B5CF6"/>
-                    <stop offset="100%" stopColor="#A78BFA"/>
-                  </linearGradient>
-                </defs>
-              </svg>
-              <div className="dk-circle-center">
-                <span className="dk-circle-n">{cTotal}</span>
-                <span className="dk-circle-l">TOTAL HEADCOUNT</span>
+        {/* HEADCOUNT BY SECTION */}
+        <div className="dk-section-card dk-anim" style={{ '--dl':'0.3s' } as React.CSSProperties}>
+          <div className="dk-section-hd">
+            <div className="dk-section-hd-left">
+              <span className="dk-section-icon-wrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </span>
+              <span className="dk-section-ttl">Headcount by Section</span>
+            </div>
+            <span className="dk-this-month">{deptCounts.length} sections</span>
+          </div>
+
+          <div className="dk-section-body">
+            {/* Left: Donut */}
+            <div className="dk-circle-wrap">
+              <div className="dk-circle-outer">
+                <svg className="dk-donut-svg" width="200" height="200" viewBox="0 0 200 200" style={{ transform:'rotate(-90deg)', position:'absolute', inset:0 }}>
+                  <circle cx="100" cy="100" r={dkR} fill="none" stroke="rgba(124,92,255,0.12)" strokeWidth={dkSW}/>
+                  {onSite  > 0 && <circle cx="100" cy="100" r={dkR} fill="none" stroke="url(#dkG1)" strokeWidth={dkSW} strokeDasharray={`${dkSite}  ${dkC-dkSite}`}  strokeDashoffset={0} strokeLinecap="round"/>}
+                  {offSite > 0 && <circle cx="100" cy="100" r={dkR} fill="none" stroke="#F59E0B" strokeWidth={dkSW} strokeDasharray={`${dkOff}   ${dkC-dkOff}`}   strokeDashoffset={-dkOff2} strokeLinecap="round"/>}
+                  {onLeave > 0 && <circle cx="100" cy="100" r={dkR} fill="none" stroke="#60A5FA" strokeWidth={dkSW} strokeDasharray={`${dkLeave} ${dkC-dkLeave}`} strokeDashoffset={-dkOff3} strokeLinecap="round"/>}
+                  <defs>
+                    <linearGradient id="dkG1" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#7C5CFF"/>
+                      <stop offset="100%" stopColor="#9D7CFF"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <div className="dk-circle-center">
+                  <span className="dk-circle-n">{cTotal}</span>
+                  <span className="dk-circle-l">Total Headcount</span>
+                </div>
+              </div>
+              <div className="dk-donut-legend">
+                <span className="dk-lg"><i style={{ background:'#7C5CFF' }}/>On site {onSite}</span>
+                <span className="dk-lg"><i style={{ background:'#F59E0B' }}/>Off site {offSite}</span>
+                <span className="dk-lg"><i style={{ background:'#60A5FA' }}/>On leave {onLeave}</span>
               </div>
             </div>
-            <div className="dk-circle-stat">
-              <span className="dk-circle-pct">100%</span>
-              <span className="dk-circle-pct-l">Total Employees</span>
-            </div>
-          </div>
 
-          {/* Right: 3-column section grid — no bars, no scroll */}
-          <div className="dk-sect-grid-wrap">
-            {deptCounts.length === 0
-              ? <p className="dk-empty">No sections yet.</p>
-              : <>
-                  <div className="dk-sect-grid">
-                    {[0, Math.ceil(deptCounts.length/3), Math.ceil(deptCounts.length/3)*2].map((start, col) => (
-                      <div key={col} className="dk-sect-col">
-                        {deptCounts.slice(start, start + Math.ceil(deptCounts.length/3)).map(([dept,cnt]) => (
-                          <div key={dept} className="dk-sect-row">
-                            <span className="dk-sect-name">{dept}</span>
-                            <span className="dk-sect-n">{cnt}</span>
-                            <span className="dk-sect-p">{employees.length?Math.round(cnt/employees.length*100):0}%</span>
+            {/* Right: ALL sections with bars (internal scroll only) */}
+            <div className="dk-sect-wrap">
+              {deptCounts.length === 0
+                ? <p className="dk-empty">No sections yet.</p>
+                : <>
+                    <div className="dk-sect-list">
+                      {deptCounts.map(([dept,cnt])=>(
+                        <div key={dept} className="dk-sect-row">
+                          <span className="dk-sect-name" title={dept}>{dept}</span>
+                          <div className="dk-sect-track">
+                            <div className="dk-sect-fill" style={{ width:Math.round(cnt/maxDept*100)+'%' }}/>
                           </div>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="dk-sect-total">
-                    <span>TOTAL</span>
-                    <span className="dk-sect-total-n">{employees.length}</span>
-                    <span>100%</span>
-                  </div>
-                </>
-            }
-          </div>
-        </div>
-      </div>
-
-      {/* ── BOTTOM: Leave · Termination · Medical ───────────────────── */}
-      <div className="dk-bottom">
-
-        {/* Active & Upcoming Leave */}
-        <div className="dk-card dk-leave">
-          <div className="dk-card-hd">
-            <span className="dk-card-ttl">Active &amp; Upcoming Leave</span>
-            <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-              <span className="dk-chip dk-chip-b">{activeLeaves.length} active</span>
-              <span className="dk-chip dk-chip-n">{upcomingRows.length} upcoming</span>
-              <button className="dk-va" onClick={()=>onNavigate?.('leave')} type="button">View all →</button>
+                          <span className="dk-sect-n">{cnt}</span>
+                          <span className="dk-sect-p">{employees.length?Math.round(cnt/employees.length*100):0}%</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="dk-sect-total">
+                      <span>TOTAL</span>
+                      <span/>
+                      <span className="dk-sect-total-n">{employees.length}</span>
+                      <span>100%</span>
+                    </div>
+                  </>
+              }
             </div>
           </div>
-          {allLeaveRows.length === 0
-            ? <p className="dk-empty">No active or upcoming leave.</p>
-            : <>
-                <div className="dk-tbl-head">
-                  <span>Employee</span><span>Section</span><span>Type</span><span>Departs</span><span>Returns</span>
-                </div>
-                {allLeaveRows.slice(0,8).map(r=>(
-                  <div key={r.id} className={`dk-tbl-row${r._soon?' dk-row-soon':''}`}>
-                    <div className="dk-emp">
-                      <span className="dk-av">{r.name.charAt(0)}</span>
-                      <span className="dk-emp-n">
-                        {r.name}
-                        {r._soon   && <span className="dk-tag dk-tag-r">7d</span>}
-                        {r._notice && <span className="dk-tag dk-tag-a">Notice</span>}
-                      </span>
-                    </div>
-                    <span className="dk-tc-m">{r.department}</span>
-                    <span className="dk-type">{r.leaveTypeCode}</span>
-                    <span className="dk-tc-d">{formatDateDisplay(r.departureDate)}</span>
-                    <span className="dk-tc-d">{r.returnDate?formatDateDisplay(r.returnDate):'—'}</span>
-                  </div>
-                ))}
-                {allLeaveRows.length > 8 && <button className="dk-more" onClick={()=>onNavigate?.('leave')} type="button">+{allLeaveRows.length-8} more → View All Leave</button>}
-              </>
-          }
         </div>
 
-        {/* Notice Period */}
-        <div className="dk-card dk-term">
+        {/* NOTICE PERIOD — needs attention */}
+        <div className="dk-card dk-term dk-anim" style={{ '--dl':'0.38s' } as React.CSSProperties}>
           <div className="dk-card-hd">
             <span className="dk-card-ttl">Notice Period</span>
-            <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+            <div className="dk-hd-actions">
               {noticeTerminations.length > 0 && <span className="dk-chip dk-chip-r">{noticeTerminations.length} active</span>}
               {noticeTerminations.length > 0 && <button className="dk-va" onClick={()=>onNavigate?.('termination')} type="button">View all →</button>}
             </div>
@@ -1655,7 +1626,7 @@ function OverviewPage({
           {noticeTerminations.length === 0
             ? <p className="dk-empty">No staff in notice period.</p>
             : <>
-                {noticeTerminations.slice(0,5).map(t=>(
+                {noticeTerminations.slice(0,4).map(t=>(
                   <div key={t.id} className="dk-term-row">
                     <span className="dk-av dk-av-r">{t.name.charAt(0)}</span>
                     <div className="dk-term-info">
@@ -1663,26 +1634,26 @@ function OverviewPage({
                       <span className="dk-term-m">{t.designation} · {t.department}</span>
                       {t.lastWorkingDate && <span className="dk-term-lwd">LWD {formatDateDisplay(t.lastWorkingDate)}</span>}
                     </div>
-                    <span className="dk-stage" style={{ color: dkStage[t.currentStage] ?? '#9CA3AF' }}>{t.currentStage}</span>
+                    <span className="dk-stage" style={{ color: dkStage[t.currentStage] ?? '#AAB3C5' }}>{t.currentStage}</span>
                   </div>
                 ))}
-                {noticeTerminations.length > 5 && <button className="dk-more" onClick={()=>onNavigate?.('termination')} type="button">+{noticeTerminations.length-5} more →</button>}
+                {noticeTerminations.length > 4 && <button className="dk-more" onClick={()=>onNavigate?.('termination')} type="button">+{noticeTerminations.length-4} more →</button>}
               </>
           }
           <div className="dk-term-foot">✓ {completedTerminations.length} completed</div>
         </div>
 
-        {/* Medical Leave */}
-        <div className="dk-card dk-medical">
+        {/* MEDICAL LEAVE — summary & trends */}
+        <div className="dk-card dk-medical dk-anim" style={{ '--dl':'0.46s' } as React.CSSProperties}>
           <div className="dk-card-hd">
             <span className="dk-card-ttl">Medical Leave</span>
             <span className="dk-chip dk-chip-n">{medicalCases.length} total</span>
           </div>
           <div className="dk-med-stats">
             {([
-              { l:'This Month', v:thisMonthMed, c:'#E2E8F0', alert:false },
-              { l:'Urgent',     v:urgentMed,    c:urgentMed?'#F87171':'#4B5563',   alert:urgentMed>0 },
-              { l:'Admitted',   v:admittedMed,  c:admittedMed?'#A78BFA':'#4B5563', alert:admittedMed>0 },
+              { l:'This Month', v:thisMonthMed, c:'#FFFFFF', alert:false },
+              { l:'Urgent',     v:urgentMed,    c:urgentMed?'#EF4444':'#7D879A',   alert:urgentMed>0 },
+              { l:'Admitted',   v:admittedMed,  c:admittedMed?'#9D7CFF':'#7D879A', alert:admittedMed>0 },
             ] as const).map(s=>(
               <div key={s.l} className={`dk-med-stat${s.alert?' dk-med-alert':''}`}>
                 <span className="dk-med-n" style={{ color:s.c }}>{s.v}</span>
@@ -1692,7 +1663,7 @@ function OverviewPage({
           </div>
           {medByDept.length > 0 && <>
             <p className="dk-sec-lbl">By Section</p>
-            {medByDept.slice(0,5).map(([dept,cnt])=>(
+            {medByDept.slice(0,4).map(([dept,cnt])=>(
               <div key={dept} className="dk-med-bar-row">
                 <span className="dk-med-dept">{dept}</span>
                 <div className="dk-med-track">
@@ -1705,6 +1676,43 @@ function OverviewPage({
           {medicalCases.length===0 && <p className="dk-empty">No medical cases on record.</p>}
         </div>
 
+      </div>
+
+      {/* ── ACTIVE & UPCOMING LEAVE — next 5 ────────────────────────── */}
+      <div className="dk-card dk-leave dk-anim" style={{ '--dl':'0.54s' } as React.CSSProperties}>
+        <div className="dk-card-hd">
+          <span className="dk-card-ttl">Active &amp; Upcoming Leave</span>
+          <div className="dk-hd-actions">
+            <span className="dk-chip dk-chip-b">{activeLeaves.length} active</span>
+            <span className="dk-chip dk-chip-n">{upcomingRows.length} upcoming</span>
+            <button className="dk-va" onClick={()=>onNavigate?.('leave')} type="button">View all →</button>
+          </div>
+        </div>
+        {allLeaveRows.length === 0
+          ? <p className="dk-empty">No active or upcoming leave.</p>
+          : <>
+              <div className="dk-tbl-head">
+                <span>Employee</span><span>Section</span><span>Type</span><span>Departs</span><span>Returns</span>
+              </div>
+              {allLeaveRows.slice(0,5).map(r=>(
+                <div key={r.id} className={`dk-tbl-row${r._soon?' dk-row-soon':''}`}>
+                  <div className="dk-emp">
+                    <span className="dk-av">{r.name.charAt(0)}</span>
+                    <span className="dk-emp-n">
+                      {r.name}
+                      {r._soon   && <span className="dk-tag dk-tag-r">7d</span>}
+                      {r._notice && <span className="dk-tag dk-tag-a">Notice</span>}
+                    </span>
+                  </div>
+                  <span className="dk-tc-m">{r.department}</span>
+                  <span className="dk-type">{r.leaveTypeCode}</span>
+                  <span className="dk-tc-d">{formatDateDisplay(r.departureDate)}</span>
+                  <span className="dk-tc-d">{r.returnDate?formatDateDisplay(r.returnDate):'—'}</span>
+                </div>
+              ))}
+              {allLeaveRows.length > 5 && <button className="dk-more" onClick={()=>onNavigate?.('leave')} type="button">+{allLeaveRows.length-5} more → View All Leave</button>}
+            </>
+        }
       </div>
     </div>
   )
