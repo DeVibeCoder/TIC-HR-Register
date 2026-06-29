@@ -10442,3 +10442,31 @@ html { overflow-x: hidden; }
 
 /* Soft side-accent info panels (kept their light fills) */
 [data-theme="dark"] .pp-send-section { background: rgba(245,158,11,.10); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DARK MODE — tables as glass cards (match "Headcount by Section")
+   The scroll wrapper becomes the glass surface; header is a sticky translucent
+   strip; body rows are transparent so the glass shows through.
+   ═══════════════════════════════════════════════════════════════════════════ */
+[data-theme="dark"] :is(.employee-table-shell, .ind-table-scroll, .module-table-card) {
+  background: linear-gradient(165deg, rgba(35,40,56,.92), rgba(23,26,35,.92));
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 18px;
+  box-shadow: 0 12px 34px rgba(0,0,0,.34), 0 0 60px -28px rgba(124,92,255,.20), inset 0 1px 0 rgba(255,255,255,.05);
+  backdrop-filter: blur(10px);
+}
+
+/* Header — sticky translucent strip on the glass */
+[data-theme="dark"] .data-table thead th { background: rgba(34,39,55,.97); color: #C8CFDD; border-bottom: 1px solid rgba(124,92,255,.22); }
+[data-theme="dark"] .employee-table thead th:nth-child(-n + 3) { background: #23283A; }
+[data-theme="dark"] .user-table thead th { background: rgba(34,39,55,.97); }
+
+/* Body — transparent rows over the glass, soft dividers */
+[data-theme="dark"] .data-table tbody td { background: transparent; color: var(--ink); border-bottom-color: rgba(255,255,255,.055); }
+[data-theme="dark"] .data-table tbody tr:last-child td { border-bottom-color: transparent; }
+[data-theme="dark"] .data-table tbody tr:hover td { background: rgba(124,92,255,.09); }
+
+/* Sticky first columns must stay opaque (so rows don't show through on h-scroll) */
+[data-theme="dark"] .employee-table tbody td:nth-child(-n + 3),
+[data-theme="dark"] .employee-table tbody tr.pending-row td:nth-child(-n + 3) { background: #181B24; }
+[data-theme="dark"] .employee-table tbody tr:hover td:nth-child(-n + 3) { background: #241E33; }
