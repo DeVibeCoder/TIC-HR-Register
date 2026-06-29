@@ -10730,3 +10730,28 @@ html { overflow-x: hidden; }
 [data-theme="dark"] :is(.action-glyph, .action-glyph.edit, .action-glyph.delete, .action-glyph.approve, .action-glyph.print, .action-glyph-extend, .action-glyph-edit-ext, .action-glyph-ei) { color: #AAB3C5; }
 [data-theme="dark"] :is(.action-glyph, .action-glyph-extend, .action-glyph-edit-ext, .action-glyph-ei):hover { color: #FFFFFF; }
 [data-theme="dark"] .action-glyph.delete:hover { color: #FCA5A5; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TABLES AS GLASS CARDS — light mode too (dark handled above), rounded edges
+   ═══════════════════════════════════════════════════════════════════════════ */
+:is([class*="table-shell"], [class*="table-scroll"], .module-table-card, .mtg-list) {
+  border-radius: 16px;
+  border: 1px solid rgba(124,92,255,.16);
+  background: linear-gradient(180deg, rgba(255,255,255,.86), rgba(248,250,255,.76));
+  box-shadow: 0 12px 30px rgba(15,23,42,.09), inset 0 1px 0 rgba(255,255,255,.7);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+}
+/* termination shell had square corners */
+.termination-table-shell { border-radius: 16px; }
+.mtg-list { padding: 8px; }
+
+/* Light table cells transparent so the frosted panel shows through (like dark) */
+.data-table tbody td { background: transparent; }
+.data-table thead th { background: rgba(245,243,255,.92); }
+
+/* Minutes list panel — dark variant */
+[data-theme="dark"] .mtg-list {
+  background: linear-gradient(180deg, rgba(42,48,66,.55), rgba(24,28,40,.5)) !important;
+  border-color: rgba(255,255,255,.09);
+  box-shadow: 0 14px 38px rgba(0,0,0,.40), inset 0 1px 0 rgba(255,255,255,.07);
+}

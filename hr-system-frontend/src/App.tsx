@@ -9613,7 +9613,7 @@ function MeetingsSection({ records, onUpdate, employees, activeLeaves }: {
       ) : filtered.length === 0 ? (
         <div style={{ textAlign:'center', padding:'24px', color:'#94a3b8', fontSize:'0.84rem' }}>No results match that search.</div>
       ) : (
-        <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+        <div className="mtg-list" style={{ display:'flex', flexDirection:'column', gap:6 }}>
           {filtered.map(rec => {
             const nAttended = rec.reps.filter(r => r.attendance === 'Attended' && r.name.trim()).length
             const nLeave    = rec.reps.filter(r => r.attendance === 'On Leave').length
