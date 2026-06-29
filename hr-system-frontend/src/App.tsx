@@ -10412,7 +10412,7 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false }: {
   const save = (r: StaffRequestRecord) => { onUpdate((prev) => {
     const idx = prev.findIndex((x) => x.id === r.id)
     if (idx >= 0) return prev.map((x) => x.id === r.id ? r : x)
-    const maxNum = prev.reduce((m, x) => Math.max(m, parseInt(String(x.id).match(/(\d+)\s*$/)?.[1] ?? '0', 10) || 0), 0)
+    const maxNum = prev.reduce((m, x) => { const mt = String(x.id).match(/^REQ-(\d{1,4})$/); return mt ? Math.max(m, parseInt(mt[1], 10)) : m }, 0)
     return [...prev, { ...r, id: `REQ-${String(maxNum + 1).padStart(3, '0')}` }]
   }); setEditing(null) }
   const del = (id: string) => onUpdate((prev) => prev.filter((x) => x.id !== id))

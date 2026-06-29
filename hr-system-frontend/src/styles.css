@@ -10721,3 +10721,7 @@ html { overflow-x: hidden; }
 
 /* Name cells that are plain text remain readable (covered by td rule, explicit for safety) */
 [data-theme="dark"] .data-table td.name-cell { color: var(--ink); }
+
+/* Dark mode — leave request row hover/expanded (was light blue, hid the text) */
+[data-theme="dark"] .lr-row:hover { background: rgba(124,92,255,.08); }
+[data-theme="dark"] .lr-row-open { background: rgba(124,92,255,.13) !important; }
