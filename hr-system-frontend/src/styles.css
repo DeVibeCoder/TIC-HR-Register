@@ -1298,7 +1298,8 @@ h2 { margin: 0; color: #111; font-size: 0.95rem; line-height: 1.2; }
 
 .status-badge.on-site,
 .status-badge.on-leave,
-.status-badge.off-site {
+.status-badge.off-site,
+.status-badge.sick-leave {
   min-width: 102px;
   font-weight: 900;
 }
@@ -10639,9 +10640,14 @@ html { overflow-x: hidden; }
 [data-theme="dark"] .action-glyph { color: #C2C9D6; }
 [data-theme="dark"] .action-glyph:hover { color: #FFFFFF; }
 
-/* Status badges readable + Sick Leave variant */
-.status-badge.sick-leave { background: #fef3c7; color: #92400e; }
-[data-theme="dark"] .status-badge.sick-leave { background: rgba(234,179,8,.20); color: #FDE68A; border: 1px solid rgba(234,179,8,.40); }
+/* Sick Leave badge — light mode matches the other site-status pills */
+.status-badge.sick-leave { background: #fef3c7; color: #92400e; border-color: rgba(180,83,9,.28); }
+
+/* Dark mode — site-status pills as consistent, readable dark chips */
+[data-theme="dark"] .status-badge.on-site  { background: rgba(124,92,255,.20); color: #DDD3FF; border-color: rgba(124,92,255,.42); }
+[data-theme="dark"] .status-badge.on-leave { background: rgba(16,185,129,.20); color: #9CF0D8; border-color: rgba(16,185,129,.42); }
+[data-theme="dark"] .status-badge.off-site { background: rgba(96,165,250,.20) !important; color: #BFDBFE !important; border-color: rgba(96,165,250,.42) !important; }
+[data-theme="dark"] .status-badge.sick-leave { background: rgba(234,179,8,.20); color: #FDE68A; border-color: rgba(234,179,8,.42); }
 
 /* Minutes — list/calendar toggle, themed + sized to match the search bar (36px) */
 .mtg-view-toggle { display: flex; gap: 3px; background: #f1f5f9; border-radius: 8px; padding: 3px; height: 36px; box-sizing: border-box; align-items: stretch; }

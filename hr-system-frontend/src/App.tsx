@@ -2373,7 +2373,7 @@ function EmployeesPage({ employees, onAdd, onEdit, onDelete, onExport, onImport,
                   <td>{employee.dateOfBirth ? formatDateDisplay(employee.dateOfBirth) : '—'}</td>
                   <td>{calculateAge(employee.dateOfBirth)}</td>
                   <td>{onLeaveIds.has(employee.employeeId)
-                    ? <span className="status-badge sick-leave" title="On Sick Leave">SL</span>
+                    ? <span className="status-badge sick-leave" title="On Sick Leave">SICK LEAVE</span>
                     : <StatusBadge status={employee.siteStatus} />}</td>
                   {!isHOD && (
                     <td>
