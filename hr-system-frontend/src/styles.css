@@ -10651,3 +10651,41 @@ html { overflow-x: hidden; }
 [data-theme="dark"] .mtg-view-toggle { background: rgba(255,255,255,.06); }
 [data-theme="dark"] .mtg-view-btn { color: #AAB3C5; }
 [data-theme="dark"] .mtg-view-btn.active { background: rgba(124,92,255,.28); color: #FFFFFF; box-shadow: none; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DARK MODE — sick-leave row highlight + leave progress pipeline (lr-*)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Employee rows: medical (sick leave) = amber, notice = red — readable on dark */
+[data-theme="dark"] .employee-table tbody tr.emp-on-medical td,
+[data-theme="dark"] .employee-table tbody tr.emp-on-medical td:nth-child(-n + 3) { background: rgba(234,179,8,.16) !important; color: #FBE8B0 !important; }
+[data-theme="dark"] .employee-table tbody tr.emp-on-medical:hover td,
+[data-theme="dark"] .employee-table tbody tr.emp-on-medical:hover td:nth-child(-n + 3) { background: rgba(234,179,8,.24) !important; }
+[data-theme="dark"] .employee-table tbody tr.emp-on-medical td:first-child { box-shadow: inset 3px 0 0 #EAB308; }
+[data-theme="dark"] .employee-table tbody tr.emp-in-notice td,
+[data-theme="dark"] .employee-table tbody tr.emp-in-notice td:nth-child(-n + 3) { background: rgba(239,68,68,.16) !important; color: #FBD3D3 !important; }
+[data-theme="dark"] .employee-table tbody tr.emp-in-notice:hover td,
+[data-theme="dark"] .employee-table tbody tr.emp-in-notice:hover td:nth-child(-n + 3) { background: rgba(239,68,68,.24) !important; }
+[data-theme="dark"] .employee-table tbody tr.emp-in-notice td:first-child { box-shadow: inset 3px 0 0 #EF4444; }
+
+/* Leave status pills (lr-step) — dark translucent, readable */
+[data-theme="dark"] .lr-step-0 { background: rgba(234,179,8,.20); color: #FDE68A; }
+[data-theme="dark"] .lr-step-1 { background: rgba(96,165,250,.20); color: #BFDBFE; }
+[data-theme="dark"] .lr-step-2 { background: rgba(157,124,255,.22); color: #DDD3FF; }
+[data-theme="dark"] .lr-step-3 { background: rgba(251,146,60,.20); color: #FED7AA; }
+[data-theme="dark"] .lr-step-4 { background: rgba(34,197,94,.20); color: #BBF7D0; }
+
+/* Leave progress pipeline (expanded row) */
+[data-theme="dark"] .lr-pipeline-row td { background: rgba(255,255,255,.03); }
+[data-theme="dark"] .lr-pipeline { background: rgba(255,255,255,.03); border-left-color: #7C5CFF; }
+[data-theme="dark"] .lr-done .lr-pip-circle    { background: #22C55E; color: #0F1117; }
+[data-theme="dark"] .lr-current .lr-pip-circle { background: #7C5CFF; color: #fff; box-shadow: 0 0 0 3px rgba(124,92,255,.3); }
+[data-theme="dark"] .lr-future .lr-pip-circle  { background: rgba(255,255,255,.08); color: #7D879A; border-color: rgba(255,255,255,.16); }
+[data-theme="dark"] .lr-done .lr-pip-label    { color: #86EFAC; }
+[data-theme="dark"] .lr-current .lr-pip-label { color: #DDD3FF; }
+[data-theme="dark"] .lr-future .lr-pip-label  { color: #7D879A; }
+[data-theme="dark"] .lr-pip-date { color: #AAB3C5; }
+[data-theme="dark"] .lr-done .lr-pip-date    { color: #86EFAC; }
+[data-theme="dark"] .lr-current .lr-pip-date { color: #DDD3FF; }
+[data-theme="dark"] .lr-future .lr-pip-date  { color: #6B7486; }
+[data-theme="dark"] .lr-fasttrack-badge { background: rgba(124,92,255,.16); color: #DDD3FF; }

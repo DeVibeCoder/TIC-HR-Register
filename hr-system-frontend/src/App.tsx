@@ -2290,7 +2290,7 @@ function EmployeesPage({ employees, onAdd, onEdit, onDelete, onExport, onImport,
       const haystack = [employee.employeeId, employee.fullName, employee.department, employee.designation, employee.nationality, employee.nicPassportNo, employee.workPermitNo, employee.mobileNo].join(' ').toLowerCase()
       return haystack.includes(normalized)
         && (department === 'All Sections' || employee.department === department)
-        && (status === 'All Statuses' || employee.siteStatus === status)
+        && (status === 'All Statuses' || (status === 'Sick Leave' ? onLeaveIds.has(employee.employeeId) : employee.siteStatus === status))
         && (nationality === 'All Nationalities' || employee.nationality === nationality)
     }).sort((a, b) => {
       const va = String(a[sortKey] ?? '').toLowerCase()
@@ -2334,7 +2334,7 @@ function EmployeesPage({ employees, onAdd, onEdit, onDelete, onExport, onImport,
           <label className="search-field"><span>Search</span><input onChange={(event) => setFilter(setQuery, event.target.value)} placeholder="Name, ID, section, designation, passport, permit..." type="text" value={query} /></label>
           <label><span>Section</span><select onChange={(event) => setFilter(setDepartment, event.target.value)} value={department}>{departments.map((item) => <option key={item}>{item}</option>)}</select></label>
           <label><span>Nationality</span><select onChange={(event) => setFilter(setNationality, event.target.value)} value={nationality}>{nationalityList.map((item) => <option key={item}>{item}</option>)}</select></label>
-          <label><span>Status</span><select onChange={(event) => setFilter(setStatus, event.target.value)} value={status}>{['All Statuses', 'On Site', 'Off Site', 'On Leave'].map((item) => <option key={item}>{item}</option>)}</select></label>
+          <label><span>Status</span><select onChange={(event) => setFilter(setStatus, event.target.value)} value={status}>{['All Statuses', 'On Site', 'Off Site', 'On Leave', 'Sick Leave'].map((item) => <option key={item}>{item}</option>)}</select></label>
           <label><span>Rows</span><select onChange={(event) => { setPageSize(event.target.value === 'All' ? 'All' : Number(event.target.value) as 50 | 100); setPage(1) }} value={pageSize}><option>50</option><option>100</option><option>All</option></select></label>
         </div>
         <div className="employee-table-shell">
@@ -2373,7 +2373,7 @@ function EmployeesPage({ employees, onAdd, onEdit, onDelete, onExport, onImport,
                   <td>{employee.dateOfBirth ? formatDateDisplay(employee.dateOfBirth) : '—'}</td>
                   <td>{calculateAge(employee.dateOfBirth)}</td>
                   <td>{onLeaveIds.has(employee.employeeId)
-                    ? <span className="status-badge sick-leave" title="On Sick Leave">SL · Sick Leave</span>
+                    ? <span className="status-badge sick-leave" title="On Sick Leave">SL</span>
                     : <StatusBadge status={employee.siteStatus} />}</td>
                   {!isHOD && (
                     <td>
