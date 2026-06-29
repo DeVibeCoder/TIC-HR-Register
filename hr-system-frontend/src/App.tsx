@@ -1569,11 +1569,8 @@ function OverviewPage({
         })}
       </div>
 
-      {/* ── MAIN GRID: Headcount (left) · Notice + Medical (right) ───── */}
-      <div className="dk-grid-main">
-
-        {/* HEADCOUNT BY SECTION */}
-        <div className="dk-section-card dk-anim" style={{ '--dl':'0.3s' } as React.CSSProperties}>
+      {/* ── HEADCOUNT BY SECTION — full width ───────────────────────── */}
+      <div className="dk-section-card dk-anim" style={{ '--dl':'0.3s' } as React.CSSProperties}>
           <div className="dk-section-hd">
             <div className="dk-section-hd-left">
               <span className="dk-section-icon-wrap">
@@ -1647,7 +1644,10 @@ function OverviewPage({
               }
             </div>
           </div>
-        </div>
+      </div>
+
+      {/* ── DETAILS BELOW: Notice · Medical · Leave ─────────────────── */}
+      <div className="dk-bottom-grid">
 
         {/* NOTICE PERIOD — needs attention */}
         <div className="dk-card dk-term dk-anim" style={{ '--dl':'0.38s' } as React.CSSProperties}>
@@ -1711,10 +1711,8 @@ function OverviewPage({
           {medicalCases.length===0 && <p className="dk-empty">No medical cases on record.</p>}
         </div>
 
-      </div>
-
-      {/* ── ACTIVE & UPCOMING LEAVE — next 5 ────────────────────────── */}
-      <div className="dk-card dk-leave dk-anim" style={{ '--dl':'0.54s' } as React.CSSProperties}>
+        {/* ACTIVE & UPCOMING LEAVE — next 5 */}
+        <div className="dk-card dk-leave dk-anim" style={{ '--dl':'0.54s' } as React.CSSProperties}>
         <div className="dk-card-hd">
           <span className="dk-card-ttl">Active &amp; Upcoming Leave</span>
           <div className="dk-hd-actions">
@@ -1748,6 +1746,7 @@ function OverviewPage({
               {allLeaveRows.length > 5 && <button className="dk-more" onClick={()=>onNavigate?.('leave')} type="button">+{allLeaveRows.length-5} more → View All Leave</button>}
             </>
         }
+        </div>
       </div>
     </div>
   )

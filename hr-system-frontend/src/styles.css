@@ -10095,17 +10095,14 @@ html { overflow-x: hidden; }
   filter: drop-shadow(0 0 6px color-mix(in srgb, var(--kc, var(--pri)) 55%, transparent));
 }
 
-/* ── Main grid: headcount (left, spans 2 rows) · notice + medical (right) ── */
-.dk-grid-main {
+/* ── Bottom grid: Notice · Medical · Leave (below full-width headcount) ── */
+.dk-bottom-grid {
   display: grid;
-  grid-template-columns: 1.6fr 1fr;
-  grid-template-rows: auto auto;
+  grid-template-columns: 1.1fr 1.1fr 1.8fr;
   gap: 16px;
   flex-shrink: 0;
+  align-items: start;
 }
-.dk-section-card { grid-column: 1; grid-row: 1 / 3; }
-.dk-grid-main > .dk-term    { grid-column: 2; grid-row: 1; }
-.dk-grid-main > .dk-medical { grid-column: 2; grid-row: 2; }
 
 /* ── Card base (glass) ──────────────────────────────────────────────── */
 .dk-section-card, .dk-card {
@@ -10156,11 +10153,11 @@ html { overflow-x: hidden; }
 .dk-lg { display: inline-flex; align-items: center; gap: 6px; font-size: 0.68rem; color: var(--tx2); font-weight: 600; }
 .dk-lg i { width: 8px; height: 8px; border-radius: 3px; display: inline-block; }
 
-/* Sections list with bars (ALL sections; no scrollbar — every row visible) */
+/* Sections — all visible, flow into columns to fill the full width (no scroll) */
 .dk-sect-wrap { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-.dk-sect-list { display: flex; flex-direction: column; gap: 2px; overflow: visible; }
+.dk-sect-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 2px 30px; overflow: visible; }
 .dk-sect-row {
-  display: grid; grid-template-columns: 130px 1fr 34px 40px;
+  display: grid; grid-template-columns: 120px 1fr 32px 38px;
   gap: 0 12px; align-items: center;
   padding: 6px 8px; border-radius: 9px;
   transition: background .15s;
@@ -10178,12 +10175,13 @@ html { overflow-x: hidden; }
 .dk-sect-n { font-size: 0.78rem; font-weight: 800; color: var(--tx); text-align: right; font-variant-numeric: tabular-nums; }
 .dk-sect-p { font-size: 0.68rem; color: var(--tx3); text-align: right; }
 .dk-sect-total {
-  display: grid; grid-template-columns: 130px 1fr 34px 40px;
-  gap: 0 12px; padding: 10px 8px 2px; margin-top: 2px;
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 8px 2px; margin-top: 6px;
   border-top: 1px solid var(--bd2); font-weight: 800;
-  font-size: 0.74rem; color: var(--tx2); align-items: center;
+  font-size: 0.78rem; color: var(--tx2);
 }
-.dk-sect-total-n { color: var(--acc); text-align: right; font-size: 0.84rem; }
+.dk-sect-total > span:first-child { margin-right: auto; letter-spacing: .06em; }
+.dk-sect-total-n { color: var(--acc); font-size: 0.9rem; }
 
 /* Card header / actions */
 .dk-card-hd { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-shrink: 0; }
@@ -10247,9 +10245,7 @@ html { overflow-x: hidden; }
 /* ── Responsive ─────────────────────────────────────────────────────── */
 @media (max-width: 1180px) {
   .dk-kpis { grid-template-columns: repeat(2,1fr); }
-  .dk-grid-main { grid-template-columns: 1fr; }
-  .dk-section-card { grid-column: 1; grid-row: auto; }
-  .dk-grid-main > .dk-term, .dk-grid-main > .dk-medical { grid-column: 1; grid-row: auto; }
+  .dk-bottom-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 720px) {
   .dk-kpis { grid-template-columns: 1fr; }
