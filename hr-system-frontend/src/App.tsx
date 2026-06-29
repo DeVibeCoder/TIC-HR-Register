@@ -8139,7 +8139,7 @@ function ExitInterviewSection({ records, onUpdate, employees, isHOD = false }: {
                 return (
                   <tr key={r.id}>
                     <td className="term-empid">{r.employeeId}</td>
-                    <td className="name-cell"><button className="name-link" type="button" onClick={() => { setEditing(r); setEditingReadOnly(isHOD) }}>{r.name}</button></td>
+                    <td className="name-cell">{r.name}</td>
                     <td>{r.department}</td>
                     <td>{formatDateDisplay(r.departureDate)}</td>
                     <td><span className="req-type-chip">{r.terminationType}</span></td>
@@ -8157,12 +8157,14 @@ function ExitInterviewSection({ records, onUpdate, employees, isHOD = false }: {
                     <td>
                       <div className="row-actions">
                         <button className="action-glyph" title="View / Print" onClick={() => { setEditing(r); setEditingReadOnly(true) }} type="button">👁</button>
+                        {status !== 'Completed' && !isHOD && (
                         <button className="action-glyph vwh" title="Open Form" onClick={() => { setEditing(r); setEditingReadOnly(false) }} type="button">
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
                             <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
                           </svg>
                         </button>
+                        )}
                         <button className="action-glyph delete vwh" title="Delete" onClick={() => del(r.id)} type="button">🗑</button>
                       </div>
                     </td>

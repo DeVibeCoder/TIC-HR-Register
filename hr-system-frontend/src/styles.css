@@ -10695,3 +10695,21 @@ html { overflow-x: hidden; }
 [data-theme="dark"] .lr-current .lr-pip-date { color: #DDD3FF; }
 [data-theme="dark"] .lr-future .lr-pip-date  { color: #6B7486; }
 [data-theme="dark"] .lr-fasttrack-badge { background: rgba(124,92,255,.16); color: #DDD3FF; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DARK MODE — progress pipeline lines, exit-interview rehire & chips
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Pipeline connector lines (leave + termination share lr-pip-*) */
+[data-theme="dark"] .lr-pip-line-future { background: rgba(255,255,255,.14); }
+[data-theme="dark"] .lr-pip-line-done   { background: #22C55E; }
+
+/* Exit interview — Rehire yes/no badges visible on dark */
+[data-theme="dark"] .doc-yes { background: rgba(34,197,94,.20); color: #86EFAC; }
+[data-theme="dark"] .doc-no  { background: rgba(239,68,68,.20); color: #FCA5A5; }
+
+/* Type chips inside tables */
+[data-theme="dark"] :is(.req-type-chip, .req-priority-badge) { background: rgba(255,255,255,.07); color: #D2D8E4; border-color: rgba(255,255,255,.14); }
+
+/* Name cells that are plain text remain readable (covered by td rule, explicit for safety) */
+[data-theme="dark"] .data-table td.name-cell { color: var(--ink); }
