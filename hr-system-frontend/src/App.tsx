@@ -10467,7 +10467,7 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false }: {
                 ? <tr><td colSpan={12} className="empty-row">No requests found</td></tr>
                 : filtered.map((r) => (
                   <tr key={r.id}>
-                    <td style={{whiteSpace:'nowrap', fontSize:'0.75rem', color:'#6366f1', fontWeight:700}}>{r.id}</td>
+                    <td style={{maxWidth:84, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', fontSize:'0.75rem', color:'var(--ink)', fontWeight:700}} title={r.id}>{r.id}</td>
                     <td style={{textAlign:'center',fontSize:'0.8rem',whiteSpace:'nowrap'}}>{formatDateDisplay(r.submittedDate)}</td>
                     <td style={{whiteSpace:'nowrap', fontSize:'0.8rem'}}>{r.employeeId || '—'}</td>
                     <td style={{whiteSpace:'nowrap', fontWeight:600}}>{r.employeeName}</td>
@@ -10475,7 +10475,7 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false }: {
                     <td style={{textAlign:'center'}}><span className="req-type-chip">{r.requestType}</span></td>
                     <td style={{textAlign:'center'}}><span className={`req-priority-badge ${priorityColors[r.priority]}`}>{r.priority}</span></td>
                     <td style={{minWidth:220, maxWidth:320}}>
-                      <span title={r.description || undefined} style={{ display:'-webkit-box', WebkitLineClamp:3, WebkitBoxOrient:'vertical', overflow:'hidden', fontSize:'0.81rem', lineHeight:'1.45', color:'#1e293b' }}>
+                      <span title={r.description || undefined} style={{ display:'-webkit-box', WebkitLineClamp:3, WebkitBoxOrient:'vertical', overflow:'hidden', fontSize:'0.81rem', lineHeight:'1.45', color:'var(--ink)' }}>
                         {r.description || '—'}
                       </span>
                     </td>
@@ -10490,12 +10490,12 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false }: {
                       )}
                       {!isHOD && statusMenu === r.id && (
                         <div style={{ position:'absolute', top:'100%', left:'50%', transform:'translateX(-50%)', zIndex:20,
-                          background:'#fff', border:'1.5px solid #e2e8f0', borderRadius:8,
-                          boxShadow:'0 4px 14px rgba(0,0,0,0.13)', padding:'4px 0', minWidth:140 }}
+                          background:'var(--surface)', border:'1.5px solid var(--line)', borderRadius:8,
+                          boxShadow:'0 8px 24px rgba(0,0,0,0.3)', padding:'4px 0', minWidth:140 }}
                           onMouseLeave={() => setStatusMenu(null)}>
                           {(['Open','In Progress','Resolved','Rejected'] as const).map(s => (
                             <button key={s} type="button" onClick={() => changeStatus(r, s)}
-                              style={{ display:'block', width:'100%', padding:'7px 14px', textAlign:'left', background: r.status===s?'#f1f5f9':'none', border:'none', cursor:'pointer', fontSize:'0.78rem', fontWeight: r.status===s?700:400 }}>
+                              style={{ display:'block', width:'100%', padding:'7px 14px', textAlign:'left', color:'var(--ink)', background: r.status===s?'var(--surface-soft)':'none', border:'none', cursor:'pointer', fontSize:'0.78rem', fontWeight: r.status===s?700:400 }}>
                               {s}
                             </button>
                           ))}
@@ -10504,7 +10504,7 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false }: {
                     </td>
                     <td style={{textAlign:'center',fontSize:'0.8rem',whiteSpace:'nowrap'}}>{r.completedDate ? formatDateDisplay(r.completedDate) : '—'}</td>
                     <td style={{maxWidth:180}}>
-                      <span title={r.actionTaken || undefined} style={{ display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden', fontSize:'0.82rem', lineHeight:'1.4', color:'#64748b' }}>
+                      <span title={r.actionTaken || undefined} style={{ display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden', fontSize:'0.82rem', lineHeight:'1.4', color:'var(--muted)' }}>
                         {r.actionTaken || '—'}
                       </span>
                     </td>

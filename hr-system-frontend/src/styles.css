@@ -10725,3 +10725,8 @@ html { overflow-x: hidden; }
 /* Dark mode — leave request row hover/expanded (was light blue, hid the text) */
 [data-theme="dark"] .lr-row:hover { background: rgba(124,92,255,.08); }
 [data-theme="dark"] .lr-row-open { background: rgba(124,92,255,.13) !important; }
+
+/* Dark mode — uniform action icons across all tables/modules */
+[data-theme="dark"] :is(.action-glyph, .action-glyph.edit, .action-glyph.delete, .action-glyph.approve, .action-glyph.print, .action-glyph-extend, .action-glyph-edit-ext, .action-glyph-ei) { color: #AAB3C5; }
+[data-theme="dark"] :is(.action-glyph, .action-glyph-extend, .action-glyph-edit-ext, .action-glyph-ei):hover { color: #FFFFFF; }
+[data-theme="dark"] .action-glyph.delete:hover { color: #FCA5A5; }
