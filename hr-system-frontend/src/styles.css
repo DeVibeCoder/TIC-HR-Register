@@ -10587,3 +10587,67 @@ html { overflow-x: hidden; }
 /* Ensure all text in highlighted rows is light/readable */
 [data-theme="dark"] .employee-table tbody tr.status-row-on-leave :is(td,span,strong,div),
 [data-theme="dark"] .employee-table tbody tr.status-row-off-site :is(td,span,strong,div) { color: inherit; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DARK MODE — module readability pass (forms, tabs, dropdowns, cards, minutes)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Form controls — !important so they beat inline white backgrounds used in
+   many forms (Request, Bank, Activities, Minutes, etc.) */
+[data-theme="dark"] .workspace-inner:not(:has(.dk-shell)) :is(input,select,textarea),
+[data-theme="dark"] :is(.modal-backdrop,.import-toast-backdrop) :is(input,select,textarea) {
+  background: #1E2230 !important; color: var(--ink) !important; border: 1px solid rgba(255,255,255,.14) !important;
+}
+[data-theme="dark"] .search-field input { background: transparent !important; border: none !important; }
+[data-theme="dark"] .workspace-inner:not(:has(.dk-shell)) ::placeholder,
+[data-theme="dark"] :is(.modal-backdrop,.import-toast-backdrop) ::placeholder { color: #7D879A !important; }
+
+/* Generic form section wrappers / fieldsets */
+[data-theme="dark"] .workspace-inner:not(:has(.dk-shell)) :is(.emp-form-section,.form-section,.os-form,fieldset),
+[data-theme="dark"] :is(.modal-backdrop,.import-toast-backdrop) :is(.emp-form-section,.form-section,.os-form,fieldset) {
+  background: rgba(255,255,255,.03); border-color: rgba(255,255,255,.08);
+}
+
+/* Leave / Termination section tab bars — clearly visible even when not selected */
+[data-theme="dark"] .leave-section-tabs { border-bottom-color: rgba(255,255,255,.10); }
+[data-theme="dark"] .leave-section-tabs button { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.10); color: #C2C9D6; }
+[data-theme="dark"] .leave-section-tabs button:hover { background: rgba(124,92,255,.16); color: #FFFFFF; }
+[data-theme="dark"] .leave-section-tabs button.active { background: rgba(124,92,255,.26); border-color: rgba(124,92,255,.50); color: #FFFFFF; box-shadow: 0 2px 10px rgba(124,92,255,.30); }
+
+/* Progress status dropdown (spd) */
+[data-theme="dark"] .spd-dropdown { background: #1A1E29; border-color: rgba(255,255,255,.12); box-shadow: 0 16px 40px rgba(0,0,0,.6); }
+[data-theme="dark"] .spd-item { color: #D2D8E4; }
+[data-theme="dark"] .spd-item:hover { background: rgba(124,92,255,.14); }
+[data-theme="dark"] .spd-item.spd-current { background: rgba(124,92,255,.20); color: #DDD3FF; }
+[data-theme="dark"] .spd-item.spd-done { color: #8A93A5; }
+[data-theme="dark"] .spd-item.spd-future .spd-dot { background: rgba(255,255,255,.18); }
+[data-theme="dark"] .spd-trigger { background: rgba(255,255,255,.08); color: #E6EAF2; border-color: rgba(255,255,255,.14); }
+[data-theme="dark"] .spd-trigger.spd-step-0 { background: rgba(234,179,8,.18); color: #FDE68A; border-color: rgba(234,179,8,.34); }
+[data-theme="dark"] .spd-trigger.spd-step-1 { background: rgba(96,165,250,.18); color: #BFDBFE; border-color: rgba(96,165,250,.34); }
+[data-theme="dark"] .spd-trigger.spd-step-2 { background: rgba(34,197,94,.18); color: #BBF7D0; border-color: rgba(34,197,94,.34); }
+[data-theme="dark"] :is(.spd-trigger.spd-step-3,.spd-trigger.spd-step-4) { background: rgba(34,197,94,.20); color: #86EFAC; border-color: rgba(34,197,94,.38); }
+
+/* Medical case cards (modal sections) */
+[data-theme="dark"] .mc-card { background: linear-gradient(165deg, rgba(40,46,64,.58), rgba(25,29,41,.55)) !important; border-color: rgba(255,255,255,.10) !important; color: var(--ink); }
+[data-theme="dark"] .mc-card-label { color: var(--muted); }
+
+/* Personal Files — employee picker */
+[data-theme="dark"] .pf-picker-row:hover { background: rgba(124,92,255,.12); }
+[data-theme="dark"] .pf-picker-add { background: rgba(124,92,255,.18); color: #DDD3FF; }
+
+/* Action glyph buttons (edit / delete / advance) visible in dark */
+[data-theme="dark"] .action-glyph { color: #C2C9D6; }
+[data-theme="dark"] .action-glyph:hover { color: #FFFFFF; }
+
+/* Status badges readable + Sick Leave variant */
+.status-badge.sick-leave { background: #fef3c7; color: #92400e; }
+[data-theme="dark"] .status-badge.sick-leave { background: rgba(234,179,8,.20); color: #FDE68A; border: 1px solid rgba(234,179,8,.40); }
+
+/* Minutes — list/calendar toggle, themed + sized to match the search bar (36px) */
+.mtg-view-toggle { display: flex; gap: 3px; background: #f1f5f9; border-radius: 8px; padding: 3px; height: 36px; box-sizing: border-box; align-items: stretch; }
+.mtg-view-btn { display: flex; align-items: center; padding: 0 14px; border-radius: 6px; font-size: 0.74rem; font-weight: 700; cursor: pointer; border: none; background: transparent; color: #64748b; }
+.mtg-view-btn.active { background: #fff; color: #1e1b4b; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+.top-actions { align-items: center; }
+[data-theme="dark"] .mtg-view-toggle { background: rgba(255,255,255,.06); }
+[data-theme="dark"] .mtg-view-btn { color: #AAB3C5; }
+[data-theme="dark"] .mtg-view-btn.active { background: rgba(124,92,255,.28); color: #FFFFFF; box-shadow: none; }

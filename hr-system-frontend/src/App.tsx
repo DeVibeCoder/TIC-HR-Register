@@ -1279,7 +1279,7 @@ function getPendingTasks(employee: Employee) {
     ['Date of Join', employee.dateOfJoin],
     ['Mobile No', employee.mobileNo],
     ['Date of Birth', employee.dateOfBirth],
-    ...(employee.nationality === 'MALDIVES' ? [] : [['WP No', employee.workPermitNo]]),
+    ...(['MALDIVES','MALDIVIAN'].includes((employee.nationality || '').toUpperCase()) ? [] : [['WP No', employee.workPermitNo]]),
   ].filter(([, value]) => !value || String(value).startsWith('PENDING-')).map(([label]) => label)
 }
 
@@ -2372,7 +2372,9 @@ function EmployeesPage({ employees, onAdd, onEdit, onDelete, onExport, onImport,
                   <td>{employee.mobileNo}</td>
                   <td>{employee.dateOfBirth ? formatDateDisplay(employee.dateOfBirth) : '—'}</td>
                   <td>{calculateAge(employee.dateOfBirth)}</td>
-                  <td><StatusBadge status={employee.siteStatus} /></td>
+                  <td>{onLeaveIds.has(employee.employeeId)
+                    ? <span className="status-badge sick-leave" title="On Sick Leave">SL · Sick Leave</span>
+                    : <StatusBadge status={employee.siteStatus} />}</td>
                   {!isHOD && (
                     <td>
                       <div className="row-actions">
@@ -9582,13 +9584,10 @@ function MeetingsSection({ records, onUpdate, employees, activeLeaves }: {
         </div>
         <div className="top-actions">
           {/* List / Calendar toggle */}
-          <div style={{ display:'flex', gap:3, background:'#f1f5f9', borderRadius:8, padding:3 }}>
+          <div className="mtg-view-toggle">
             {(['list','calendar'] as const).map(v => (
               <button key={v} type="button" onClick={() => setView(v)}
-                style={{ padding:'4px 12px', borderRadius:6, fontSize:'0.74rem', fontWeight:700, cursor:'pointer', border:'none',
-                  background: view===v ? '#fff' : 'transparent',
-                  color: view===v ? '#1e1b4b' : '#64748b',
-                  boxShadow: view===v ? '0 1px 4px rgba(0,0,0,0.1)' : 'none' }}>
+                className={`mtg-view-btn${view===v ? ' active' : ''}`}>
                 {v === 'list' ? '☰ List' : '📅 Calendar'}
               </button>
             ))}
@@ -9932,7 +9931,7 @@ function StaffRequestModal({ record, employees, onClose, onSave }: {
 
   const save = (e: FormEvent) => {
     e.preventDefault()
-    onSave({ ...record, id: isNew ? `REQ-${Date.now()}` : record.id, employeeId, employeeName, section, department, requestType, priority, description, submittedDate, completedDate: isNew ? '' : completedDate, status: isNew ? 'Open' : status, actionTaken: isNew ? '' : actionTaken })
+    onSave({ ...record, id: record.id, employeeId, employeeName, section, department, requestType, priority, description, submittedDate, completedDate: isNew ? '' : completedDate, status: isNew ? 'Open' : status, actionTaken: isNew ? '' : actionTaken })
   }
 
   const fieldStyle = { padding: '7px 10px', borderRadius: '7px', border: '1.5px solid rgba(124,58,237,0.2)', fontSize: '0.85rem', background: '#fff', width: '100%' }
@@ -10408,7 +10407,12 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false }: {
     && (statusFilter === 'All' || r.status === statusFilter)
   ), [records, search, typeFilter, statusFilter])
 
-  const save = (r: StaffRequestRecord) => { onUpdate((prev) => { const idx = prev.findIndex((x) => x.id === r.id); return idx >= 0 ? prev.map((x) => x.id === r.id ? r : x) : [...prev, r] }); setEditing(null) }
+  const save = (r: StaffRequestRecord) => { onUpdate((prev) => {
+    const idx = prev.findIndex((x) => x.id === r.id)
+    if (idx >= 0) return prev.map((x) => x.id === r.id ? r : x)
+    const maxNum = prev.reduce((m, x) => Math.max(m, parseInt(String(x.id).match(/(\d+)\s*$/)?.[1] ?? '0', 10) || 0), 0)
+    return [...prev, { ...r, id: `REQ-${String(maxNum + 1).padStart(3, '0')}` }]
+  }); setEditing(null) }
   const del = (id: string) => onUpdate((prev) => prev.filter((x) => x.id !== id))
 
   const changeStatus = (r: StaffRequestRecord, newStatus: StaffRequestRecord['status']) => {
