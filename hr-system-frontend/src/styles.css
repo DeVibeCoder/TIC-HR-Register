@@ -10391,3 +10391,54 @@ html { overflow-x: hidden; }
 [data-theme="dark"] .workspace-inner:not(:has(.dk-shell)) hr,
 [data-theme="dark"] :is(.modal-backdrop,.import-toast-backdrop) hr { border-color: rgba(255,255,255,.08); }
 [data-theme="dark"] .workspace-inner:not(:has(.dk-shell)) :is(.divider,.separator) { background: rgba(255,255,255,.08); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DARK MODE — tables, row states & remaining light surfaces
+   Mirrors the light selectors (prefixed with [data-theme="dark"]) so they win
+   on specificity. Only active in dark mode; light mode untouched.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Base data tables */
+[data-theme="dark"] .data-table thead th { background: #1E2230; color: #C7CEDC; border-bottom-color: rgba(124,92,255,.30); }
+[data-theme="dark"] .data-table tbody td { background: transparent; color: var(--ink); border-bottom-color: rgba(255,255,255,.07); }
+[data-theme="dark"] .data-table tbody tr:last-child td { border-bottom-color: rgba(255,255,255,.10); }
+[data-theme="dark"] .data-table tbody tr:hover td { background: rgba(124,92,255,.10); }
+
+/* Employee table — sticky first columns */
+[data-theme="dark"] .employee-table thead th:nth-child(-n + 3) { background: #232838; }
+[data-theme="dark"] .employee-table tbody td:nth-child(-n + 3),
+[data-theme="dark"] .employee-table tbody tr.pending-row td:nth-child(-n + 3) { background: #14171F; }
+[data-theme="dark"] .employee-table tbody tr:hover td:nth-child(-n + 3) { background: rgba(124,92,255,.16); }
+
+/* Employee table — status row tints */
+[data-theme="dark"] .employee-table tbody tr.status-row-on-leave td,
+[data-theme="dark"] .employee-table tbody tr.status-row-on-leave td:nth-child(-n + 3) { background: rgba(34,197,94,.13); }
+[data-theme="dark"] .employee-table tbody tr.status-row-on-leave:hover td,
+[data-theme="dark"] .employee-table tbody tr.status-row-on-leave:hover td:nth-child(-n + 3) { background: rgba(34,197,94,.20); }
+[data-theme="dark"] .employee-table tbody tr.status-row-off-site td,
+[data-theme="dark"] .employee-table tbody tr.status-row-off-site td:nth-child(-n + 3) { background: rgba(96,165,250,.13); }
+[data-theme="dark"] .employee-table tbody tr.status-row-off-site:hover td,
+[data-theme="dark"] .employee-table tbody tr.status-row-off-site:hover td:nth-child(-n + 3) { background: rgba(96,165,250,.20); }
+[data-theme="dark"] .pending-row td { background: rgba(255,255,255,.03); }
+
+/* Leave / history rows */
+[data-theme="dark"] .returned-row td { background: rgba(34,197,94,.13); }
+[data-theme="dark"] .not-returned-row td { background: rgba(239,68,68,.13); }
+[data-theme="dark"] .not-returned-row:hover td { background: rgba(239,68,68,.20) !important; }
+
+/* Other tables / hover rows */
+[data-theme="dark"] .user-table thead th { background: #232838; }
+[data-theme="dark"] .bank-table tbody tr:hover td { background: rgba(124,92,255,.12); }
+[data-theme="dark"] .termination-table tr:hover { background-color: rgba(124,92,255,.12); }
+[data-theme="dark"] .ind-prev-ptbl tbody tr:nth-child(even) td { background: rgba(255,255,255,.03); }
+[data-theme="dark"] .ei-quest-table th { background: #1E2230; border-bottom-color: rgba(255,255,255,.10); color: #C7CEDC; }
+[data-theme="dark"] .pp-table tr:hover td { background: rgba(124,92,255,.10) !important; }
+[data-theme="dark"] .mc-row:hover, [data-theme="dark"] .lr-row:hover { background: rgba(124,92,255,.10); }
+[data-theme="dark"] .inv-low-stock-row { background: rgba(245,158,11,.12) !important; }
+[data-theme="dark"] .mc-admitted-row { background: rgba(239,68,68,.12) !important; }
+
+/* Hover/soft-fill list rows that used light purple/grey */
+[data-theme="dark"] :is(.ov-list li:hover, .pending-task-row:hover, .pf-picker-row:hover, .settings-tab-btn:hover) { background: rgba(124,92,255,.12); }
+
+/* Soft side-accent info panels (kept their light fills) */
+[data-theme="dark"] .pp-send-section { background: rgba(245,158,11,.10); }
