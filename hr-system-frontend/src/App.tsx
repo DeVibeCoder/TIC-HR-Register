@@ -167,6 +167,7 @@ type PersonalFileRecord = {
   employeeId: string
   fullName: string
   department: string
+  designation?: string
   staffStatus: StaffStatus
   coc: boolean
   jd: boolean
@@ -305,8 +306,9 @@ type StaffRequestRecord = {
   description: string
   submittedDate: string
   completedDate: string
-  status: 'Open' | 'In Progress' | 'Resolved' | 'Rejected'
+  status: 'Open' | 'Completed' | 'Rejected'
   actionTaken: string
+  locked?: boolean   // true once Completed or Rejected — cannot change status again
 }
 
 type VisitRecord = {
@@ -597,8 +599,8 @@ const storeOrderFromDb = (r: DbRow): StoreOrder => ({ id: r.id as string, orderD
 const storeOrderToDb   = (r: StoreOrder) => ({ id: r.id, order_date: r.orderDate, ordered_by: r.orderedBy, order_type: r.orderType, category: r.category, items: r.items ?? [], status: r.status, received_date: r.receivedDate, received_by: r.receivedBy, remarks: r.remarks })
 
 // ── Operations + Activities mappers ───────────────────────────────────────────
-const personalFileFromDb = (r: DbRow): PersonalFileRecord => ({ fileNo: r.file_no as string, employeeId: r.employee_id as string, fullName: r.full_name as string, department: r.department as string, staffStatus: r.staff_status as StaffStatus, coc: r.coc as boolean, jd: r.jd as boolean, ea: r.ea as boolean, eaExpiryDate: r.ea_expiry_date as string, remarks: r.remarks as string })
-const personalFileToDb   = (r: PersonalFileRecord) => ({ file_no: r.fileNo, employee_id: r.employeeId, full_name: r.fullName, department: r.department, staff_status: r.staffStatus, coc: r.coc, jd: r.jd, ea: r.ea, ea_expiry_date: r.eaExpiryDate, remarks: r.remarks })
+const personalFileFromDb = (r: DbRow): PersonalFileRecord => ({ fileNo: r.file_no as string, employeeId: r.employee_id as string, fullName: r.full_name as string, department: r.department as string, designation: (r.designation ?? '') as string, staffStatus: r.staff_status as StaffStatus, coc: r.coc as boolean, jd: r.jd as boolean, ea: r.ea as boolean, eaExpiryDate: r.ea_expiry_date as string, remarks: r.remarks as string })
+const personalFileToDb   = (r: PersonalFileRecord) => ({ file_no: r.fileNo, employee_id: r.employeeId, full_name: r.fullName, department: r.department, designation: r.designation ?? '', staff_status: r.staffStatus, coc: r.coc, jd: r.jd, ea: r.ea, ea_expiry_date: r.eaExpiryDate, remarks: r.remarks })
 
 const inductionFromDb = (r: DbRow): InductionRecord => ({ id: r.id as string, refNo: r.ref_no as string, inductionDate: r.induction_date as string, conductedBy: r.conducted_by as string, conductedByEmpId: r.conducted_by_emp_id as string, participants: (r.participants ?? []) as InductionParticipant[], inductionContent: r.induction_content as string, status: r.status as InductionRecord['status'], remarks: r.remarks as string })
 const inductionToDb   = (r: InductionRecord) => ({ id: r.id, ref_no: r.refNo, induction_date: r.inductionDate, conducted_by: r.conductedBy, conducted_by_emp_id: r.conductedByEmpId ?? '', participants: r.participants ?? [], induction_content: r.inductionContent, status: r.status, remarks: r.remarks })
@@ -612,8 +614,8 @@ const meetingToDb   = (r: MeetingRecord) => ({ id: r.id, ref_number: r.refNumber
 const bankAccFromDb = (r: DbRow): BankAccountRecord => ({ id: r.id as string, employeeId: r.employee_id as string, fullName: r.full_name as string, department: r.department as string, nationality: r.nationality as string, bank: r.bank as BankName, accountType: r.account_type as AccountType, scheduledDate: r.scheduled_date as string, status: r.status as AccountStatus, remarks: r.remarks as string })
 const bankAccToDb   = (r: BankAccountRecord) => ({ id: r.id, employee_id: r.employeeId, full_name: r.fullName, department: r.department, nationality: r.nationality, bank: r.bank, account_type: r.accountType, scheduled_date: r.scheduledDate, status: r.status, remarks: r.remarks ?? '' })
 
-const staffReqFromDb = (r: DbRow): StaffRequestRecord => ({ id: r.id as string, employeeId: r.employee_id as string, employeeName: r.employee_name as string, section: r.section as string, department: r.department as string, requestType: r.request_type as StaffRequestRecord['requestType'], priority: r.priority as RequestPriority, description: r.description as string, submittedDate: r.submitted_date as string, completedDate: r.completed_date as string, status: r.status as StaffRequestRecord['status'], actionTaken: r.action_taken as string })
-const staffReqToDb   = (r: StaffRequestRecord) => ({ id: r.id, employee_id: r.employeeId, employee_name: r.employeeName, section: r.section, department: r.department, request_type: r.requestType, priority: r.priority, description: r.description, submitted_date: r.submittedDate, completed_date: r.completedDate, status: r.status, action_taken: r.actionTaken })
+const staffReqFromDb = (r: DbRow): StaffRequestRecord => ({ id: r.id as string, employeeId: r.employee_id as string, employeeName: r.employee_name as string, section: r.section as string, department: r.department as string, requestType: r.request_type as StaffRequestRecord['requestType'], priority: r.priority as RequestPriority, description: r.description as string, submittedDate: r.submitted_date as string, completedDate: r.completed_date as string, status: (r.status === 'Resolved' || r.status === 'In Progress' ? 'Completed' : r.status) as StaffRequestRecord['status'], actionTaken: r.action_taken as string, locked: (r.locked ?? (r.status === 'Completed' || r.status === 'Rejected' || r.status === 'Resolved')) as boolean })
+const staffReqToDb   = (r: StaffRequestRecord) => ({ id: r.id, employee_id: r.employeeId, employee_name: r.employeeName, section: r.section, department: r.department, request_type: r.requestType, priority: r.priority, description: r.description, submitted_date: r.submittedDate, completed_date: r.completedDate, status: r.status, action_taken: r.actionTaken, locked: r.locked ?? false })
 
 const visitFromDb = (r: DbRow): VisitRecord => ({ id: r.id as string, employeeId: r.employee_id as string, employeeName: r.employee_name as string, department: r.department as string, nicPassportNo: r.nic_passport_no as string, nationality: r.nationality as string, visitType: r.visit_type as VisitRecord['visitType'], visitDate: r.visit_date as string, status: r.status as VisitRecord['status'], remarks: r.remarks as string })
 const visitToDb   = (r: VisitRecord) => ({ id: r.id, employee_id: r.employeeId, employee_name: r.employeeName, department: r.department, nic_passport_no: r.nicPassportNo, nationality: r.nationality, visit_type: r.visitType, visit_date: r.visitDate, status: r.status, remarks: r.remarks })
@@ -1060,12 +1062,12 @@ const initialTrainingRecords: TrainingRecord[] = [
   },
 ]
 const initialStaffRequests: StaffRequestRecord[] = [
-  { id: 'REQ-2026-001', employeeId: '53979', employeeName: 'NAVEEN SEKAR', section: 'STORES', department: 'THILAFUSHI INDUSTRIAL COMPLEX', requestType: 'Other', priority: 'High', description: 'Room C-14 has a broken ceiling fan and leaking roof. Requested urgent repair before monsoon season.', submittedDate: '2026-05-10', completedDate: '', status: 'In Progress', actionTaken: 'Maintenance team scheduled for 30 May' },
-  { id: 'REQ-2026-002', employeeId: '50427', employeeName: 'MD SAIFUR RAHMAN', section: 'STORES', department: 'THILAFUSHI INDUSTRIAL COMPLEX', requestType: 'Documents', priority: 'High', description: 'Work permit renewal required. Current WP expires on 27 Jun 2026. Requesting HR to initiate renewal process with Immigration.', submittedDate: '2026-05-15', completedDate: '', status: 'In Progress', actionTaken: '' },
-  { id: 'REQ-2026-003', employeeId: '58692', employeeName: 'SHANTUMON PATHIYIL CHACKO', section: 'HUMAN RESOURCES', department: 'THILAFUSHI INDUSTRIAL COMPLEX', requestType: 'IT', priority: 'Medium', description: 'Laptop screen flickering intermittently. Affects HR system data entry. Requesting replacement or repair.', submittedDate: '2026-04-22', completedDate: '2026-04-30', status: 'Resolved', actionTaken: 'New laptop issued on 30 April' },
-  { id: 'REQ-2026-004', employeeId: '57637', employeeName: 'MUNI ACHARI GUNTI KOVALA', section: 'CAFE', department: 'THILAFUSHI INDUSTRIAL COMPLEX', requestType: 'Transfer', priority: 'Medium', description: 'Requesting department transfer to Kitchen. Have 8 years of culinary experience and believe skills are better utilised there.', submittedDate: '2026-05-08', completedDate: '2026-05-20', status: 'Rejected', actionTaken: 'Transfer declined — CAFE currently understaffed' },
-  { id: 'REQ-2026-005', employeeId: '59217', employeeName: 'RAJKUMAR GUPTA', section: 'MECHANICAL', department: 'THILAFUSHI INDUSTRIAL COMPLEX', requestType: 'Leave', priority: 'Low', description: 'Requesting 2 days emergency leave on 5-6 June 2026 to handle urgent banking matters in Male.', submittedDate: '2026-05-25', completedDate: '', status: 'In Progress', actionTaken: '' },
-  { id: 'REQ-2026-006', employeeId: '61245', employeeName: 'ARUSHULLA RASHID', section: 'HUMAN RESOURCES', department: 'THILAFUSHI INDUSTRIAL COMPLEX', requestType: 'IT', priority: 'Low', description: 'Requesting ergonomic chair for HR office workstation. Current chair causing back strain during extended working hours.', submittedDate: '2026-05-02', completedDate: '2026-05-14', status: 'Resolved', actionTaken: 'Ergonomic chair procured and delivered' },
+  { id: 'REQ-2026-001', employeeId: '53979', employeeName: 'NAVEEN SEKAR', section: 'STORES', department: 'THILAFUSHI INDUSTRIAL COMPLEX', requestType: 'Other', priority: 'High', description: 'Room C-14 has a broken ceiling fan and leaking roof. Requested urgent repair before monsoon season.', submittedDate: '2026-05-10', completedDate: '', status: 'Open', actionTaken: 'Maintenance team scheduled for 30 May', locked: false },
+  { id: 'REQ-2026-002', employeeId: '50427', employeeName: 'MD SAIFUR RAHMAN', section: 'STORES', department: 'THILAFUSHI INDUSTRIAL COMPLEX', requestType: 'Documents', priority: 'High', description: 'Work permit renewal required. Current WP expires on 27 Jun 2026. Requesting HR to initiate renewal process with Immigration.', submittedDate: '2026-05-15', completedDate: '', status: 'Open', actionTaken: '', locked: false },
+  { id: 'REQ-2026-003', employeeId: '58692', employeeName: 'SHANTUMON PATHIYIL CHACKO', section: 'HUMAN RESOURCES', department: 'THILAFUSHI INDUSTRIAL COMPLEX', requestType: 'IT', priority: 'Medium', description: 'Laptop screen flickering intermittently. Affects HR system data entry. Requesting replacement or repair.', submittedDate: '2026-04-22', completedDate: '2026-04-30', status: 'Completed', actionTaken: 'New laptop issued on 30 April', locked: true },
+  { id: 'REQ-2026-004', employeeId: '57637', employeeName: 'MUNI ACHARI GUNTI KOVALA', section: 'CAFE', department: 'THILAFUSHI INDUSTRIAL COMPLEX', requestType: 'Transfer', priority: 'Medium', description: 'Requesting department transfer to Kitchen. Have 8 years of culinary experience and believe skills are better utilised there.', submittedDate: '2026-05-08', completedDate: '2026-05-20', status: 'Rejected', actionTaken: 'Transfer declined — CAFE currently understaffed', locked: true },
+  { id: 'REQ-2026-005', employeeId: '59217', employeeName: 'RAJKUMAR GUPTA', section: 'MECHANICAL', department: 'THILAFUSHI INDUSTRIAL COMPLEX', requestType: 'Leave', priority: 'Low', description: 'Requesting 2 days emergency leave on 5-6 June 2026 to handle urgent banking matters in Male.', submittedDate: '2026-05-25', completedDate: '', status: 'Open', actionTaken: '', locked: false },
+  { id: 'REQ-2026-006', employeeId: '61245', employeeName: 'ARUSHULLA RASHID', section: 'HUMAN RESOURCES', department: 'THILAFUSHI INDUSTRIAL COMPLEX', requestType: 'IT', priority: 'Low', description: 'Requesting ergonomic chair for HR office workstation. Current chair causing back strain during extended working hours.', submittedDate: '2026-05-02', completedDate: '2026-05-14', status: 'Completed', actionTaken: 'Ergonomic chair procured and delivered', locked: true },
 ]
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -2222,7 +2224,7 @@ function OffSiteModal({ records, employees, onUpdate, onClose }: {
   )
 }
 
-function EmployeesPage({ employees, onAdd, onEdit, onDelete, onExport, onImport, onTemplate, onShowTasks, medicalCases, noticeTerminations, offSiteRecords, onUpdateOffSite, isHOD = false }: {
+function EmployeesPage({ employees, onAdd, onEdit, onDelete, onExport, onImport, onTemplate, onShowTasks, medicalCases, noticeTerminations, offSiteRecords, onUpdateOffSite, isHOD = false, isAdmin = false }: {
   employees: Employee[]
   onAdd: () => void
   onEdit: (employee: Employee) => void
@@ -2236,6 +2238,7 @@ function EmployeesPage({ employees, onAdd, onEdit, onDelete, onExport, onImport,
   offSiteRecords: OffSiteRecord[]
   onUpdateOffSite: (fn: (prev: OffSiteRecord[]) => OffSiteRecord[]) => void
   isHOD?: boolean
+  isAdmin?: boolean
 }) {
   const [query, setQuery] = useState('')
   const [showOffSite, setShowOffSite] = useState(false)
@@ -2311,7 +2314,7 @@ function EmployeesPage({ employees, onAdd, onEdit, onDelete, onExport, onImport,
       <PageHeader eyebrow="Employee register" title="Employees" subtitle="TIC Employee Details in one place with site status" />
       <section className="employee-workspace">
         <div className="table-actions">
-          {!isHOD && (
+          {isAdmin && (
             <div className="table-actions-left">
               <button className="primary-button vwh" onClick={onTemplate} type="button">Template</button>
               <button className="primary-button vwh" onClick={onImport} type="button">Import</button>
@@ -4660,7 +4663,7 @@ function InductionModal({ employees, record, onClose, onSave }: {
 }) {
   const isNew = record.id.startsWith('IND-new')
 
-  const [refNo] = useState(record.refNo)
+  const [refNo, setRefNo] = useState(record.refNo)
   const [inductionDate, setInductionDate] = useState(
     record.inductionDate || new Date().toISOString().slice(0, 10)
   )
@@ -4729,7 +4732,7 @@ function InductionModal({ employees, record, onClose, onSave }: {
         <div className="ind-form-grid">
           <label>
             <span>Sequence No</span>
-            <input value={refNo} readOnly className="ind-ref-readonly" title="Auto-generated — cannot be changed" />
+            <input value={refNo} onChange={(e) => setRefNo(e.target.value.replace(/\D/g,'').slice(0,4))} placeholder="e.g. 001" title="Sequence number — edit if needed" />
           </label>
           <label>
             <span>Induction Date</span>
@@ -4737,7 +4740,7 @@ function InductionModal({ employees, record, onClose, onSave }: {
           </label>
           <label>
             <span>Full Reference</span>
-            <input className="ind-ref-readonly" disabled value={derivedFullRef} />
+            <input className="ind-ref-readonly" readOnly value={derivedFullRef} style={{ color: 'var(--muted, #6b7280)', fontStyle: 'italic' }} />
           </label>
           <label>
             <span>Conducted By (HR Staff)</span>
@@ -5915,6 +5918,7 @@ function PersonalFilesSection({ records, onUpdate, employees = [], isAdmin = fal
       employeeId: emp.employeeId,
       fullName: emp.fullName,
       department: emp.department,
+      designation: emp.designation || '',
       staffStatus: 'Active',
       coc: false, jd: false, ea: false, eaExpiryDate: '', remarks: '',
     }
@@ -5933,8 +5937,8 @@ function PersonalFilesSection({ records, onUpdate, employees = [], isAdmin = fal
   }
 
   const downloadPfTemplate = () => downloadCsv('personal-files-template.csv', [
-    ['File No', 'Emp ID', 'Full Name', 'Section', 'Status', 'COC', 'JD', 'EA', 'EA Expiry Date', 'Remarks'],
-    ['0001', '12345', 'EXAMPLE EMPLOYEE', 'ADMINISTRATION', 'Active', 'TRUE', 'FALSE', 'FALSE', '', ''],
+    ['PF NO', 'EMP ID', 'NAME', 'SECTION', 'DESIGNATION', 'PP NO', 'WP NO', 'DOJ', 'STATUS', 'COC', 'JD', 'EA'],
+    ['0001', '12345', 'EXAMPLE EMPLOYEE', 'ADMINISTRATION', 'HR OFFICER', 'A1234567', 'WP123456', '2020-01-01', 'Active', 'TRUE', 'FALSE', 'FALSE'],
   ])
 
   const importPfCsv = () => {
@@ -5948,8 +5952,9 @@ function PersonalFilesSection({ records, onUpdate, employees = [], isAdmin = fal
       const hdr = rows[0].map(h => h.toLowerCase().replace(/[^a-z0-9]/g, ''))
       const ci = (terms: string[]) => terms.map(t => hdr.indexOf(t)).find(i => i >= 0) ?? -1
       const g = (row: string[], idx: number) => idx >= 0 ? (row[idx] ?? '').trim() : ''
-      const iFileNo = ci(['fileno','file']), iEmpId = ci(['empid','employeeid']),
-            iName   = ci(['fullname','name']), iDept = ci(['section','department']),
+      const iFileNo = ci(['pfno','fileno','file']), iEmpId = ci(['empid','employeeid']),
+            iName   = ci(['name','fullname']), iDept = ci(['section','department']),
+            iDesig  = ci(['designation']),
             iStatus = ci(['status','staffstatus']), iCoc = ci(['coc']),
             iJd     = ci(['jd']),               iEa   = ci(['ea']),
             iEaExp  = ci(['eaexpirydate','eaexpiry']), iRemarks = ci(['remarks'])
@@ -5960,6 +5965,7 @@ function PersonalFilesSection({ records, onUpdate, employees = [], isAdmin = fal
           employeeId:    g(r, iEmpId),
           fullName:      g(r, iName),
           department:    g(r, iDept),
+          designation:   g(r, iDesig) || '',   // optional — empty OK for legacy data
           staffStatus:   (g(r, iStatus) || 'Active') as StaffStatus,
           coc:           g(r, iCoc).toLowerCase() === 'true' || g(r, iCoc) === '1',
           jd:            g(r, iJd).toLowerCase()  === 'true' || g(r, iJd)  === '1',
@@ -5979,6 +5985,14 @@ function PersonalFilesSection({ records, onUpdate, employees = [], isAdmin = fal
     }
     input.click()
   }
+
+  // Smart section list: only show sections relevant to the current staff filter
+  const smartSections = useMemo(() => {
+    const subset = staffFilter === 'All' ? records
+      : staffFilter === 'Active' ? records.filter(r => r.staffStatus === 'Active')
+      : records.filter(r => r.staffStatus !== 'Active')
+    return Array.from(new Set(subset.map(r => r.department).filter(Boolean))).sort()
+  }, [records, staffFilter])
 
   const filtered = useMemo(() => records.filter((r) => {
     const matchSearch = [r.fileNo, r.employeeId, r.fullName, r.department].join(' ').toLowerCase().includes(search.trim().toLowerCase())
@@ -6022,12 +6036,12 @@ function PersonalFilesSection({ records, onUpdate, employees = [], isAdmin = fal
             <span>Section</span>
             <select value={deptFilter} onChange={(e) => { setDeptFilter(e.target.value); setPage(1) }}>
               <option>All Sections</option>
-              {departmentsList.map((d) => <option key={d}>{d}</option>)}
+              {smartSections.map((d) => <option key={d}>{d}</option>)}
             </select>
           </label>
           <label>
             <span>Status</span>
-            <select value={staffFilter} onChange={(e) => { setStaffFilter(e.target.value as typeof staffFilter); setPage(1) }}>
+            <select value={staffFilter} onChange={(e) => { setStaffFilter(e.target.value as typeof staffFilter); setDeptFilter('All Sections'); setPage(1) }}>
               <option value="Active">Active</option>
               <option value="Inactive">Inactive</option>
               <option value="All">All</option>
@@ -6397,6 +6411,7 @@ function BankAccountModal({ record, employees, onClose, onSave }: {
 }) {
   const isNew = record.id.startsWith('BNK-new')
   const [employeeId, setEmployeeId] = useState(record.employeeId)
+  const [empSearch, setEmpSearch] = useState('')
   const [bank, setBank] = useState<BankName>(record.bank)
   const [accountType, setAccountType] = useState<AccountType>(record.accountType)
   const [scheduledDate, setScheduledDate] = useState(record.scheduledDate)
@@ -6404,22 +6419,34 @@ function BankAccountModal({ record, employees, onClose, onSave }: {
   const [remarks, setRemarks] = useState(record.remarks ?? '')
 
   // Expatriates only (exclude all Maldivian nationals), sorted by name
-  const nonLocals = employees
+  const nonLocals = useMemo(() => employees
     .filter((e) => !['MALDIVES','MALDIVIAN'].includes((e.nationality || '').toUpperCase()))
-    .sort((a, b) => a.fullName.localeCompare(b.fullName))
-  const selected = isNew
-    ? (nonLocals.find((e) => e.employeeId === employeeId) ?? nonLocals[0])
-    : employees.find((e) => e.employeeId === record.employeeId)
+    .sort((a, b) => a.fullName.localeCompare(b.fullName)), [employees])
+
+  const filteredNonLocals = useMemo(() => {
+    const q = empSearch.trim().toLowerCase()
+    if (!q) return nonLocals
+    return nonLocals.filter(e =>
+      e.fullName.toLowerCase().includes(q) ||
+      e.employeeId.toLowerCase().includes(q) ||
+      e.department.toLowerCase().includes(q)
+    )
+  }, [nonLocals, empSearch])
+
+  const selected = nonLocals.find((e) => e.employeeId === employeeId)
+    ?? (isNew ? nonLocals[0] : undefined)
+  const displayEmp = isNew ? selected : employees.find((e) => e.employeeId === record.employeeId)
 
   const save = (e: FormEvent) => {
     e.preventDefault()
+    const emp = isNew ? selected : displayEmp
     onSave({
       ...record,
-      id: isNew && selected ? `BNK-${selected.employeeId}` : record.id,
-      employeeId: selected?.employeeId ?? record.employeeId,
-      fullName: selected?.fullName ?? record.fullName,
-      department: selected?.department ?? record.department,
-      nationality: selected?.nationality ?? record.nationality,
+      id: isNew && emp ? `BNK-${emp.employeeId}` : record.id,
+      employeeId: emp?.employeeId ?? record.employeeId,
+      fullName: emp?.fullName ?? record.fullName,
+      department: emp?.department ?? record.department,
+      nationality: emp?.nationality ?? record.nationality,
       bank,
       accountType,
       scheduledDate,
@@ -6427,8 +6454,6 @@ function BankAccountModal({ record, employees, onClose, onSave }: {
       remarks,
     })
   }
-
-  const displayEmp = isNew ? selected : employees.find((e) => e.employeeId === record.employeeId)
 
   return (
     <div className="modal-backdrop" role="presentation">
@@ -6446,35 +6471,54 @@ function BankAccountModal({ record, employees, onClose, onSave }: {
             <div className="trn-modal-field-block">
               <span className="trn-modal-field-lbl">Employee</span>
               {isNew ? (
-                <select
-                  value={employeeId}
-                  onChange={(e) => setEmployeeId(e.target.value)}
-                  style={{ width: '100%', padding: '7px 10px', borderRadius: '7px', border: '1.5px solid rgba(124,58,237,0.2)', fontSize: '0.85rem', background: '#fff' }}
-                >
-                  <option value="">— Select employee —</option>
-                  {nonLocals.map((emp) => (
-                    <option key={emp.employeeId} value={emp.employeeId}>
-                      {emp.employeeId} · {emp.fullName.length > 22 ? emp.fullName.slice(0,22)+'…' : emp.fullName} · {emp.department}
-                    </option>
-                  ))}
-                </select>
+                <div>
+                  <input
+                    type="text"
+                    value={empSearch}
+                    onChange={e => { setEmpSearch(e.target.value); setEmployeeId('') }}
+                    placeholder="Search by name, ID or section…"
+                    autoComplete="off"
+                    style={{ width: '100%', padding: '7px 10px', borderRadius: '7px', border: '1.5px solid rgba(124,58,237,0.2)', fontSize: '0.85rem', marginBottom: 6 }}
+                  />
+                  <div style={{ maxHeight: 180, overflowY: 'auto', border: '1px solid rgba(124,58,237,0.15)', borderRadius: 7, background: 'var(--surface, #fff)' }}>
+                    {filteredNonLocals.length === 0
+                      ? <p style={{ padding: '10px 12px', fontSize: '0.8rem', color: '#94a3b8' }}>No employees match.</p>
+                      : filteredNonLocals.map(emp => (
+                        <button
+                          key={emp.employeeId}
+                          type="button"
+                          onClick={() => { setEmployeeId(emp.employeeId); setEmpSearch(`${emp.employeeId} · ${emp.fullName}`) }}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px',
+                            textAlign: 'left', border: 'none', background: employeeId === emp.employeeId ? 'rgba(124,58,237,0.14)' : 'transparent',
+                            cursor: 'pointer', borderBottom: '1px solid rgba(128,128,128,0.10)',
+                          }}
+                        >
+                          <span style={{ fontSize: '0.76rem', fontWeight: 700, color: '#7c3aed', minWidth: 52 }}>{emp.employeeId}</span>
+                          <span style={{ fontSize: '0.83rem', fontWeight: 600, flex: 1, color: 'var(--ink)' }}>{emp.fullName}</span>
+                          <span style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>{emp.department}</span>
+                        </button>
+                      ))
+                    }
+                  </div>
+                </div>
               ) : (
-                <p style={{ margin: 0, fontWeight: 700, fontSize: '0.92rem', color: '#1e1b4b' }}>{record.fullName}</p>
+                <p style={{ margin: 0, fontWeight: 700, fontSize: '0.92rem' }}>{record.fullName}</p>
               )}
             </div>
             {displayEmp && (
               <div className="trn-modal-detail-row" style={{ gridTemplateColumns: '1fr 1fr 1fr', marginTop: '8px' }}>
                 <div>
                   <span className="trn-modal-field-lbl">Emp ID</span>
-                  <p style={{ margin: 0, fontSize: '0.85rem', color: '#374151' }}>{displayEmp.employeeId}</p>
+                  <p style={{ margin: 0, fontSize: '0.85rem' }}>{displayEmp.employeeId}</p>
                 </div>
                 <div>
                   <span className="trn-modal-field-lbl">Section</span>
-                  <p style={{ margin: 0, fontSize: '0.85rem', color: '#374151' }}>{displayEmp.department}</p>
+                  <p style={{ margin: 0, fontSize: '0.85rem' }}>{displayEmp.department}</p>
                 </div>
                 <div>
                   <span className="trn-modal-field-lbl">Nationality</span>
-                  <p style={{ margin: 0, fontSize: '0.85rem', color: '#374151' }}>{displayEmp.nationality}</p>
+                  <p style={{ margin: 0, fontSize: '0.85rem' }}>{displayEmp.nationality}</p>
                 </div>
               </div>
             )}
@@ -6867,10 +6911,21 @@ function TerminationFormModal({
               {/* Employee search */}
               <div style={{ position: 'relative', marginBottom: 10 }}>
                 <label><span>Search Staff</span>
-                  <input className="lf-search-input" placeholder="Employee ID or name…"
-                    type="text" value={searchQuery} autoComplete="off"
-                    onChange={(e) => handleSearchChange(e.target.value)}
-                    onFocus={() => !form.employeeId && setShowResults(true)} />
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <input className="lf-search-input" placeholder="Employee ID or name…"
+                      type="text" value={searchQuery} autoComplete="off"
+                      style={{ paddingRight: searchQuery ? 28 : undefined }}
+                      onChange={(e) => handleSearchChange(e.target.value)}
+                      onFocus={() => !form.employeeId && setShowResults(true)} />
+                    {searchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => { setSearchQuery(''); setForm(cur => ({ ...cur, employeeId: '', name: '', department: '', designation: '', nationality: '', passportNo: '', wpNo: '', dateOfJoin: '' })); setShowResults(false) }}
+                        style={{ position: 'absolute', right: 6, background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', color: '#9ca3af', lineHeight: 1, padding: '2px 4px' }}
+                        title="Clear search"
+                      >✕</button>
+                    )}
+                  </div>
                 </label>
                 {showResults && searchResults.length > 0 && (
                   <ul className="lf-search-results" style={{ top: '100%', zIndex: 100 }}>
@@ -6884,14 +6939,6 @@ function TerminationFormModal({
                   </ul>
                 )}
               </div>
-              {form.employeeId && (
-                <div className="os-emp-pill" style={{ marginBottom: 10 }}>
-                  <div>
-                    <strong>{form.name}</strong>
-                    <span style={{ display: 'block', fontSize: '0.72rem', color: '#3b82f6' }}>{form.employeeId} · {form.department}</span>
-                  </div>
-                </div>
-              )}
               {/* Readonly fields — same form-grid pattern as rest of app */}
               <div className="form-grid">
                 <label><span>Designation</span><input readOnly value={form.designation} placeholder="—" className="lf-readonly" /></label>
@@ -7847,7 +7894,7 @@ function ExitInterviewAnalyticsModal({ records, onClose }: { records: ExitInterv
         </div>
 
         {/* ── Body — single scrollable area ── */}
-        <div style={{ flex:1, overflowY:'auto', padding:'16px 20px 20px' }}>
+        <div className="ei-analytics-body" style={{ flex:1, overflowY:'auto', padding:'16px 20px 20px' }}>
           {total === 0
             ? <div style={{ textAlign:'center', padding:'40px 0', color:'#94a3b8' }}>No exit interview data to analyse.</div>
             : (
@@ -7863,9 +7910,9 @@ function ExitInterviewAnalyticsModal({ records, onClose }: { records: ExitInterv
                         { label:'Skipped',   n:skipped.length,   color:'#b45309', bg:'#fffbeb', border:'#fde68a' },
                         { label:'Rehire Eligible', n:rehireCount, color:'#0369a1', bg:'#f0f9ff', border:'#bae6fd' },
                       ].map(k => (
-                        <div key={k.label} style={{ background:k.bg, border:`1.5px solid ${k.border}`, borderRadius:10, padding:'12px 14px', textAlign:'center' }}>
-                          <div style={{ fontSize:'1.6rem', fontWeight:900, color:k.color, lineHeight:1 }}>{k.n}</div>
-                          <div style={{ fontSize:'0.65rem', fontWeight:700, color:'#64748b', textTransform:'uppercase', letterSpacing:'0.07em', marginTop:4 }}>{k.label}</div>
+                        <div key={k.label} className="ei-kpi-card" style={{ background:k.bg, border:`1.5px solid ${k.border}`, borderRadius:10, padding:'12px 14px', textAlign:'center' }}>
+                          <div className="ei-kpi-num" style={{ fontSize:'1.6rem', fontWeight:900, color:k.color, lineHeight:1 }}>{k.n}</div>
+                          <div className="ei-kpi-lbl" style={{ fontSize:'0.65rem', fontWeight:700, color:'#64748b', textTransform:'uppercase', letterSpacing:'0.07em', marginTop:4 }}>{k.label}</div>
                         </div>
                       ))}
                     </div>
@@ -7874,12 +7921,12 @@ function ExitInterviewAnalyticsModal({ records, onClose }: { records: ExitInterv
 
                     {/* Reasons grid */}
                     <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:14 }}>
-                      <div style={{ background:'#fff', border:'1px solid #e2e8f0', borderRadius:10, padding:'14px 16px' }}>
-                        <div style={{ fontSize:'0.72rem', fontWeight:800, color:'#ef4444', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:10 }}>Involuntary Exits</div>
+                      <div className="ei-panel" style={{ background:'#fff', border:'1px solid #e2e8f0', borderRadius:10, padding:'14px 16px' }}>
+                        <div className="ei-panel-title" style={{ fontSize:'0.72rem', fontWeight:800, color:'#ef4444', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:10 }}>Involuntary Exits</div>
                         <ReasonBars src={records} type="inv" />
                       </div>
-                      <div style={{ background:'#fff', border:'1px solid #e2e8f0', borderRadius:10, padding:'14px 16px' }}>
-                        <div style={{ fontSize:'0.72rem', fontWeight:800, color:'#6366f1', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:10 }}>Voluntary Exits</div>
+                      <div className="ei-panel" style={{ background:'#fff', border:'1px solid #e2e8f0', borderRadius:10, padding:'14px 16px' }}>
+                        <div className="ei-panel-title" style={{ fontSize:'0.72rem', fontWeight:800, color:'#6366f1', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:10 }}>Voluntary Exits</div>
                         <ReasonBars src={records} type="vol" />
                       </div>
                     </div>
@@ -7891,16 +7938,16 @@ function ExitInterviewAnalyticsModal({ records, onClose }: { records: ExitInterv
                       const sorted = Object.entries(deptMap).sort((a,b) => b[1]-a[1])
                       const max = sorted[0]?.[1] ?? 1
                       return sorted.length > 0 ? (
-                        <div style={{ background:'#fff', border:'1px solid #e2e8f0', borderRadius:10, padding:'14px 16px', marginBottom:14 }}>
-                          <div style={{ fontSize:'0.72rem', fontWeight:800, color:'#475569', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:10 }}>Exits by Department</div>
+                        <div className="ei-panel" style={{ background:'#fff', border:'1px solid #e2e8f0', borderRadius:10, padding:'14px 16px', marginBottom:14 }}>
+                          <div className="ei-panel-title" style={{ fontSize:'0.72rem', fontWeight:800, color:'#475569', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:10 }}>Exits by Department</div>
                           <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                             {sorted.map(([dept, count]) => (
                               <div key={dept} style={{ display:'grid', gridTemplateColumns:'1fr 80px 28px', gap:6, alignItems:'center' }}>
-                                <span style={{ fontSize:'0.75rem', color:'#475569', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{dept}</span>
+                                <span style={{ fontSize:'0.75rem', color:'var(--muted)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{dept}</span>
                                 <div style={{ height:8, borderRadius:4, background:'#f1f5f9', overflow:'hidden' }}>
                                   <div style={{ height:'100%', width:`${(count/max)*100}%`, background:'#6366f1', borderRadius:4 }} />
                                 </div>
-                                <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#475569', textAlign:'right' }}>{count}</span>
+                                <span style={{ fontSize:'0.72rem', fontWeight:700, color:'var(--muted)', textAlign:'right' }}>{count}</span>
                               </div>
                             ))}
                           </div>
@@ -7909,16 +7956,16 @@ function ExitInterviewAnalyticsModal({ records, onClose }: { records: ExitInterv
                     })()}
 
                     {/* Rehire eligibility */}
-                    <div style={{ background:'#fff', border:'1px solid #e2e8f0', borderRadius:10, padding:'14px 16px' }}>
-                      <div style={{ fontSize:'0.72rem', fontWeight:800, color:'#475569', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:10 }}>Rehire Eligibility</div>
+                    <div className="ei-panel" style={{ background:'#fff', border:'1px solid #e2e8f0', borderRadius:10, padding:'14px 16px' }}>
+                      <div className="ei-panel-title" style={{ fontSize:'0.72rem', fontWeight:800, color:'#475569', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:10 }}>Rehire Eligibility</div>
                       <div style={{ display:'flex', gap:10 }}>
-                        <div style={{ flex:1, background:'#f0fdf4', border:'1.5px solid #86efac', borderRadius:8, padding:'10px', textAlign:'center' }}>
-                          <div style={{ fontSize:'1.3rem', fontWeight:900, color:'#15803d' }}>{rehireCount}</div>
-                          <div style={{ fontSize:'0.65rem', color:'#15803d', fontWeight:700, textTransform:'uppercase' }}>Eligible</div>
+                        <div className="ei-kpi-card" style={{ flex:1, background:'#f0fdf4', border:'1.5px solid #86efac', borderRadius:8, padding:'10px', textAlign:'center' }}>
+                          <div className="ei-kpi-num" style={{ fontSize:'1.3rem', fontWeight:900, color:'#15803d' }}>{rehireCount}</div>
+                          <div className="ei-kpi-lbl" style={{ fontSize:'0.65rem', color:'#15803d', fontWeight:700, textTransform:'uppercase' }}>Eligible</div>
                         </div>
-                        <div style={{ flex:1, background:'#fef2f2', border:'1.5px solid #fca5a5', borderRadius:8, padding:'10px', textAlign:'center' }}>
-                          <div style={{ fontSize:'1.3rem', fontWeight:900, color:'#dc2626' }}>{total - rehireCount}</div>
-                          <div style={{ fontSize:'0.65rem', color:'#dc2626', fontWeight:700, textTransform:'uppercase' }}>Not Eligible</div>
+                        <div className="ei-kpi-card" style={{ flex:1, background:'#fef2f2', border:'1.5px solid #fca5a5', borderRadius:8, padding:'10px', textAlign:'center' }}>
+                          <div className="ei-kpi-num" style={{ fontSize:'1.3rem', fontWeight:900, color:'#dc2626' }}>{total - rehireCount}</div>
+                          <div className="ei-kpi-lbl" style={{ fontSize:'0.65rem', color:'#dc2626', fontWeight:700, textTransform:'uppercase' }}>Not Eligible</div>
                         </div>
                         <div style={{ flex:2, background:'#f8fafc', borderRadius:8, padding:'10px', overflow:'hidden' }}>
                           <div style={{ height:18, borderRadius:9, overflow:'hidden', background:'#fca5a5', marginBottom:6 }}>
@@ -7945,7 +7992,7 @@ function ExitInterviewAnalyticsModal({ records, onClose }: { records: ExitInterv
                       {filteredPersonRecords.length === 0
                         ? <p style={{ textAlign:'center', color:'#94a3b8', padding:'24px 0' }}>No records match the search.</p>
                         : filteredPersonRecords.map(r => (
-                          <div key={r.id} onClick={() => setSelectedRecord(r)}
+                          <div key={r.id} className="ei-panel ei-person-row" onClick={() => setSelectedRecord(r)}
                             style={{ background:'#fff', border:'1.5px solid #e2e8f0', borderRadius:10, padding:'11px 14px',
                               cursor:'pointer', display:'flex', alignItems:'center', gap:12,
                               transition:'border-color 0.15s, box-shadow 0.15s' }}
@@ -7955,8 +8002,8 @@ function ExitInterviewAnalyticsModal({ records, onClose }: { records: ExitInterv
                               {(r.name[0] ?? '').toUpperCase()}
                             </div>
                             <div style={{ flex:1, minWidth:0 }}>
-                              <div style={{ fontWeight:700, fontSize:'0.85rem', color:'#1e1b4b', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{r.name}</div>
-                              <div style={{ fontSize:'0.72rem', color:'#64748b' }}>{r.employeeId} · {r.department} · {r.designation}</div>
+                              <div style={{ fontWeight:700, fontSize:'0.85rem', color:'var(--ink)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{r.name}</div>
+                              <div style={{ fontSize:'0.72rem', color:'var(--muted)' }}>{r.employeeId} · {r.department} · {r.designation}</div>
                             </div>
                             <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:4, flexShrink:0 }}>
                               <span style={{ fontSize:'0.68rem', fontWeight:700, padding:'2px 8px', borderRadius:5,
@@ -7998,39 +8045,39 @@ function ExitInterviewAnalyticsModal({ records, onClose }: { records: ExitInterv
                       <>
                         <SatisfactionBars src={[selectedRecord]} />
                         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:14 }}>
-                          <div style={{ background:'#fff', border:'1px solid #e2e8f0', borderRadius:10, padding:'14px 16px' }}>
-                            <div style={{ fontSize:'0.72rem', fontWeight:800, color:'#ef4444', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:10 }}>Involuntary Reasons</div>
+                          <div className="ei-panel" style={{ background:'#fff', border:'1px solid #e2e8f0', borderRadius:10, padding:'14px 16px' }}>
+                            <div className="ei-panel-title" style={{ fontSize:'0.72rem', fontWeight:800, color:'#ef4444', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:10 }}>Involuntary Reasons</div>
                             <ReasonBars src={[selectedRecord]} type="inv" />
-                            {selectedRecord.invOther && <div style={{ fontSize:'0.78rem', color:'#64748b', marginTop:6, fontStyle:'italic' }}>Other: {selectedRecord.invOther}</div>}
+                            {selectedRecord.invOther && <div style={{ fontSize:'0.78rem', color:'var(--muted)', marginTop:6, fontStyle:'italic' }}>Other: {selectedRecord.invOther}</div>}
                           </div>
-                          <div style={{ background:'#fff', border:'1px solid #e2e8f0', borderRadius:10, padding:'14px 16px' }}>
-                            <div style={{ fontSize:'0.72rem', fontWeight:800, color:'#6366f1', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:10 }}>Voluntary Reasons</div>
+                          <div className="ei-panel" style={{ background:'#fff', border:'1px solid #e2e8f0', borderRadius:10, padding:'14px 16px' }}>
+                            <div className="ei-panel-title" style={{ fontSize:'0.72rem', fontWeight:800, color:'#6366f1', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:10 }}>Voluntary Reasons</div>
                             <ReasonBars src={[selectedRecord]} type="vol" />
-                            {selectedRecord.volOther && <div style={{ fontSize:'0.78rem', color:'#64748b', marginTop:6, fontStyle:'italic' }}>Other: {selectedRecord.volOther}</div>}
+                            {selectedRecord.volOther && <div style={{ fontSize:'0.78rem', color:'var(--muted)', marginTop:6, fontStyle:'italic' }}>Other: {selectedRecord.volOther}</div>}
                           </div>
                         </div>
-                        <div style={{ background:'#fff', border:'1px solid #e2e8f0', borderRadius:10, padding:'14px 16px', marginBottom:14 }}>
-                          <div style={{ fontSize:'0.72rem', fontWeight:800, color:'#475569', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:10 }}>Interview Responses</div>
+                        <div className="ei-panel" style={{ background:'#fff', border:'1px solid #e2e8f0', borderRadius:10, padding:'14px 16px', marginBottom:14 }}>
+                          <div className="ei-panel-title" style={{ fontSize:'0.72rem', fontWeight:800, color:'#475569', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:10 }}>Interview Responses</div>
                           {eiShortQuestions.map((q, i) => {
                             const ans = selectedRecord[`q${i+1}` as keyof ExitInterviewRecord] as string
                             return ans ? (
-                              <div key={i} style={{ marginBottom:10, borderBottom:'1px solid #f1f5f9', paddingBottom:8 }}>
+                              <div key={i} style={{ marginBottom:10, borderBottom:'1px solid rgba(0,0,0,0.06)', paddingBottom:8 }}>
                                 <div style={{ fontSize:'0.73rem', fontWeight:700, color:'#6366f1', marginBottom:2 }}>{i+1}. {q}</div>
-                                <div style={{ fontSize:'0.82rem', color:'#374151', lineHeight:1.5 }}>{ans}</div>
+                                <div style={{ fontSize:'0.82rem', color:'var(--ink)', lineHeight:1.5 }}>{ans}</div>
                               </div>
                             ) : null
                           })}
                           {selectedRecord.employeeComments && (
-                            <div style={{ marginTop:8, background:'#f8fafc', borderRadius:8, padding:'8px 12px' }}>
-                              <div style={{ fontSize:'0.72rem', fontWeight:700, color:'#64748b', marginBottom:4 }}>Employee Comments</div>
-                              <div style={{ fontSize:'0.82rem', color:'#374151' }}>{selectedRecord.employeeComments}</div>
+                            <div style={{ marginTop:8, background:'rgba(0,0,0,0.03)', borderRadius:8, padding:'8px 12px' }}>
+                              <div style={{ fontSize:'0.72rem', fontWeight:700, color:'var(--muted)', marginBottom:4 }}>Employee Comments</div>
+                              <div style={{ fontSize:'0.82rem', color:'var(--ink)' }}>{selectedRecord.employeeComments}</div>
                             </div>
                           )}
                         </div>
                         {selectedRecord.areasToImprove && (
-                          <div style={{ background:'#fff', border:'1px solid #e2e8f0', borderRadius:10, padding:'14px 16px' }}>
-                            <div style={{ fontSize:'0.72rem', fontWeight:800, color:'#475569', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:8 }}>Areas to Improve</div>
-                            <p style={{ fontSize:'0.82rem', color:'#374151', margin:0 }}>{selectedRecord.areasToImprove}</p>
+                          <div className="ei-panel" style={{ background:'#fff', border:'1px solid #e2e8f0', borderRadius:10, padding:'14px 16px' }}>
+                            <div className="ei-panel-title" style={{ fontSize:'0.72rem', fontWeight:800, color:'#475569', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:8 }}>Areas to Improve</div>
+                            <p style={{ fontSize:'0.82rem', color:'var(--ink)', margin:0 }}>{selectedRecord.areasToImprove}</p>
                           </div>
                         )}
                       </>
@@ -8549,7 +8596,7 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
 <style>
   @page { size:A4 portrait; margin:7mm 15mm 10mm 15mm; }
   *,*::before,*::after { box-sizing:border-box; }
-  body { font-family:Arial,Helvetica,sans-serif; font-size:8.5pt; color:#111; background:#e8e8e8; margin:0; padding:0; }
+  body { font-family:Arial,Helvetica,sans-serif; font-size:10.5pt; color:#111; background:#e8e8e8; margin:0; padding:0; }
   .pbar { display:flex; align-items:center; gap:14px; padding:10px 20px; background:#1e1b4b; position:sticky; top:0; z-index:10; font-family:system-ui,sans-serif; font-size:13px; }
   .pbar button { padding:7px 18px; background:#6d28d9; color:#fff; border:none; border-radius:6px; font-size:13px; font-weight:700; cursor:pointer; }
   .pbar span { color:rgba(221,214,254,0.7); font-size:12px; }
@@ -8711,6 +8758,7 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
 
     <div class="disc-subsection">
       <p class="disc-section-hd">2. Discussion of Issues, Updates and Challenges Faced by Each Section:</p>
+      <div style="border:0.8pt solid #aaa;border-radius:4pt;padding:8pt 10pt;margin-top:4pt;">
       ${MEETING_DEPTS.filter(md => !new Set(['ADMINISTRATION','HUMAN RESOURCES']).has(md.label)).map(md => {
         const update = record.deptUpdates.find(d => d.dept === md.label)
         const bullets = (update?.points ?? '').split('\n').filter(p => p.trim())
@@ -8721,6 +8769,7 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
         </div>`
       }).join('')}
       ${record.additionalSectionNotes?.trim() ? `<div style="margin-bottom:7pt;"><p class="disc-dept-hd">ADDITIONAL</p><ul class="disc-ul">${record.additionalSectionNotes.trim().split('\n').filter(l=>l.trim()).map(l=>`<li>${esc(l.trim())}</li>`).join('')}</ul></div>` : ''}
+      </div>
     </div>
 
     <div class="disc-subsection">
@@ -9933,7 +9982,7 @@ function StaffRequestModal({ record, employees, onClose, onSave }: {
 
   const save = (e: FormEvent) => {
     e.preventDefault()
-    onSave({ ...record, id: record.id, employeeId, employeeName, section, department, requestType, priority, description, submittedDate, completedDate: isNew ? '' : completedDate, status: isNew ? 'Open' : status, actionTaken: isNew ? '' : actionTaken })
+    onSave({ ...record, id: record.id, employeeId, employeeName, section, department, requestType, priority, description, submittedDate, completedDate: isNew ? '' : completedDate, status: isNew ? 'Open' : status, actionTaken: isNew ? '' : actionTaken, locked: record.locked ?? false })
   }
 
   const fieldStyle = { padding: '7px 10px', borderRadius: '7px', border: '1.5px solid rgba(124,58,237,0.2)', fontSize: '0.85rem', background: '#fff', width: '100%' }
@@ -9998,25 +10047,16 @@ function StaffRequestModal({ record, employees, onClose, onSave }: {
                 <input type="date" value={submittedDate} onChange={(e) => setSubmittedDate(e.target.value)} required style={fieldStyle} />
               </label>
             </div>
-            {!isNew && (
-              <div className="trn-modal-detail-row" style={{ gridTemplateColumns:'1fr 1fr', marginTop:'10px' }}>
-                <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
-                  <span className="trn-modal-field-lbl">Status</span>
-                  <select value={status} onChange={(e) => setStatus(e.target.value as StaffRequestRecord['status'])} style={fieldStyle}>
-                    <option>Open</option><option>In Progress</option><option>Resolved</option><option>Rejected</option>
-                  </select>
-                </label>
-                <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
-                  <span className="trn-modal-field-lbl">Closed Date</span>
-                  <input type="date" value={completedDate} onChange={(e) => setCompletedDate(e.target.value)} style={fieldStyle} />
-                </label>
-              </div>
-            )}
-            {isNew && (
-              <div style={{ marginTop:10, padding:'8px 12px', background:'#f8fafc', borderRadius:7, border:'1px solid #e2e8f0' }}>
-                <span style={{ fontSize:'0.78rem', color:'#64748b' }}>Status will be set to <strong>Open</strong> automatically on creation.</span>
-              </div>
-            )}
+            <div style={{ marginTop:10, padding:'8px 12px', background:'rgba(124,58,237,0.06)', borderRadius:7, border:'1px solid rgba(124,58,237,0.12)' }}>
+              <span style={{ fontSize:'0.78rem', color:'var(--ink,#374151)' }}>
+                {isNew
+                  ? <>Status will be set to <strong>Open</strong> automatically on creation.</>
+                  : record.locked
+                    ? <>Status: <strong>{status}</strong> — locked and cannot be changed.</>
+                    : <>Status: <strong>{status}</strong> — use the ⟳ proceed icon in the table to update.</>
+                }
+              </span>
+            </div>
           </div>
 
           {/* Description + Action Taken */}
@@ -10399,9 +10439,9 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false }: {
   const [typeFilter, setTypeFilter] = useState('All')
   const [statusFilter, setStatusFilter] = useState('All')
   const [editing, setEditing] = useState<StaffRequestRecord | null>(null)
-  const [statusMenu, setStatusMenu] = useState<string | null>(null)
-  const [resolveModal, setResolveModal] = useState<StaffRequestRecord | null>(null)
-  const [resolveAction, setResolveAction] = useState('')
+  const [updateModal, setUpdateModal] = useState<StaffRequestRecord | null>(null)
+  const [updateAction, setUpdateAction] = useState('')
+  const [updateNewStatus, setUpdateNewStatus] = useState<'Completed' | 'Rejected'>('Completed')
 
   const filtered = useMemo(() => records.filter((r) =>
     `${r.employeeId} ${r.employeeName} ${r.section} ${r.department} ${r.requestType} ${r.description}`.toLowerCase().includes(search.toLowerCase())
@@ -10417,16 +10457,26 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false }: {
   }); setEditing(null) }
   const del = (id: string) => onUpdate((prev) => prev.filter((x) => x.id !== id))
 
-  const changeStatus = (r: StaffRequestRecord, newStatus: StaffRequestRecord['status']) => {
-    if (newStatus === 'Resolved') { setResolveAction(r.actionTaken || ''); setResolveModal(r); setStatusMenu(null) }
-    else { save({ ...r, status: newStatus, completedDate: (newStatus === 'Rejected') ? new Date().toISOString().slice(0,10) : r.completedDate }); setStatusMenu(null) }
+  const openUpdate = (r: StaffRequestRecord) => {
+    setUpdateAction(r.actionTaken || '')
+    setUpdateNewStatus('Completed')
+    setUpdateModal(r)
+  }
+
+  const confirmUpdate = () => {
+    if (!updateModal) return
+    save({ ...updateModal, status: updateNewStatus, actionTaken: updateAction, completedDate: new Date().toISOString().slice(0,10), locked: true })
+    setUpdateModal(null)
   }
 
   const newReq = (): StaffRequestRecord => ({
     id: 'REQ-new', employeeId: '', employeeName: '', section: '', department: '', requestType: 'Documents',
     priority: 'Medium', description: '', submittedDate: new Date().toISOString().slice(0, 10),
-    completedDate: '', status: 'Open', actionTaken: '',
+    completedDate: '', status: 'Open', actionTaken: '', locked: false,
   })
+
+  // Status badge colours for requests
+  const reqStatusClass = (s: string) => s === 'Open' ? 'status-badge open' : s === 'Completed' ? 'status-badge approved' : 'status-badge rejected'
 
   return (
     <>
@@ -10441,7 +10491,7 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false }: {
               <option>Transfer</option><option>Meals &amp; Stay</option><option>Other</option>
             </select>
           </label>
-          <label><span>Status</span><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="All">All Statuses</option><option>Open</option><option>In Progress</option><option>Resolved</option><option>Rejected</option></select></label>
+          <label><span>Status</span><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="All">All Statuses</option><option>Open</option><option>Completed</option><option>Rejected</option></select></label>
           <button className="primary-button vwh" type="button" onClick={() => setEditing(newReq())}>+ Add Request</button>
         </div>
         <div className="employee-table-shell compact-scroll">
@@ -10479,39 +10529,24 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false }: {
                         {r.description || '—'}
                       </span>
                     </td>
-                    <td style={{textAlign:'center', position:'relative', whiteSpace:'nowrap'}}>
-                      {isHOD ? (
-                        <StatusBadge status={r.status} />
-                      ) : (
-                        <button type="button" onClick={() => setStatusMenu(statusMenu === r.id ? null : r.id)}
-                          style={{ background:'none', border:'none', cursor:'pointer', padding:0 }}>
-                          <StatusBadge status={r.status} />
-                        </button>
-                      )}
-                      {!isHOD && statusMenu === r.id && (
-                        <div style={{ position:'absolute', top:'100%', left:'50%', transform:'translateX(-50%)', zIndex:20,
-                          background:'var(--surface)', border:'1.5px solid var(--line)', borderRadius:8,
-                          boxShadow:'0 8px 24px rgba(0,0,0,0.3)', padding:'4px 0', minWidth:140 }}
-                          onMouseLeave={() => setStatusMenu(null)}>
-                          {(['Open','In Progress','Resolved','Rejected'] as const).map(s => (
-                            <button key={s} type="button" onClick={() => changeStatus(r, s)}
-                              style={{ display:'block', width:'100%', padding:'7px 14px', textAlign:'left', color:'var(--ink)', background: r.status===s?'var(--surface-soft)':'none', border:'none', cursor:'pointer', fontSize:'0.78rem', fontWeight: r.status===s?700:400 }}>
-                              {s}
-                            </button>
-                          ))}
-                        </div>
-                      )}
+                    <td style={{textAlign:'center', whiteSpace:'nowrap'}}>
+                      <span className={reqStatusClass(r.status)}>{r.status}</span>
                     </td>
                     <td style={{textAlign:'center',fontSize:'0.8rem',whiteSpace:'nowrap'}}>{r.completedDate ? formatDateDisplay(r.completedDate) : '—'}</td>
                     <td style={{maxWidth:180}}>
-                      <span title={r.actionTaken || undefined} style={{ display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden', fontSize:'0.82rem', lineHeight:'1.4', color:'var(--muted)' }}>
+                      <span title={r.actionTaken || undefined} style={{ display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden', fontSize:'0.82rem', lineHeight:'1.4', color:'var(--ink)' }}>
                         {r.actionTaken || '—'}
                       </span>
                     </td>
                     <td style={{textAlign:'center',whiteSpace:'nowrap'}}>
                       <div className="row-actions" style={{ flexWrap: 'nowrap' }}>
+                        {/* Proceed icon — only for Open, non-locked, non-HOD */}
+                        {!isHOD && !r.locked && r.status === 'Open' && (
+                          <button className="action-glyph vwh" title="Status Update" onClick={() => openUpdate(r)} type="button"
+                            style={{ fontSize:'0.9rem', color:'#7c3aed' }}>⟳</button>
+                        )}
                         <button className="action-glyph edit vwh" title="Edit" onClick={() => setEditing(r)} type="button">✎</button>
-                        <button className="action-glyph delete vwh" title="Delete" onClick={() => del(r.id)} type="button">🗑</button>
+                        {!isHOD && <button className="action-glyph delete vwh" title="Delete" onClick={() => del(r.id)} type="button">🗑</button>}
                       </div>
                     </td>
                   </tr>
@@ -10521,30 +10556,53 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false }: {
         </div>
       </section>
       {editing && <StaffRequestModal record={editing} employees={employees} onClose={() => setEditing(null)} onSave={save} />}
-      {resolveModal && (
+
+      {/* ── Status Update Modal ── */}
+      {updateModal && (
         <div className="modal-backdrop" role="presentation">
-          <section className="registration-modal" role="dialog" aria-modal="true" style={{ maxWidth:480 }}>
+          <section className="registration-modal" role="dialog" aria-modal="true" style={{ maxWidth:500 }}>
             <div className="modal-header">
-              <div><p className="eyebrow">Resolve Request</p><h2>{resolveModal.requestType} — {resolveModal.id}</h2></div>
-              <button className="icon-button" onClick={() => setResolveModal(null)} type="button">×</button>
+              <div>
+                <p className="eyebrow">Activities · Requests</p>
+                <h2>Status Update — {updateModal.id}</h2>
+                <p style={{ fontSize:'0.8rem', color:'var(--muted)' }}>{updateModal.requestType} · {updateModal.employeeName || updateModal.employeeId}</p>
+              </div>
+              <button className="icon-button" onClick={() => setUpdateModal(null)} type="button">×</button>
             </div>
-            <div style={{ padding:'16px 20px' }}>
-              <p style={{ fontSize:'0.85rem', color:'#374151', marginBottom:12 }}>
-                Confirm marking <strong>{resolveModal.employeeName || resolveModal.employeeId}</strong>'s request as <strong>Resolved</strong>?
-              </p>
-              <label style={{ display:'flex', flexDirection:'column', gap:6 }}>
-                <span style={{ fontSize:'0.78rem', fontWeight:700, color:'#374151' }}>Action Taken <span style={{ fontWeight:400, color:'#94a3b8' }}>(update if needed)</span></span>
-                <textarea value={resolveAction} onChange={e => setResolveAction(e.target.value)}
-                  placeholder="Describe what was done to resolve this request…"
-                  style={{ padding:'8px 10px', borderRadius:8, border:'1.5px solid #e2e8f0', fontSize:'0.85rem', minHeight:80, resize:'vertical', width:'100%', boxSizing:'border-box' }} />
+            <div style={{ padding:'16px 20px 4px' }}>
+              {/* Outcome selector */}
+              <div style={{ display:'flex', gap:10, marginBottom:16 }}>
+                <button
+                  type="button"
+                  onClick={() => setUpdateNewStatus('Completed')}
+                  style={{ flex:1, padding:'10px 0', borderRadius:8, border:`2px solid ${updateNewStatus==='Completed'?'#16a34a':'rgba(0,0,0,0.12)'}`,
+                    background: updateNewStatus==='Completed'?'rgba(22,163,74,0.10)':'transparent',
+                    color: updateNewStatus==='Completed'?'#16a34a':'var(--muted)', fontWeight:700, cursor:'pointer', fontSize:'0.88rem' }}
+                >✓ Complete</button>
+                <button
+                  type="button"
+                  onClick={() => setUpdateNewStatus('Rejected')}
+                  style={{ flex:1, padding:'10px 0', borderRadius:8, border:`2px solid ${updateNewStatus==='Rejected'?'#dc2626':'rgba(0,0,0,0.12)'}`,
+                    background: updateNewStatus==='Rejected'?'rgba(220,38,38,0.10)':'transparent',
+                    color: updateNewStatus==='Rejected'?'#dc2626':'var(--muted)', fontWeight:700, cursor:'pointer', fontSize:'0.88rem' }}
+                >✕ Reject</button>
+              </div>
+              <label style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:16 }}>
+                <span style={{ fontSize:'0.78rem', fontWeight:700, color:'var(--ink)' }}>Action Taken <span style={{ fontWeight:400, color:'var(--muted)' }}>(required)</span></span>
+                <textarea value={updateAction} onChange={e => setUpdateAction(e.target.value)}
+                  placeholder="Describe the action taken or reason for rejection…"
+                  rows={3}
+                  style={{ padding:'8px 10px', borderRadius:8, border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', resize:'vertical', width:'100%', boxSizing:'border-box' }} />
               </label>
+              <p style={{ fontSize:'0.76rem', color:'var(--muted)', marginBottom:12, fontStyle:'italic' }}>
+                ⚠ Once confirmed, the status cannot be changed again.
+              </p>
             </div>
             <div className="modal-actions">
-              <button className="quiet-button light" onClick={() => setResolveModal(null)} type="button">Cancel</button>
-              <button className="primary-button" type="button" onClick={() => {
-                save({ ...resolveModal, status: 'Resolved', actionTaken: resolveAction, completedDate: new Date().toISOString().slice(0,10) })
-                setResolveModal(null)
-              }}>✓ Confirm Resolved</button>
+              <button className="quiet-button light" onClick={() => setUpdateModal(null)} type="button">Cancel</button>
+              <button className="primary-button" type="button" disabled={!updateAction.trim()} onClick={confirmUpdate}>
+                Confirm {updateNewStatus === 'Completed' ? 'Completion' : 'Rejection'}
+              </button>
             </div>
           </section>
         </div>
@@ -13155,7 +13213,7 @@ function App() {
         </div>
         <main className="workspace-inner" id="top">
           {activePage === 'overview' && <OverviewPage employees={scopedEmployees} leaveRequests={scopedLeaveRequests} activeLeaves={scopedActiveLeaves} leaveHistory={scopedLeaveHistory} noticeTerminations={scopedNoticeTerminations} completedTerminations={scopedCompletedTerminations} exitInterviews={scopedExitInterviews} medicalCases={scopedMedicalCases} inventoryItems={inventoryItems} passportHandovers={scopedPassportHandovers} onNavigate={setActivePage} currentUserName={currentUserName} />}
-          {activePage === 'employees' && <EmployeesPage employees={scopedEmployees} medicalCases={scopedMedicalCases} noticeTerminations={scopedNoticeTerminations} offSiteRecords={scopedOffSiteRecords} onUpdateOffSite={(fn) => setOffSiteRecords(fn)} onAdd={() => { setEmployeeMode('add'); setEmployeeForm(emptyEmployee); setShowEmployeeForm(true) }} onEdit={openEditEmployee} onDelete={deleteEmployee} onExport={exportCsv} onImport={importCsv} onTemplate={downloadTemplate} onShowTasks={() => setShowPendingTasks(true)} isHOD={isHOD} />}
+          {activePage === 'employees' && <EmployeesPage employees={scopedEmployees} medicalCases={scopedMedicalCases} noticeTerminations={scopedNoticeTerminations} offSiteRecords={scopedOffSiteRecords} onUpdateOffSite={(fn) => setOffSiteRecords(fn)} onAdd={() => { setEmployeeMode('add'); setEmployeeForm(emptyEmployee); setShowEmployeeForm(true) }} onEdit={openEditEmployee} onDelete={deleteEmployee} onExport={exportCsv} onImport={importCsv} onTemplate={downloadTemplate} onShowTasks={() => setShowPendingTasks(true)} isHOD={isHOD} isAdmin={currentUserRole === 'Admin'} />}
           {activePage === 'leave' && <LeavePage employees={scopedEmployees} leaveRequests={scopedLeaveRequests} activeLeaves={scopedActiveLeaves} leaveHistory={scopedLeaveHistory} medicalCases={scopedMedicalCases} isHOD={isHOD} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onSetRequestStep={setLeaveRequestStep} onExtendLeave={extendActiveLeave} onEditActiveLeave={editActiveLeave} onHistoryConfirm={updateHistoryConfirmation} onUpdateMedical={(fn) => setMedicalCases(fn)} />}
           {activePage === 'operations' && <OperationsPage employees={employees} completedTerminations={completedTerminations} activeLeaves={activeLeaves} isHOD={isHOD} userRole={currentUserRole} />}
           {activePage === 'activities' && <ActivitiesPage employees={scopedEmployees} passportHandovers={scopedPassportHandovers} onUpdatePassport={(fn) => setPassportHandovers(fn)} tripRequests={tripRequests} onUpdateTripRequests={(fn) => setTripRequests(fn)} inventoryItems={inventoryItems} inventoryUsage={inventoryUsage} inventoryOrders={inventoryOrders} onUpdateInventoryItems={(fn) => setInventoryItems(fn)} onUpdateInventoryUsage={(fn) => setInventoryUsage(fn)} onUpdateInventoryOrders={(fn) => setInventoryOrders(fn)} isHOD={isHOD} isHR={isHR} isTripReqApprover={isTripReqApprover} currentUserSections={currentUserSections} currentUserName={currentUserName} />}

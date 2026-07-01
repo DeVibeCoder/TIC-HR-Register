@@ -10767,3 +10767,153 @@ html { overflow-x: hidden; }
 [data-theme="dark"] .termination-row .action-glyph { background: transparent; border: none; color: #AAB3C5; }
 [data-theme="dark"] .termination-row .action-glyph:hover { background: rgba(124,92,255,.16); color: #FFFFFF; }
 [data-theme="dark"] .termination-row .action-glyph.delete:hover { background: rgba(239,68,68,.16); color: #FCA5A5; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DARK MODE — Multi-section fixes
+   Sick-leave overlay · Medical KPI · Section tabs · Termination form ·
+   Exit Interview · Bank/Training modal · Add-Staff picker · Analytics panels
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. Sick-leave sticky column scroll-overlay fix ────────────────────────
+      The first 3 columns are position:sticky. The existing dark-mode rule gives
+      them rgba(234,179,8,.16) — semi-transparent — so scrolled content bleeds
+      through. Override with an OPAQUE amber that still reads as "on sick leave". */
+[data-theme="dark"] .employee-table tbody tr.emp-on-medical td:nth-child(-n+3) {
+  background: #2A2510 !important;
+}
+[data-theme="dark"] .employee-table tbody tr.emp-on-medical:hover td:nth-child(-n+3) {
+  background: #34300F !important;
+}
+
+/* ── 2. Medical leave — KPI chips, analytics button ────────────────────────
+      .mc-kpi-chip has background:#fff + border:#e8eaf0 (invisible on dark).   */
+[data-theme="dark"] .mc-kpi-chip {
+  background: rgba(30,34,49,.92) !important;
+  border-color: rgba(255,255,255,.12) !important;
+}
+[data-theme="dark"] .mc-kpi-lbl { color: #AAB3C5; }
+[data-theme="dark"] .mc-analytics-btn {
+  background: rgba(124,92,255,.12);
+  border-color: rgba(124,92,255,.30);
+  color: #DDD3FF;
+}
+[data-theme="dark"] .mc-analytics-btn:hover {
+  background: rgba(124,92,255,.22);
+  border-color: rgba(124,92,255,.46);
+}
+
+/* ── 3. Medical analytics modal — panels & chart elements ──────────────────
+      .mc-an-panel has background:#f8fafc (very light). Fix panels + labels.  */
+[data-theme="dark"] .mc-an-panel {
+  background: rgba(23,26,35,.90) !important;
+  border-color: rgba(255,255,255,.09) !important;
+}
+[data-theme="dark"] .mc-an-title { color: #DDD3FF; }
+[data-theme="dark"] .mc-an-h-label { color: #AAB3C5; }
+[data-theme="dark"] .mc-an-h-meta  { color: #AAB3C5; }
+[data-theme="dark"] .mc-an-h-track { background: rgba(255,255,255,.08) !important; }
+[data-theme="dark"] .mc-an-bar-val { color: #93C5FD; }
+[data-theme="dark"] .mc-an-bar-lbl { color: #7D879A; }
+/* Staff summary table inside the analytics panel */
+[data-theme="dark"] .mc-an-staff-panel table thead tr { background: #1E2230 !important; }
+[data-theme="dark"] .mc-an-staff-panel table th { color: #AAB3C5 !important; border-bottom-color: rgba(255,255,255,.10) !important; }
+[data-theme="dark"] .mc-an-staff-panel table td { color: var(--ink) !important; border-bottom-color: rgba(255,255,255,.06) !important; }
+/* Analytics modal header/footer borders */
+[data-theme="dark"] .mc-analytics-modal .modal-header { border-bottom-color: rgba(255,255,255,.08) !important; }
+[data-theme="dark"] .mc-analytics-modal .modal-actions { border-top-color: rgba(255,255,255,.08) !important; }
+/* Staff scroll container border */
+[data-theme="dark"] .mc-an-staff-scroll { border-color: rgba(255,255,255,.07) !important; }
+
+/* ── 4. Section inline tabs — dark-mode variant ────────────────────────────
+      The bar already uses a deep purple (#1a0d52) but looks identical in both
+      modes. Give dark mode a softer translucent feel + brighter active pill.  */
+[data-theme="dark"] .section-inline-tabs {
+  background: rgba(20,8,62,.80);
+  box-shadow: 0 4px 16px rgba(0,0,0,.55), 0 0 0 1px rgba(124,92,255,.22);
+}
+[data-theme="dark"] .section-inline-tabs button { color: rgba(196,181,253,.60); }
+[data-theme="dark"] .section-inline-tabs button:hover {
+  background: rgba(255,255,255,.09);
+  color: rgba(255,255,255,.90);
+}
+[data-theme="dark"] .section-inline-tabs button.active {
+  background: #7C5CFF;
+  color: #fff;
+  box-shadow: 0 2px 12px rgba(124,92,255,.60);
+}
+
+/* ── 5. Termination form redesign — dark mode ──────────────────────────────
+      .trn-form-section, .trn-form-body, .modal-actions use #fff / light grey. */
+[data-theme="dark"] .trn-form-section {
+  background: rgba(23,26,35,.92) !important;
+  border-color: rgba(255,255,255,.09) !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,.30);
+}
+[data-theme="dark"] .trn-section-label { color: #AAB3C5 !important; }
+[data-theme="dark"] .trn-form-body { background: #171A23; }
+[data-theme="dark"] .trn-form-redesign .modal-actions {
+  background: #171A23 !important;
+  border-top-color: rgba(255,255,255,.07) !important;
+}
+
+/* ── 6. Exit interview — Emp ID column text ────────────────────────────────
+      .term-empid in dark mode inherits a dark table cell color.               */
+[data-theme="dark"] td.term-empid { color: var(--ink) !important; }
+
+/* ── 7. Exit Interview analytics — body + panels ───────────────────────────
+      Panels use inline background:#fff and hardcoded text colors.
+      Class names (ei-kpi-card, ei-panel, ei-panel-title, etc.) added to JSX. */
+[data-theme="dark"] .ei-analytics-modal {
+  background: #171A23 !important;
+  border-color: rgba(255,255,255,.09) !important;
+}
+[data-theme="dark"] .ei-analytics-body { background: #171A23; }
+/* KPI stat cards (Overall + Rehire eligibility) */
+[data-theme="dark"] .ei-kpi-card {
+  background: rgba(30,34,49,.92) !important;
+  border-color: rgba(255,255,255,.12) !important;
+}
+[data-theme="dark"] .ei-kpi-num  { color: #DDD3FF !important; }
+[data-theme="dark"] .ei-kpi-lbl  { color: #AAB3C5 !important; }
+/* Content panels (Reasons grid, Dept chart, Responses, etc.) */
+[data-theme="dark"] .ei-panel {
+  background: rgba(23,26,35,.90) !important;
+  border-color: rgba(255,255,255,.09) !important;
+}
+[data-theme="dark"] .ei-panel-title { color: #DDD3FF !important; }
+/* Per-employee list rows */
+[data-theme="dark"] .ei-person-row {
+  background: rgba(23,26,35,.92) !important;
+  border-color: rgba(255,255,255,.09) !important;
+}
+
+/* ── 8. Bank account / Training modal cards ────────────────────────────────
+      .trn-modal-card uses a near-white gradient background in light mode.     */
+[data-theme="dark"] .trn-modal-card {
+  background: rgba(23,26,35,.92) !important;
+  border-color: rgba(255,255,255,.10) !important;
+}
+[data-theme="dark"] .trn-modal-field-lbl { color: #C4B5FD !important; }
+[data-theme="dark"] .trn-modal-title-input { color: var(--ink) !important; }
+
+/* ── 9. Personal Files — Add Staff picker dark mode text ────────────────────
+      .pf-picker-name (#0f172a) and .pf-picker-meta (#64748b) are too dark.   */
+[data-theme="dark"] .pf-picker-name { color: var(--ink) !important; }
+[data-theme="dark"] .pf-picker-meta { color: #AAB3C5 !important; }
+[data-theme="dark"] .pf-picker-row  { border-bottom-color: rgba(255,255,255,.07); }
+
+/* ── 10. Requests — Status Update modal dark mode ───────────────────────────
+       The proceed (⟳) modal uses standard modal-backdrop — inputs/textarea
+       already covered by the broad input rule, but confirm text needs ink.    */
+[data-theme="dark"] .req-update-modal-warning { color: #FCA5A5 !important; }
+
+/* ── 11. Bank account modal — employee search picker ────────────────────────
+       The employee search result buttons use default background which may be
+       light in dark mode. They share the modal-backdrop input dark rule.      */
+[data-theme="dark"] .bank-emp-search-btn {
+  background: rgba(30,34,49,.85);
+  border-color: rgba(255,255,255,.09);
+  color: var(--ink);
+}
+[data-theme="dark"] .bank-emp-search-btn:hover { background: rgba(45,52,75,.92); }
+[data-theme="dark"] .bank-emp-search-btn.selected { background: rgba(124,92,255,.15); border-color: rgba(124,92,255,.35); }
