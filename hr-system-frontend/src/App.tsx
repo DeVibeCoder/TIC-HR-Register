@@ -8794,17 +8794,19 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
 
     <div class="disc-subsection">
       <p class="disc-section-hd">2. Discussion of Issues, Updates and Challenges Faced by Each Section:</p>
-      <div style="border:0.8pt solid #aaa;border-radius:4pt;padding:8pt 10pt;margin-top:4pt;">
+      <div style="display:flex;flex-direction:column;gap:5pt;margin-top:4pt;">
       ${MEETING_DEPTS.filter(md => !new Set(['ADMINISTRATION','HUMAN RESOURCES']).has(md.label)).map(md => {
         const update = record.deptUpdates.find(d => d.dept === md.label)
         const bullets = (update?.points ?? '').split('\n').filter(p => p.trim())
           .map(p => `<li>${esc(p.trim())}</li>`).join('')
-        return `<div style="margin-bottom:7pt;">
-          <p class="disc-dept-hd">${esc(md.label)}</p>
-          ${bullets ? `<ul class="disc-ul">${bullets}</ul>` : `<p class="disc-dept-nil">Nil</p>`}
+        return `<div style="border:0.8pt solid #bbb;border-radius:4pt;overflow:hidden;">
+          <div style="background:#f0f0f0;padding:3pt 8pt;font-size:8pt;font-weight:800;letter-spacing:0.3pt;border-bottom:0.5pt solid #ccc;">${esc(md.label)}</div>
+          <div style="padding:5pt 10pt;">
+            ${bullets ? `<ul class="disc-ul" style="margin:0;">${bullets}</ul>` : `<p class="disc-dept-nil" style="margin:0;">Nil</p>`}
+          </div>
         </div>`
       }).join('')}
-      ${record.additionalSectionNotes?.trim() ? `<div style="margin-bottom:7pt;"><p class="disc-dept-hd">ADDITIONAL</p><ul class="disc-ul">${record.additionalSectionNotes.trim().split('\n').filter(l=>l.trim()).map(l=>`<li>${esc(l.trim())}</li>`).join('')}</ul></div>` : ''}
+      ${record.additionalSectionNotes?.trim() ? `<div style="border:0.8pt solid #bbb;border-radius:4pt;overflow:hidden;"><div style="background:#f0f0f0;padding:3pt 8pt;font-size:8pt;font-weight:800;letter-spacing:0.3pt;border-bottom:0.5pt solid #ccc;">ADDITIONAL</div><div style="padding:5pt 10pt;"><ul class="disc-ul" style="margin:0;">${record.additionalSectionNotes.trim().split('\n').filter(l=>l.trim()).map(l=>`<li>${esc(l.trim())}</li>`).join('')}</ul></div></div>` : ''}
       </div>
     </div>
 
@@ -9703,11 +9705,10 @@ function MeetingsSection({ records, onUpdate, employees, activeLeaves, isReadOnl
             const nAttended  = rec.reps.filter(r => r.attendance === 'Attended' && r.name.trim()).length
             const nLeave     = rec.reps.filter(r => r.attendance === 'On Leave').length
             const nAbsent    = rec.reps.filter(r => r.attendance === 'Absent').length
-            const deptBlocks = rec.deptUpdates.filter(d => d.points.trim())
+            const deptNotes  = rec.deptUpdates.filter(d => d.points.trim()).map(d => d.dept)
             const dt         = fmtD(rec.date)
             return (
-              <div key={rec.id} className={`mtg-card${deptBlocks.length > 0 ? ' mtg-card-expanded' : ''}`}>
-                {/* ── Main row ── */}
+              <div key={rec.id} className="mtg-card">
                 <div className="mtg-card-row">
                   {dt && (
                     <div className="mtg-date-box">
@@ -9727,6 +9728,9 @@ function MeetingsSection({ records, onUpdate, employees, activeLeaves, isReadOnl
                         {nLeave  > 0 && <span className="mtg-chip leave">{nLeave} on leave</span>}
                         {nAbsent > 0 && <span className="mtg-chip absent">{nAbsent} absent</span>}
                       </div>
+                      {deptNotes.length > 0 && (
+                        <div className="mtg-dept-line" style={{ flex:1 }}>{deptNotes.join(' · ')}</div>
+                      )}
                     </div>
                   </div>
                   <div className="mtg-actions">
@@ -9735,22 +9739,6 @@ function MeetingsSection({ records, onUpdate, employees, activeLeaves, isReadOnl
                     {!isReadOnly && <button className="quiet-button vwh" type="button" title="Delete" onClick={() => del(rec.id)} style={{ fontSize:'0.9rem', padding:'3px 8px', color:'#ef4444' }}>🗑</button>}
                   </div>
                 </div>
-
-                {/* ── Dept minutes — always visible ── */}
-                {deptBlocks.length > 0 && (
-                  <div className="mtg-dept-expand">
-                    {deptBlocks.map(d => (
-                      <div key={d.dept} className="mtg-dept-rect">
-                        <div className="mtg-dept-rect-hdr">{d.dept}</div>
-                        <div className="mtg-dept-rect-body">
-                          {d.points.split('\n').filter(p => p.trim()).map((pt, i) => (
-                            <div key={i} className="mtg-dept-point">– {pt.trim()}</div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
             )
           })}
