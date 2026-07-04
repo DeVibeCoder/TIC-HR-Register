@@ -5837,18 +5837,18 @@ input::-webkit-credentials-auto-fill-button { visibility: hidden; pointer-events
   vertical-align: middle !important;
 }
 
-/* Personal Files: center these columns (header + cell) */
+/* Personal Files table: min-width so it scrolls horizontally */
+.personal-files-table { min-width: 1200px; }
+
+/* Personal Files: center these columns (header + cell)
+   Layout: 1:File No  2:Emp ID  3:Name  4:Section  5:Designation
+           6:PP No    7:WP No   8:DOJ   9:Status   10:COC  11:JD
+           12:EA      13:EA Expiry  14:Action                      */
 .personal-files-table th:nth-child(1),  /* File No */
 .personal-files-table td:nth-child(1),
 .personal-files-table th:nth-child(2),  /* Emp ID */
 .personal-files-table td:nth-child(2),
-.personal-files-table th:nth-child(5),  /* COC */
-.personal-files-table td:nth-child(5),
-.personal-files-table th:nth-child(6),  /* JD */
-.personal-files-table td:nth-child(6),
-.personal-files-table th:nth-child(7),  /* EA */
-.personal-files-table td:nth-child(7),
-.personal-files-table th:nth-child(8),  /* EA Expiry */
+.personal-files-table th:nth-child(8),  /* DOJ */
 .personal-files-table td:nth-child(8),
 .personal-files-table th:nth-child(9),  /* Status */
 .personal-files-table td:nth-child(9),

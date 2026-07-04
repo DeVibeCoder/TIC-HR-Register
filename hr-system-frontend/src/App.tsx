@@ -6016,6 +6016,8 @@ function PersonalFilesSection({ records, onUpdate, employees = [], isAdmin = fal
     return Array.from(new Set(subset.map(r => r.department).filter(Boolean))).sort()
   }, [records, staffFilter])
 
+  const empMap = useMemo(() => new Map(employees.map(e => [e.employeeId, e])), [employees])
+
   const filtered = useMemo(() => records.filter((r) => {
     const matchSearch = [r.fileNo, r.employeeId, r.fullName, r.department].join(' ').toLowerCase().includes(search.trim().toLowerCase())
     const matchDept = deptFilter === 'All Sections' || r.department === deptFilter
@@ -6088,28 +6090,35 @@ function PersonalFilesSection({ records, onUpdate, employees = [], isAdmin = fal
             <thead>
               <tr>
                 <th>File No</th><th>Emp ID</th><th>Full Name</th><th>Section</th>
+                <th>Designation</th><th>PP No</th><th>WP No</th><th>DOJ</th>
+                <th style={{ textAlign:'center' }}>Status</th>
                 <th style={{ textAlign:'center' }}>COC</th>
                 <th style={{ textAlign:'center' }}>JD</th>
                 <th style={{ textAlign:'center' }}>EA</th>
                 <th style={{ textAlign:'center' }}>EA Expiry</th>
-                <th style={{ textAlign:'center' }}>Status</th>
                 <th style={{ textAlign:'center' }}>Action</th>
               </tr>
             </thead>
             <tbody>
               {rows.length === 0 ? (
-                <tr><td colSpan={10} className="empty-row">No personal file records. Use "+ Add Staff" to add employees.</td></tr>
-              ) : rows.map((file) => (
+                <tr><td colSpan={14} className="empty-row">No personal file records. Use "+ Add Staff" to add employees.</td></tr>
+              ) : rows.map((file) => {
+                const emp = empMap.get(file.employeeId)
+                return (
                 <tr key={file.fileNo} className={rowClass(file.staffStatus)}>
                   <td>{file.fileNo}</td>
                   <td>{file.employeeId}</td>
                   <td>{file.fullName}</td>
                   <td>{file.department}</td>
+                  <td>{file.designation || '—'}</td>
+                  <td>{emp?.nicPassportNo || '—'}</td>
+                  <td>{emp?.workPermitNo || '—'}</td>
+                  <td>{emp?.dateOfJoin ? formatDateDisplay(emp.dateOfJoin) : '—'}</td>
+                  <td style={{ textAlign:'center' }}><StaffStatusBadge status={file.staffStatus} /></td>
                   <td className="doc-check-cell">{file.coc ? <span className="doc-yes">✓</span> : <span className="doc-no">—</span>}</td>
                   <td className="doc-check-cell">{file.jd  ? <span className="doc-yes">✓</span> : <span className="doc-no">—</span>}</td>
                   <td className="doc-check-cell">{file.ea  ? <span className="doc-yes">✓</span> : <span className="doc-no">—</span>}</td>
                   <td style={{ textAlign:'center' }}>{file.eaExpiryDate ? formatDateDisplay(file.eaExpiryDate) : '—'}</td>
-                  <td style={{ textAlign:'center' }}><StaffStatusBadge status={file.staffStatus} /></td>
                   <td style={{ textAlign:'center' }}>
                     <div className="row-actions">
                       <button className="action-glyph edit vwh" onClick={() => setEditingFileNo(file.fileNo)} type="button" title="Edit">✎</button>
@@ -6117,7 +6126,8 @@ function PersonalFilesSection({ records, onUpdate, employees = [], isAdmin = fal
                     </div>
                   </td>
                 </tr>
-              ))}
+                )
+              })}
             </tbody>
           </table>
         </div>
