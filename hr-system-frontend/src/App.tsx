@@ -8619,11 +8619,10 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   // Dynamic approved-by role
   const approvedByRole = record.chairperson === CHAIRPERSON_OPTIONS[1].value ? 'Deputy General Manager' : 'General Manager'
 
-  // Footer per page: full-width blue rule, ref LEFT, page number centred
-  const pgFooter = (n: number) =>
-    `<div class="pg-footer">
+  // Footer content — placed in <tfoot> so the browser auto-repeats it on every printed page
+  const footerHtml =
+    `<div class="pg-footer" style="text-align:center;">
       <span class="pf-ref">BRIEFING MEETING MINUTES &mdash; ${esc(refSeq)}</span>
-      <span class="pf-num">${n}</span>
     </div>`
 
   const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/>
@@ -8683,31 +8682,27 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   /* Section dept boxes — never split across pages */
   .dept-box { page-break-inside:avoid; break-inside:avoid; }
 
-  /* Per-page footer — blue rule, ref LEFT, page number centred */
+  /* Document frame — <tfoot> auto-repeats the footer on EVERY printed page */
+  .doc { width:100%; border-collapse:collapse; }
+  .doc > tbody > tr > td { padding:0; vertical-align:top; }
+  .doc > tfoot { display:table-footer-group; }
+  .doc > tfoot > tr > td { padding:0; }
   .pg-footer {
     position:relative;
     border-top:1pt solid #2f78c5;
-    padding-top:5pt; margin-top:14pt;
+    padding-top:5pt; margin-top:10pt;
     font-size:8.5pt; color:#2f78c5;
   }
   .pg-footer .pf-ref { white-space:nowrap; letter-spacing:0.3pt; }
-  .pg-footer .pf-num {
-    position:absolute; left:0; right:0; top:5pt;
-    text-align:center; font-weight:800;
-  }
 
   @media print {
     body { background:#fff; }
     .pbar { display:none !important; }
     .wrap { max-width:none; margin:0; padding:0; gap:0; }
-    /* Each page fills one physical sheet; footer pinned to the bottom */
-    .page {
-      box-shadow:none; padding:0;
-      display:flex; flex-direction:column;
-      min-height:260mm;
-    }
+    .page { box-shadow:none; padding:0; }
     .pgbrk { page-break-before:always; }
-    .pg-footer { margin-top:auto; }
+    /* Reserve room so page content never collides with the repeated footer */
+    .pg-footer { margin-top:6pt; }
   }
 </style></head><body>
 <div class="pbar">
@@ -8715,6 +8710,9 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   <span>Briefing Meeting Minutes — ${esc(record.refNumber)}</span>
 </div>
 <div class="wrap">
+<table class="doc">
+<tfoot><tr><td>${footerHtml}</td></tr></tfoot>
+<tbody><tr><td>
 
 <!-- PAGE 1 -->
 <div class="page">
@@ -8791,7 +8789,6 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
       <td style="text-align:center;padding:3pt;font-weight:800;">${pad2(grandTotal)}</td>
     </tr></tfoot>
   </table>
-  ${pgFooter(1)}
 </div>
 
 <!-- PAGE 2 -->
@@ -8831,7 +8828,6 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
       </div>
     </div>
   </div>
-  ${pgFooter(2)}
 </div>
 
 <!-- PAGE 3 -->
@@ -8861,9 +8857,10 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
       </div>
     </div>
   </div>
-  ${pgFooter(3)}
 </div>
 
+</td></tr></tbody>
+</table>
 </div>
 </body></html>`
   const win = window.open('', '_blank')
