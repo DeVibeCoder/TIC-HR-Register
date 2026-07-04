@@ -5956,36 +5956,54 @@ function PersonalFilesSection({ records, onUpdate, employees = [], isAdmin = fal
       const hdr = rows[0].map(h => h.toLowerCase().replace(/[^a-z0-9]/g, ''))
       const ci = (terms: string[]) => terms.map(t => hdr.indexOf(t)).find(i => i >= 0) ?? -1
       const g = (row: string[], idx: number) => idx >= 0 ? (row[idx] ?? '').trim() : ''
-      const iFileNo = ci(['pfno','fileno','file']), iEmpId = ci(['empid','employeeid']),
-            iName   = ci(['name','fullname']), iDept = ci(['section','department']),
-            iDesig  = ci(['designation']),
-            iStatus = ci(['status','staffstatus']), iCoc = ci(['coc']),
-            iJd     = ci(['jd']),               iEa   = ci(['ea']),
-            iEaExp  = ci(['eaexpirydate','eaexpiry']), iRemarks = ci(['remarks'])
+      const iFileNo = ci(['pfno','fileno','filenumber','file','pf'])
+      const iEmpId  = ci(['empid','employeeid','empno','employeeno','empcode'])
+      const iName   = ci(['name','fullname','employeename','staffname'])
+      const iDept   = ci(['section','department','dept'])
+      const iDesig  = ci(['designation','jobtitle','position','post'])
+      const iStatus = ci(['status','staffstatus','empstatus'])
+      const iCoc    = ci(['coc'])
+      const iJd     = ci(['jd'])
+      const iEa     = ci(['ea'])
+      const iEaExp  = ci(['eaexpirydate','eaexpiry'])
+      const iRemarks= ci(['remarks'])
+      const pb = (v: string) => v.toLowerCase() === 'true' || v === '1'
+      // Build lookup of existing records so we can preserve values for columns absent from the CSV
+      const existingMap = new Map(records.map(r => [r.fileNo, r]))
       const imported: PersonalFileRecord[] = rows.slice(1)
         .filter(r => r.some(c => c.trim()))
-        .map(r => ({
-          fileNo:        g(r, iFileNo) || String(Date.now()).slice(-6),
-          employeeId:    g(r, iEmpId),
-          fullName:      g(r, iName),
-          department:    g(r, iDept),
-          designation:   g(r, iDesig) || '',   // optional — empty OK for legacy data
-          staffStatus:   (['Active','Terminated','Retired','Transferred'].find(s => s.toLowerCase() === (g(r, iStatus) || 'Active').toLowerCase()) || 'Active') as StaffStatus,
-          coc:           g(r, iCoc).toLowerCase() === 'true' || g(r, iCoc) === '1',
-          jd:            g(r, iJd).toLowerCase()  === 'true' || g(r, iJd)  === '1',
-          ea:            g(r, iEa).toLowerCase()  === 'true' || g(r, iEa)  === '1',
-          eaExpiryDate:  g(r, iEaExp),
-          remarks:       g(r, iRemarks),
-        }))
+        .map(r => {
+          const fileNo = g(r, iFileNo) || String(Date.now()).slice(-6)
+          const ex = existingMap.get(fileNo)
+          return {
+            fileNo,
+            employeeId:   iEmpId   >= 0 ? g(r, iEmpId)   : (ex?.employeeId   ?? ''),
+            fullName:     iName    >= 0 ? g(r, iName)    : (ex?.fullName    ?? ''),
+            department:   iDept    >= 0 ? g(r, iDept)    : (ex?.department   ?? ''),
+            designation:  iDesig   >= 0 ? g(r, iDesig)   : (ex?.designation  ?? ''),
+            staffStatus:  (['Active','Terminated','Retired','Transferred'].find(s => s.toLowerCase() === (g(r, iStatus) || 'Active').toLowerCase()) || 'Active') as StaffStatus,
+            coc:          iCoc     >= 0 ? pb(g(r, iCoc))  : (ex?.coc   ?? false),
+            jd:           iJd      >= 0 ? pb(g(r, iJd))   : (ex?.jd    ?? false),
+            ea:           iEa      >= 0 ? pb(g(r, iEa))   : (ex?.ea    ?? false),
+            eaExpiryDate: iEaExp   >= 0 ? g(r, iEaExp)   : (ex?.eaExpiryDate ?? ''),
+            remarks:      iRemarks >= 0 ? g(r, iRemarks)  : (ex?.remarks      ?? ''),
+          }
+        })
       if (imported.length === 0) return
-      onUpdate(prev => {
-        const existingNos = new Set(prev.map(r => r.fileNo))
-        const toAdd = imported.filter(r => !existingNos.has(r.fileNo))
-        const toUpdate = imported.filter(r => existingNos.has(r.fileNo))
-        const updated = prev.map(r => { const u = toUpdate.find(x => x.fileNo === r.fileNo); return u ?? r })
-        return [...toAdd, ...updated]
-      })
-      await supabase.from('personal_files').upsert(imported.map(personalFileToDb), { onConflict: 'file_no' })
+      const importedNos = new Set(imported.map(r => r.fileNo))
+      const addedCount   = imported.filter(r => !existingMap.has(r.fileNo)).length
+      const updatedCount = imported.filter(r =>  existingMap.has(r.fileNo)).length
+      onUpdate(prev => [...imported, ...prev.filter(r => !importedNos.has(r.fileNo))])
+      // Reset filters so the newly imported records are immediately visible
+      setStaffFilter('All'); setDeptFilter('All Sections'); setSearch(''); setPage(1)
+      try {
+        const { error } = await supabase.from('personal_files').upsert(imported.map(personalFileToDb), { onConflict: 'file_no' })
+        if (error) alert(`Imported in app, but database sync failed: ${error.message}`)
+        else alert(`Import complete: ${addedCount} added, ${updatedCount} updated`)
+      } catch (e) {
+        console.error('[PF import]', e)
+        alert('Import complete in app, but database sync encountered an error.')
+      }
     }
     input.click()
   }
@@ -9902,11 +9920,11 @@ function OperationsPage({ employees, completedTerminations, activeLeaves, isHOD 
       supabase.from('training_records').select('*'),
       supabase.from('bank_account_records').select('*'),
     ]).then(([mt, pf, ind, tr, bnk]) => {
-      if (mt.data  !== null) setMeetingRecords(mt.data.map(meetingFromDb))
-      if (pf.data  !== null) setPersonalFiles(pf.data.map(personalFileFromDb))   // null=error, []=empty (clears stale seed data)
-      if (ind.data !== null) setInductionRecords(ind.data.map(inductionFromDb))
-      if (tr.data  !== null) setTrainingRecords(tr.data.map(trainingFromDb))
-      if (bnk.data !== null) setBankAccountRecords(bnk.data.map(bankAccFromDb))
+      if (mt.data  !== null) { const d = mt.data.map(meetingFromDb);   prevMt.current  = d; setMeetingRecords(d) }
+      if (pf.data  !== null) { const d = pf.data.map(personalFileFromDb); prevPf.current = d; setPersonalFiles(d) }
+      if (ind.data !== null) { const d = ind.data.map(inductionFromDb);  prevInd.current = d; setInductionRecords(d) }
+      if (tr.data  !== null) { const d = tr.data.map(trainingFromDb);    prevTr.current  = d; setTrainingRecords(d) }
+      if (bnk.data !== null) { const d = bnk.data.map(bankAccFromDb);    prevBnk.current = d; setBankAccountRecords(d) }
       opsLoaded.current = true
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps
