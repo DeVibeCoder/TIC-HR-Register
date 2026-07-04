@@ -9570,9 +9570,10 @@ function MeetingsSection({ records, onUpdate, employees, activeLeaves, isReadOnl
   activeLeaves: ActiveLeaveRecord[]
   isReadOnly?: boolean
 }) {
-  const [editing,   setEditing]   = useState<MeetingRecord | null>(null)
-  const [search,    setSearch]    = useState('')
-  const [view,      setView]      = useState<'list'|'calendar'>('list')
+  const [editing,    setEditing]    = useState<MeetingRecord | null>(null)
+  const [search,     setSearch]     = useState('')
+  const [view,       setView]       = useState<'list'|'calendar'>('list')
+  const [expandedId, setExpandedId] = useState<string | null>(null)
 
   const mkNew = (): MeetingRecord => {
     const yr = new Date().getFullYear().toString().slice(-2)
@@ -9701,42 +9702,70 @@ function MeetingsSection({ records, onUpdate, employees, activeLeaves, isReadOnl
       ) : (
         <div className="mtg-list" style={{ display:'flex', flexDirection:'column', gap:6 }}>
           {filtered.map(rec => {
-            const nAttended = rec.reps.filter(r => r.attendance === 'Attended' && r.name.trim()).length
-            const nLeave    = rec.reps.filter(r => r.attendance === 'On Leave').length
-            const nAbsent   = rec.reps.filter(r => r.attendance === 'Absent').length
-            const deptNotes = rec.deptUpdates.filter(d => d.points.trim()).map(d => d.dept)
-            const dt        = fmtD(rec.date)
+            const nAttended  = rec.reps.filter(r => r.attendance === 'Attended' && r.name.trim()).length
+            const nLeave     = rec.reps.filter(r => r.attendance === 'On Leave').length
+            const nAbsent    = rec.reps.filter(r => r.attendance === 'Absent').length
+            const deptNotes  = rec.deptUpdates.filter(d => d.points.trim()).map(d => d.dept)
+            const deptBlocks = rec.deptUpdates.filter(d => d.points.trim())
+            const dt         = fmtD(rec.date)
+            const isExpanded = expandedId === rec.id
             return (
-              <div key={rec.id} className="mtg-card">
-                {dt && (
-                  <div className="mtg-date-box">
-                    <span className="mtg-day">{dt.day}</span>
-                    <span className="mtg-month">{dt.rest}</span>
+              <div key={rec.id} className={`mtg-card${isExpanded ? ' mtg-card-expanded' : ''}`}>
+                {/* ── Main row ── */}
+                <div className="mtg-card-row">
+                  {dt && (
+                    <div className="mtg-date-box">
+                      <span className="mtg-day">{dt.day}</span>
+                      <span className="mtg-month">{dt.rest}</span>
+                    </div>
+                  )}
+                  <div className="mtg-card-body">
+                    <div className="mtg-top-row">
+                      <span className="mtg-ref">{rec.refNumber}</span>
+                      <span className={`mtg-badge ${rec.status === 'Final' ? 'final' : 'draft'}`}>{rec.status}</span>
+                      <span className="mtg-chair" style={{ marginLeft:2 }}>{rec.chairperson}</span>
+                    </div>
+                    <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
+                      <div className="mtg-chips" style={{ margin:0 }}>
+                        <span className="mtg-chip attended">{nAttended} attended</span>
+                        {nLeave  > 0 && <span className="mtg-chip leave">{nLeave} on leave</span>}
+                        {nAbsent > 0 && <span className="mtg-chip absent">{nAbsent} absent</span>}
+                      </div>
+                      {deptNotes.length > 0 && (
+                        <div className="mtg-dept-line" style={{ flex:1 }}>{deptNotes.join(' · ')}</div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="mtg-actions">
+                    {deptBlocks.length > 0 && (
+                      <button className="quiet-button vwh" type="button"
+                        title={isExpanded ? 'Hide minutes' : 'Show minutes'}
+                        onClick={() => setExpandedId(isExpanded ? null : rec.id)}
+                        style={{ fontSize:'0.75rem', padding:'3px 8px', fontWeight:700 }}>
+                        {isExpanded ? '▲' : '▼'}
+                      </button>
+                    )}
+                    {!isReadOnly && <button className="quiet-button vwh" type="button" title="Edit" onClick={() => setEditing(rec)} style={{ fontSize:'0.9rem', padding:'3px 8px' }}>✎</button>}
+                    <button className="quiet-button" type="button" title="Print" onClick={() => printMeetingMinutes(rec, employees, activeLeaves)} style={{ fontSize:'0.9rem', padding:'3px 8px' }}>🖨</button>
+                    {!isReadOnly && <button className="quiet-button vwh" type="button" title="Delete" onClick={() => del(rec.id)} style={{ fontSize:'0.9rem', padding:'3px 8px', color:'#ef4444' }}>🗑</button>}
+                  </div>
+                </div>
+
+                {/* ── Dept minutes panel ── */}
+                {isExpanded && (
+                  <div className="mtg-dept-expand">
+                    {deptBlocks.map(d => (
+                      <div key={d.dept} className="mtg-dept-rect">
+                        <div className="mtg-dept-rect-hdr">{d.dept}</div>
+                        <div className="mtg-dept-rect-body">
+                          {d.points.split('\n').filter(p => p.trim()).map((pt, i) => (
+                            <div key={i} className="mtg-dept-point">– {pt.trim()}</div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
-                <div className="mtg-card-body">
-                  <div className="mtg-top-row">
-                    <span className="mtg-ref">{rec.refNumber}</span>
-                    <span className={`mtg-badge ${rec.status === 'Final' ? 'final' : 'draft'}`}>{rec.status}</span>
-                    <span className="mtg-chair" style={{ marginLeft:2 }}>{rec.chairperson}</span>
-                  </div>
-                  <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
-                    <div className="mtg-chips" style={{ margin:0 }}>
-                      <span className="mtg-chip attended">{nAttended} attended</span>
-                      {nLeave  > 0 && <span className="mtg-chip leave">{nLeave} on leave</span>}
-                      {nAbsent > 0 && <span className="mtg-chip absent">{nAbsent} absent</span>}
-                    </div>
-                    {deptNotes.length > 0 && (
-                      <div className="mtg-dept-line" style={{ flex:1 }}>{deptNotes.join(' · ')}</div>
-                    )}
-                  </div>
-                </div>
-                {/* Icons only — no text labels */}
-                <div className="mtg-actions">
-                  {!isReadOnly && <button className="quiet-button vwh" type="button" title="Edit" onClick={() => setEditing(rec)} style={{ fontSize:'0.9rem', padding:'3px 8px' }}>✎</button>}
-                  <button className="quiet-button" type="button" title="Print" onClick={() => printMeetingMinutes(rec, employees, activeLeaves)} style={{ fontSize:'0.9rem', padding:'3px 8px' }}>🖨</button>
-                  {!isReadOnly && <button className="quiet-button vwh" type="button" title="Delete" onClick={() => del(rec.id)} style={{ fontSize:'0.9rem', padding:'3px 8px', color:'#ef4444' }}>🗑</button>}
-                </div>
               </div>
             )
           })}

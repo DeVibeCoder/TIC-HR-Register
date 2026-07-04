@@ -9330,8 +9330,7 @@ html { overflow-x: hidden; }
 /* Meeting record card */
 .mtg-card {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
   background: #fff;
   border: 1.5px solid #e8eaf0;
   border-radius: 10px;
@@ -9341,6 +9340,49 @@ html { overflow-x: hidden; }
 .mtg-card:hover {
   border-color: #c7d2fe;
   box-shadow: 0 2px 10px rgba(99,102,241,0.09);
+}
+.mtg-card-expanded {
+  border-color: #c7d2fe;
+}
+/* Inner row: date + body + actions */
+.mtg-card-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+/* Dept minutes panel */
+.mtg-dept-expand {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #e8eaf0;
+}
+.mtg-dept-rect {
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.mtg-dept-rect-hdr {
+  background: #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 5px 12px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: #1e1b4b;
+  letter-spacing: 0.02em;
+}
+.mtg-dept-rect-body {
+  padding: 6px 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mtg-dept-point {
+  font-size: 0.76rem;
+  color: #374151;
+  line-height: 1.5;
 }
 
 /* Date badge — purple gradient box */
@@ -10761,6 +10803,10 @@ html { overflow-x: hidden; }
   border-color: rgba(255,255,255,.09);
   box-shadow: 0 14px 38px rgba(0,0,0,.40), inset 0 1px 0 rgba(255,255,255,.07);
 }
+[data-theme="dark"] .mtg-dept-expand { border-top-color: rgba(255,255,255,.08); }
+[data-theme="dark"] .mtg-dept-rect { border-color: rgba(255,255,255,.1); }
+[data-theme="dark"] .mtg-dept-rect-hdr { background: rgba(255,255,255,.05); border-bottom-color: rgba(255,255,255,.08); color: #c7d2fe; }
+[data-theme="dark"] .mtg-dept-point { color: #cbd5e1; }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Minutes & termination fill to bottom; uniform termination action icons
