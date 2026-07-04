@@ -8684,9 +8684,15 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   /* Section dept boxes — never split across pages */
   .dept-box { page-break-inside:avoid; break-inside:avoid; }
 
-  /* Fixed footer — same position every printed page */
-  .print-footer { display:none; }
-  .pf-ref { flex:1; letter-spacing:0.4pt; }
+  /* Footer — visible on screen, fixed on every printed page */
+  .print-footer {
+    display:flex; align-items:center;
+    padding:5pt 0 4pt;
+    border-top:1pt solid #2f78c5;
+    font-size:8.5pt; color:#2f78c5; background:#fff;
+    max-width:210mm; margin:0 auto;
+  }
+  .pf-ref { flex:1; letter-spacing:0.4pt; padding-left:15mm; }
   .pf-pg  { flex:1; text-align:center; font-weight:800; }
   .pf-end { flex:1; }
 
@@ -8697,12 +8703,12 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
     .page { box-shadow:none; padding:0; }
     .pgbrk { page-break-before:always; }
     .print-footer {
-      display:flex; align-items:flex-start;
-      position:fixed; bottom:0; left:15mm; right:15mm;
-      border-top:1pt solid #2f78c5; padding-top:5pt; padding-bottom:4pt;
-      font-size:8.5pt; color:#2f78c5; background:#fff;
+      position:fixed; bottom:0; left:0; right:0;
+      max-width:none; margin:0;
+      padding:5pt 0 4pt;
     }
-    .pf-pg::after { content:counter(page); }
+    .pf-ref { padding-left:15mm; }
+    .pf-pg::after { content:counter(page); font-weight:800; }
   }
 </style></head><body>
 <div class="pbar">
@@ -8726,12 +8732,12 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   <table class="info-tbl" style="table-layout:fixed;">
     <!-- Date + Time Started + Time Ended on one row, time labels same grey as Date -->
     <tr>
-      <td class="lbl" style="width:22mm;">Date</td>
+      <td class="lbl" style="width:20mm;">Date</td>
       <td style="text-transform:uppercase;">${fmtMeetingDate(record.date)}</td>
-      <td class="lbl" style="width:24mm;">Time Started</td>
-      <td style="width:18mm;">${esc(record.timeStarted)} hrs.</td>
-      <td class="lbl" style="width:22mm;">Time Ended</td>
-      <td style="width:18mm;">${esc(record.timeEnded ? record.timeEnded + ' hrs.' : '—')}</td>
+      <td class="lbl" style="width:30mm;white-space:nowrap;">Time Started</td>
+      <td style="width:22mm;white-space:nowrap;">${esc(record.timeStarted)} hrs.</td>
+      <td class="lbl" style="width:26mm;white-space:nowrap;">Time Ended</td>
+      <td style="width:22mm;white-space:nowrap;">${esc(record.timeEnded ? record.timeEnded + ' hrs.' : '—')}</td>
     </tr>
     <tr>
       <td class="lbl">Venue</td>
