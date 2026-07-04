@@ -9945,7 +9945,7 @@ function OperationsPage({ employees, completedTerminations, activeLeaves, isHOD 
           Minutes
         </button>
       </div>
-      {activeSection === 'files'     && <PersonalFilesSection records={personalFiles} onUpdate={setPersonalFiles} employees={employees} isAdmin={userRole === 'Admin'} />}
+      {activeSection === 'files'     && <PersonalFilesSection records={personalFiles} onUpdate={setPersonalFiles} employees={employees} isAdmin={userRole === 'Admin' || userRole === 'HR'} />}
       {activeSection === 'induction' && <InductionSection employees={employees} records={inductionRecords} onUpdate={setInductionRecords} onBack={() => {}} isReadOnly={userRole === 'Executive'} />}
       {activeSection === 'training'  && <TrainingSection records={trainingRecords} employees={employees} onUpdate={setTrainingRecords} onBack={() => {}} isReadOnly={userRole === 'Executive'} />}
       {activeSection === 'bank'      && <BankAccountSection employees={employees} records={bankAccountRecords} onUpdate={setBankAccountRecords} onBack={() => {}} />}
