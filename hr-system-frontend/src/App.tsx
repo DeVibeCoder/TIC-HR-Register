@@ -3,7 +3,7 @@ import type { FormEvent } from 'react'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 import { supabase, usernameToEmail } from './lib/supabase'
 
-type Page = 'overview' | 'employees' | 'leave' | 'operations' | 'activities' | 'termination' | 'settings'
+type Page = 'overview' | 'employees' | 'leave' | 'operations' | 'activities' | 'termination' | 'reports' | 'settings'
 type SiteStatus = 'On Site' | 'Off Site' | 'On Leave'
 type RecordStatus = 'Pending' | 'Active'
 type LeaveView = 'request' | 'active' | 'history' | 'medical'
@@ -661,6 +661,7 @@ const pages: Array<{ id: Page; label: string }> = [
   { id: 'operations', label: 'HR Operations' },
   { id: 'activities', label: 'Activities' },
   { id: 'termination', label: 'Termination' },
+  { id: 'reports', label: 'Reports' },
   { id: 'settings', label: 'Settings' },
 ]
 
@@ -2224,7 +2225,7 @@ function OffSiteModal({ records, employees, onUpdate, onClose }: {
   )
 }
 
-function EmployeesPage({ employees, onAdd, onEdit, onDelete, onExport, onImport, onTemplate, onShowTasks, medicalCases, noticeTerminations, offSiteRecords, onUpdateOffSite, isHOD = false, isAdmin = false }: {
+function EmployeesPage({ employees, onAdd, onEdit, onDelete, onExport, onImport, onTemplate, onShowTasks, medicalCases, noticeTerminations, offSiteRecords, onUpdateOffSite, isHOD = false, isAdmin = false, isExecutive = false }: {
   employees: Employee[]
   onAdd: () => void
   onEdit: (employee: Employee) => void
@@ -2239,6 +2240,7 @@ function EmployeesPage({ employees, onAdd, onEdit, onDelete, onExport, onImport,
   onUpdateOffSite: (fn: (prev: OffSiteRecord[]) => OffSiteRecord[]) => void
   isHOD?: boolean
   isAdmin?: boolean
+  isExecutive?: boolean
 }) {
   const [query, setQuery] = useState('')
   const [showOffSite, setShowOffSite] = useState(false)
@@ -2330,7 +2332,7 @@ function EmployeesPage({ employees, onAdd, onEdit, onDelete, onExport, onImport,
               Off Site{offSiteRecords.filter(r => r.status === 'Out').length > 0 && <span className="pending-count-badge" style={{ marginLeft: '6px' }}>{offSiteRecords.filter(r => r.status === 'Out').length}</span>}
             </button>
             <button className="primary-button" onClick={onExport} type="button">Export</button>
-            {!isHOD && <button className="primary-button vwh" onClick={onAdd} type="button">Add Employee</button>}
+            {!isHOD && !isExecutive && <button className="primary-button vwh" onClick={onAdd} type="button">Add Employee</button>}
           </div>
         </div>
         <div className="table-toolbar employee-toolbar">
@@ -2378,7 +2380,7 @@ function EmployeesPage({ employees, onAdd, onEdit, onDelete, onExport, onImport,
                   <td>{onLeaveIds.has(employee.employeeId)
                     ? <span className="status-badge sick-leave" title="On Sick Leave">SICK LEAVE</span>
                     : <StatusBadge status={employee.siteStatus} />}</td>
-                  {!isHOD && (
+                  {!isHOD && !isExecutive && (
                     <td>
                       <div className="row-actions">
                         <button className="action-glyph edit vwh" onClick={() => onEdit(employee)} type="button" title="Edit">✎</button>
@@ -4274,6 +4276,7 @@ function LeavePage({
   onHistoryConfirm,
   onUpdateMedical,
   isHOD = false,
+  isExecutive = false,
 }: {
   employees: Employee[]
   leaveRequests: LeaveRequestRecord[]
@@ -4289,6 +4292,7 @@ function LeavePage({
   onHistoryConfirm: (id: string, confirmation: HistoryConfirmation) => void
   onUpdateMedical: (fn: (prev: MedicalCaseRecord[]) => MedicalCaseRecord[]) => void
   isHOD?: boolean
+  isExecutive?: boolean
 }) {
   const [activeLeaveView, setActiveLeaveView] = useState<LeaveView>('request')
 
@@ -4373,7 +4377,7 @@ function LeavePage({
               <label className="search-field"><span>Search</span><input type="text" value={requestSearch} onChange={(event) => setRequestSearch(event.target.value)} placeholder="Employee, ID, purpose" /></label>
               <label><span>Leave Type</span><select value={requestTypeFilter} onChange={(event) => setRequestTypeFilter(event.target.value as 'All' | LeaveTypeCode)}><option value="All">All Types</option>{leaveTypeOptions.map((item) => <option key={item.code} value={item.code}>{item.label} ({item.code})</option>)}</select></label>
               <label><span>Section</span><select value={requestDepartmentFilter} onChange={(event) => setRequestDepartmentFilter(event.target.value)}><option>All Departments</option>{departmentsList.map((item) => <option key={item}>{item}</option>)}</select></label>
-              <button className="primary-button toolbar-add-btn vwh" onClick={onAddRequest} type="button">Add Leave Request</button>
+              {!isExecutive && <button className="primary-button toolbar-add-btn vwh" onClick={onAddRequest} type="button">Add Leave Request</button>}
             </div>
             <div className="employee-table-shell compact-scroll">
               <table className="data-table leave-table">
@@ -4418,8 +4422,8 @@ function LeavePage({
                           </td>
                           <td onClick={(e) => e.stopPropagation()}>
                             <div className="row-actions request-inline-actions">
-                              <button className="action-glyph edit vwh" onClick={() => onEditRequest(record)} type="button" title="Edit">✎</button>
-                              <button className="action-glyph delete vwh" onClick={() => onDeleteRequest(record.id)} type="button" title="Delete">🗑</button>
+                              {!isExecutive && <button className="action-glyph edit vwh" onClick={() => onEditRequest(record)} type="button" title="Edit">✎</button>}
+                              {!isExecutive && <button className="action-glyph delete vwh" onClick={() => onDeleteRequest(record.id)} type="button" title="Delete">🗑</button>}
                             </div>
                           </td>
                         </tr>
@@ -4438,7 +4442,7 @@ function LeavePage({
                                         <Fragment key={step}>
                                           <button
                                             className={`lr-pip-step ${cls}`}
-                                            disabled={isHOD}
+                                            disabled={isHOD || isExecutive}
                                             onClick={(e) => { e.stopPropagation(); onSetRequestStep(record.id, step) }}
                                             type="button"
                                             title={`Set to: ${step}`}
@@ -4539,7 +4543,7 @@ function LeavePage({
                           <td className="leave-status-cell-sm"><StatusBadge status="Departed" /></td>
                           <td onClick={e => e.stopPropagation()}>
                             {/* Single-extension: if exists → edit it; if not → add it */}
-                            <button
+                            {!isExecutive && <button
                               className={`action-glyph vwh ${hasExt ? 'action-glyph-edit-ext' : 'action-glyph-extend'}`}
                               onClick={() => hasExt && ext
                                 ? setEditingExtension({ record, ext })
@@ -4549,7 +4553,7 @@ function LeavePage({
                               title={hasExt ? 'Edit extension' : 'Add extension'}
                             >
                               <ExtendSvg />
-                            </button>
+                            </button>}
                           </td>
                         </tr>
                         {isExp && hasExt && ext && (
@@ -6164,11 +6168,12 @@ function PersonalFilesSection({ records, onUpdate, employees = [], isAdmin = fal
   )
 }
 
-function InductionSection({ employees, records, onUpdate }: {
+function InductionSection({ employees, records, onUpdate, isReadOnly = false }: {
   employees: Employee[]
   records: InductionRecord[]
   onUpdate: (fn: (prev: InductionRecord[]) => InductionRecord[]) => void
   onBack?: () => void
+  isReadOnly?: boolean
 }) {
   const [search, setSearch] = useState('')
   const [editing, setEditing] = useState<InductionRecord | null>(null)
@@ -6220,7 +6225,7 @@ function InductionSection({ employees, records, onUpdate }: {
             <span>Search</span>
             <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Ref no, conducted by, participant name" />
           </label>
-          <button className="primary-button vwh" onClick={() => setEditing(newRecord())} type="button">Add Session</button>
+          {!isReadOnly && <button className="primary-button vwh" onClick={() => setEditing(newRecord())} type="button">Add Session</button>}
         </div>
         <div className="employee-table-shell compact-scroll">
           <table className="data-table induction-table">
@@ -6277,11 +6282,12 @@ function InductionSection({ employees, records, onUpdate }: {
   )
 }
 
-function TrainingSection({ records, onUpdate, employees }: {
+function TrainingSection({ records, onUpdate, employees, isReadOnly = false }: {
   records: TrainingRecord[]
   onUpdate: (fn: (prev: TrainingRecord[]) => TrainingRecord[]) => void
   onBack?: () => void
   employees: Employee[]
+  isReadOnly?: boolean
 }) {
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState<'All' | 'Internal' | 'External'>('All')
@@ -6313,7 +6319,7 @@ function TrainingSection({ records, onUpdate, employees }: {
         <div className="table-toolbar ops-section-toolbar">
           <label className="search-field"><span>Search</span><input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Training title, trainer" /></label>
           <label><span>Type</span><select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as typeof typeFilter)}><option value="All">All Types</option><option value="Internal">Internal</option><option value="External">External</option></select></label>
-          <button className="primary-button vwh" onClick={() => setEditing(newRecord())} type="button">Add</button>
+          {!isReadOnly && <button className="primary-button vwh" onClick={() => setEditing(newRecord())} type="button">Add</button>}
         </div>
         <div className="employee-table-shell compact-scroll">
           <table className="data-table training-table">
@@ -8240,6 +8246,7 @@ function TerminationPage({
   onViewDetails,
   onUpdateExitInterviews,
   isHOD = false,
+  isExecutive = false,
 }: {
   noticeTerminations: EnhancedTerminationRecord[]
   completedTerminations: CompletedTerminationRecord[]
@@ -8252,6 +8259,7 @@ function TerminationPage({
   onViewDetails: (record: EnhancedTerminationRecord | CompletedTerminationRecord) => void
   onUpdateExitInterviews: (fn: (prev: ExitInterviewRecord[]) => ExitInterviewRecord[]) => void
   isHOD?: boolean
+  isExecutive?: boolean
 }) {
   const [activeTab, setActiveTab] = useState<TerminationTab>('notice')
   const [noticeSearch, setNoticeSearch] = useState('')
@@ -8309,7 +8317,7 @@ function TerminationPage({
               <label className="search-field"><span>Search</span><input onChange={(e) => setNoticeSearch(e.target.value)} placeholder="Employee, ID, department…" type="text" value={noticeSearch} /></label>
               <label><span>Section</span><select onChange={(e) => setNoticeDepartmentFilter(e.target.value)} value={noticeDepartmentFilter}>{noticeDepartments.map((d) => <option key={d}>{d}</option>)}</select></label>
               <label><span>Stage</span><select onChange={(e) => setNoticeStageFilter(e.target.value === 'All' ? 'All' : e.target.value as TerminationStage)} value={noticeStageFilter}><option value="All">All Stages</option>{allTerminationStages.map((s) => <option key={s}>{s}</option>)}</select></label>
-              <button className="primary-button toolbar-add-btn vwh" onClick={onAdd} type="button">+ Add</button>
+              {!isHOD && !isExecutive && <button className="primary-button toolbar-add-btn vwh" onClick={onAdd} type="button">+ Add</button>}
             </div>
             <div className="employee-table-shell compact-scroll termination-table-shell">
               <table className="data-table termination-table compact">
@@ -8343,10 +8351,10 @@ function TerminationPage({
                             <td className="leave-status-cell termination-status-cell" onClick={(e) => e.stopPropagation()}>
                               <button
                                 className={`lr-status-pill lr-step-${stageIdx}`}
-                                disabled={isLast || isHOD}
+                                disabled={isLast || isHOD || isExecutive}
                                 onClick={(e) => { e.stopPropagation(); if (nextStage) onSetStage(r.id, nextStage) }}
                                 type="button"
-                                title={isLast ? 'Pending Departure — final stage' : isHOD ? 'View only' : `Advance to: ${nextStage}`}
+                                title={isLast ? 'Pending Departure — final stage' : (isHOD || isExecutive) ? 'View only' : `Advance to: ${nextStage}`}
                               >
                                 {r.currentStage}
                                 {!isLast && <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 4, opacity: 0.7 }}><path d="M4 2l4 4-4 4"/></svg>}
@@ -8355,8 +8363,8 @@ function TerminationPage({
                             <td className="termination-actions" onClick={(e) => e.stopPropagation()}>
                               <div className="row-actions">
                                 <button className="action-glyph" onClick={() => onViewDetails(r)} type="button" title="View">👁</button>
-                                <button className="action-glyph edit vwh" onClick={() => onEdit(r)} type="button" title="Edit">✎</button>
-                                <button className="action-glyph delete vwh" onClick={() => onDelete(r.id)} type="button" title="Delete">🗑</button>
+                                {!isHOD && !isExecutive && <button className="action-glyph edit vwh" onClick={() => onEdit(r)} type="button" title="Edit">✎</button>}
+                                {!isHOD && !isExecutive && <button className="action-glyph delete vwh" onClick={() => onDelete(r.id)} type="button" title="Delete">🗑</button>}
                               </div>
                             </td>
                           </tr>
@@ -8377,10 +8385,10 @@ function TerminationPage({
                                       <Fragment key={stage}>
                                         <button
                                           className={`lr-pip-step ${cls}`}
-                                          disabled={isHOD}
-                                          onClick={(e) => { e.stopPropagation(); if (!isHOD) onSetStage(r.id, stage) }}
+                                          disabled={isHOD || isExecutive}
+                                          onClick={(e) => { e.stopPropagation(); if (!isHOD && !isExecutive) onSetStage(r.id, stage) }}
                                           type="button"
-                                          title={isHOD ? 'View only' : `Set to: ${stage}`}
+                                          title={(isHOD || isExecutive) ? 'View only' : `Set to: ${stage}`}
                                         >
                                           <div className="lr-pip-circle">{isDone ? '✓' : i + 1}</div>
                                           <div className="lr-pip-label">{stage}</div>
@@ -9527,11 +9535,12 @@ function MeetingCalendar({ records }: { records: MeetingRecord[] }) {
 }
 
 /* ─── MeetingsSection ──────────────────────────────────────────── */
-function MeetingsSection({ records, onUpdate, employees, activeLeaves }: {
+function MeetingsSection({ records, onUpdate, employees, activeLeaves, isReadOnly = false }: {
   records: MeetingRecord[]
   onUpdate: (fn: (prev: MeetingRecord[]) => MeetingRecord[]) => void
   employees: Employee[]
   activeLeaves: ActiveLeaveRecord[]
+  isReadOnly?: boolean
 }) {
   const [editing,   setEditing]   = useState<MeetingRecord | null>(null)
   const [search,    setSearch]    = useState('')
@@ -9649,7 +9658,7 @@ function MeetingsSection({ records, onUpdate, employees, activeLeaves }: {
               <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Ref, date, chairperson…" />
             </label>
           )}
-          <button className="primary-button vwh" onClick={() => setEditing(mkNew())} type="button" style={{ fontSize:'0.76rem', padding:'0 12px', height:36, minHeight:36, alignSelf:'flex-end' }}>+ New Meeting</button>
+          {!isReadOnly && <button className="primary-button vwh" onClick={() => setEditing(mkNew())} type="button" style={{ fontSize:'0.76rem', padding:'0 12px', height:36, minHeight:36, alignSelf:'flex-end' }}>+ New Meeting</button>}
         </div>
       </div>
 
@@ -9696,9 +9705,9 @@ function MeetingsSection({ records, onUpdate, employees, activeLeaves }: {
                 </div>
                 {/* Icons only — no text labels */}
                 <div className="mtg-actions">
-                  <button className="quiet-button vwh" type="button" title="Edit" onClick={() => setEditing(rec)} style={{ fontSize:'0.9rem', padding:'3px 8px' }}>✎</button>
+                  {!isReadOnly && <button className="quiet-button vwh" type="button" title="Edit" onClick={() => setEditing(rec)} style={{ fontSize:'0.9rem', padding:'3px 8px' }}>✎</button>}
                   <button className="quiet-button" type="button" title="Print" onClick={() => printMeetingMinutes(rec, employees, activeLeaves)} style={{ fontSize:'0.9rem', padding:'3px 8px' }}>🖨</button>
-                  <button className="quiet-button vwh" type="button" title="Delete" onClick={() => del(rec.id)} style={{ fontSize:'0.9rem', padding:'3px 8px', color:'#ef4444' }}>🗑</button>
+                  {!isReadOnly && <button className="quiet-button vwh" type="button" title="Delete" onClick={() => del(rec.id)} style={{ fontSize:'0.9rem', padding:'3px 8px', color:'#ef4444' }}>🗑</button>}
                 </div>
               </div>
             )
@@ -9870,7 +9879,7 @@ function OperationsPage({ employees, completedTerminations, activeLeaves, isHOD 
   isHOD?: boolean
   userRole?: UserRole
 }) {
-  const [activeSection, setActiveSection] = useState<OpsSection>(isHOD ? 'training' : 'files')
+  const [activeSection, setActiveSection] = useState<OpsSection>(isHOD ? 'training' : (userRole === 'Executive' ? 'induction' : 'files'))
   const [meetingRecords,    setMeetingRecords]    = useState<MeetingRecord[]>(() => tryLoad('tic_meetings'))
   const [personalFiles,     setPersonalFiles]     = useState<PersonalFileRecord[]>(() => { localStorage.removeItem('tic_personal_files'); return [] })
   const [inductionRecords,  setInductionRecords]  = useState<InductionRecord[]>(() => tryLoad('tic_induction'))
@@ -9928,19 +9937,19 @@ function OperationsPage({ employees, completedTerminations, activeLeaves, isHOD 
     <>
       <PageHeader eyebrow="HR operations" title="HR Operations" />
       <div className="section-inline-tabs">
-        {!isHOD && <button className={activeSection === 'files' ? 'active' : ''} onClick={() => setActiveSection('files')} type="button">Personal Files</button>}
+        {!isHOD && userRole !== 'Executive' && <button className={activeSection === 'files' ? 'active' : ''} onClick={() => setActiveSection('files')} type="button">Personal Files</button>}
         {!isHOD && <button className={activeSection === 'induction' ? 'active' : ''} onClick={() => setActiveSection('induction')} type="button">Induction</button>}
         <button className={activeSection === 'training' ? 'active' : ''} onClick={() => setActiveSection('training')} type="button">Training</button>
-        {!isHOD && <button className={activeSection === 'bank' ? 'active' : ''} onClick={() => setActiveSection('bank')} type="button">Bank Account</button>}
+        {!isHOD && userRole !== 'Executive' && <button className={activeSection === 'bank' ? 'active' : ''} onClick={() => setActiveSection('bank')} type="button">Bank Account</button>}
         <button className={activeSection === 'meetings' ? 'active' : ''} onClick={() => setActiveSection('meetings')} type="button">
           Minutes
         </button>
       </div>
       {activeSection === 'files'     && <PersonalFilesSection records={personalFiles} onUpdate={setPersonalFiles} employees={employees} isAdmin={userRole === 'Admin'} />}
-      {activeSection === 'induction' && <InductionSection employees={employees} records={inductionRecords} onUpdate={setInductionRecords} onBack={() => {}} />}
-      {activeSection === 'training'  && <TrainingSection records={trainingRecords} employees={employees} onUpdate={setTrainingRecords} onBack={() => {}} />}
+      {activeSection === 'induction' && <InductionSection employees={employees} records={inductionRecords} onUpdate={setInductionRecords} onBack={() => {}} isReadOnly={userRole === 'Executive'} />}
+      {activeSection === 'training'  && <TrainingSection records={trainingRecords} employees={employees} onUpdate={setTrainingRecords} onBack={() => {}} isReadOnly={userRole === 'Executive'} />}
       {activeSection === 'bank'      && <BankAccountSection employees={employees} records={bankAccountRecords} onUpdate={setBankAccountRecords} onBack={() => {}} />}
-      {activeSection === 'meetings'  && <MeetingsSection records={isHOD ? meetingRecords.filter(r => r.status === 'Final') : meetingRecords} onUpdate={setMeetingRecords} employees={employees} activeLeaves={activeLeaves} />}
+      {activeSection === 'meetings'  && <MeetingsSection records={(isHOD || userRole === 'Executive') ? meetingRecords.filter(r => r.status === 'Final') : meetingRecords} onUpdate={setMeetingRecords} employees={employees} activeLeaves={activeLeaves} isReadOnly={userRole === 'Executive'} />}
     </>
   )
 }
@@ -10428,12 +10437,13 @@ const priorityColors: Record<RequestPriority, string> = {
   High: 'req-priority-high',
 }
 
-function RequestsSection({ records, employees, onUpdate, isHOD = false }: {
+function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOnly = false }: {
   records: StaffRequestRecord[]
   employees: Employee[]
   onUpdate: (fn: (prev: StaffRequestRecord[]) => StaffRequestRecord[]) => void
   onBack?: () => void
   isHOD?: boolean
+  isReadOnly?: boolean
 }) {
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('All')
@@ -10492,7 +10502,7 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false }: {
             </select>
           </label>
           <label><span>Status</span><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="All">All Statuses</option><option>Open</option><option>Completed</option><option>Rejected</option></select></label>
-          <button className="primary-button vwh" type="button" onClick={() => setEditing(newReq())}>+ Add Request</button>
+          {!isReadOnly && <button className="primary-button vwh" type="button" onClick={() => setEditing(newReq())}>+ Add Request</button>}
         </div>
         <div className="employee-table-shell compact-scroll">
           <table className="data-table">
@@ -10540,13 +10550,13 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false }: {
                     </td>
                     <td style={{textAlign:'center',whiteSpace:'nowrap'}}>
                       <div className="row-actions" style={{ flexWrap: 'nowrap' }}>
-                        {/* Proceed icon — only for Open, non-locked, non-HOD */}
-                        {!isHOD && !r.locked && r.status === 'Open' && (
+                        {/* Proceed icon — only for Open, non-locked, non-HOD, non-ReadOnly */}
+                        {!isHOD && !isReadOnly && !r.locked && r.status === 'Open' && (
                           <button className="action-glyph vwh" title="Status Update" onClick={() => openUpdate(r)} type="button"
                             style={{ fontSize:'0.9rem', color:'#7c3aed' }}>⟳</button>
                         )}
-                        <button className="action-glyph edit vwh" title="Edit" onClick={() => setEditing(r)} type="button">✎</button>
-                        {!isHOD && <button className="action-glyph delete vwh" title="Delete" onClick={() => del(r.id)} type="button">🗑</button>}
+                        {!isReadOnly && <button className="action-glyph edit vwh" title="Edit" onClick={() => setEditing(r)} type="button">✎</button>}
+                        {!isHOD && !isReadOnly && <button className="action-glyph delete vwh" title="Delete" onClick={() => del(r.id)} type="button">🗑</button>}
                       </div>
                     </td>
                   </tr>
@@ -10611,11 +10621,12 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false }: {
   )
 }
 
-function VisitsSection({ records, employees, onUpdate }: {
+function VisitsSection({ records, employees, onUpdate, isReadOnly = false }: {
   records: VisitRecord[]
   employees: Employee[]
   onUpdate: (fn: (prev: VisitRecord[]) => VisitRecord[]) => void
   onBack?: () => void
+  isReadOnly?: boolean
 }) {
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('All')
@@ -10650,7 +10661,7 @@ function VisitsSection({ records, employees, onUpdate }: {
             </select>
           </label>
           <label><span>Status</span><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="All">All Statuses</option><option>Scheduled</option><option>Completed</option><option>Cancelled</option></select></label>
-          <button className="primary-button vwh" type="button" onClick={() => setEditing(newVisit())}>+ Add Visit</button>
+          {!isReadOnly && <button className="primary-button vwh" type="button" onClick={() => setEditing(newVisit())}>+ Add Visit</button>}
         </div>
         <div className="employee-table-shell compact-scroll">
           <table className="data-table">
@@ -10683,8 +10694,8 @@ function VisitsSection({ records, employees, onUpdate }: {
                     <td style={{maxWidth:200, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', color:'#64748b', fontSize:'0.82rem'}}>{r.remarks || '—'}</td>
                     <td style={{textAlign:'center'}}>
                       <div className="row-actions">
-                        <button className="action-glyph edit vwh" title="Edit" onClick={() => setEditing(r)} type="button">✎</button>
-                        <button className="action-glyph delete vwh" title="Delete" onClick={() => del(r.id)} type="button">🗑</button>
+                        {!isReadOnly && <button className="action-glyph edit vwh" title="Edit" onClick={() => setEditing(r)} type="button">✎</button>}
+                        {!isReadOnly && <button className="action-glyph delete vwh" title="Delete" onClick={() => del(r.id)} type="button">🗑</button>}
                       </div>
                     </td>
                   </tr>
@@ -11427,6 +11438,7 @@ function ActivitiesPage({
   onUpdateInventoryOrders,
   isHOD = false,
   isHR = false,
+  isExecutive = false,
   isTripReqApprover = false,
   currentUserSections = [],
   currentUserName = '',
@@ -11443,6 +11455,7 @@ function ActivitiesPage({
   onUpdateInventoryUsage: (fn: (prev: InventoryUsageRecord[]) => InventoryUsageRecord[]) => void
   onUpdateInventoryOrders: (fn: (prev: StoreOrder[]) => StoreOrder[]) => void
   isHOD?: boolean
+  isExecutive?: boolean
   isHR?: boolean
   isTripReqApprover?: boolean
   currentUserSections?: string[]
@@ -11488,23 +11501,23 @@ function ActivitiesPage({
       <div className="section-inline-tabs">
         <button className={activeSection === 'requests' ? 'active' : ''} onClick={() => setActiveSection('requests')} type="button">Requests</button>
         <button className={activeSection === 'visits' ? 'active' : ''} onClick={() => setActiveSection('visits')} type="button">Visits</button>
-        {!isHOD && <button className={activeSection === 'incidents' ? 'active' : ''} onClick={() => setActiveSection('incidents')} type="button">Incidents</button>}
-        {!isHOD && <button className={activeSection === 'passport' ? 'active' : ''} onClick={() => setActiveSection('passport')} type="button">Passports</button>}
+        {!isHOD && !isExecutive && <button className={activeSection === 'incidents' ? 'active' : ''} onClick={() => setActiveSection('incidents')} type="button">Incidents</button>}
+        {!isHOD && !isExecutive && <button className={activeSection === 'passport' ? 'active' : ''} onClick={() => setActiveSection('passport')} type="button">Passports</button>}
         {/* Trip Req: visible to non-HOD/HR staff AND to the designated Trip Req approver (ali41966) */}
-        {(!isHOD || isTripReqApprover) && !isHR && <button className={activeSection === 'tripreq' ? 'active' : ''} onClick={() => setActiveSection('tripreq')} type="button">Trip Req</button>}
-        {!isHOD && !isHR && <button className={activeSection === 'inventory' ? 'active' : ''} onClick={() => setActiveSection('inventory')} type="button">Inventory</button>}
+        {(!isHOD || isTripReqApprover) && !isHR && !isExecutive && <button className={activeSection === 'tripreq' ? 'active' : ''} onClick={() => setActiveSection('tripreq')} type="button">Trip Req</button>}
+        {!isHOD && !isHR && !isExecutive && <button className={activeSection === 'inventory' ? 'active' : ''} onClick={() => setActiveSection('inventory')} type="button">Inventory</button>}
       </div>
-      {activeSection === 'requests' && <RequestsSection records={scopedStaffRequests} employees={employees} onUpdate={setStaffRequests} onBack={() => {}} isHOD={isHOD} />}
-      {activeSection === 'visits' && <VisitsSection records={scopedVisitRecords} employees={employees} onUpdate={setVisitRecords} onBack={() => {}} />}
-      {!isHOD && activeSection === 'incidents' && <IncidentsSection records={incidentRecords} employees={employees} onUpdate={setIncidentRecords} onBack={() => {}} />}
-      {!isHOD && activeSection === 'passport' && <PassportTrackingSection records={passportHandovers} employees={employees} onUpdate={onUpdatePassport} />}
-      {(!isHOD || isTripReqApprover) && !isHR && activeSection === 'tripreq' && <TripReqSection records={tripRequests} employees={employees} onUpdate={onUpdateTripRequests} currentUserName={currentUserName} canApprove={isTripReqApprover} />}
-      {!isHOD && !isHR && activeSection === 'inventory' && <InventorySection items={inventoryItems} usage={inventoryUsage} orders={inventoryOrders} onUpdateItems={onUpdateInventoryItems} onUpdateUsage={onUpdateInventoryUsage} onUpdateOrders={onUpdateInventoryOrders} employees={employees} />}
+      {activeSection === 'requests' && <RequestsSection records={scopedStaffRequests} employees={employees} onUpdate={setStaffRequests} onBack={() => {}} isHOD={isHOD} isReadOnly={isExecutive} />}
+      {activeSection === 'visits' && <VisitsSection records={scopedVisitRecords} employees={employees} onUpdate={setVisitRecords} onBack={() => {}} isReadOnly={isExecutive} />}
+      {!isHOD && !isExecutive && activeSection === 'incidents' && <IncidentsSection records={incidentRecords} employees={employees} onUpdate={setIncidentRecords} onBack={() => {}} />}
+      {!isHOD && !isExecutive && activeSection === 'passport' && <PassportTrackingSection records={passportHandovers} employees={employees} onUpdate={onUpdatePassport} />}
+      {(!isHOD || isTripReqApprover) && !isHR && !isExecutive && activeSection === 'tripreq' && <TripReqSection records={tripRequests} employees={employees} onUpdate={onUpdateTripRequests} currentUserName={currentUserName} canApprove={isTripReqApprover} />}
+      {!isHOD && !isHR && !isExecutive && activeSection === 'inventory' && <InventorySection items={inventoryItems} usage={inventoryUsage} orders={inventoryOrders} onUpdateItems={onUpdateInventoryItems} onUpdateUsage={onUpdateInventoryUsage} onUpdateOrders={onUpdateInventoryOrders} employees={employees} />}
     </>
   )
 }
 
-type UserRole = 'Admin' | 'HR' | 'Viewer' | 'HOD'
+type UserRole = 'Admin' | 'HR' | 'Viewer' | 'HOD' | 'Executive'
 type AppUserStatus = 'Active' | 'Inactive'
 
 type AppUser = {
@@ -11530,6 +11543,7 @@ const rolePermissions: Record<UserRole, string> = {
   'HR': 'View and edit HR records (Employees, Leave, Operations, Termination) — no user management, no Trip Req or Inventory',
   'Viewer': 'Read-only access to employees and leave records',
   'HOD': 'Read-only access scoped to assigned section(s) only',
+  'Executive': 'Read-only access to Overview, Employees, Leave, Operations (Induction, Training, Minutes), Activities (Requests, Visits), Termination, and Reports',
 }
 
 function UserFormModal({ user, employees, onClose, onSave }: {
@@ -11643,6 +11657,7 @@ function UserFormModal({ user, employees, onClose, onSave }: {
                 <option value="HR">HR</option>
                 <option value="Viewer">Viewer</option>
                 <option value="HOD">HOD</option>
+                <option value="Executive">Executive</option>
               </select>
             </label>
             <label><span>Status</span>
@@ -11883,6 +11898,7 @@ function SettingsPage({ employees, leaveRequests: _lr, activeLeaves: _al, onRese
     'HR': 'role-hr',
     'Viewer': 'role-viewer',
     'HOD': 'role-hod',
+    'Executive': 'role-executive',
   }
 
   // Helpers for profile card
@@ -12334,7 +12350,324 @@ const pageIcons: Record<Page, string> = {
   operations: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>`,
   activities: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
   termination: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`,
+  reports: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>`,
   settings: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2"/></svg>`,
+}
+
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December']
+
+function ReportsPage({
+  employees,
+  leaveRequests,
+  activeLeaves,
+  leaveHistory,
+  noticeTerminations,
+  completedTerminations,
+  exitInterviews,
+  medicalCases,
+}: {
+  employees: Employee[]
+  leaveRequests: LeaveRequestRecord[]
+  activeLeaves: ActiveLeaveRecord[]
+  leaveHistory: LeaveHistoryRecord[]
+  noticeTerminations: EnhancedTerminationRecord[]
+  completedTerminations: CompletedTerminationRecord[]
+  exitInterviews: ExitInterviewRecord[]
+  medicalCases: MedicalCaseRecord[]
+}) {
+  const now = new Date()
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth())
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear())
+
+  const [inductionRecords, setInductionRecords] = useState<InductionRecord[]>([])
+  const [trainingRecords,  setTrainingRecords]  = useState<TrainingRecord[]>([])
+  const [meetingRecords,   setMeetingRecords]   = useState<MeetingRecord[]>([])
+  const [staffRequests,    setStaffRequests]    = useState<StaffRequestRecord[]>([])
+  const [visitRecords,     setVisitRecords]     = useState<VisitRecord[]>([])
+  const [loading,          setLoading]          = useState(true)
+
+  useEffect(() => {
+    Promise.all([
+      supabase.from('induction_records').select('*'),
+      supabase.from('training_records').select('*'),
+      supabase.from('meeting_records').select('*'),
+      supabase.from('staff_requests').select('*'),
+      supabase.from('visit_records').select('*'),
+    ]).then(([ind, tr, mt, sr, vr]) => {
+      if (ind.data) setInductionRecords(ind.data.map(inductionFromDb))
+      if (tr.data)  setTrainingRecords(tr.data.map(trainingFromDb))
+      if (mt.data)  setMeetingRecords(mt.data.map(meetingFromDb))
+      if (sr.data)  setStaffRequests(sr.data.map(staffReqFromDb))
+      if (vr.data)  setVisitRecords(vr.data.map(visitFromDb))
+      setLoading(false)
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const inMonth = (dateStr: string | undefined) => {
+    if (!dateStr) return false
+    const d = new Date(dateStr)
+    return d.getFullYear() === selectedYear && d.getMonth() === selectedMonth
+  }
+
+  // Monthly filtered slices
+  const mLeaveReq   = leaveRequests.filter(r => inMonth(r.departureDate))
+  const mLeaveHist  = leaveHistory.filter(r => inMonth(r.departureDate))
+  const mMedical    = medicalCases.filter(r => inMonth(r.caseDate))
+  const mNoticeTerm = noticeTerminations.filter(r => inMonth(r.dateSubmitted))
+  const mCompTerm   = completedTerminations.filter(r => inMonth(r.departureDate) || inMonth(r.lastWorkingDate))
+  const mInduction  = inductionRecords.filter(r => inMonth(r.inductionDate))
+  const mTraining   = trainingRecords.filter(r => inMonth(r.date))
+  const mMeetings   = meetingRecords.filter(r => inMonth(r.date))
+  const mRequests   = staffRequests.filter(r => inMonth(r.submittedDate))
+  const mVisits     = visitRecords.filter(r => inMonth(r.visitDate))
+
+  // Workforce snapshot (current, no date filter)
+  const totalEmp = employees.length
+  const onSite   = employees.filter(e => e.siteStatus === 'On Site').length
+  const offSite  = employees.filter(e => e.siteStatus === 'Off Site').length
+  const onLeave  = activeLeaves.length
+  const byNat    = employees.reduce<Record<string, number>>((acc, e) => { acc[e.nationality] = (acc[e.nationality] ?? 0) + 1; return acc }, {})
+  const bySec    = employees.reduce<Record<string, number>>((acc, e) => { acc[e.department] = (acc[e.department] ?? 0) + 1; return acc }, {})
+
+  // Leave breakdown by type
+  const leaveByType = mLeaveReq.reduce<Record<string, number>>((acc, r) => { acc[r.leaveTypeCode] = (acc[r.leaveTypeCode] ?? 0) + 1; return acc }, {})
+
+  // Induction total participants
+  const inductionParticipants = mInduction.reduce((s, r) => s + r.participants.length, 0)
+  const trainingParticipants  = mTraining.reduce((s, r) => s + r.participants.length, 0)
+
+  const availableYears = Array.from({ length: 5 }, (_, i) => now.getFullYear() - 2 + i)
+
+  const handlePrint = () => window.print()
+
+  const Stat = ({ n, label, color = '#3b82f6' }: { n: number | string; label: string; color?: string }) => (
+    <div className="rpt-kpi">
+      <div className="rpt-kpi-num" style={{ color }}>{n}</div>
+      <div className="rpt-kpi-lbl">{label}</div>
+    </div>
+  )
+
+  const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
+    <div className="rpt-section">
+      <div className="rpt-section-hd">{title}</div>
+      {children}
+    </div>
+  )
+
+  return (
+    <div className="reports-page">
+      <PageHeader eyebrow="Reports" title="Monthly Report" />
+
+      <div className="rpt-controls no-print">
+        <label>
+          <span>Month</span>
+          <select value={selectedMonth} onChange={e => setSelectedMonth(Number(e.target.value))}>
+            {MONTH_NAMES.map((m, i) => <option key={i} value={i}>{m}</option>)}
+          </select>
+        </label>
+        <label>
+          <span>Year</span>
+          <select value={selectedYear} onChange={e => setSelectedYear(Number(e.target.value))}>
+            {availableYears.map(y => <option key={y}>{y}</option>)}
+          </select>
+        </label>
+        <button className="primary-button" onClick={handlePrint} type="button">🖨 Print / Export PDF</button>
+      </div>
+
+      {loading ? (
+        <div className="rpt-loading">Loading report data…</div>
+      ) : (
+        <div className="rpt-body" id="rpt-print-area">
+          <div className="rpt-period-title">{MONTH_NAMES[selectedMonth]} {selectedYear} — HR Monthly Report</div>
+          <div className="rpt-meta">Thilafushi Industrial Complex · HR Department</div>
+
+          {/* ── Workforce ── */}
+          <Section title="1. Workforce Overview">
+            <div className="rpt-kpi-row">
+              <Stat n={totalEmp} label="Total Employees" color="#0f172a" />
+              <Stat n={onSite}   label="On Site"         color="#16a34a" />
+              <Stat n={offSite}  label="Off Site"        color="#d97706" />
+              <Stat n={onLeave}  label="Currently on Leave" color="#7c3aed" />
+            </div>
+            <div className="rpt-two-col">
+              <div>
+                <div className="rpt-sub-hd">By Nationality</div>
+                <table className="rpt-table">
+                  <thead><tr><th>Nationality</th><th>Count</th></tr></thead>
+                  <tbody>
+                    {Object.entries(byNat).sort((a,b) => b[1]-a[1]).map(([nat, n]) => (
+                      <tr key={nat}><td>{nat}</td><td>{n}</td></tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div>
+                <div className="rpt-sub-hd">By Section (Top 10)</div>
+                <table className="rpt-table">
+                  <thead><tr><th>Section</th><th>Count</th></tr></thead>
+                  <tbody>
+                    {Object.entries(bySec).sort((a,b) => b[1]-a[1]).slice(0,10).map(([sec, n]) => (
+                      <tr key={sec}><td>{sec}</td><td>{n}</td></tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </Section>
+
+          {/* ── Leave ── */}
+          <Section title="2. Leave">
+            <div className="rpt-kpi-row">
+              <Stat n={mLeaveReq.length}  label="New Requests"    color="#7c3aed" />
+              <Stat n={mLeaveHist.length} label="Completed Leaves" color="#0369a1" />
+              <Stat n={activeLeaves.length} label="Currently Active" color="#d97706" />
+            </div>
+            {Object.keys(leaveByType).length > 0 && (
+              <>
+                <div className="rpt-sub-hd">Leave Type Breakdown (New Requests)</div>
+                <table className="rpt-table rpt-table-sm">
+                  <thead><tr><th>Type</th><th>Count</th></tr></thead>
+                  <tbody>
+                    {Object.entries(leaveByType).map(([t, n]) => (
+                      <tr key={t}><td>{t}</td><td>{n}</td></tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
+            )}
+          </Section>
+
+          {/* ── Medical ── */}
+          <Section title="3. Medical Cases">
+            <div className="rpt-kpi-row">
+              <Stat n={mMedical.length} label="Cases This Month" color="#dc2626" />
+              <Stat n={mMedical.filter(r => r.isUrgent).length} label="Urgent" color="#dc2626" />
+              <Stat n={mMedical.filter(r => r.isAdmitted).length} label="Admitted" color="#7c3aed" />
+              <Stat n={mMedical.reduce((s, r) => s + (r.sickLeaveDays || 0), 0)} label="Sick Leave Days" color="#d97706" />
+            </div>
+            {mMedical.length > 0 && (
+              <table className="rpt-table rpt-table-sm">
+                <thead><tr><th>Emp ID</th><th>Name</th><th>Section</th><th>Date</th><th>Sick Leave Days</th></tr></thead>
+                <tbody>
+                  {mMedical.map(r => (
+                    <tr key={r.id}><td>{r.employeeId}</td><td>{r.name}</td><td>{r.department}</td><td>{formatDateDisplay(r.caseDate)}</td><td>{r.sickLeaveDays || 0}</td></tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </Section>
+
+          {/* ── Termination ── */}
+          <Section title="4. Termination">
+            <div className="rpt-kpi-row">
+              <Stat n={mNoticeTerm.length} label="Notice Submissions" color="#dc2626" />
+              <Stat n={mCompTerm.length}   label="Completed Departures" color="#0f172a" />
+              <Stat n={exitInterviews.filter(e => inMonth(e.departureDate)).length} label="Exit Interviews" color="#7c3aed" />
+            </div>
+            {mCompTerm.length > 0 && (
+              <table className="rpt-table rpt-table-sm">
+                <thead><tr><th>Emp ID</th><th>Name</th><th>Section</th><th>Nationality</th><th>Departure</th><th>Reason</th></tr></thead>
+                <tbody>
+                  {mCompTerm.map(r => (
+                    <tr key={r.id}><td>{r.employeeId}</td><td>{r.name}</td><td>{r.department}</td><td>{r.nationality}</td><td>{formatDateDisplay(r.departureDate)}</td><td>{r.reasonForLeaving || '—'}</td></tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </Section>
+
+          {/* ── HR Operations ── */}
+          <Section title="5. HR Operations">
+            <div className="rpt-kpi-row">
+              <Stat n={mInduction.length}        label="Induction Sessions"       color="#0369a1" />
+              <Stat n={inductionParticipants}    label="Induction Participants"   color="#0369a1" />
+              <Stat n={mTraining.length}         label="Training Sessions"        color="#16a34a" />
+              <Stat n={trainingParticipants}     label="Training Participants"    color="#16a34a" />
+              <Stat n={mMeetings.length}         label="Meeting Minutes (Final)"  color="#7c3aed" />
+            </div>
+            {mInduction.length > 0 && (
+              <>
+                <div className="rpt-sub-hd">Induction Sessions</div>
+                <table className="rpt-table rpt-table-sm">
+                  <thead><tr><th>Ref No</th><th>Date</th><th>Conducted By</th><th>Participants</th><th>Status</th></tr></thead>
+                  <tbody>
+                    {mInduction.map(r => (
+                      <tr key={r.id}><td>{r.refNo}</td><td>{formatDateDisplay(r.inductionDate)}</td><td>{r.conductedBy}</td><td>{r.participants.length}</td><td>{r.status}</td></tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
+            )}
+            {mTraining.length > 0 && (
+              <>
+                <div className="rpt-sub-hd">Training Sessions</div>
+                <table className="rpt-table rpt-table-sm">
+                  <thead><tr><th>Title</th><th>Date</th><th>Type</th><th>Conducted By</th><th>Participants</th><th>Status</th></tr></thead>
+                  <tbody>
+                    {mTraining.map(r => (
+                      <tr key={r.id}><td>{r.trainingTitle}</td><td>{formatDateDisplay(r.date)}</td><td>{r.trainingType}</td><td>{r.conductedBy}</td><td>{r.participants.length}</td><td>{r.status}</td></tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
+            )}
+            {mMeetings.length > 0 && (
+              <>
+                <div className="rpt-sub-hd">Meeting Minutes</div>
+                <table className="rpt-table rpt-table-sm">
+                  <thead><tr><th>Ref No</th><th>Date</th><th>Venue</th><th>Chairperson</th><th>Status</th></tr></thead>
+                  <tbody>
+                    {mMeetings.map(r => (
+                      <tr key={r.id}><td>{r.refNumber}</td><td>{formatDateDisplay(r.date)}</td><td>{r.venue}</td><td>{r.chairperson}</td><td>{r.status}</td></tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
+            )}
+          </Section>
+
+          {/* ── Activities ── */}
+          <Section title="6. Activities">
+            <div className="rpt-kpi-row">
+              <Stat n={mRequests.length} label="Staff Requests" color="#0369a1" />
+              <Stat n={mRequests.filter(r => r.status === 'Completed').length} label="Completed" color="#16a34a" />
+              <Stat n={mRequests.filter(r => r.status === 'Open').length} label="Open" color="#d97706" />
+              <Stat n={mVisits.length}   label="Visits Recorded" color="#7c3aed" />
+            </div>
+            {mRequests.length > 0 && (
+              <>
+                <div className="rpt-sub-hd">Staff Requests by Type</div>
+                <table className="rpt-table rpt-table-sm">
+                  <thead><tr><th>Request Type</th><th>Count</th></tr></thead>
+                  <tbody>
+                    {Object.entries(mRequests.reduce<Record<string,number>>((acc, r) => { acc[r.requestType]=(acc[r.requestType]??0)+1; return acc }, {}))
+                      .sort((a,b)=>b[1]-a[1]).map(([t,n]) => <tr key={t}><td>{t}</td><td>{n}</td></tr>)}
+                  </tbody>
+                </table>
+              </>
+            )}
+            {mVisits.length > 0 && (
+              <>
+                <div className="rpt-sub-hd">Medical Visits by Type</div>
+                <table className="rpt-table rpt-table-sm">
+                  <thead><tr><th>Visit Type</th><th>Count</th></tr></thead>
+                  <tbody>
+                    {Object.entries(mVisits.reduce<Record<string,number>>((acc, r) => { acc[r.visitType]=(acc[r.visitType]??0)+1; return acc }, {}))
+                      .sort((a,b)=>b[1]-a[1]).map(([t,n]) => <tr key={t}><td>{t}</td><td>{n}</td></tr>)}
+                  </tbody>
+                </table>
+              </>
+            )}
+          </Section>
+
+          <div className="rpt-footer">
+            Generated on {new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'long', year:'numeric' })} · TIC HR System
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 function App() {
@@ -13099,6 +13432,7 @@ function App() {
   const currentAppUser = currentProfile
   const isHOD = currentUserRole === 'HOD'
   const isHR  = currentUserRole === 'HR'
+  const isExecutive = currentUserRole === 'Executive'
   // AHMED ALI (ali41966) — designated Trip Req approver even as HOD
   const TRIPREQ_APPROVER_USERNAME = 'ali41966'
   const isTripReqApprover = currentAppUser?.username === TRIPREQ_APPROVER_USERNAME
@@ -13213,11 +13547,12 @@ function App() {
         </div>
         <main className="workspace-inner" id="top">
           {activePage === 'overview' && <OverviewPage employees={scopedEmployees} leaveRequests={scopedLeaveRequests} activeLeaves={scopedActiveLeaves} leaveHistory={scopedLeaveHistory} noticeTerminations={scopedNoticeTerminations} completedTerminations={scopedCompletedTerminations} exitInterviews={scopedExitInterviews} medicalCases={scopedMedicalCases} inventoryItems={inventoryItems} passportHandovers={scopedPassportHandovers} onNavigate={setActivePage} currentUserName={currentUserName} />}
-          {activePage === 'employees' && <EmployeesPage employees={scopedEmployees} medicalCases={scopedMedicalCases} noticeTerminations={scopedNoticeTerminations} offSiteRecords={scopedOffSiteRecords} onUpdateOffSite={(fn) => setOffSiteRecords(fn)} onAdd={() => { setEmployeeMode('add'); setEmployeeForm(emptyEmployee); setShowEmployeeForm(true) }} onEdit={openEditEmployee} onDelete={deleteEmployee} onExport={exportCsv} onImport={importCsv} onTemplate={downloadTemplate} onShowTasks={() => setShowPendingTasks(true)} isHOD={isHOD} isAdmin={currentUserRole === 'Admin'} />}
-          {activePage === 'leave' && <LeavePage employees={scopedEmployees} leaveRequests={scopedLeaveRequests} activeLeaves={scopedActiveLeaves} leaveHistory={scopedLeaveHistory} medicalCases={scopedMedicalCases} isHOD={isHOD} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onSetRequestStep={setLeaveRequestStep} onExtendLeave={extendActiveLeave} onEditActiveLeave={editActiveLeave} onHistoryConfirm={updateHistoryConfirmation} onUpdateMedical={(fn) => setMedicalCases(fn)} />}
+          {activePage === 'employees' && <EmployeesPage employees={scopedEmployees} medicalCases={scopedMedicalCases} noticeTerminations={scopedNoticeTerminations} offSiteRecords={scopedOffSiteRecords} onUpdateOffSite={(fn) => setOffSiteRecords(fn)} onAdd={() => { setEmployeeMode('add'); setEmployeeForm(emptyEmployee); setShowEmployeeForm(true) }} onEdit={openEditEmployee} onDelete={deleteEmployee} onExport={exportCsv} onImport={importCsv} onTemplate={downloadTemplate} onShowTasks={() => setShowPendingTasks(true)} isHOD={isHOD} isAdmin={currentUserRole === 'Admin'} isExecutive={isExecutive} />}
+          {activePage === 'leave' && <LeavePage employees={scopedEmployees} leaveRequests={scopedLeaveRequests} activeLeaves={scopedActiveLeaves} leaveHistory={scopedLeaveHistory} medicalCases={scopedMedicalCases} isHOD={isHOD} isExecutive={isExecutive} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onSetRequestStep={setLeaveRequestStep} onExtendLeave={extendActiveLeave} onEditActiveLeave={editActiveLeave} onHistoryConfirm={updateHistoryConfirmation} onUpdateMedical={(fn) => setMedicalCases(fn)} />}
           {activePage === 'operations' && <OperationsPage employees={employees} completedTerminations={completedTerminations} activeLeaves={activeLeaves} isHOD={isHOD} userRole={currentUserRole} />}
-          {activePage === 'activities' && <ActivitiesPage employees={scopedEmployees} passportHandovers={scopedPassportHandovers} onUpdatePassport={(fn) => setPassportHandovers(fn)} tripRequests={tripRequests} onUpdateTripRequests={(fn) => setTripRequests(fn)} inventoryItems={inventoryItems} inventoryUsage={inventoryUsage} inventoryOrders={inventoryOrders} onUpdateInventoryItems={(fn) => setInventoryItems(fn)} onUpdateInventoryUsage={(fn) => setInventoryUsage(fn)} onUpdateInventoryOrders={(fn) => setInventoryOrders(fn)} isHOD={isHOD} isHR={isHR} isTripReqApprover={isTripReqApprover} currentUserSections={currentUserSections} currentUserName={currentUserName} />}
-          {activePage === 'termination' && <TerminationPage noticeTerminations={scopedNoticeTerminations} completedTerminations={scopedCompletedTerminations} exitInterviews={scopedExitInterviews} employees={scopedEmployees} isHOD={isHOD} onAdd={openAddTermination} onEdit={openEditTermination} onSetStage={setTerminationStage} onDelete={deleteTermination} onViewDetails={(record) => setTerminationDetails(record)} onUpdateExitInterviews={(fn) => setExitInterviews(fn)} />}
+          {activePage === 'activities' && <ActivitiesPage employees={scopedEmployees} passportHandovers={scopedPassportHandovers} onUpdatePassport={(fn) => setPassportHandovers(fn)} tripRequests={tripRequests} onUpdateTripRequests={(fn) => setTripRequests(fn)} inventoryItems={inventoryItems} inventoryUsage={inventoryUsage} inventoryOrders={inventoryOrders} onUpdateInventoryItems={(fn) => setInventoryItems(fn)} onUpdateInventoryUsage={(fn) => setInventoryUsage(fn)} onUpdateInventoryOrders={(fn) => setInventoryOrders(fn)} isHOD={isHOD} isHR={isHR} isExecutive={isExecutive} isTripReqApprover={isTripReqApprover} currentUserSections={currentUserSections} currentUserName={currentUserName} />}
+          {activePage === 'termination' && <TerminationPage noticeTerminations={scopedNoticeTerminations} completedTerminations={scopedCompletedTerminations} exitInterviews={scopedExitInterviews} employees={scopedEmployees} isHOD={isHOD} isExecutive={isExecutive} onAdd={openAddTermination} onEdit={openEditTermination} onSetStage={setTerminationStage} onDelete={deleteTermination} onViewDetails={(record) => setTerminationDetails(record)} onUpdateExitInterviews={(fn) => setExitInterviews(fn)} />}
+          {activePage === 'reports' && <ReportsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} noticeTerminations={noticeTerminations} completedTerminations={completedTerminations} exitInterviews={exitInterviews} medicalCases={medicalCases} />}
           {activePage === 'settings' && <SettingsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} onReset={() => setResetStep(1)} currentUserName={currentUserName} loggedInUser={currentProfile} users={users} onUpdateUsers={(fn) => setUsers(fn)} />}
         </main>
       </div> {/* .workspace */}

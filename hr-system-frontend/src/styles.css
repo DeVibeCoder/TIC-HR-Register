@@ -10915,3 +10915,186 @@ html { overflow-x: hidden; }
 }
 [data-theme="dark"] .bank-emp-search-btn:hover { background: rgba(45,52,75,.92); }
 [data-theme="dark"] .bank-emp-search-btn.selected { background: rgba(124,92,255,.15); border-color: rgba(124,92,255,.35); }
+
+/* ── Executive role chip ─────────────────────────────────────────────────── */
+.role-chip.role-executive { background: #e0f2fe; color: #0369a1; }
+[data-theme="dark"] .role-chip.role-executive { background: rgba(3,105,161,.18); color: #7dd3fc; }
+
+/* ── Reports Page ────────────────────────────────────────────────────────── */
+.reports-page { display: flex; flex-direction: column; gap: 20px; padding-bottom: 40px; }
+
+.rpt-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 18px;
+}
+.rpt-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.rpt-controls label select {
+  font-size: 0.86rem;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--ink);
+  cursor: pointer;
+  min-width: 130px;
+}
+
+.rpt-loading {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.rpt-body {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.rpt-period-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--ink);
+  padding-bottom: 4px;
+  border-bottom: 2px solid var(--line);
+}
+.rpt-meta {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: -12px;
+}
+
+.rpt-section {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.rpt-section-hd {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ink);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 8px;
+}
+
+.rpt-sub-hd {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 4px;
+}
+
+.rpt-kpi-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.rpt-kpi {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 18px;
+  min-width: 110px;
+  flex: 1 1 110px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rpt-kpi-num {
+  font-size: 1.55rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.rpt-kpi-lbl {
+  font-size: 0.73rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.rpt-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.rpt-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  color: var(--ink);
+}
+.rpt-table th {
+  text-align: left;
+  font-weight: 600;
+  padding: 6px 10px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.rpt-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.rpt-table tbody tr:last-child td { border-bottom: none; }
+.rpt-table tbody tr:hover td { background: rgba(59,130,246,.04); }
+.rpt-table-sm { font-size: 0.78rem; }
+
+.rpt-footer {
+  font-size: 0.74rem;
+  color: var(--muted);
+  text-align: right;
+  margin-top: 8px;
+}
+
+/* dark mode adjustments */
+[data-theme="dark"] .rpt-kpi { background: rgba(255,255,255,.035); }
+[data-theme="dark"] .rpt-table th { background: rgba(255,255,255,.04); }
+[data-theme="dark"] .rpt-table tbody tr:hover td { background: rgba(255,255,255,.04); }
+
+/* print styles */
+@media print {
+  .no-print,
+  .workspace-sidebar,
+  .workspace-topbar,
+  .page-header,
+  .rpt-controls { display: none !important; }
+
+  .workspace-inner { padding: 0 !important; }
+  .rpt-body { gap: 16px; }
+  .rpt-section { border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; break-inside: avoid; }
+  .rpt-kpi { border: 1px solid #e2e8f0; }
+  .rpt-period-title { font-size: 1rem; }
+  .rpt-table th, .rpt-table td { padding: 4px 8px; }
+}
