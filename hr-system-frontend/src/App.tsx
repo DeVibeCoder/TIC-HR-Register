@@ -8619,7 +8619,7 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   // Dynamic approved-by role
   const approvedByRole = record.chairperson === CHAIRPERSON_OPTIONS[1].value ? 'Deputy General Manager' : 'General Manager'
 
-  // Footer content — placed in <tfoot> so the browser auto-repeats it on every printed page
+  // Footer — position:fixed in print so it pins to the bottom of every physical page
   const footerHtml =
     `<div class="pg-footer">
       <span class="pf-ref">BRIEFING MEETING MINUTES &mdash; ${esc(refSeq)}</span>
@@ -8628,7 +8628,7 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/>
 <title>Briefing Meeting Minutes — ${esc(record.refNumber)}</title>
 <style>
-  @page { size:A4 portrait; margin:12mm 15mm 14mm 15mm; }
+  @page { size:A4 portrait; margin:12mm 15mm 18mm 15mm; }
   *,*::before,*::after { box-sizing:border-box; }
   body { font-family:Arial,Helvetica,sans-serif; font-size:11pt; color:#111; background:#e8e8e8; margin:0; padding:0; }
   .pbar { display:flex; align-items:center; gap:14px; padding:10px 20px; background:#1e1b4b; position:sticky; top:0; z-index:10; font-family:system-ui,sans-serif; font-size:13px; }
@@ -8682,16 +8682,13 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   /* Section dept boxes — never split across pages */
   .dept-box { page-break-inside:avoid; break-inside:avoid; }
 
-  /* Document frame — <tfoot> auto-repeats the footer on EVERY printed page */
-  .doc { width:100%; border-collapse:collapse; }
-  .doc > tbody > tr > td { padding:0; vertical-align:top; }
-  .doc > tfoot { display:table-footer-group; }
-  .doc > tfoot > tr > td { padding:0; vertical-align:bottom; }
+  /* Footer — pinned to the bottom-left of every printed page */
   .pg-footer {
     border-top:1pt solid #2f78c5;
     padding-top:5pt; margin-top:10pt;
     font-size:8.5pt; color:#2f78c5;
     text-align:left;
+    max-width:210mm; margin-left:auto; margin-right:auto;
   }
   .pg-footer .pf-ref { white-space:nowrap; letter-spacing:0.3pt; }
 
@@ -8701,12 +8698,12 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
     .wrap { max-width:none; margin:0; padding:0; gap:0; }
     .page { box-shadow:none; padding:0; }
     .pgbrk { page-break-before:always; }
-    /* Table fills each page so the tfoot footer is pinned to the bottom
-       of every page — including the short last page */
-    html, body { height:100%; }
-    .wrap { height:100%; }
-    .doc { height:100%; }
-    .pg-footer { margin-top:6pt; }
+    /* Fixed footer repeats and pins to the bottom of every physical page */
+    .pg-footer {
+      position:fixed; left:0; right:0; bottom:6mm;
+      margin:0; padding:4pt 0 0;
+      background:#fff;
+    }
   }
 </style></head><body>
 <div class="pbar">
@@ -8714,9 +8711,6 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   <span>Briefing Meeting Minutes — ${esc(record.refNumber)}</span>
 </div>
 <div class="wrap">
-<table class="doc">
-<tfoot><tr><td>${footerHtml}</td></tr></tfoot>
-<tbody><tr><td>
 
 <!-- PAGE 1 -->
 <div class="page">
@@ -8863,9 +8857,8 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   </div>
 </div>
 
-</td></tr></tbody>
-</table>
 </div>
+${footerHtml}
 </body></html>`
   const win = window.open('', '_blank')
   if (win) { win.document.write(html); win.document.close() }
