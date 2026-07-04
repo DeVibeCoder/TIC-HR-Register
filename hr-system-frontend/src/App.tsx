@@ -8558,12 +8558,12 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   const hcRows = HEADCOUNT_DEPTS.map(dept => {
     const { onDuty, notInSite, sickLeave, onLeave, total } = calcMeetingHeadcount(dept, employees, activeLeaves)
     return `<tr>
-      <td style="padding:4pt 6pt;font-size:9pt;border:0.5pt solid #bbb;">${esc(dept.label)}</td>
-      <td style="text-align:center;padding:4pt;font-size:9pt;border:0.5pt solid #bbb;">${pad2(onDuty)}</td>
-      <td style="text-align:center;padding:4pt;font-size:9pt;border:0.5pt solid #bbb;">${pad2(notInSite)}</td>
-      <td style="text-align:center;padding:4pt;font-size:9pt;border:0.5pt solid #bbb;">${pad2(sickLeave)}</td>
-      <td style="text-align:center;padding:4pt;font-size:9pt;border:0.5pt solid #bbb;">${pad2(onLeave)}</td>
-      <td style="text-align:center;padding:4pt;font-size:9pt;border:0.5pt solid #bbb;font-weight:700;">${pad2(total)}</td>
+      <td style="padding:4pt 6pt;font-size:10pt;border:0.5pt solid #bbb;">${esc(dept.label)}</td>
+      <td style="text-align:center;padding:4pt;font-size:10pt;border:0.5pt solid #bbb;">${pad2(onDuty)}</td>
+      <td style="text-align:center;padding:4pt;font-size:10pt;border:0.5pt solid #bbb;">${pad2(notInSite)}</td>
+      <td style="text-align:center;padding:4pt;font-size:10pt;border:0.5pt solid #bbb;">${pad2(sickLeave)}</td>
+      <td style="text-align:center;padding:4pt;font-size:10pt;border:0.5pt solid #bbb;">${pad2(onLeave)}</td>
+      <td style="text-align:center;padding:4pt;font-size:10pt;border:0.5pt solid #bbb;font-weight:700;">${pad2(total)}</td>
     </tr>`
   }).join('')
 
@@ -8605,11 +8605,11 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   }
 
   const agendaHtml = (record.agendaType ?? 'standard') === 'custom' && record.customAgenda?.trim()
-    ? `<ol style="margin:0 0 0 20pt;padding:0;">${record.customAgenda.trim().split('\n').filter(l=>l.trim()).map(l=>`<li style="margin-bottom:5pt;font-size:9pt;">${esc(l.trim())}</li>`).join('')}</ol>`
+    ? `<ol style="margin:0 0 0 20pt;padding:0;">${record.customAgenda.trim().split('\n').filter(l=>l.trim()).map(l=>`<li style="margin-bottom:5pt;font-size:10pt;">${esc(l.trim())}</li>`).join('')}</ol>`
     : `<ol style="margin:0 0 0 20pt;padding:0;">
-        <li style="margin-bottom:5pt;font-size:9pt;">REVIEW OF MINUTES FROM THE PREVIOUS MEETING HELD ON ${fmtAgendaDate(record.prevMeetingDate)}.</li>
-        <li style="margin-bottom:5pt;font-size:9pt;">DISCUSSION OF ISSUES, UPDATES AND CHALLENGES FACED BY EACH SECTION.</li>
-        <li style="margin-bottom:5pt;font-size:9pt;">ANY OTHER MATTERS THAT NEED TO BE ADDRESSED&hellip;</li>
+        <li style="margin-bottom:5pt;font-size:10pt;">REVIEW OF MINUTES FROM THE PREVIOUS MEETING HELD ON ${fmtAgendaDate(record.prevMeetingDate)}.</li>
+        <li style="margin-bottom:5pt;font-size:10pt;">DISCUSSION OF ISSUES, UPDATES AND CHALLENGES FACED BY EACH SECTION.</li>
+        <li style="margin-bottom:5pt;font-size:10pt;">ANY OTHER MATTERS THAT NEED TO BE ADDRESSED&hellip;</li>
       </ol>`
 
   // Letterhead image URL
@@ -8630,9 +8630,9 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/>
 <title>Briefing Meeting Minutes — ${esc(record.refNumber)}</title>
 <style>
-  @page { size:A4 portrait; margin:7mm 15mm 10mm 15mm; }
+  @page { size:A4 portrait; margin:7mm 15mm 20mm 15mm; }
   *,*::before,*::after { box-sizing:border-box; }
-  body { font-family:Arial,Helvetica,sans-serif; font-size:10.5pt; color:#111; background:#e8e8e8; margin:0; padding:0; }
+  body { font-family:Arial,Helvetica,sans-serif; font-size:11pt; color:#111; background:#e8e8e8; margin:0; padding:0; }
   .pbar { display:flex; align-items:center; gap:14px; padding:10px 20px; background:#1e1b4b; position:sticky; top:0; z-index:10; font-family:system-ui,sans-serif; font-size:13px; }
   .pbar button { padding:7px 18px; background:#6d28d9; color:#fff; border:none; border-radius:6px; font-size:13px; font-weight:700; cursor:pointer; }
   .pbar span { color:rgba(221,214,254,0.7); font-size:12px; }
@@ -8641,45 +8641,48 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
 
   /* Info table — auto-sizes based on content */
   .info-tbl { width:100%; border-collapse:collapse; margin-bottom:6pt; }
-  .info-tbl td { border:0.6pt solid #999; padding:2.5pt 6pt; font-size:8.5pt; vertical-align:middle; }
-  .info-tbl td.lbl { font-weight:700; white-space:nowrap; width:26mm; background:#f0f0f0; color:#111; font-size:8pt; }
+  .info-tbl td { border:0.6pt solid #999; padding:2.5pt 6pt; font-size:9.5pt; vertical-align:middle; }
+  .info-tbl td.lbl { font-weight:700; white-space:nowrap; width:26mm; background:#f0f0f0; color:#111; font-size:9pt; }
   /* Participant tables — small, fixed layout, height controlled on <tr> */
   .p-tbl { width:100%; border-collapse:collapse; table-layout:fixed; }
-  .p-tbl th { background:#e8e8e8; border:0.5pt solid #bbb; padding:2pt 4pt; font-size:7pt; font-weight:700; text-align:left; overflow:hidden; }
+  .p-tbl th { background:#e8e8e8; border:0.5pt solid #bbb; padding:2pt 4pt; font-size:8pt; font-weight:700; text-align:left; overflow:hidden; }
   .p-tbl th.ctr,.p-tbl td.ctr { text-align:center; }
-  .p-tbl td { border:0.5pt solid #ddd; padding:0 4pt; font-size:7.5pt; overflow:hidden; vertical-align:middle; }
+  .p-tbl td { border:0.5pt solid #ddd; padding:0 4pt; font-size:8.5pt; overflow:hidden; vertical-align:middle; }
   .p-tbl .nc { width:46%; } .p-tbl .dc { width:44%; } .p-tbl .sc { width:10%; }
 
   /* Headcount table — compact fixed column widths */
   .hc-tbl { width:100%; border-collapse:collapse; }
-  .hc-tbl th { background:#4a7fb5; color:#fff; font-size:7pt; font-weight:700; padding:2.5pt 2pt; border:0.5pt solid #3a6f9f; text-align:center; }
+  .hc-tbl th { background:#4a7fb5; color:#fff; font-size:8pt; font-weight:700; padding:2.5pt 2pt; border:0.5pt solid #3a6f9f; text-align:center; }
   .hc-tbl th.lft { text-align:left; }
   /* Number columns: equal fixed width so all values align */
   .hc-tbl th:not(.lft),.hc-tbl td:not(:first-child) { width:13%; text-align:center; }
   .hc-tbl th:first-child,.hc-tbl td:first-child { width:35%; }
-  .hc-tbl td { padding:2pt 3pt; font-size:7.5pt; border:0.5pt solid #bbb; }
+  .hc-tbl td { padding:2pt 3pt; font-size:8.5pt; border:0.5pt solid #bbb; }
   .hc-tbl .tot td { font-weight:800; background:#f0f0f0; }
 
   /* Discussion page */
-  .disc-intro { font-size:8.5pt; font-weight:700; margin-bottom:8pt; padding-bottom:6pt; border-bottom:0.5pt solid #ccc; }
-  .disc-section-hd { font-size:8.5pt; font-weight:800; text-decoration:underline; text-transform:uppercase; margin:0 0 5pt; }
+  .disc-intro { font-size:9.5pt; font-weight:700; margin-bottom:8pt; padding-bottom:6pt; border-bottom:0.5pt solid #ccc; }
+  .disc-section-hd { font-size:9.5pt; font-weight:800; text-decoration:underline; text-transform:uppercase; margin:0 0 5pt; }
   .disc-subsection { margin-bottom:10pt; padding-left:14pt; }
   .disc-label { display:flex; align-items:baseline; gap:6pt; margin-bottom:5pt; }
-  .disc-label strong { font-size:8.5pt; text-transform:uppercase; letter-spacing:0.3pt; }
-  .disc-dept-hd { font-size:8pt; font-weight:700; text-decoration:underline; margin-bottom:3pt; }
-  .disc-dept-nil { font-size:8pt; color:#888; }
-  .disc-text { font-size:8.5pt; line-height:1.5; }
+  .disc-label strong { font-size:9.5pt; text-transform:uppercase; letter-spacing:0.3pt; }
+  .disc-dept-hd { font-size:9pt; font-weight:700; text-decoration:underline; margin-bottom:3pt; }
+  .disc-dept-nil { font-size:9pt; color:#888; }
+  .disc-text { font-size:9.5pt; line-height:1.5; }
   .disc-ul { margin:0; padding-left:14pt; }
-  .disc-ul li { font-size:8pt; margin-bottom:2pt; }
+  .disc-ul li { font-size:9pt; margin-bottom:2pt; }
 
   /* Closing */
-  .closing-note { text-align:center; border:0.7pt solid #aaa; padding:4pt 8pt; margin:10pt 0 8pt; font-size:8pt; color:#555; font-style:italic; }
+  .closing-note { text-align:center; border:0.7pt solid #aaa; padding:4pt 8pt; margin:10pt 0 8pt; font-size:9pt; color:#555; font-style:italic; }
   .sig-grid { display:grid; grid-template-columns:1fr 1fr; gap:32pt; margin-top:6pt; }
   .sig-box { border:0.7pt solid #aaa; padding:8pt 12pt 7pt; }
-  .sig-by { font-size:8pt; margin-bottom:12pt; }
+  .sig-by { font-size:9pt; margin-bottom:12pt; }
   .sig-line { border-bottom:0.7pt solid #888; margin-bottom:4pt; height:12pt; }
-  .sig-name { font-size:8pt; font-weight:700; }
-  .sig-role { font-size:8pt; }
+  .sig-name { font-size:9pt; font-weight:700; }
+  .sig-role { font-size:9pt; text-transform:uppercase; }
+
+  /* Fixed footer — same position on every printed page */
+  .print-footer { display:none; }
 
   @media print {
     body { background:#fff; }
@@ -8687,6 +8690,12 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
     .wrap { max-width:none; margin:0; padding:0; gap:0; }
     .page { box-shadow:none; padding:0; }
     .pgbrk { page-break-before:always; }
+    .print-footer {
+      display:flex; align-items:center;
+      position:fixed; bottom:0; left:15mm; right:15mm;
+      border-top:0.8pt solid #2f78c5; padding-top:5pt;
+      font-size:8.5pt; color:#2f78c5; background:#fff;
+    }
   }
 </style></head><body>
 <div class="pbar">
@@ -8770,7 +8779,6 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
       <td style="text-align:center;padding:3pt;font-weight:800;">${pad2(grandTotal)}</td>
     </tr></tfoot>
   </table>
-  ${pgFooter(1)}
 </div>
 
 <!-- PAGE 2 -->
@@ -8779,13 +8787,13 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
 
   <!-- Agenda -->
   <div style="margin-bottom:10pt;">
-    <div class="disc-label"><span style="font-size:9.5pt;">&#9675;</span><strong>Agenda:</strong></div>
+    <div class="disc-label"><span style="font-size:10.5pt;">&#9675;</span><strong>Agenda:</strong></div>
     ${agendaHtml}
   </div>
 
   <!-- Discussion -->
   <div>
-    <div class="disc-label" style="margin-bottom:6pt;"><span style="font-size:9.5pt;">&#9675;</span><strong>Discussion:</strong></div>
+    <div class="disc-label" style="margin-bottom:6pt;"><span style="font-size:10.5pt;">&#9675;</span><strong>Discussion:</strong></div>
 
     <div class="disc-subsection">
       <p class="disc-section-hd">1. Review of Minutes from the Previous Meeting Held on ${fmtAgendaDate(record.prevMeetingDate)}.</p>
@@ -8800,13 +8808,13 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
         const bullets = (update?.points ?? '').split('\n').filter(p => p.trim())
           .map(p => `<li>${esc(p.trim())}</li>`).join('')
         return `<div style="border:0.8pt solid #bbb;border-radius:4pt;overflow:hidden;">
-          <div style="background:#f0f0f0;padding:3pt 8pt;font-size:8pt;font-weight:800;letter-spacing:0.3pt;border-bottom:0.5pt solid #ccc;">${esc(md.label)}</div>
+          <div style="background:#f0f0f0;padding:3pt 8pt;font-size:9pt;font-weight:800;letter-spacing:0.3pt;border-bottom:0.5pt solid #ccc;">${esc(md.label)}</div>
           <div style="padding:5pt 10pt;">
             ${bullets ? `<ul class="disc-ul" style="margin:0;">${bullets}</ul>` : `<p class="disc-dept-nil" style="margin:0;">Nil</p>`}
           </div>
         </div>`
       }).join('')}
-      ${record.additionalSectionNotes?.trim() ? `<div style="border:0.8pt solid #bbb;border-radius:4pt;overflow:hidden;"><div style="background:#f0f0f0;padding:3pt 8pt;font-size:8pt;font-weight:800;letter-spacing:0.3pt;border-bottom:0.5pt solid #ccc;">ADDITIONAL</div><div style="padding:5pt 10pt;"><ul class="disc-ul" style="margin:0;">${record.additionalSectionNotes.trim().split('\n').filter(l=>l.trim()).map(l=>`<li>${esc(l.trim())}</li>`).join('')}</ul></div></div>` : ''}
+      ${record.additionalSectionNotes?.trim() ? `<div style="border:0.8pt solid #bbb;border-radius:4pt;overflow:hidden;"><div style="background:#f0f0f0;padding:3pt 8pt;font-size:9pt;font-weight:800;letter-spacing:0.3pt;border-bottom:0.5pt solid #ccc;">ADDITIONAL</div><div style="padding:5pt 10pt;"><ul class="disc-ul" style="margin:0;">${record.additionalSectionNotes.trim().split('\n').filter(l=>l.trim()).map(l=>`<li>${esc(l.trim())}</li>`).join('')}</ul></div></div>` : ''}
       </div>
     </div>
 
@@ -8824,20 +8832,24 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
         <p class="sig-by">Prepared by:</p>
         <div class="sig-line"></div>
         <p class="sig-name">${esc(record.preparedBy)}</p>
-        <p class="sig-role">Administrator</p>
+        <p class="sig-role">ADMINISTRATOR</p>
       </div>
       <div class="sig-box">
         <p class="sig-by">Approved by:</p>
         <div class="sig-line"></div>
         <p class="sig-name">${esc(record.approvedBy)}</p>
-        <p class="sig-role">${approvedByRole}</p>
+        <p class="sig-role">${approvedByRole.toUpperCase()}</p>
       </div>
     </div>
   </div>
-  ${pgFooter(2)}
 </div>
 
-</div></body></html>`
+</div>
+<div class="print-footer">
+  <span style="flex:1;letter-spacing:0.4pt;opacity:0.75;">BRIEFING MEETING MINUTES &mdash; ${esc(refSeq)}</span>
+  <span style="flex:1;"></span>
+</div>
+</body></html>`
   const win = window.open('', '_blank')
   if (win) { win.document.write(html); win.document.close() }
 }
