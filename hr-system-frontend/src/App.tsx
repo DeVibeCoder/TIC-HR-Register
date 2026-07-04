@@ -8700,8 +8700,14 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
     body { background:#fff; }
     .pbar { display:none !important; }
     .wrap { max-width:none; margin:0; padding:0; gap:0; }
-    .page { box-shadow:none; padding:0; }
+    /* Each page fills one physical sheet; footer pinned to the bottom */
+    .page {
+      box-shadow:none; padding:0;
+      display:flex; flex-direction:column;
+      min-height:260mm;
+    }
     .pgbrk { page-break-before:always; }
+    .pg-footer { margin-top:auto; }
   }
 </style></head><body>
 <div class="pbar">
@@ -8824,7 +8830,13 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
       ${record.additionalSectionNotes?.trim() ? `<div class="dept-box" style="border:0.8pt solid #bbb;border-radius:4pt;overflow:hidden;"><div style="background:#f0f0f0;padding:3pt 8pt;font-size:9pt;font-weight:800;letter-spacing:0.3pt;border-bottom:0.5pt solid #ccc;">ADDITIONAL</div><div style="padding:5pt 10pt;"><ul class="disc-ul" style="margin:0;">${record.additionalSectionNotes.trim().split('\n').filter(l=>l.trim()).map(l=>`<li>${esc(l.trim())}</li>`).join('')}</ul></div></div>` : ''}
       </div>
     </div>
+  </div>
+  ${pgFooter(2)}
+</div>
 
+<!-- PAGE 3 -->
+<div class="page pgbrk">
+  <div>
     <div class="disc-subsection">
       <p class="disc-section-hd">3. Any Other Matters That Need to Be Addressed:</p>
       <p class="disc-text" style="white-space:pre-line;">${record.otherMatters.trim() ? esc(record.otherMatters) : '<span style="color:#888;font-style:italic;">None.</span>'}</p>
@@ -8849,7 +8861,7 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
       </div>
     </div>
   </div>
-  ${pgFooter(2)}
+  ${pgFooter(3)}
 </div>
 
 </div>
