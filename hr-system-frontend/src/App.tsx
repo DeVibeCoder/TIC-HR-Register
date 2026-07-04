@@ -8630,7 +8630,7 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/>
 <title>Briefing Meeting Minutes — ${esc(record.refNumber)}</title>
 <style>
-  @page { size:A4 portrait; margin:7mm 15mm 20mm 15mm; }
+  @page { size:A4 portrait; }
   *,*::before,*::after { box-sizing:border-box; }
   body { font-family:Arial,Helvetica,sans-serif; font-size:11pt; color:#111; background:#e8e8e8; margin:0; padding:0; }
   .pbar { display:flex; align-items:center; gap:14px; padding:10px 20px; background:#1e1b4b; position:sticky; top:0; z-index:10; font-family:system-ui,sans-serif; font-size:13px; }
@@ -8641,8 +8641,8 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
 
   /* Info table — auto-sizes based on content */
   .info-tbl { width:100%; border-collapse:collapse; margin-bottom:6pt; }
-  .info-tbl td { border:0.6pt solid #999; padding:2.5pt 6pt; font-size:9.5pt; vertical-align:middle; }
-  .info-tbl td.lbl { font-weight:700; white-space:nowrap; width:26mm; background:#f0f0f0; color:#111; font-size:9pt; }
+  .info-tbl td { border:0.6pt solid #999; padding:2.5pt 6pt; font-size:10pt; vertical-align:middle; }
+  .info-tbl td.lbl { font-weight:700; white-space:nowrap; width:26mm; background:#f0f0f0; color:#111; font-size:9.5pt; }
   /* Participant tables — small, fixed layout, height controlled on <tr> */
   .p-tbl { width:100%; border-collapse:collapse; table-layout:fixed; }
   .p-tbl th { background:#e8e8e8; border:0.5pt solid #bbb; padding:2pt 4pt; font-size:8pt; font-weight:700; text-align:left; overflow:hidden; }
@@ -8670,7 +8670,7 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   .disc-dept-nil { font-size:9pt; color:#888; }
   .disc-text { font-size:9.5pt; line-height:1.5; }
   .disc-ul { margin:0; padding-left:14pt; }
-  .disc-ul li { font-size:9pt; margin-bottom:2pt; }
+  .disc-ul li { font-size:10pt; margin-bottom:2pt; }
 
   /* Closing */
   .closing-note { text-align:center; border:0.7pt solid #aaa; padding:4pt 8pt; margin:10pt 0 8pt; font-size:9pt; color:#555; font-style:italic; }
@@ -8684,15 +8684,14 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   /* Section dept boxes — never split across pages */
   .dept-box { page-break-inside:avoid; break-inside:avoid; }
 
-  /* Footer — visible on screen, fixed on every printed page */
+  /* Screen-only footer preview (hidden in print — @page margin boxes handle it) */
   .print-footer {
-    display:flex; align-items:center;
-    padding:5pt 0 4pt;
-    border-top:1pt solid #2f78c5;
+    display:flex; align-items:center; gap:0;
+    border-top:1pt solid #2f78c5; padding:5pt 0 4pt;
     font-size:8.5pt; color:#2f78c5; background:#fff;
-    max-width:210mm; margin:0 auto;
+    max-width:210mm; margin:8px auto 0;
   }
-  .pf-ref { flex:1; letter-spacing:0.4pt; padding-left:15mm; }
+  .pf-ref { flex:2; white-space:nowrap; padding-left:15mm; letter-spacing:0.3pt; }
   .pf-pg  { flex:1; text-align:center; font-weight:800; }
   .pf-end { flex:1; }
 
@@ -8702,13 +8701,35 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
     .wrap { max-width:none; margin:0; padding:0; gap:0; }
     .page { box-shadow:none; padding:0; }
     .pgbrk { page-break-before:always; }
-    .print-footer {
-      position:fixed; bottom:0; left:0; right:0;
-      max-width:none; margin:0;
-      padding:5pt 0 4pt;
+    /* Hide screen footer — @page margin boxes appear instead */
+    .print-footer { display:none !important; }
+
+    @page {
+      margin:7mm 15mm 18mm 15mm;
+      @bottom-left {
+        content: "BRIEFING MEETING MINUTES \2014 ${esc(refSeq)}";
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 8.5pt; color: #2f78c5;
+        white-space: nowrap;
+        border-top: 1pt solid #2f78c5;
+        padding-top: 4pt; vertical-align: top;
+        width: 70%;
+      }
+      @bottom-center {
+        content: counter(page);
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 8.5pt; color: #2f78c5; font-weight: bold;
+        border-top: 1pt solid #2f78c5;
+        padding-top: 4pt; vertical-align: top;
+        text-align: center;
+        width: 15%;
+      }
+      @bottom-right {
+        content: "";
+        border-top: 1pt solid #2f78c5;
+        width: 15%;
+      }
     }
-    .pf-ref { padding-left:15mm; }
-    .pf-pg::after { content:counter(page); font-weight:800; }
   }
 </style></head><body>
 <div class="pbar">
@@ -8732,7 +8753,7 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   <table class="info-tbl" style="table-layout:fixed;">
     <!-- Date + Time Started + Time Ended on one row, time labels same grey as Date -->
     <tr>
-      <td class="lbl" style="width:20mm;">Date</td>
+      <td class="lbl" style="width:32mm;">Date</td>
       <td style="text-transform:uppercase;">${fmtMeetingDate(record.date)}</td>
       <td class="lbl" style="width:30mm;white-space:nowrap;">Time Started</td>
       <td style="width:22mm;white-space:nowrap;">${esc(record.timeStarted)} hrs.</td>
