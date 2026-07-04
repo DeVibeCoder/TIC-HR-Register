@@ -2271,16 +2271,21 @@ button.step-pill:hover { filter: brightness(0.98); }
 .not-returned-row:hover td { background: #ffd4da; }
 
 .leave-empty-zone {
-  display: grid;
+  display: flex;
   align-items: center;
-  min-height: 54px;
+  min-height: 34px;
   margin-top: 8px;
-  padding: 10px 12px;
-  border: 1px dashed rgba(148, 163, 184, 0.56);
-  border-radius: 12px;
+  padding: 6px 14px;
+  border: 1px dashed rgba(148, 163, 184, 0.45);
+  border-radius: 10px;
   color: #334155;
   font-size: 0.76rem;
-  background: rgba(239, 246, 255, 0.82);
+  background: rgba(239, 246, 255, 0.70);
+}
+[data-theme="dark"] .leave-empty-zone {
+  background: rgba(30,34,49,.55);
+  border-color: rgba(255,255,255,.12);
+  color: #AAB3C5;
 }
 
 .status-badge.not-returned {
@@ -10672,9 +10677,9 @@ html { overflow-x: hidden; }
 
 /* Employee rows: medical (sick leave) = amber, notice = red — readable on dark */
 [data-theme="dark"] .employee-table tbody tr.emp-on-medical td,
-[data-theme="dark"] .employee-table tbody tr.emp-on-medical td:nth-child(-n + 3) { background: rgba(234,179,8,.16) !important; color: #FBE8B0 !important; }
+[data-theme="dark"] .employee-table tbody tr.emp-on-medical td:nth-child(-n + 3) { background: #2A2510 !important; color: #FBE8B0 !important; }
 [data-theme="dark"] .employee-table tbody tr.emp-on-medical:hover td,
-[data-theme="dark"] .employee-table tbody tr.emp-on-medical:hover td:nth-child(-n + 3) { background: rgba(234,179,8,.24) !important; }
+[data-theme="dark"] .employee-table tbody tr.emp-on-medical:hover td:nth-child(-n + 3) { background: #34300F !important; }
 [data-theme="dark"] .employee-table tbody tr.emp-on-medical td:first-child { box-shadow: inset 3px 0 0 #EAB308; }
 [data-theme="dark"] .employee-table tbody tr.emp-in-notice td,
 [data-theme="dark"] .employee-table tbody tr.emp-in-notice td:nth-child(-n + 3) { background: rgba(239,68,68,.16) !important; color: #FBD3D3 !important; }
@@ -10774,16 +10779,9 @@ html { overflow-x: hidden; }
    Exit Interview · Bank/Training modal · Add-Staff picker · Analytics panels
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ── 1. Sick-leave sticky column scroll-overlay fix ────────────────────────
-      The first 3 columns are position:sticky. The existing dark-mode rule gives
-      them rgba(234,179,8,.16) — semi-transparent — so scrolled content bleeds
-      through. Override with an OPAQUE amber that still reads as "on sick leave". */
-[data-theme="dark"] .employee-table tbody tr.emp-on-medical td:nth-child(-n+3) {
-  background: #2A2510 !important;
-}
-[data-theme="dark"] .employee-table tbody tr.emp-on-medical:hover td:nth-child(-n+3) {
-  background: #34300F !important;
-}
+/* ── 1. Sick-leave row — uniform solid amber across ALL cells (sticky + scroll)
+      The main rule above now uses #2A2510 for every td, so sticky cells
+      and non-sticky cells are identical — no two-tone effect. */
 
 /* ── 2. Medical leave — KPI chips, analytics button ────────────────────────
       .mc-kpi-chip has background:#fff + border:#e8eaf0 (invisible on dark).   */
