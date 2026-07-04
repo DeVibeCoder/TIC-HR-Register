@@ -9573,8 +9573,6 @@ function MeetingsSection({ records, onUpdate, employees, activeLeaves, isReadOnl
   const [editing,    setEditing]    = useState<MeetingRecord | null>(null)
   const [search,     setSearch]     = useState('')
   const [view,       setView]       = useState<'list'|'calendar'>('list')
-  const [expandedId, setExpandedId] = useState<string | null>(null)
-
   const mkNew = (): MeetingRecord => {
     const yr = new Date().getFullYear().toString().slice(-2)
     // Auto-generate ref from last record's sequence
@@ -9705,12 +9703,10 @@ function MeetingsSection({ records, onUpdate, employees, activeLeaves, isReadOnl
             const nAttended  = rec.reps.filter(r => r.attendance === 'Attended' && r.name.trim()).length
             const nLeave     = rec.reps.filter(r => r.attendance === 'On Leave').length
             const nAbsent    = rec.reps.filter(r => r.attendance === 'Absent').length
-            const deptNotes  = rec.deptUpdates.filter(d => d.points.trim()).map(d => d.dept)
             const deptBlocks = rec.deptUpdates.filter(d => d.points.trim())
             const dt         = fmtD(rec.date)
-            const isExpanded = expandedId === rec.id
             return (
-              <div key={rec.id} className={`mtg-card${isExpanded ? ' mtg-card-expanded' : ''}`}>
+              <div key={rec.id} className={`mtg-card${deptBlocks.length > 0 ? ' mtg-card-expanded' : ''}`}>
                 {/* ── Main row ── */}
                 <div className="mtg-card-row">
                   {dt && (
@@ -9731,28 +9727,17 @@ function MeetingsSection({ records, onUpdate, employees, activeLeaves, isReadOnl
                         {nLeave  > 0 && <span className="mtg-chip leave">{nLeave} on leave</span>}
                         {nAbsent > 0 && <span className="mtg-chip absent">{nAbsent} absent</span>}
                       </div>
-                      {deptNotes.length > 0 && (
-                        <div className="mtg-dept-line" style={{ flex:1 }}>{deptNotes.join(' · ')}</div>
-                      )}
                     </div>
                   </div>
                   <div className="mtg-actions">
-                    {deptBlocks.length > 0 && (
-                      <button className="quiet-button vwh" type="button"
-                        title={isExpanded ? 'Hide minutes' : 'Show minutes'}
-                        onClick={() => setExpandedId(isExpanded ? null : rec.id)}
-                        style={{ fontSize:'0.75rem', padding:'3px 8px', fontWeight:700 }}>
-                        {isExpanded ? '▲' : '▼'}
-                      </button>
-                    )}
                     {!isReadOnly && <button className="quiet-button vwh" type="button" title="Edit" onClick={() => setEditing(rec)} style={{ fontSize:'0.9rem', padding:'3px 8px' }}>✎</button>}
                     <button className="quiet-button" type="button" title="Print" onClick={() => printMeetingMinutes(rec, employees, activeLeaves)} style={{ fontSize:'0.9rem', padding:'3px 8px' }}>🖨</button>
                     {!isReadOnly && <button className="quiet-button vwh" type="button" title="Delete" onClick={() => del(rec.id)} style={{ fontSize:'0.9rem', padding:'3px 8px', color:'#ef4444' }}>🗑</button>}
                   </div>
                 </div>
 
-                {/* ── Dept minutes panel ── */}
-                {isExpanded && (
+                {/* ── Dept minutes — always visible ── */}
+                {deptBlocks.length > 0 && (
                   <div className="mtg-dept-expand">
                     {deptBlocks.map(d => (
                       <div key={d.dept} className="mtg-dept-rect">
