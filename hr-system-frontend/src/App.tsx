@@ -8681,8 +8681,14 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   .sig-name { font-size:9pt; font-weight:700; }
   .sig-role { font-size:9pt; text-transform:uppercase; }
 
-  /* Fixed footer — same position on every printed page */
+  /* Section dept boxes — never split across pages */
+  .dept-box { page-break-inside:avoid; break-inside:avoid; }
+
+  /* Fixed footer — same position every printed page */
   .print-footer { display:none; }
+  .pf-ref { flex:1; letter-spacing:0.4pt; }
+  .pf-pg  { flex:1; text-align:center; font-weight:800; }
+  .pf-end { flex:1; }
 
   @media print {
     body { background:#fff; }
@@ -8691,11 +8697,12 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
     .page { box-shadow:none; padding:0; }
     .pgbrk { page-break-before:always; }
     .print-footer {
-      display:flex; align-items:center;
+      display:flex; align-items:flex-start;
       position:fixed; bottom:0; left:15mm; right:15mm;
-      border-top:0.8pt solid #2f78c5; padding-top:5pt;
+      border-top:1pt solid #2f78c5; padding-top:5pt; padding-bottom:4pt;
       font-size:8.5pt; color:#2f78c5; background:#fff;
     }
+    .pf-pg::after { content:counter(page); }
   }
 </style></head><body>
 <div class="pbar">
@@ -8807,14 +8814,14 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
         const update = record.deptUpdates.find(d => d.dept === md.label)
         const bullets = (update?.points ?? '').split('\n').filter(p => p.trim())
           .map(p => `<li>${esc(p.trim())}</li>`).join('')
-        return `<div style="border:0.8pt solid #bbb;border-radius:4pt;overflow:hidden;">
+        return `<div class="dept-box" style="border:0.8pt solid #bbb;border-radius:4pt;overflow:hidden;">
           <div style="background:#f0f0f0;padding:3pt 8pt;font-size:9pt;font-weight:800;letter-spacing:0.3pt;border-bottom:0.5pt solid #ccc;">${esc(md.label)}</div>
           <div style="padding:5pt 10pt;">
             ${bullets ? `<ul class="disc-ul" style="margin:0;">${bullets}</ul>` : `<p class="disc-dept-nil" style="margin:0;">Nil</p>`}
           </div>
         </div>`
       }).join('')}
-      ${record.additionalSectionNotes?.trim() ? `<div style="border:0.8pt solid #bbb;border-radius:4pt;overflow:hidden;"><div style="background:#f0f0f0;padding:3pt 8pt;font-size:9pt;font-weight:800;letter-spacing:0.3pt;border-bottom:0.5pt solid #ccc;">ADDITIONAL</div><div style="padding:5pt 10pt;"><ul class="disc-ul" style="margin:0;">${record.additionalSectionNotes.trim().split('\n').filter(l=>l.trim()).map(l=>`<li>${esc(l.trim())}</li>`).join('')}</ul></div></div>` : ''}
+      ${record.additionalSectionNotes?.trim() ? `<div class="dept-box" style="border:0.8pt solid #bbb;border-radius:4pt;overflow:hidden;"><div style="background:#f0f0f0;padding:3pt 8pt;font-size:9pt;font-weight:800;letter-spacing:0.3pt;border-bottom:0.5pt solid #ccc;">ADDITIONAL</div><div style="padding:5pt 10pt;"><ul class="disc-ul" style="margin:0;">${record.additionalSectionNotes.trim().split('\n').filter(l=>l.trim()).map(l=>`<li>${esc(l.trim())}</li>`).join('')}</ul></div></div>` : ''}
       </div>
     </div>
 
@@ -8846,8 +8853,9 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
 
 </div>
 <div class="print-footer">
-  <span style="flex:1;letter-spacing:0.4pt;opacity:0.75;">BRIEFING MEETING MINUTES &mdash; ${esc(refSeq)}</span>
-  <span style="flex:1;"></span>
+  <span class="pf-ref">BRIEFING MEETING MINUTES &mdash; ${esc(refSeq)}</span>
+  <span class="pf-pg"></span>
+  <span class="pf-end"></span>
 </div>
 </body></html>`
   const win = window.open('', '_blank')
