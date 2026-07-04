@@ -8619,12 +8619,11 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   // Dynamic approved-by role
   const approvedByRole = record.chairperson === CHAIRPERSON_OPTIONS[1].value ? 'Deputy General Manager' : 'General Manager'
 
-  // Footer: full-width blue rule, ref LEFT, page number CENTRE
+  // Footer: full-width blue rule, ref LEFT, page number absolutely centred
   const pgFooter = (n: number) =>
-    `<div style="display:flex;align-items:center;border-top:1pt solid #2f78c5;padding-top:5pt;margin-top:14pt;font-size:8.5pt;color:#2f78c5;">
-      <span style="flex:2;white-space:nowrap;letter-spacing:0.3pt;">BRIEFING MEETING MINUTES &mdash; ${esc(refSeq)}</span>
-      <span style="flex:1;text-align:center;font-weight:800;">${n}</span>
-      <span style="flex:1;"></span>
+    `<div style="position:relative;border-top:1pt solid #2f78c5;padding-top:5pt;margin-top:14pt;font-size:8.5pt;color:#2f78c5;">
+      <span style="white-space:nowrap;letter-spacing:0.3pt;">BRIEFING MEETING MINUTES &mdash; ${esc(refSeq)}</span>
+      <span style="position:absolute;left:0;right:0;text-align:center;font-weight:800;top:5pt;">${n}</span>
     </div>`
 
   const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/>
@@ -8641,8 +8640,8 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
 
   /* Info table — auto-sizes based on content */
   .info-tbl { width:100%; border-collapse:collapse; margin-bottom:6pt; }
-  .info-tbl td { border:0.6pt solid #999; padding:2.5pt 6pt; font-size:10pt; vertical-align:middle; }
-  .info-tbl td.lbl { font-weight:700; white-space:nowrap; width:26mm; background:#f0f0f0; color:#111; font-size:9.5pt; }
+  .info-tbl td { border:0.6pt solid #999; padding:2.5pt 6pt; font-size:8.5pt; vertical-align:middle; }
+  .info-tbl td.lbl { font-weight:700; white-space:nowrap; width:26mm; background:#f0f0f0; color:#111; font-size:8pt; }
   /* Participant tables — small, fixed layout, height controlled on <tr> */
   .p-tbl { width:100%; border-collapse:collapse; table-layout:fixed; }
   .p-tbl th { background:#e8e8e8; border:0.5pt solid #bbb; padding:2pt 4pt; font-size:8pt; font-weight:700; text-align:left; overflow:hidden; }
