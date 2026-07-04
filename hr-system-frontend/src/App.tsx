@@ -8621,7 +8621,7 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
 
   // Footer content — placed in <tfoot> so the browser auto-repeats it on every printed page
   const footerHtml =
-    `<div class="pg-footer" style="text-align:center;">
+    `<div class="pg-footer">
       <span class="pf-ref">BRIEFING MEETING MINUTES &mdash; ${esc(refSeq)}</span>
     </div>`
 
@@ -8686,12 +8686,12 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   .doc { width:100%; border-collapse:collapse; }
   .doc > tbody > tr > td { padding:0; vertical-align:top; }
   .doc > tfoot { display:table-footer-group; }
-  .doc > tfoot > tr > td { padding:0; }
+  .doc > tfoot > tr > td { padding:0; vertical-align:bottom; }
   .pg-footer {
-    position:relative;
     border-top:1pt solid #2f78c5;
     padding-top:5pt; margin-top:10pt;
     font-size:8.5pt; color:#2f78c5;
+    text-align:left;
   }
   .pg-footer .pf-ref { white-space:nowrap; letter-spacing:0.3pt; }
 
@@ -8701,7 +8701,11 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
     .wrap { max-width:none; margin:0; padding:0; gap:0; }
     .page { box-shadow:none; padding:0; }
     .pgbrk { page-break-before:always; }
-    /* Reserve room so page content never collides with the repeated footer */
+    /* Table fills each page so the tfoot footer is pinned to the bottom
+       of every page — including the short last page */
+    html, body { height:100%; }
+    .wrap { height:100%; }
+    .doc { height:100%; }
     .pg-footer { margin-top:6pt; }
   }
 </style></head><body>
