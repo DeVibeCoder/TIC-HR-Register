@@ -8661,7 +8661,7 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   /* Discussion page */
   .disc-intro { font-size:9.5pt; font-weight:700; margin-bottom:8pt; padding-bottom:6pt; border-bottom:0.5pt solid #ccc; }
   .disc-section-hd { font-size:9.5pt; font-weight:800; text-decoration:underline; text-transform:uppercase; margin:0 0 5pt; }
-  .disc-subsection { margin-bottom:10pt; padding-left:14pt; }
+  .disc-subsection { margin-bottom:7pt; padding-left:14pt; }
   .disc-label { display:flex; align-items:baseline; gap:6pt; margin-bottom:5pt; }
   .disc-label strong { font-size:9.5pt; text-transform:uppercase; letter-spacing:0.3pt; }
   .disc-dept-hd { font-size:9pt; font-weight:700; text-decoration:underline; margin-bottom:3pt; }
@@ -8812,7 +8812,7 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
 
     <div class="disc-subsection">
       <p class="disc-section-hd">2. Discussion of Issues, Updates and Challenges Faced by Each Section:</p>
-      <div style="display:flex;flex-direction:column;gap:5pt;margin-top:4pt;">
+      <div style="display:flex;flex-direction:column;gap:4pt;margin-top:3pt;">
       ${MEETING_DEPTS.filter(md => !new Set(['ADMINISTRATION','HUMAN RESOURCES']).has(md.label)).map(md => {
         const update = record.deptUpdates.find(d => d.dept === md.label)
         const bullets = (update?.points ?? '').split('\n').filter(p => p.trim())
@@ -8830,8 +8830,8 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   </div>
 </div>
 
-<!-- PAGE 3 -->
-<div class="page pgbrk">
+<!-- Other matters + closing — flows after the discussion (no forced break) -->
+<div class="page">
   <div>
     <div class="disc-subsection">
       <p class="disc-section-hd">3. Any Other Matters That Need to Be Addressed:</p>
