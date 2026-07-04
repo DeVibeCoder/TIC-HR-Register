@@ -8619,10 +8619,10 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   // Dynamic approved-by role
   const approvedByRole = record.chairperson === CHAIRPERSON_OPTIONS[1].value ? 'Deputy General Manager' : 'General Manager'
 
-  // Footer: title LEFT · page number CENTRE
+  // Footer: full-width blue rule, ref LEFT, page number CENTRE
   const pgFooter = (n: number) =>
-    `<div style="display:flex;align-items:center;border-top:0.8pt solid #2f78c5;padding-top:5pt;margin-top:14pt;font-size:7.5pt;color:#2f78c5;">
-      <span style="flex:1;letter-spacing:0.4pt;opacity:0.75;">BRIEFING MEETING MINUTES &mdash; ${esc(refSeq)}</span>
+    `<div style="display:flex;align-items:center;border-top:1pt solid #2f78c5;padding-top:5pt;margin-top:14pt;font-size:8.5pt;color:#2f78c5;">
+      <span style="flex:2;white-space:nowrap;letter-spacing:0.3pt;">BRIEFING MEETING MINUTES &mdash; ${esc(refSeq)}</span>
       <span style="flex:1;text-align:center;font-weight:800;">${n}</span>
       <span style="flex:1;"></span>
     </div>`
@@ -8630,7 +8630,7 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/>
 <title>Briefing Meeting Minutes — ${esc(record.refNumber)}</title>
 <style>
-  @page { size:A4 portrait; }
+  @page { size:A4 portrait; margin:12mm 15mm 14mm 15mm; }
   *,*::before,*::after { box-sizing:border-box; }
   body { font-family:Arial,Helvetica,sans-serif; font-size:11pt; color:#111; background:#e8e8e8; margin:0; padding:0; }
   .pbar { display:flex; align-items:center; gap:14px; padding:10px 20px; background:#1e1b4b; position:sticky; top:0; z-index:10; font-family:system-ui,sans-serif; font-size:13px; }
@@ -8684,52 +8684,12 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   /* Section dept boxes — never split across pages */
   .dept-box { page-break-inside:avoid; break-inside:avoid; }
 
-  /* Screen-only footer preview (hidden in print — @page margin boxes handle it) */
-  .print-footer {
-    display:flex; align-items:center; gap:0;
-    border-top:1pt solid #2f78c5; padding:5pt 0 4pt;
-    font-size:8.5pt; color:#2f78c5; background:#fff;
-    max-width:210mm; margin:8px auto 0;
-  }
-  .pf-ref { flex:2; white-space:nowrap; padding-left:15mm; letter-spacing:0.3pt; }
-  .pf-pg  { flex:1; text-align:center; font-weight:800; }
-  .pf-end { flex:1; }
-
   @media print {
     body { background:#fff; }
     .pbar { display:none !important; }
     .wrap { max-width:none; margin:0; padding:0; gap:0; }
     .page { box-shadow:none; padding:0; }
     .pgbrk { page-break-before:always; }
-    /* Hide screen footer — @page margin boxes appear instead */
-    .print-footer { display:none !important; }
-
-    @page {
-      margin:7mm 15mm 18mm 15mm;
-      @bottom-left {
-        content: "BRIEFING MEETING MINUTES \2014 ${esc(refSeq)}";
-        font-family: Arial, Helvetica, sans-serif;
-        font-size: 8.5pt; color: #2f78c5;
-        white-space: nowrap;
-        border-top: 1pt solid #2f78c5;
-        padding-top: 4pt; vertical-align: top;
-        width: 70%;
-      }
-      @bottom-center {
-        content: counter(page);
-        font-family: Arial, Helvetica, sans-serif;
-        font-size: 8.5pt; color: #2f78c5; font-weight: bold;
-        border-top: 1pt solid #2f78c5;
-        padding-top: 4pt; vertical-align: top;
-        text-align: center;
-        width: 15%;
-      }
-      @bottom-right {
-        content: "";
-        border-top: 1pt solid #2f78c5;
-        width: 15%;
-      }
-    }
   }
 </style></head><body>
 <div class="pbar">
@@ -8813,6 +8773,7 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
       <td style="text-align:center;padding:3pt;font-weight:800;">${pad2(grandTotal)}</td>
     </tr></tfoot>
   </table>
+  ${pgFooter(1)}
 </div>
 
 <!-- PAGE 2 -->
@@ -8876,13 +8837,9 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
       </div>
     </div>
   </div>
+  ${pgFooter(2)}
 </div>
 
-</div>
-<div class="print-footer">
-  <span class="pf-ref">BRIEFING MEETING MINUTES &mdash; ${esc(refSeq)}</span>
-  <span class="pf-pg"></span>
-  <span class="pf-end"></span>
 </div>
 </body></html>`
   const win = window.open('', '_blank')
