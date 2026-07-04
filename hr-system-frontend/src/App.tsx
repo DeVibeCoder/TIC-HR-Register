@@ -5970,7 +5970,7 @@ function PersonalFilesSection({ records, onUpdate, employees = [], isAdmin = fal
           fullName:      g(r, iName),
           department:    g(r, iDept),
           designation:   g(r, iDesig) || '',   // optional — empty OK for legacy data
-          staffStatus:   (g(r, iStatus) || 'Active') as StaffStatus,
+          staffStatus:   (['Active','Terminated','Retired','Transferred'].find(s => s.toLowerCase() === (g(r, iStatus) || 'Active').toLowerCase()) || 'Active') as StaffStatus,
           coc:           g(r, iCoc).toLowerCase() === 'true' || g(r, iCoc) === '1',
           jd:            g(r, iJd).toLowerCase()  === 'true' || g(r, iJd)  === '1',
           ea:            g(r, iEa).toLowerCase()  === 'true' || g(r, iEa)  === '1',
@@ -9945,7 +9945,7 @@ function OperationsPage({ employees, completedTerminations, activeLeaves, isHOD 
           Minutes
         </button>
       </div>
-      {activeSection === 'files'     && <PersonalFilesSection records={personalFiles} onUpdate={setPersonalFiles} employees={employees} isAdmin={userRole === 'Admin' || userRole === 'HR'} />}
+      {activeSection === 'files'     && <PersonalFilesSection records={personalFiles} onUpdate={setPersonalFiles} employees={employees} isAdmin={userRole === 'Admin'} />}
       {activeSection === 'induction' && <InductionSection employees={employees} records={inductionRecords} onUpdate={setInductionRecords} onBack={() => {}} isReadOnly={userRole === 'Executive'} />}
       {activeSection === 'training'  && <TrainingSection records={trainingRecords} employees={employees} onUpdate={setTrainingRecords} onBack={() => {}} isReadOnly={userRole === 'Executive'} />}
       {activeSection === 'bank'      && <BankAccountSection employees={employees} records={bankAccountRecords} onUpdate={setBankAccountRecords} onBack={() => {}} />}
