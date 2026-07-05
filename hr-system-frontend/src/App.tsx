@@ -1455,7 +1455,7 @@ function OverviewPage({
   // ── Greeting ────────────────────────────────────────────────────────────
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening'
-  const firstName = (currentUserName || 'HR Manager').trim().split(/\s+/)[0]
+  const firstName = (currentUserName || 'HR Manager').trim()
 
   // ── Leave rows (max 5) ───────────────────────────────────────────────────
   const noticeEmpIds2 = new Set(noticeTerminations.map(t => t.employeeId))
@@ -8279,14 +8279,20 @@ function ExitInterviewSection({ records, onUpdate, employees, isHOD = false, isE
                     <td>
                       <div className="row-actions">
                         <button className="action-glyph" title="View / Print" onClick={() => { setEditing(r); setEditingReadOnly(true) }} type="button">👁</button>
-                        {/* Open editable form: normally only before completion; Admin can reopen a completed one to make changes */}
-                        {((status !== 'Completed') || isAdmin) && !isHOD && !isExecutive && (
-                        <button className="action-glyph vwh" title={status === 'Completed' ? 'Reopen / Edit (Admin)' : 'Open Form'} onClick={() => { setEditing(r); setEditingReadOnly(false) }} type="button">
+                        {/* Editable form only before completion. A completed interview is locked. */}
+                        {status !== 'Completed' && !isHOD && !isExecutive && (
+                        <button className="action-glyph vwh" title="Open Form" onClick={() => { setEditing(r); setEditingReadOnly(false) }} type="button">
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
                             <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
                           </svg>
                         </button>
+                        )}
+                        {/* Admin can revert a completed interview back to editable */}
+                        {status === 'Completed' && isAdmin && !isHOD && !isExecutive && (
+                        <button className="action-glyph vwh" title="Revert to editable" onClick={() => {
+                          if (window.confirm(`Revert ${r.name}'s completed exit interview back to editable?`)) { setEditing(r); setEditingReadOnly(false) }
+                        }} type="button">↩</button>
                         )}
                         {!isExecutive && !isHOD && <button className="action-glyph delete vwh" title="Delete" onClick={() => del(r.id)} type="button">🗑</button>}
                       </div>
@@ -13499,6 +13505,25 @@ function App() {
     })
   }, [completedTerminations.length])
 
+  // Keep each exit interview's Termination Date aligned with the linked
+  // termination's Last Working Date (notice takes precedence, then completed).
+  // This also corrects any pre-existing mismatches.
+  useEffect(() => {
+    const lwdByEmp = new Map<string, string>()
+    for (const t of completedTerminations) if (t.lastWorkingDate) lwdByEmp.set(t.employeeId, t.lastWorkingDate)
+    for (const t of noticeTerminations)    if (t.lastWorkingDate) lwdByEmp.set(t.employeeId, t.lastWorkingDate)
+    if (lwdByEmp.size === 0) return
+    setExitInterviews(prev => {
+      let changed = false
+      const next = prev.map(ei => {
+        const lwd = lwdByEmp.get(ei.employeeId)
+        if (lwd && ei.departureDate !== lwd) { changed = true; return { ...ei, departureDate: lwd } }
+        return ei
+      })
+      return changed ? next : prev
+    })
+  }, [noticeTerminations, completedTerminations])
+
   const saveLeaveRequest = (record: LeaveRequestRecord) => {
     setLeaveRequests((current) => {
       const exists = current.some((item) => item.id === record.id)
@@ -13899,7 +13924,7 @@ function App() {
             <div className="sidebar-user-avatar">{getInitials(currentUserName)}</div>
             {!sidebarCollapsed && (
               <span className="sidebar-user-name">
-                <span className="sidebar-user-name-text">{currentUserRole === 'Executive' ? currentUserName.trim() : currentUserName.trim().split(/\s+/)[0]}</span>
+                <span className="sidebar-user-name-text">{currentUserName.trim()}</span>
                 <span className="sidebar-user-desig">
                   {currentAppUser?.designation ?? currentUserRole}
                   {currentUserRole === 'Viewer' && <span className="sidebar-view-only-badge" style={{ marginLeft: 4 }}>View Only</span>}
