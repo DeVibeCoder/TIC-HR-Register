@@ -1642,6 +1642,9 @@ h2 { margin: 0; color: #111; font-size: 0.95rem; line-height: 1.2; }
   width: 100%;
   padding-right: 48px !important;
 }
+/* Hide the browser-native password reveal icon (Edge/IE) so only our custom toggle shows */
+.login-pass-wrap input::-ms-reveal,
+.login-pass-wrap input::-ms-clear { display: none; }
 .login-pass-toggle {
   position: absolute;
   right: 12px;

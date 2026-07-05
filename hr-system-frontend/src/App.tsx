@@ -444,6 +444,9 @@ type CompletedTerminationRecord = {
   reasonForLeaving: string
   comments: string
   terminationType: TerminationType
+  // Full employee snapshot captured at completion so an accidental termination
+  // can be reverted (employee restored) without data loss.
+  employeeSnapshot?: Employee
 }
 
 // ── Lightweight localStorage helper (no sample-data fallback) ────────────────
@@ -577,8 +580,8 @@ const offSiteToDb   = (r: OffSiteRecord) => ({ id: r.id, employee_id: r.employee
 const noticetermFromDb = (r: DbRow): EnhancedTerminationRecord => ({ id: r.id as string, employeeId: r.employee_id as string, name: r.name as string, department: r.department as string, designation: r.designation as string, nationality: r.nationality as string, passportNo: r.passport_no as string, wpNo: r.wp_no as string, dateOfJoin: r.date_of_join as string, dateSubmitted: r.date_submitted as string, lastWorkingDate: r.last_working_date as string, departureDate: r.departure_date as string, currentStage: r.current_stage as TerminationStage, stageDates: (r.stage_dates ?? {}) as Partial<Record<TerminationStage,string>>, reasonForLeaving: r.reason_for_leaving as string, satisfactionRating: r.satisfaction_rating as number, rehireEligible: r.rehire_eligible as boolean, exitInterviewCompleted: r.exit_interview_completed as boolean, comments: r.comments as string, terminationType: r.termination_type as TerminationType })
 const noticetermToDb   = (r: EnhancedTerminationRecord) => ({ id: r.id, employee_id: r.employeeId, name: r.name, department: r.department, designation: r.designation, nationality: r.nationality, passport_no: r.passportNo, wp_no: r.wpNo, date_of_join: r.dateOfJoin, date_submitted: r.dateSubmitted, last_working_date: r.lastWorkingDate, departure_date: r.departureDate, current_stage: r.currentStage, stage_dates: r.stageDates ?? {}, reason_for_leaving: r.reasonForLeaving, satisfaction_rating: r.satisfactionRating, rehire_eligible: r.rehireEligible, exit_interview_completed: r.exitInterviewCompleted, comments: r.comments, termination_type: r.terminationType })
 
-const compTermFromDb = (r: DbRow): CompletedTerminationRecord => ({ id: r.id as string, employeeId: r.employee_id as string, name: r.name as string, department: r.department as string, designation: r.designation as string, nationality: r.nationality as string, passportNo: r.passport_no as string, wpNo: r.wp_no as string, dateOfJoin: r.date_of_join as string, lastWorkingDate: r.last_working_date as string, departureDate: r.departure_date as string, currentStage: r.current_stage as TerminationStage, rehireEligible: r.rehire_eligible as boolean, exitInterviewCompleted: r.exit_interview_completed as boolean, reasonForLeaving: r.reason_for_leaving as string, comments: r.comments as string, terminationType: r.termination_type as TerminationType })
-const compTermToDb   = (r: CompletedTerminationRecord) => ({ id: r.id, employee_id: r.employeeId, name: r.name, department: r.department, designation: r.designation, nationality: r.nationality, passport_no: r.passportNo, wp_no: r.wpNo, date_of_join: r.dateOfJoin, last_working_date: r.lastWorkingDate, departure_date: r.departureDate, current_stage: r.currentStage, rehire_eligible: r.rehireEligible, exit_interview_completed: r.exitInterviewCompleted, reason_for_leaving: r.reasonForLeaving, comments: r.comments, termination_type: r.terminationType })
+const compTermFromDb = (r: DbRow): CompletedTerminationRecord => ({ id: r.id as string, employeeId: r.employee_id as string, name: r.name as string, department: r.department as string, designation: r.designation as string, nationality: r.nationality as string, passportNo: r.passport_no as string, wpNo: r.wp_no as string, dateOfJoin: r.date_of_join as string, lastWorkingDate: r.last_working_date as string, departureDate: r.departure_date as string, currentStage: r.current_stage as TerminationStage, rehireEligible: r.rehire_eligible as boolean, exitInterviewCompleted: r.exit_interview_completed as boolean, reasonForLeaving: r.reason_for_leaving as string, comments: r.comments as string, terminationType: r.termination_type as TerminationType, employeeSnapshot: (r.employee_snapshot ?? undefined) as Employee | undefined })
+const compTermToDb   = (r: CompletedTerminationRecord) => ({ id: r.id, employee_id: r.employeeId, name: r.name, department: r.department, designation: r.designation, nationality: r.nationality, passport_no: r.passportNo, wp_no: r.wpNo, date_of_join: r.dateOfJoin, last_working_date: r.lastWorkingDate, departure_date: r.departureDate, current_stage: r.currentStage, rehire_eligible: r.rehireEligible, exit_interview_completed: r.exitInterviewCompleted, reason_for_leaving: r.reasonForLeaving, comments: r.comments, termination_type: r.terminationType, employee_snapshot: r.employeeSnapshot ?? null })
 
 const exitIntFromDb = (r: DbRow): ExitInterviewRecord => ({ id: r.id as string, employeeId: r.employee_id as string, name: r.name as string, department: r.department as string, designation: r.designation as string, nationality: r.nationality as string, terminationType: r.termination_type as TerminationType, departureDate: r.departure_date as string, periodOfService: r.period_of_service as string, joinDate: r.join_date as string, rehireEligible: r.rehire_eligible as boolean, interviewDate: r.interview_date as string, skipped: r.skipped as boolean, skipReason: r.skip_reason as string, interviewerEmployeeId: r.interviewer_employee_id as string, involuntaryReasons: (r.involuntary_reasons ?? []) as string[], voluntaryReasons: (r.voluntary_reasons ?? []) as string[], invOther: r.inv_other as string, volOther: r.vol_other as string, employeeComments: r.employee_comments as string, questionnaire: (r.questionnaire ?? {}) as EIQuestionnaire, areasToImprove: r.areas_to_improve as string, q1: r.q1 as string, q2: r.q2 as string, q3: r.q3 as string, q4: r.q4 as string, q5: r.q5 as string, q6: r.q6 as string, q7: r.q7 as string, q8: r.q8 as string, q9: r.q9 as string, q10: r.q10 as string, q11: r.q11 as string, q12: r.q12 as string, q13: r.q13 as string, q14: r.q14 as string, interviewerComments: r.interviewer_comments as string, interviewerName: r.interviewer_name as string })
 const exitIntToDb   = (r: ExitInterviewRecord) => ({ id: r.id, employee_id: r.employeeId, name: r.name, department: r.department, designation: r.designation, nationality: r.nationality, termination_type: r.terminationType, departure_date: r.departureDate, period_of_service: r.periodOfService, join_date: r.joinDate ?? '', rehire_eligible: r.rehireEligible, interview_date: r.interviewDate, skipped: r.skipped ?? false, skip_reason: r.skipReason ?? '', interviewer_employee_id: r.interviewerEmployeeId ?? '', involuntary_reasons: r.involuntaryReasons ?? [], voluntary_reasons: r.voluntaryReasons ?? [], inv_other: r.invOther, vol_other: r.volOther, employee_comments: r.employeeComments, questionnaire: r.questionnaire ?? {}, areas_to_improve: r.areasToImprove, q1: r.q1, q2: r.q2, q3: r.q3, q4: r.q4, q5: r.q5, q6: r.q6, q7: r.q7, q8: r.q8, q9: r.q9, q10: r.q10, q11: r.q11, q12: r.q12, q13: r.q13, q14: r.q14, interviewer_comments: r.interviewerComments, interviewer_name: r.interviewerName })
@@ -2323,7 +2326,7 @@ function EmployeesPage({ employees, onAdd, onEdit, onDelete, onExport, onImport,
             </div>
           )}
           <div className="table-actions-right">
-            {!isHOD && (
+            {!isHOD && !isExecutive && (
               <button className="primary-button" onClick={onShowTasks} type="button">
                 Pending Tasks{pendingCount > 0 && <span className="pending-count-badge" style={{ marginLeft: '6px' }}>{pendingCount}</span>}
               </button>
@@ -2359,7 +2362,7 @@ function EmployeesPage({ employees, onAdd, onEdit, onDelete, onExport, onImport,
                 <th>Date of Birth</th>
                 <th>Age</th>
                 <SortTh col="siteStatus" label="Site Status" />
-                {!isHOD && <th>Action</th>}
+                {!isHOD && !isExecutive && <th>Action</th>}
               </tr>
             </thead>
             <tbody>
@@ -3845,10 +3848,11 @@ function MedicalAnalyticsModal({ records, onClose }: {
   )
 }
 
-function MedicalLeaveSection({ records, employees, onUpdate }: {
+function MedicalLeaveSection({ records, employees, onUpdate, isReadOnly = false }: {
   records: MedicalCaseRecord[]
   employees: Employee[]
   onUpdate: (fn: (prev: MedicalCaseRecord[]) => MedicalCaseRecord[]) => void
+  isReadOnly?: boolean
 }) {
   const [search, setSearch] = useState('')
   const [mcFilter, setMcFilter] = useState<'All' | 'Yes' | 'No'>('All')
@@ -3946,7 +3950,7 @@ function MedicalLeaveSection({ records, employees, onUpdate }: {
             {months.map((key) => <option key={key} value={key}>{formatMonthLabel(key)}</option>)}
           </select>
         </label>
-        <button className="primary-button toolbar-add-btn vwh" onClick={() => setEditing(newCase())} type="button">+ Add Medical Case</button>
+        {!isReadOnly && <button className="primary-button toolbar-add-btn vwh" onClick={() => setEditing(newCase())} type="button">+ Add Medical Case</button>}
       </div>
 
       {/* Table */}
@@ -3964,7 +3968,7 @@ function MedicalLeaveSection({ records, employees, onUpdate }: {
               <th>SL From</th>
               <th>SL To</th>
               <th style={{ textAlign: 'center' }}>Days</th>
-              <th style={{ textAlign: 'center' }}>Action</th>
+              {!isReadOnly && <th style={{ textAlign: 'center' }}>Action</th>}
             </tr>
           </thead>
           <tbody>
@@ -3985,16 +3989,18 @@ function MedicalLeaveSection({ records, employees, onUpdate }: {
                     <td style={{ whiteSpace: 'nowrap' }}>{r.sickLeaveFrom ? formatDateDisplay(r.sickLeaveFrom) : '—'}</td>
                     <td style={{ whiteSpace: 'nowrap' }}>{r.sickLeaveTo ? formatDateDisplay(r.sickLeaveTo) : '—'}</td>
                     <td style={{ textAlign: 'center' }}><strong>{r.sickLeaveDays || '—'}</strong></td>
+                    {!isReadOnly && (
                     <td style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
                       <div className="row-actions request-inline-actions" style={{ justifyContent: 'center' }}>
                         <button className="action-glyph edit vwh" onClick={() => setEditing(r)} type="button" title="Edit">✎</button>
                         <button className="action-glyph delete vwh" onClick={() => del(r.id)} type="button" title="Delete">🗑</button>
                       </div>
                     </td>
+                    )}
                   </tr>
                   {isExp && (
                     <tr className="mc-detail-row">
-                      <td colSpan={11}>
+                      <td colSpan={isReadOnly ? 10 : 11}>
                         <div className="mc-detail-content mc-detail-3grid">
                           {/* Col 1 — Doctor Advice (wider) */}
                           <div className="mc-d3-advice">
@@ -4641,7 +4647,7 @@ function LeavePage({
         )}
 
         {activeLeaveView === 'medical' && (
-          <MedicalLeaveSection records={medicalCases} employees={employees} onUpdate={onUpdateMedical} />
+          <MedicalLeaveSection records={medicalCases} employees={employees} onUpdate={onUpdateMedical} isReadOnly={isExecutive} />
         )}
 
         {viewingProgress && <LeaveProgressModal record={viewingProgress} onClose={() => setViewingProgress(null)} />}
@@ -7605,8 +7611,8 @@ function ExitInterviewFormModal({ record, employees, onClose, onSave, viewOnly =
                   <input value={form.name} readOnly style={roStyle} />
                 </label>
                 <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <span style={{ fontSize: '0.73rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Termination Date</span>
-                  <input type="date" value={form.departureDate} onChange={e => !viewOnly && setForm(p => ({ ...p, departureDate: e.target.value }))} style={viewOnly ? roStyle : fStyle} readOnly={viewOnly} />
+                  <span style={{ fontSize: '0.73rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Termination Date <em style={{ textTransform: 'none', fontWeight: 500, color: '#94a3b8' }}>(auto — Last Working Date)</em></span>
+                  <input type="date" value={form.departureDate} readOnly style={roStyle} />
                 </label>
                 <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <span style={{ fontSize: '0.73rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Employee ID</span>
@@ -8163,11 +8169,13 @@ function ExitInterviewAnalyticsModal({ records, onClose }: { records: ExitInterv
   )
 }
 
-function ExitInterviewSection({ records, onUpdate, employees, isHOD = false }: {
+function ExitInterviewSection({ records, onUpdate, employees, isHOD = false, isExecutive = false, isAdmin = false }: {
   records: ExitInterviewRecord[]
   onUpdate: (fn: (prev: ExitInterviewRecord[]) => ExitInterviewRecord[]) => void
   employees: Employee[]
   isHOD?: boolean
+  isExecutive?: boolean
+  isAdmin?: boolean
 }) {
   const [monthFilter, setMonthFilter] = useState('All')
   const [deptFilter, setDeptFilter] = useState('All Sections')
@@ -8271,15 +8279,16 @@ function ExitInterviewSection({ records, onUpdate, employees, isHOD = false }: {
                     <td>
                       <div className="row-actions">
                         <button className="action-glyph" title="View / Print" onClick={() => { setEditing(r); setEditingReadOnly(true) }} type="button">👁</button>
-                        {status !== 'Completed' && !isHOD && (
-                        <button className="action-glyph vwh" title="Open Form" onClick={() => { setEditing(r); setEditingReadOnly(false) }} type="button">
+                        {/* Open editable form: normally only before completion; Admin can reopen a completed one to make changes */}
+                        {((status !== 'Completed') || isAdmin) && !isHOD && !isExecutive && (
+                        <button className="action-glyph vwh" title={status === 'Completed' ? 'Reopen / Edit (Admin)' : 'Open Form'} onClick={() => { setEditing(r); setEditingReadOnly(false) }} type="button">
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
                             <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
                           </svg>
                         </button>
                         )}
-                        <button className="action-glyph delete vwh" title="Delete" onClick={() => del(r.id)} type="button">🗑</button>
+                        {!isExecutive && !isHOD && <button className="action-glyph delete vwh" title="Delete" onClick={() => del(r.id)} type="button">🗑</button>}
                       </div>
                     </td>
                   </tr>
@@ -8306,8 +8315,10 @@ function TerminationPage({
   onDelete,
   onViewDetails,
   onUpdateExitInterviews,
+  onRevert,
   isHOD = false,
   isExecutive = false,
+  isAdmin = false,
 }: {
   noticeTerminations: EnhancedTerminationRecord[]
   completedTerminations: CompletedTerminationRecord[]
@@ -8319,8 +8330,10 @@ function TerminationPage({
   onDelete: (id: string) => void
   onViewDetails: (record: EnhancedTerminationRecord | CompletedTerminationRecord) => void
   onUpdateExitInterviews: (fn: (prev: ExitInterviewRecord[]) => ExitInterviewRecord[]) => void
+  onRevert?: (record: CompletedTerminationRecord | EnhancedTerminationRecord) => void
   isHOD?: boolean
   isExecutive?: boolean
+  isAdmin?: boolean
 }) {
   const [activeTab, setActiveTab] = useState<TerminationTab>('notice')
   const [noticeSearch, setNoticeSearch] = useState('')
@@ -8497,7 +8510,14 @@ function TerminationPage({
                         <td>{formatDateDisplay(r.lastWorkingDate)}</td>
                         <td>{formatDateDisplay(r.departureDate)}</td>
                         <td><span className="req-type-chip">{r.terminationType}</span></td>
-                        <td className="termination-actions"><button className="action-glyph" onClick={() => onViewDetails(r)} type="button" title="View">👁</button></td>
+                        <td className="termination-actions">
+                          <div className="row-actions">
+                            <button className="action-glyph" onClick={() => onViewDetails(r)} type="button" title="View">👁</button>
+                            {isAdmin && onRevert && (
+                              <button className="action-glyph vwh" onClick={() => onRevert(r)} type="button" title="Revert — restore employee & undo this termination">↩</button>
+                            )}
+                          </div>
+                        </td>
                       </tr>
                     ))}
                 </tbody>
@@ -8512,6 +8532,8 @@ function TerminationPage({
             onUpdate={onUpdateExitInterviews}
             employees={employees}
             isHOD={isHOD}
+            isExecutive={isExecutive}
+            isAdmin={isAdmin}
           />
         )}
       </section>
@@ -13459,6 +13481,8 @@ function App() {
           reasonForLeaving: record.reasonForLeaving,
           comments: record.comments,
           terminationType: record.terminationType,
+          // Snapshot the full employee (while still present) so an accidental termination is fully revertible
+          employeeSnapshot: employees.find((e) => e.employeeId === record.employeeId),
         })),
         ...current,
       ])
@@ -13618,7 +13642,7 @@ function App() {
           const draft: ExitInterviewRecord = {
             id: `EI-${Date.now()}`, employeeId: r.employeeId, name: r.name,
             department: r.department, designation: r.designation, nationality: r.nationality,
-            terminationType: r.terminationType, departureDate: r.departureDate,
+            terminationType: r.terminationType, departureDate: r.lastWorkingDate || r.departureDate,
             periodOfService: '', joinDate: r.dateOfJoin, rehireEligible: true, interviewDate: '',
             skipped: false, skipReason: '',
             involuntaryReasons: [], voluntaryReasons: [], invOther: '', volOther: '',
@@ -13639,12 +13663,39 @@ function App() {
       const exists = current.some((item) => item.id === record.id)
       return exists ? current.map((item) => item.id === record.id ? record : item) : [record, ...current]
     })
+    // Keep the exit interview's Termination Date in sync with the notice-period Last Working Date
+    if (record.lastWorkingDate) {
+      setExitInterviews((prev) => prev.map((ei) =>
+        ei.employeeId === record.employeeId ? { ...ei, departureDate: record.lastWorkingDate } : ei
+      ))
+    }
     setShowTerminationForm(false)
     setEditingTermination(null)
   }
 
   const deleteTermination = (id: string) => {
     setNoticeTerminations((current) => current.filter((record) => record.id !== id))
+  }
+
+  // Admin-only: undo a termination (including an accidental one) and restore the employee.
+  const revertTermination = (rec: CompletedTerminationRecord | EnhancedTerminationRecord) => {
+    if (!window.confirm(`Revert termination for ${rec.name}?\n\nThis restores the employee to the Employees list and removes this termination record and any linked exit interview.`)) return
+    setNoticeTerminations((cur) => cur.filter((r) => r.id !== rec.id))
+    setCompletedTerminations((cur) => cur.filter((r) => r.id !== rec.id))
+    setExitInterviews((cur) => cur.filter((ei) => ei.employeeId !== rec.employeeId))
+    setEmployees((cur) => {
+      if (cur.some((e) => e.employeeId === rec.employeeId)) return cur
+      const snap = (rec as CompletedTerminationRecord).employeeSnapshot
+      const restored: Employee = snap
+        ? { ...snap, siteStatus: 'On Site' }
+        : {
+            employeeId: rec.employeeId, fullName: rec.name, department: rec.department,
+            designation: rec.designation, nationality: rec.nationality,
+            nicPassportNo: rec.passportNo, workPermitNo: rec.wpNo, dateOfJoin: rec.dateOfJoin,
+            mobileNo: '', dateOfBirth: '', passportStatus: '', siteStatus: 'On Site',
+          }
+      return [restored, ...cur]
+    })
   }
 
   // Convert DD-MM-YYYY, DD/MM/YYYY, or DD-Mon-YYYY (e.g. 25-Jun-2026) → YYYY-MM-DD
@@ -13792,6 +13843,7 @@ function App() {
   const isHOD = currentUserRole === 'HOD'
   const isHR  = currentUserRole === 'HR'
   const isExecutive = currentUserRole === 'Executive'
+  const isAdmin = currentUserRole === 'Admin'
   // AHMED ALI (ali41966) — designated Trip Req approver even as HOD
   const TRIPREQ_APPROVER_USERNAME = 'ali41966'
   const isTripReqApprover = currentAppUser?.username === TRIPREQ_APPROVER_USERNAME
@@ -13847,7 +13899,7 @@ function App() {
             <div className="sidebar-user-avatar">{getInitials(currentUserName)}</div>
             {!sidebarCollapsed && (
               <span className="sidebar-user-name">
-                <span className="sidebar-user-name-text">{currentUserName.trim().split(/\s+/)[0]}</span>
+                <span className="sidebar-user-name-text">{currentUserRole === 'Executive' ? currentUserName.trim() : currentUserName.trim().split(/\s+/)[0]}</span>
                 <span className="sidebar-user-desig">
                   {currentAppUser?.designation ?? currentUserRole}
                   {currentUserRole === 'Viewer' && <span className="sidebar-view-only-badge" style={{ marginLeft: 4 }}>View Only</span>}
@@ -13910,7 +13962,7 @@ function App() {
           {activePage === 'leave' && <LeavePage employees={scopedEmployees} leaveRequests={scopedLeaveRequests} activeLeaves={scopedActiveLeaves} leaveHistory={scopedLeaveHistory} medicalCases={scopedMedicalCases} isHOD={isHOD} isExecutive={isExecutive} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onSetRequestStep={setLeaveRequestStep} onExtendLeave={extendActiveLeave} onEditActiveLeave={editActiveLeave} onHistoryConfirm={updateHistoryConfirmation} onUpdateMedical={(fn) => setMedicalCases(fn)} />}
           {activePage === 'operations' && <OperationsPage employees={employees} completedTerminations={completedTerminations} activeLeaves={activeLeaves} isHOD={isHOD} userRole={currentUserRole} />}
           {activePage === 'activities' && <ActivitiesPage employees={scopedEmployees} passportHandovers={scopedPassportHandovers} onUpdatePassport={(fn) => setPassportHandovers(fn)} tripRequests={tripRequests} onUpdateTripRequests={(fn) => setTripRequests(fn)} inventoryItems={inventoryItems} inventoryUsage={inventoryUsage} inventoryOrders={inventoryOrders} onUpdateInventoryItems={(fn) => setInventoryItems(fn)} onUpdateInventoryUsage={(fn) => setInventoryUsage(fn)} onUpdateInventoryOrders={(fn) => setInventoryOrders(fn)} isHOD={isHOD} isHR={isHR} isExecutive={isExecutive} isTripReqApprover={isTripReqApprover} currentUserSections={currentUserSections} currentUserName={currentUserName} />}
-          {activePage === 'termination' && <TerminationPage noticeTerminations={scopedNoticeTerminations} completedTerminations={scopedCompletedTerminations} exitInterviews={scopedExitInterviews} employees={scopedEmployees} isHOD={isHOD} isExecutive={isExecutive} onAdd={openAddTermination} onEdit={openEditTermination} onSetStage={setTerminationStage} onDelete={deleteTermination} onViewDetails={(record) => setTerminationDetails(record)} onUpdateExitInterviews={(fn) => setExitInterviews(fn)} />}
+          {activePage === 'termination' && <TerminationPage noticeTerminations={scopedNoticeTerminations} completedTerminations={scopedCompletedTerminations} exitInterviews={scopedExitInterviews} employees={scopedEmployees} isHOD={isHOD} isExecutive={isExecutive} isAdmin={isAdmin} onAdd={openAddTermination} onEdit={openEditTermination} onSetStage={setTerminationStage} onDelete={deleteTermination} onRevert={revertTermination} onViewDetails={(record) => setTerminationDetails(record)} onUpdateExitInterviews={(fn) => setExitInterviews(fn)} />}
           {activePage === 'reports' && <ReportsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} noticeTerminations={noticeTerminations} completedTerminations={completedTerminations} exitInterviews={exitInterviews} medicalCases={medicalCases} />}
           {activePage === 'settings' && <SettingsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} onReset={() => setResetStep(1)} currentUserName={currentUserName} loggedInUser={currentProfile} users={users} onUpdateUsers={(fn) => setUsers(fn)} />}
         </main>
