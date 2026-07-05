@@ -12222,15 +12222,9 @@ function SettingsPage({ employees, leaveRequests: _lr, activeLeaves: _al, onRese
           onClose={() => setShowChangePw(false)}
           onSave={async (newPassword) => {
             // Self-service change: update the CURRENT user's own password via their
-            // session (no admin rights needed). Returns true on success.
+            // session (no admin rights needed). Return '' on success, else the error.
             const { error } = await supabase.auth.updateUser({ password: newPassword })
-            if (error) {
-              alert(`Password update failed:\n\n${error.message}\n\nPlease try again.`)
-              return false
-            }
-            setShowChangePw(false)
-            alert('✓ Password updated successfully.\n\nPlease use your new password the next time you sign in.')
-            return true
+            return error ? error.message : ''
           }}
         />
       )}
@@ -12241,7 +12235,7 @@ function SettingsPage({ employees, leaveRequests: _lr, activeLeaves: _al, onRese
 function ChangePasswordModal({ user, onClose, onSave }: {
   user: AppUser
   onClose: () => void
-  onSave: (newPassword: string) => void | Promise<unknown>
+  onSave: (newPassword: string) => Promise<string>
 }) {
   const [current, setCurrent] = useState('')
   const [next, setNext] = useState('')
@@ -12249,6 +12243,7 @@ function ChangePasswordModal({ user, onClose, onSave }: {
   const [error, setError] = useState('')
   const [showPw, setShowPw] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [success, setSuccess] = useState(false)
 
   const save = async (e: FormEvent) => {
     e.preventDefault()
@@ -12256,7 +12251,28 @@ function ChangePasswordModal({ user, onClose, onSave }: {
     if (next.length < 6) { setError('New password must be at least 6 characters.'); return }
     if (next !== confirm) { setError('New password and confirmation do not match.'); return }
     setSaving(true)
-    try { await onSave(next) } finally { setSaving(false) }
+    try {
+      const err = await onSave(next)
+      if (err) { setError(err); return }
+      setSuccess(true)
+    } finally { setSaving(false) }
+  }
+
+  if (success) {
+    return (
+      <div className="modal-backdrop" role="presentation">
+        <section className="registration-modal pw-success-modal" role="dialog" aria-modal="true" style={{ maxWidth: 400 }}>
+          <div className="pw-success-body">
+            <div className="pw-success-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" width="34" height="34"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <h2 className="pw-success-title">Password Updated</h2>
+            <p className="pw-success-text">Your password has been changed successfully. Please use your new password the next time you sign in.</p>
+            <button className="primary-button" type="button" onClick={onClose} style={{ minWidth: 120 }}>Done</button>
+          </div>
+        </section>
+      </div>
+    )
   }
 
   return (

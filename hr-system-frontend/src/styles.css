@@ -4248,6 +4248,46 @@ input::-webkit-credentials-auto-fill-button { visibility: hidden; pointer-events
 .form-grid-3 { grid-template-columns: 1fr 1fr 1fr !important; }
 .form-row { display: contents; }
 
+/* Password-change success confirmation */
+.pw-success-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 32px 28px 30px;
+  gap: 6px;
+}
+.pw-success-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: #dcfce7;
+  color: #16a34a;
+  margin-bottom: 14px;
+  box-shadow: 0 0 0 8px rgba(22, 163, 74, 0.08);
+  animation: pw-pop 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes pw-pop { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.pw-success-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+.pw-success-text {
+  margin: 4px 0 18px;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: #64748b;
+  max-width: 300px;
+}
+[data-theme="dark"] .pw-success-title { color: #f1f5f9; }
+[data-theme="dark"] .pw-success-text { color: #94a3b8; }
+[data-theme="dark"] .pw-success-icon { background: rgba(22, 163, 74, 0.2); color: #4ade80; }
+
 /* ── Leave section redesign ───────────────────────────────── */
 .leave-section-tabs {
   display: flex;
