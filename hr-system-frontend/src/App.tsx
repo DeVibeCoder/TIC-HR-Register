@@ -5898,6 +5898,7 @@ function PersonalFilesSection({ records, onUpdate, employees = [], isAdmin = fal
   const [search, setSearch] = useState('')
   const [deptFilter, setDeptFilter] = useState('All Sections')
   const [staffFilter, setStaffFilter] = useState<'Active' | 'Inactive' | 'All'>('Active')
+  const [typeFilter, setTypeFilter] = useState<'All Types' | 'Terminated' | 'Retired' | 'Transferred'>('All Types')
   const [editingFileNo, setEditingFileNo] = useState<string | null>(null)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState<50 | 100 | 'All'>(50)
@@ -5938,6 +5939,16 @@ function PersonalFilesSection({ records, onUpdate, employees = [], isAdmin = fal
     onUpdate(prev => prev.filter(r => r.fileNo !== fileNo))
     supabase.from('personal_files').delete().eq('file_no', fileNo)
       .then(({ error }) => { if (error) console.error('[PF delete]', error.message) })
+  }
+
+  const removeAllFiles = async () => {
+    if (records.length === 0) { alert('There are no personal files to remove.'); return }
+    const ok = await confirmDelete(`Remove ALL ${records.length} personal files? This clears the entire list and cannot be undone.`)
+    if (!ok) return
+    onUpdate(() => [])
+    const { error } = await supabase.from('personal_files').delete().not('file_no', 'is', null)
+    if (error) alert(`Cleared in app, but database delete failed: ${error.message}`)
+    else alert('All personal files have been removed.')
   }
 
   const downloadPfTemplate = () => downloadCsv('personal-files-template.csv', [
@@ -5995,14 +6006,14 @@ function PersonalFilesSection({ records, onUpdate, employees = [], isAdmin = fal
       const updatedCount = imported.filter(r =>  existingMap.has(r.fileNo)).length
       onUpdate(prev => [...imported, ...prev.filter(r => !importedNos.has(r.fileNo))])
       // Reset filters so the newly imported records are immediately visible
-      setStaffFilter('All'); setDeptFilter('All Sections'); setSearch(''); setPage(1)
+      setStaffFilter('All'); setTypeFilter('All Types'); setDeptFilter('All Sections'); setSearch(''); setPage(1)
       try {
         const { error } = await supabase.from('personal_files').upsert(imported.map(personalFileToDb), { onConflict: 'file_no' })
-        if (error) alert(`Imported in app, but database sync failed: ${error.message}`)
-        else alert(`Import complete: ${addedCount} added, ${updatedCount} updated`)
+        if (error) alert(`⚠ Imported into the app, but database sync failed:\n\n${error.message}\n\nThe records are visible now but may not persist. Please try again.`)
+        else alert(`✓ Import successful\n\n${addedCount} record(s) added\n${updatedCount} record(s) updated\n${imported.length} total row(s) processed`)
       } catch (e) {
         console.error('[PF import]', e)
-        alert('Import complete in app, but database sync encountered an error.')
+        alert('⚠ Import completed in the app, but database sync encountered an error. Please try again.')
       }
     }
     input.click()
@@ -6018,14 +6029,24 @@ function PersonalFilesSection({ records, onUpdate, employees = [], isAdmin = fal
 
   const empMap = useMemo(() => new Map(employees.map(e => [e.employeeId, e])), [employees])
 
+  // Default order: by PF No ascending (numeric-aware)
+  const pfNoSort = (a: PersonalFileRecord, b: PersonalFileRecord) => {
+    const na = parseInt(a.fileNo, 10), nb = parseInt(b.fileNo, 10)
+    if (!isNaN(na) && !isNaN(nb) && na !== nb) return na - nb
+    return a.fileNo.localeCompare(b.fileNo, undefined, { numeric: true })
+  }
+
   const filtered = useMemo(() => records.filter((r) => {
     const matchSearch = [r.fileNo, r.employeeId, r.fullName, r.department].join(' ').toLowerCase().includes(search.trim().toLowerCase())
     const matchDept = deptFilter === 'All Sections' || r.department === deptFilter
-    const matchStaff = staffFilter === 'All'
-      || (staffFilter === 'Active' && r.staffStatus === 'Active')
-      || (staffFilter === 'Inactive' && r.staffStatus !== 'Active')
+    // Type filter takes precedence when a specific type is chosen
+    const matchStaff = typeFilter !== 'All Types'
+      ? r.staffStatus === typeFilter
+      : (staffFilter === 'All'
+        || (staffFilter === 'Active' && r.staffStatus === 'Active')
+        || (staffFilter === 'Inactive' && r.staffStatus !== 'Active'))
     return matchSearch && matchDept && matchStaff
-  }), [records, search, deptFilter, staffFilter])
+  }).sort(pfNoSort), [records, search, deptFilter, staffFilter, typeFilter])
 
   const totalPages = pageSize === 'All' ? 1 : Math.max(1, Math.ceil(filtered.length / pageSize))
   const safePage = Math.min(page, totalPages)
@@ -6065,10 +6086,19 @@ function PersonalFilesSection({ records, onUpdate, employees = [], isAdmin = fal
           </label>
           <label>
             <span>Status</span>
-            <select value={staffFilter} onChange={(e) => { setStaffFilter(e.target.value as typeof staffFilter); setDeptFilter('All Sections'); setPage(1) }}>
+            <select value={staffFilter} onChange={(e) => { setStaffFilter(e.target.value as typeof staffFilter); setTypeFilter('All Types'); setDeptFilter('All Sections'); setPage(1) }}>
               <option value="Active">Active</option>
               <option value="Inactive">Inactive</option>
               <option value="All">All</option>
+            </select>
+          </label>
+          <label>
+            <span>Type</span>
+            <select value={typeFilter} onChange={(e) => { setTypeFilter(e.target.value as typeof typeFilter); setPage(1) }}>
+              <option value="All Types">All Types</option>
+              <option value="Terminated">Terminated</option>
+              <option value="Retired">Retired</option>
+              <option value="Transferred">Transferred</option>
             </select>
           </label>
           <label>
@@ -6077,12 +6107,15 @@ function PersonalFilesSection({ records, onUpdate, employees = [], isAdmin = fal
               <option value={50}>50</option><option value={100}>100</option><option value="All">All</option>
             </select>
           </label>
-          {/* Admin-only actions */}
-          {isAdmin && <>
-            <button className="quiet-button vwh" type="button" onClick={downloadPfTemplate} title="Download CSV template">Template</button>
-            <button className="quiet-button vwh" type="button" onClick={importPfCsv} title="Import from CSV">Import</button>
-          </>}
-          <button className="primary-button vwh" type="button" onClick={() => { setPickerSearch(''); setShowPicker(true) }}>+ Add Staff</button>
+          {/* Action buttons — pushed to the right */}
+          <div className="pf-toolbar-actions">
+            {isAdmin && <>
+              <button className="primary-button vwh" type="button" onClick={downloadPfTemplate} title="Download CSV template">Template</button>
+              <button className="primary-button vwh" type="button" onClick={importPfCsv} title="Import from CSV">Import</button>
+              <button className="danger-button vwh" type="button" onClick={removeAllFiles} title="Remove all personal files">Remove All</button>
+            </>}
+            <button className="primary-button vwh" type="button" onClick={() => { setPickerSearch(''); setShowPicker(true) }}>+ Add Staff</button>
+          </div>
         </div>
 
         <div className="employee-table-shell compact-scroll">

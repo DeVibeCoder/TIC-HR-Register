@@ -2760,6 +2760,16 @@ button.step-pill:hover { filter: brightness(0.98); }
 }
 .pf-toggle-label input[type="checkbox"] { width: 14px; height: 14px; }
 .pf-toolbar .primary-button { flex-shrink: 0; align-self: flex-end; }
+/* Action buttons pushed to the right of the toolbar */
+.pf-toolbar-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.pf-toolbar-actions .primary-button,
+.pf-toolbar-actions .danger-button { flex-shrink: 0; }
 
 /* ── Personal files: status badges ──────────────────────── */
 .status-badge.completed {
