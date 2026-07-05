@@ -4417,10 +4417,10 @@ function LeavePage({
                           <td className="leave-status-cell" onClick={(e) => e.stopPropagation()}>
                             <button
                               className={`lr-status-pill lr-step-${stepIdx}`}
-                              disabled={isLast || isHOD}
-                              onClick={(e) => { e.stopPropagation(); if (nextStep) onSetRequestStep(record.id, nextStep) }}
+                              disabled={isLast || isHOD || isExecutive}
+                              onClick={(e) => { e.stopPropagation(); if (!isExecutive && nextStep) onSetRequestStep(record.id, nextStep) }}
                               type="button"
-                              title={isLast ? 'Pending Departure — final step' : `Advance to: ${nextStep}`}
+                              title={isExecutive ? 'View only' : isLast ? 'Pending Departure — final step' : `Advance to: ${nextStep}`}
                             >
                               {record.step}
                               {!isLast && <svg width="9" height="9" viewBox="0 0 12 12" fill="currentColor" style={{ marginLeft: 4, opacity: 0.7 }}><path d="M4 2l4 4-4 4" stroke="currentColor" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>}
