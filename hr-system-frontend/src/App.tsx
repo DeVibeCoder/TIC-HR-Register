@@ -12221,10 +12221,16 @@ function SettingsPage({ employees, leaveRequests: _lr, activeLeaves: _al, onRese
           user={currentAppUser}
           onClose={() => setShowChangePw(false)}
           onSave={async (newPassword) => {
-            await supabase.functions.invoke('manage-user', {
-              body: { action: 'update', userId: currentAppUser.id, password: newPassword }
-            })
+            // Self-service change: update the CURRENT user's own password via their
+            // session (no admin rights needed). Returns true on success.
+            const { error } = await supabase.auth.updateUser({ password: newPassword })
+            if (error) {
+              alert(`Password update failed:\n\n${error.message}\n\nPlease try again.`)
+              return false
+            }
             setShowChangePw(false)
+            alert('✓ Password updated successfully.\n\nPlease use your new password the next time you sign in.')
+            return true
           }}
         />
       )}
@@ -12235,20 +12241,22 @@ function SettingsPage({ employees, leaveRequests: _lr, activeLeaves: _al, onRese
 function ChangePasswordModal({ user, onClose, onSave }: {
   user: AppUser
   onClose: () => void
-  onSave: (newPassword: string) => void
+  onSave: (newPassword: string) => void | Promise<unknown>
 }) {
   const [current, setCurrent] = useState('')
   const [next, setNext] = useState('')
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState('')
   const [showPw, setShowPw] = useState(false)
+  const [saving, setSaving] = useState(false)
 
-  const save = (e: FormEvent) => {
+  const save = async (e: FormEvent) => {
     e.preventDefault()
     if (user.password && current !== user.password) { setError('Current password is incorrect.'); return }
     if (next.length < 6) { setError('New password must be at least 6 characters.'); return }
     if (next !== confirm) { setError('New password and confirmation do not match.'); return }
-    onSave(next)
+    setSaving(true)
+    try { await onSave(next) } finally { setSaving(false) }
   }
 
   return (
@@ -12272,8 +12280,8 @@ function ChangePasswordModal({ user, onClose, onSave }: {
             {error && <div className="full-field" style={{ color: '#b91c1c', fontSize: '0.8rem', fontWeight: 600 }}>{error}</div>}
           </div>
           <div className="modal-actions">
-            <button className="quiet-button light" onClick={onClose} type="button">Cancel</button>
-            <button className="primary-button" type="submit">Update Password</button>
+            <button className="quiet-button light" onClick={onClose} type="button" disabled={saving}>Cancel</button>
+            <button className="primary-button" type="submit" disabled={saving}>{saving ? 'Updating…' : 'Update Password'}</button>
           </div>
         </form>
       </section>
