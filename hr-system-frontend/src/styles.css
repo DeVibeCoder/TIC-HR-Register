@@ -11308,3 +11308,182 @@ html { overflow-x: hidden; }
   border-top: 1px solid var(--line);
   margin-top: 4px;
 }
+
+/* ════════════════════════════════════════════════════════════════
+   MOBILE LAYER — phone-friendly app shell (≤ 768px)
+   Sidebar becomes a bottom navigation bar with small icons;
+   workspace fills the remaining height; toolbars stack; tables
+   scroll horizontally; modals and login fit small screens.
+   Appended last so it wins the cascade. Purely presentational.
+   ════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* ── Shell: column layout, dynamic viewport height ─────────── */
+  #app, .app-shell {
+    height: 100vh;
+    height: 100dvh;
+  }
+  .app-shell { flex-direction: column; }
+
+  /* ── Sidebar → fixed-height bottom nav bar ─────────────────── */
+  .sidebar,
+  .sidebar--collapsed {
+    order: 2;
+    flex: 0 0 auto;
+    width: 100%;
+    height: auto;
+    flex-direction: row;
+    align-items: stretch;
+    padding: 0 4px;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-shadow: 0 -2px 16px rgba(76, 29, 149, 0.35);
+    transition: none;
+  }
+  [data-theme="dark"] .sidebar {
+    border-right: none;
+    border-top: 1px solid rgba(124, 92, 255, 0.16);
+  }
+  .sidebar-header { display: none; }
+
+  .sidebar-nav {
+    flex: 1;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 0;
+    padding: 5px 2px;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .sidebar-item {
+    flex: 1 0 auto;
+    width: auto;
+    min-width: 54px;
+    min-height: 48px;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    padding: 4px 5px;
+    border-radius: 10px;
+    text-align: center;
+  }
+
+  /* Small icons */
+  .sidebar-icon,
+  .sidebar-icon svg { width: 19px; height: 19px; }
+
+  /* Tiny label under the icon (shown when rendered) */
+  .sidebar-item .sidebar-label,
+  .sidebar--collapsed .sidebar-item .sidebar-label {
+    opacity: 1;
+    max-width: none;
+    pointer-events: auto;
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    line-height: 1;
+  }
+
+  /* Bottom section → compact row: avatar + logout icon only */
+  .sidebar-bottom {
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    padding: 0 4px 0 8px;
+    margin: 8px 0;
+    border-top: none;
+    border-left: 1px solid rgba(255, 255, 255, 0.12);
+  }
+  .sidebar-user {
+    padding: 0;
+    background: transparent;
+    gap: 0;
+  }
+  .sidebar-user-name { display: none; }
+  .sidebar-logout {
+    padding: 8px;
+  }
+  .sidebar-logout span { display: none; }
+
+  /* ── Topbar: hide the sidebar collapse toggle ──────────────── */
+  .topbar-toggle-btn,
+  .workspace-topbar .topbar-divider { display: none; }
+  .workspace-topbar { height: 40px; padding: 0 12px; }
+
+  /* ── Workspace fills the space above the bottom nav ────────── */
+  .workspace {
+    order: 1;
+    flex: 1;
+    min-height: 0;
+    height: auto;
+    padding: 0; /* reset older 720px rule */
+  }
+
+  /* Inner page containers were sized to the full desktop viewport
+     (100vh); on mobile they must fill the remaining flex space. */
+  .employee-workspace,
+  .leave-workspace {
+    height: 100%;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  /* ── Toolbars & action rows stack nicely ───────────────────── */
+  .table-toolbar,
+  .leave-toolbar-4,
+  .leave-toolbar-3,
+  .leave-toolbar-4.leave-toolbar-has-btn,
+  .leave-toolbar-3.leave-toolbar-has-btn {
+    grid-template-columns: 1fr 1fr;
+  }
+  .table-toolbar .toolbar-add-btn { grid-column: 1 / -1; justify-self: stretch; }
+  .table-actions-left,
+  .table-actions-right { flex-wrap: wrap; row-gap: 6px; }
+  .pf-toolbar-actions { margin-left: 0; width: 100%; }
+
+  /* ── Tables: smooth touch scrolling (horizontal) ───────────── */
+  .employee-table-shell,
+  .compact-scroll {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ── Modals: fit the phone screen ──────────────────────────── */
+  .modal-backdrop { padding: 10px; }
+  .registration-modal {
+    max-height: calc(100vh - 20px);
+    max-height: calc(100dvh - 20px);
+    overflow-y: auto;
+  }
+
+  /* ── Login page: single centred column ─────────────────────── */
+  .login-floats { display: none; }
+  .login-center {
+    grid-template-columns: 1fr;
+    padding: 12px 20px 32px;
+    align-items: start;
+  }
+  .login-divider { display: none; }
+  .login-headline-col {
+    padding: 18px 0 6px;
+    text-align: center;
+  }
+  .login-headline { font-size: 2rem; }
+  .login-headline br { display: none; }
+  .login-desc { display: none; }
+  .login-tags { justify-content: center; }
+  .login-form-col {
+    padding: 8px 0 24px;
+    width: 100%;
+    max-width: 380px;
+    margin: 0 auto;
+  }
+  .login-logo { width: 116px; height: 116px; border-radius: 20px; }
+}
+
+/* Very small phones: icon-only bottom nav to avoid scrolling */
+@media (max-width: 400px) {
+  .sidebar-item { min-width: 44px; }
+  .sidebar-item .sidebar-label,
+  .sidebar--collapsed .sidebar-item .sidebar-label { display: none; }
+  .login-headline { font-size: 1.7rem; }
+}
