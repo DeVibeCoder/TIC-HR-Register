@@ -11279,29 +11279,27 @@ html { overflow-x: hidden; }
   margin-top: 4px;
 }
 
+
 /* ════════════════════════════════════════════════════════════════
    MOBILE LAYER — phone-friendly app shell (≤ 768px)
-   Bottom navigation bar (position:fixed so it always stays visible
-   above browser chrome), workspace sized with small-viewport units,
-   compact type/controls so more data fits on screen.
-   Appended last so it wins the cascade. Purely presentational.
+   Polished fixed bottom navigation; ultra-compact top chrome
+   (topbar, page headers, tabs, filters) so the data table owns
+   the screen. Appended last so it wins the cascade. CSS-only.
    ════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
 
   :root {
-    /* Height of the fixed bottom nav (plus iOS home-indicator inset) */
-    --mnav-h: calc(54px + env(safe-area-inset-bottom, 0px));
+    --mnav-h: calc(56px + env(safe-area-inset-bottom, 0px));
   }
 
-  /* ── Shell: use the SMALL viewport height so nothing hides
-        behind collapsing mobile browser toolbars ──────────────── */
+  /* ── Shell ─────────────────────────────────────────────────── */
   #app, .app-shell {
     height: 100vh;
     height: 100svh;
   }
   .app-shell { flex-direction: column; }
 
-  /* ── Sidebar → fixed bottom navigation bar ─────────────────── */
+  /* ── Bottom navigation bar ─────────────────────────────────── */
   .sidebar,
   .sidebar--collapsed {
     position: fixed !important;
@@ -11316,15 +11314,18 @@ html { overflow-x: hidden; }
     flex: none;
     flex-direction: row !important;
     align-items: stretch;
-    padding: 0 4px;
+    padding: 0 6px;
     padding-bottom: env(safe-area-inset-bottom, 0px);
-    box-shadow: 0 -2px 16px rgba(76, 29, 149, 0.35);
+    background: linear-gradient(180deg, #6D28D9 0%, #5B21B6 100%);
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 -4px 24px rgba(46, 16, 101, 0.45);
     transition: none !important;
     overflow: hidden !important;
   }
   [data-theme="dark"] .sidebar {
+    background: linear-gradient(180deg, #1E1840 0%, #131028 100%);
     border-right: none;
-    border-top: 1px solid rgba(124, 92, 255, 0.16);
+    border-top: 1px solid rgba(124, 92, 255, 0.22);
   }
   .sidebar-header { display: none; }
 
@@ -11332,62 +11333,81 @@ html { overflow-x: hidden; }
     flex: 1;
     min-width: 0;
     flex-direction: row;
-    align-items: stretch;
-    gap: 0;
-    padding: 4px 2px;
+    align-items: center;
+    justify-content: space-around;
+    gap: 2px;
+    padding: 6px 2px;
     overflow-x: auto;
     overflow-y: hidden;
   }
 
   .sidebar-item {
-    flex: 1 0 auto;
+    flex: 1 1 0;
     width: auto;
-    min-width: 48px;
-    min-height: 0;
+    min-width: 46px;
+    max-width: 76px;
+    min-height: 44px;
     flex-direction: column;
     justify-content: center;
-    gap: 2px;
-    padding: 3px 4px;
-    border-radius: 9px;
+    gap: 3px;
+    padding: 4px 2px;
+    border-radius: 12px;
     text-align: center;
+    color: rgba(255, 255, 255, 0.55);
   }
 
-  /* Small icons */
   .sidebar-icon,
-  .sidebar-icon svg { width: 18px; height: 18px; }
+  .sidebar-icon svg { width: 20px; height: 20px; }
 
-  /* Tiny label under the icon (when rendered) */
+  /* Active page: soft glowing pill */
+  .sidebar-item.active {
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  }
+  .sidebar-item.active .sidebar-icon svg {
+    color: #fff;
+    filter: drop-shadow(0 0 6px rgba(196, 181, 253, 0.8));
+  }
+  .sidebar-item:hover { background: rgba(255, 255, 255, 0.08); }
+
+  /* Tiny label under the icon */
   .sidebar-item .sidebar-label,
   .sidebar--collapsed .sidebar-item .sidebar-label {
     opacity: 1 !important;
-    max-width: none !important;
+    max-width: 100% !important;
     pointer-events: auto !important;
     font-size: 0.53rem;
     font-weight: 700;
     letter-spacing: 0.01em;
     line-height: 1;
+    text-overflow: ellipsis;
+    overflow: hidden;
   }
+  .sidebar-item.active .sidebar-label { color: #fff; }
 
-  /* Bottom section → compact row: avatar + logout icon only */
+  /* Right cluster: avatar + logout, subtle divider */
   .sidebar-bottom {
     flex-direction: row;
     align-items: center;
-    gap: 4px;
-    padding: 0 2px 0 6px;
-    margin: 6px 0;
+    gap: 2px;
+    padding: 0 2px 0 8px;
+    margin: 10px 0;
     border-top: none;
-    border-left: 1px solid rgba(255, 255, 255, 0.12);
+    border-left: 1px solid rgba(255, 255, 255, 0.14);
   }
   .sidebar-user { padding: 0; background: transparent; gap: 0; }
+  .sidebar-user-avatar { width: 24px; height: 24px; font-size: 0.62rem; border-radius: 8px; }
   .sidebar-user-name { display: none; }
-  .sidebar-logout { padding: 7px; }
+  .sidebar-logout { padding: 7px; border-radius: 10px; }
   .sidebar-logout span { display: none; }
 
-  /* ── Topbar: slimmer; hide the sidebar collapse toggle ─────── */
+  /* ── Topbar: ultra slim ────────────────────────────────────── */
   .topbar-toggle-btn,
   .workspace-topbar .topbar-divider { display: none; }
-  .workspace-topbar { height: 34px; padding: 0 10px; }
-  .topbar-page-title { font-size: 0.7rem; }
+  .workspace-topbar { height: 30px; padding: 0 10px; }
+  .topbar-page-title { font-size: 0.64rem; letter-spacing: 0.05em; }
+  .theme-toggle { transform: scale(0.85); transform-origin: right center; }
 
   /* ── Workspace fills the screen above the fixed nav ────────── */
   .workspace {
@@ -11396,62 +11416,96 @@ html { overflow-x: hidden; }
     height: auto;
     padding: 0 0 var(--mnav-h);
   }
-
-  /* Inner page containers were sized to the desktop viewport
-     (100vh); on mobile they fill the remaining flex space. */
   .employee-workspace,
   .leave-workspace {
     height: 100%;
-    padding: 8px 8px 4px;
+    padding: 6px 8px 2px;
+    gap: 4px !important;
   }
 
-  /* ── Compact sizing: smaller text & controls on phones ─────── */
-  .page-header h1, .page-header h2 { font-size: 1.05rem; }
-  .page-header p { font-size: 0.72rem; }
-  .page-header .eyebrow { font-size: 0.6rem; }
+  /* ── Page headers: single compact line ─────────────────────── */
+  .page-header { padding: 5px 10px !important; border-radius: 10px; margin-bottom: 4px; }
+  .page-header .eyebrow { display: none; }
+  .page-header p { display: none; }
+  .page-header h1, .page-header h2 { font-size: 0.95rem !important; margin: 0; }
 
-  .data-table thead th { font-size: 0.62rem !important; padding: 6px 6px !important; }
-  .data-table tbody td { font-size: 0.72rem !important; padding: 5px 6px !important; }
-  .leave-workspace .data-table tbody td { font-size: 0.72rem !important; }
+  /* ── Section tab rows: small chips ─────────────────────────── */
+  .leave-section-tabs,
+  .termination-tabs,
+  .section-inline-tabs,
+  .bank-section-tabs {
+    gap: 4px;
+    margin-bottom: 4px;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .leave-section-tabs::-webkit-scrollbar,
+  .section-inline-tabs::-webkit-scrollbar,
+  .bank-section-tabs::-webkit-scrollbar { display: none; }
+  .leave-section-tabs button,
+  .lst-btn,
+  .section-inline-tabs button,
+  .bank-section-tabs button {
+    font-size: 0.64rem !important;
+    padding: 4px 8px !important;
+    min-height: 26px !important;
+    white-space: nowrap;
+    flex: 0 0 auto !important;
+  }
+  .tab-count { font-size: 0.56rem; padding: 0 4px; }
 
-  .table-toolbar span { font-size: 0.62rem !important; }
-  .table-toolbar input,
-  .table-toolbar select { min-height: 30px !important; font-size: 0.76rem !important; padding: 4px 8px; }
-  .primary-button { min-height: 30px; padding: 5px 10px; font-size: 0.72rem; }
-  .quiet-button { font-size: 0.72rem; padding: 5px 9px; }
-  .leave-section-tabs button, .lst-btn { font-size: 0.7rem; padding: 6px 8px; }
-  .tab-count { font-size: 0.58rem; }
-  .table-footer { font-size: 0.68rem; }
-
-  /* ── Toolbars & action rows stack nicely ───────────────────── */
+  /* ── Filters & search: small tight boxes, no labels ────────── */
   .table-toolbar,
   .leave-toolbar-4,
   .leave-toolbar-3,
   .leave-toolbar-4.leave-toolbar-has-btn,
   .leave-toolbar-3.leave-toolbar-has-btn {
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 4px !important;
+    padding: 2px 0 4px !important;
+    margin-bottom: 0 !important;
   }
-  .table-toolbar .toolbar-add-btn { grid-column: 1 / -1; justify-self: stretch; }
-  .table-actions { padding: 4px 0 !important; gap: 6px; flex-wrap: wrap; }
+  /* Hide field captions — selects show their value, search has a
+     placeholder; each filter becomes one small box */
+  .table-toolbar label > span { display: none !important; }
+  .table-toolbar input,
+  .table-toolbar select {
+    min-height: 30px !important;
+    height: 30px;
+    font-size: 0.73rem !important;
+    padding: 3px 8px !important;
+    border-radius: 8px;
+  }
+  .search-field { grid-column: 1 / -1; }
+
+  /* Action rows: compact wrapping buttons */
+  .table-actions { padding: 3px 0 !important; gap: 5px; flex-wrap: wrap; }
   .table-actions-left,
-  .table-actions-right { flex-wrap: wrap; row-gap: 5px; gap: 5px; }
+  .table-actions-right { flex-wrap: wrap; row-gap: 4px; gap: 5px; }
   .pf-toolbar-actions { margin-left: 0; width: 100%; }
+  .primary-button { min-height: 28px; padding: 4px 10px; font-size: 0.7rem; }
+  .quiet-button { font-size: 0.7rem; padding: 4px 8px; }
+  .table-toolbar .toolbar-add-btn { grid-column: 1 / -1; justify-self: stretch; }
+  .table-footer { padding: 3px 0 !important; font-size: 0.66rem; }
 
-  /* Tighter vertical rhythm so the table gets the space */
-  .employee-workspace, .leave-workspace { gap: 5px !important; }
-  .table-toolbar { padding: 2px 0 4px !important; margin-bottom: 0 !important; }
-  .table-toolbar label span { margin-bottom: 1px; }
-  .table-footer { padding: 4px 0 !important; }
-  .leave-section-tabs, .termination-tabs { margin-bottom: 2px; }
-
-  /* ── Tables: smooth horizontal touch scrolling ─────────────── */
-  .employee-table-shell,
-  .compact-scroll {
-    -webkit-overflow-scrolling: touch;
+  /* ── Table: the star of the screen — clear and readable ────── */
+  .data-table thead th {
+    font-size: 0.6rem !important;
+    padding: 6px 6px !important;
+    letter-spacing: 0.03em;
   }
+  .data-table tbody td {
+    font-size: 0.75rem !important;
+    padding: 6px 6px !important;
+    line-height: 1.35;
+  }
+  .leave-workspace .data-table tbody td { font-size: 0.75rem !important; }
+  .employee-table-shell,
+  .compact-scroll { -webkit-overflow-scrolling: touch; }
 
-  /* ── Modals: fit the phone screen ──────────────────────────── */
+  /* ── Modals ────────────────────────────────────────────────── */
   .modal-backdrop { padding: 10px; }
   .registration-modal {
     max-height: calc(100vh - 20px);
@@ -11481,9 +11535,9 @@ html { overflow-x: hidden; }
   .login-logo { width: 108px; height: 108px; border-radius: 18px; }
 }
 
-/* Very small phones: icon-only bottom nav to avoid scrolling */
+/* Very small phones: icon-only bottom nav */
 @media (max-width: 400px) {
-  .sidebar-item { min-width: 42px; }
+  .sidebar-item { min-width: 40px; min-height: 40px; }
   .sidebar-item .sidebar-label,
   .sidebar--collapsed .sidebar-item .sidebar-label { display: none; }
   .login-headline { font-size: 1.65rem; }
