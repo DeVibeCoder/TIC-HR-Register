@@ -11599,3 +11599,95 @@ html { overflow-x: hidden; }
   .sidebar--collapsed .sidebar-item .sidebar-label { display: none; }
   .login-headline { font-size: 1.65rem; }
 }
+
+/* ════════════════════════════════════════════════════════════════
+   MOBILE LAYER 2 — refinements (≤ 768px)
+   Unfrozen employees table, force-fit tabs, smaller add buttons,
+   phone-friendly analytics/reports. Appended last; CSS-only.
+   ════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* ── 1. Employees table: unfreeze the left columns ─────────── */
+  .employee-table tbody td:nth-child(-n + 3) {
+    position: static !important;
+    left: auto !important;
+    box-shadow: none !important;
+  }
+  .employee-table thead th:nth-child(-n + 3) {
+    left: auto !important;
+    box-shadow: none !important;
+  }
+  .employee-table th:nth-child(-n + 3),
+  .employee-table td:nth-child(-n + 3) {
+    width: auto !important;
+    min-width: 0 !important;
+  }
+
+  /* ── 2. Top tabs: force-fit the screen width ───────────────── */
+  .leave-section-tabs,
+  .termination-tabs,
+  .section-inline-tabs,
+  .bank-section-tabs {
+    overflow-x: hidden !important;
+  }
+  .leave-section-tabs button,
+  .lst-btn,
+  .section-inline-tabs button,
+  .bank-section-tabs button {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    font-size: 0.56rem !important;
+    padding: 3px 2px !important;
+    min-height: 24px !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    justify-content: center;
+  }
+  .lst-btn svg { display: none; }
+  .tab-count { font-size: 0.5rem; padding: 0 3px; margin-left: 2px; }
+
+  /* ── 3. Smaller add / action buttons ───────────────────────── */
+  .primary-button,
+  .table-toolbar .toolbar-add-btn {
+    min-height: 24px !important;
+    padding: 2px 7px !important;
+    font-size: 0.6rem !important;
+  }
+  .quiet-button { font-size: 0.6rem !important; padding: 2px 6px !important; }
+  .mc-analytics-btn { font-size: 0.6rem !important; padding: 3px 7px !important; min-height: 24px; }
+
+  /* ── 4. Analytics & dashboards: phone friendly ─────────────── */
+  /* KPI chips: one swipeable row */
+  .mc-kpi-bar {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    gap: 6px;
+    padding: 6px 0;
+  }
+  .mc-kpi-bar::-webkit-scrollbar { display: none; }
+  .mc-kpi-chip { flex: 0 0 auto; padding: 5px 10px; }
+  .mc-kpi-num { font-size: 0.95rem; }
+  .mc-kpi-lbl { font-size: 0.56rem; }
+
+  /* Medical analytics modal: stack charts, allow body scroll */
+  .mc-charts-row { grid-template-columns: 1fr !important; height: auto !important; }
+  .mc-charts-row .mc-an-panel { height: 160px; }
+  .mc-analytics-grid { grid-template-columns: 1fr !important; }
+  .mc-analytics-body { padding: 8px 10px !important; overflow-y: auto !important; }
+
+  /* Exit-interview analytics: full width, stacked panels */
+  .ei-analytics-modal { width: 100% !important; max-width: 100% !important; }
+  .ei-dashboard-grid { grid-template-columns: 1fr !important; gap: 10px; }
+  .ei-stat-row { grid-template-columns: repeat(2, 1fr) !important; gap: 8px; }
+  .ei-stat { padding: 10px 12px; }
+  .ei-stat-value { font-size: 1.3rem; }
+
+  /* Reports page */
+  .rpt-summary-cards { grid-template-columns: repeat(2, 1fr) !important; gap: 8px; }
+  .rpt-two-col { grid-template-columns: 1fr !important; }
+
+  /* Modals: use the full phone width */
+  .registration-modal { width: 100% !important; }
+}
