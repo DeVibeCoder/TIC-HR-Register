@@ -1585,11 +1585,17 @@ function OverviewPage({
               <span className="dk-section-ttl">Headcount by Section</span>
             </div>
             <div className="dk-section-hd-right">
-              <span className="dk-this-month">
-                This Month
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-              </span>
-              <button className="dk-icon-btn" type="button" title="Export" aria-label="Export headcount">
+              <button
+                className="dk-icon-btn"
+                type="button"
+                title="Export headcount CSV"
+                aria-label="Export headcount"
+                onClick={() => downloadCsv('headcount-by-section.csv', [
+                  ['SECTION', 'HEADCOUNT', 'PERCENT'],
+                  ...deptCounts.map(([dept, cnt]) => [dept, String(cnt), `${employees.length ? Math.round(cnt / employees.length * 100) : 0}%`]),
+                  ['TOTAL', String(employees.length), '100%'],
+                ])}
+              >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               </button>
             </div>

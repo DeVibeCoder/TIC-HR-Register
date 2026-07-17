@@ -11691,3 +11691,111 @@ html { overflow-x: hidden; }
   /* Modals: use the full phone width */
   .registration-modal { width: 100% !important; }
 }
+
+/* ════════════════════════════════════════════════════════════════
+   MOBILE LAYER 3 — refinements (dashboard, minutes, footers,
+   settings, nav active state). Appended last; CSS-only.
+   ════════════════════════════════════════════════════════════════ */
+
+/* Dashboard must scroll when content is taller than the viewport.
+   .dk-shell used min-height:100% inside an overflow-hidden parent,
+   so its own overflow-y:auto never engaged and the bottom of the
+   page (headcount sections) was clipped — on ALL screen sizes. */
+.dk-shell { height: 100%; }
+
+@media (max-width: 768px) {
+
+  /* ── Dashboard: KPI cards 2-per-line, compact ──────────────── */
+  .dk-shell { padding: 12px 10px 20px; }
+  .dk-kpis { grid-template-columns: repeat(2, 1fr) !important; gap: 8px; }
+  .dk-kpi { padding: 10px 12px 0; border-radius: 14px; gap: 8px; }
+  .dk-kpi-top { gap: 10px; }
+  .dk-kpi-num { font-size: 1.35rem; }
+  .dk-kpi-label { font-size: 0.54rem; letter-spacing: .06em; }
+
+  /* Headcount widget: show every section */
+  .dk-section-body { gap: 14px; }
+  .dk-sect-list { grid-template-columns: 1fr; gap: 0; }
+  .dk-sect-row { grid-template-columns: 96px 1fr 26px 32px; gap: 0 8px; padding: 4px 4px; }
+  .dk-sect-name { font-size: 0.62rem; }
+  .dk-sect-n, .dk-sect-p { font-size: 0.62rem; }
+  .dk-circle-outer { transform: scale(0.82); margin: -14px 0; }
+
+  /* ── Minutes: compact meeting cards ────────────────────────── */
+  .mtg-card { padding: 5px 8px; }
+  .mtg-card-row { gap: 8px; }
+  .mtg-date-box { padding: 4px 7px; border-radius: 8px; }
+  .mtg-day { font-size: 0.85rem; }
+  .mtg-month { font-size: 0.48rem; }
+  .mtg-ref { font-size: 0.68rem; }
+  .mtg-badge { font-size: 0.5rem; padding: 1px 6px; }
+  .mtg-chair { font-size: 0.58rem; }
+  /* Participants counters hidden on phones */
+  .mtg-chips { display: none !important; }
+  .mtg-dept-line { font-size: 0.55rem; }
+  .mtg-actions .quiet-button { font-size: 0.72rem !important; padding: 2px 6px !important; }
+
+  /* ── Table footers: slim pagination everywhere ─────────────── */
+  .table-footer {
+    gap: 6px;
+    padding-top: 3px !important;
+    padding-bottom: 1px !important;
+    font-size: 0.6rem !important;
+  }
+  .table-footer .quiet-button {
+    min-height: 22px !important;
+    padding: 1px 8px !important;
+    font-size: 0.58rem !important;
+  }
+  .table-footer strong { font-size: 0.62rem; }
+
+  /* ── Settings: mobile friendly ─────────────────────────────── */
+  .settings-page { padding: 8px !important; }
+  .user-mgmt-header { flex-wrap: wrap; gap: 8px; }
+  .user-mgmt-title { font-size: 1rem; }
+  .user-mgmt-subtitle { font-size: 0.68rem; }
+  .user-mgmt-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .user-table { min-width: 640px; }
+  .settings-section { padding: 10px !important; border-radius: 12px; }
+  .settings-section h3 { font-size: 0.85rem; }
+
+  /* ── Bottom nav: slimmer bar + new active look ─────────────── */
+  :root { --mnav-h: calc(50px + env(safe-area-inset-bottom, 0px)); }
+  .sidebar-nav { padding: 4px 2px; }
+  .sidebar-item {
+    position: relative;
+    min-height: 40px;
+    gap: 2px;
+    border-radius: 10px;
+  }
+  .sidebar-icon { transition: transform .25s cubic-bezier(.34, 1.56, .64, 1); }
+  /* Active page: glowing indicator line above a gently lifted icon */
+  .sidebar-item.active {
+    background: transparent;
+    box-shadow: none;
+  }
+  .sidebar-item.active::before {
+    content: '';
+    position: absolute;
+    top: 1px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 18px;
+    height: 3px;
+    border-radius: 99px;
+    background: linear-gradient(90deg, #c4b5fd, #a78bfa);
+    box-shadow: 0 0 10px rgba(196, 181, 253, 0.9);
+    animation: mnav-ind 260ms cubic-bezier(.34, 1.56, .64, 1);
+  }
+  .sidebar-item.active .sidebar-icon { transform: translateY(-1px) scale(1.14); }
+  .sidebar-item.active .sidebar-icon svg {
+    color: #fff;
+    filter: drop-shadow(0 0 7px rgba(196, 181, 253, 0.85));
+  }
+  .sidebar-item.active .sidebar-label { color: #fff; }
+}
+
+@keyframes mnav-ind {
+  from { width: 4px; opacity: 0; }
+  to   { width: 18px; opacity: 1; }
+}
