@@ -1414,7 +1414,7 @@ function OverviewPage({
   const onLeave   = employees.filter(e => e.siteStatus === 'On Leave').length
   const onSitePct = employees.length ? Math.round((onSite / employees.length) * 100) : 0
 
-  // ── Employees by section ─────────────────────────────────────────────────
+  // ── Employees by section (live snapshot) ─────────────────────────────────
   const deptCounts = useMemo(() => {
     const d: Record<string, number> = {}
     employees.forEach(e => {
@@ -1423,7 +1423,68 @@ function OverviewPage({
     })
     return Object.entries(d).sort((a, b) => b[1] - a[1])
   }, [employees])
-  const maxDept = deptCounts[0]?.[1] ?? 1
+
+  // ── Headcount month filter ───────────────────────────────────────────────
+  // Current month = live snapshot. Past months are reconstructed from join
+  // dates + completed terminations (who was on the payroll at month-end).
+  const curMonthKey = new Date().toISOString().slice(0, 7)
+  const [hcMonth, setHcMonth] = useState(curMonthKey)
+
+  const hcMonthOptions = useMemo(() => {
+    const allDates = [
+      ...employees.map(e => e.dateOfJoin),
+      ...completedTerminations.map(t => t.dateOfJoin),
+    ].filter(Boolean)
+    const earliest = allDates.sort()[0]?.slice(0, 7) ?? curMonthKey
+    const months: string[] = []
+    const d = new Date(curMonthKey + '-01T12:00:00')
+    // Walk backwards from the current month to the earliest data month (cap 24)
+    for (let i = 0; i < 24; i++) {
+      const key = d.toISOString().slice(0, 7)
+      months.push(key)
+      if (key <= earliest) break
+      d.setMonth(d.getMonth() - 1)
+    }
+    return months
+  }, [employees, completedTerminations, curMonthKey])
+
+  const hcIsCurrent = hcMonth === curMonthKey
+  const hcMonthLabel = (key: string) => {
+    if (key === curMonthKey) return 'This Month'
+    const [y, m] = key.split('-')
+    return `${MONTH_NAMES[Number(m) - 1]} ${y}`
+  }
+
+  // Historical section counts for the selected month (end-of-month, capped at today)
+  const hcData = useMemo(() => {
+    if (hcIsCurrent) {
+      return { counts: deptCounts, total: employees.length }
+    }
+    const [y, m] = hcMonth.split('-').map(Number)
+    const monthEnd = new Date(y, m, 0, 23, 59, 59)          // last day of that month
+    const asOf = monthEnd.toISOString().slice(0, 10)
+    const d: Record<string, number> = {}
+    let total = 0
+    // Current staff who had already joined by month-end (they're still here now)
+    employees.forEach(e => {
+      if (e.dateOfJoin && e.dateOfJoin <= asOf) {
+        const dept = normaliseDept(e.department)
+        d[dept] = (d[dept] ?? 0) + 1; total++
+      }
+    })
+    // Staff who had joined by month-end but departed after it (still on payroll then)
+    completedTerminations.forEach(t => {
+      if (t.dateOfJoin && t.dateOfJoin <= asOf && (!t.departureDate || t.departureDate > asOf)) {
+        const dept = normaliseDept(t.department)
+        d[dept] = (d[dept] ?? 0) + 1; total++
+      }
+    })
+    return { counts: Object.entries(d).sort((a, b) => b[1] - a[1]), total }
+  }, [hcIsCurrent, hcMonth, deptCounts, employees, completedTerminations])
+
+  const hcCounts = hcData.counts
+  const hcTotal = hcData.total
+  const maxDept = hcCounts[0]?.[1] ?? 1
 
   // ── Medical leave ────────────────────────────────────────────────────────
   const now = new Date()
@@ -1585,15 +1646,23 @@ function OverviewPage({
               <span className="dk-section-ttl">Headcount by Section</span>
             </div>
             <div className="dk-section-hd-right">
+              <select
+                className="dk-month-select"
+                value={hcMonth}
+                onChange={(e) => setHcMonth(e.target.value)}
+                title="Select month"
+              >
+                {hcMonthOptions.map(key => <option key={key} value={key}>{hcMonthLabel(key)}</option>)}
+              </select>
               <button
                 className="dk-icon-btn"
                 type="button"
                 title="Export headcount CSV"
                 aria-label="Export headcount"
-                onClick={() => downloadCsv('headcount-by-section.csv', [
+                onClick={() => downloadCsv(`headcount-${hcMonth}.csv`, [
                   ['SECTION', 'HEADCOUNT', 'PERCENT'],
-                  ...deptCounts.map(([dept, cnt]) => [dept, String(cnt), `${employees.length ? Math.round(cnt / employees.length * 100) : 0}%`]),
-                  ['TOTAL', String(employees.length), '100%'],
+                  ...hcCounts.map(([dept, cnt]) => [dept, String(cnt), `${hcTotal ? Math.round(cnt / hcTotal * 100) : 0}%`]),
+                  ['TOTAL', String(hcTotal), '100%'],
                 ])}
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -1607,9 +1676,13 @@ function OverviewPage({
               <div className="dk-circle-outer">
                 <svg className="dk-donut-svg" width="200" height="200" viewBox="0 0 200 200" style={{ transform:'rotate(-90deg)', position:'absolute', inset:0 }}>
                   <circle cx="100" cy="100" r={dkR} fill="none" stroke="rgba(124,92,255,0.12)" strokeWidth={dkSW}/>
-                  {onSite  > 0 && <circle cx="100" cy="100" r={dkR} fill="none" stroke="url(#dkG1)" strokeWidth={dkSW} strokeDasharray={`${dkSite}  ${dkC-dkSite}`}  strokeDashoffset={0} strokeLinecap="round"/>}
-                  {offSite > 0 && <circle cx="100" cy="100" r={dkR} fill="none" stroke="#F59E0B" strokeWidth={dkSW} strokeDasharray={`${dkOff}   ${dkC-dkOff}`}   strokeDashoffset={-dkOff2} strokeLinecap="round"/>}
-                  {onLeave > 0 && <circle cx="100" cy="100" r={dkR} fill="none" stroke="#60A5FA" strokeWidth={dkSW} strokeDasharray={`${dkLeave} ${dkC-dkLeave}`} strokeDashoffset={-dkOff3} strokeLinecap="round"/>}
+                  {hcIsCurrent ? <>
+                    {onSite  > 0 && <circle cx="100" cy="100" r={dkR} fill="none" stroke="url(#dkG1)" strokeWidth={dkSW} strokeDasharray={`${dkSite}  ${dkC-dkSite}`}  strokeDashoffset={0} strokeLinecap="round"/>}
+                    {offSite > 0 && <circle cx="100" cy="100" r={dkR} fill="none" stroke="#F59E0B" strokeWidth={dkSW} strokeDasharray={`${dkOff}   ${dkC-dkOff}`}   strokeDashoffset={-dkOff2} strokeLinecap="round"/>}
+                    {onLeave > 0 && <circle cx="100" cy="100" r={dkR} fill="none" stroke="#60A5FA" strokeWidth={dkSW} strokeDasharray={`${dkLeave} ${dkC-dkLeave}`} strokeDashoffset={-dkOff3} strokeLinecap="round"/>}
+                  </> : (
+                    hcTotal > 0 && <circle cx="100" cy="100" r={dkR} fill="none" stroke="url(#dkG1)" strokeWidth={dkSW} strokeDasharray={`${dkC} 0`} strokeLinecap="round"/>
+                  )}
                   <defs>
                     <linearGradient id="dkG1" x1="0%" y1="0%" x2="100%" y2="0%">
                       <stop offset="0%" stopColor="#7C5CFF"/>
@@ -1618,38 +1691,42 @@ function OverviewPage({
                   </defs>
                 </svg>
                 <div className="dk-circle-center">
-                  <span className="dk-circle-n">{cTotal}</span>
+                  <span className="dk-circle-n">{hcIsCurrent ? cTotal : hcTotal}</span>
                   <span className="dk-circle-l">Total Headcount</span>
                 </div>
               </div>
               <div className="dk-donut-legend">
-                <span className="dk-lg"><i style={{ background:'#7C5CFF' }}/>On site {onSite}</span>
-                <span className="dk-lg"><i style={{ background:'#F59E0B' }}/>Off site {offSite}</span>
-                <span className="dk-lg"><i style={{ background:'#60A5FA' }}/>On leave {onLeave}</span>
+                {hcIsCurrent ? <>
+                  <span className="dk-lg"><i style={{ background:'#7C5CFF' }}/>On site {onSite}</span>
+                  <span className="dk-lg"><i style={{ background:'#F59E0B' }}/>Off site {offSite}</span>
+                  <span className="dk-lg"><i style={{ background:'#60A5FA' }}/>On leave {onLeave}</span>
+                </> : (
+                  <span className="dk-lg"><i style={{ background:'#7C5CFF' }}/>{hcMonthLabel(hcMonth)} — {hcTotal} staff</span>
+                )}
               </div>
             </div>
 
             {/* Right: ALL sections with bars (internal scroll only) */}
             <div className="dk-sect-wrap">
-              {deptCounts.length === 0
-                ? <p className="dk-empty">No sections yet.</p>
+              {hcCounts.length === 0
+                ? <p className="dk-empty">No section data for {hcMonthLabel(hcMonth)}.</p>
                 : <>
                     <div className="dk-sect-list">
-                      {deptCounts.map(([dept,cnt])=>(
+                      {hcCounts.map(([dept,cnt])=>(
                         <div key={dept} className="dk-sect-row">
                           <span className="dk-sect-name" title={dept}>{dept}</span>
                           <div className="dk-sect-track">
                             <div className="dk-sect-fill" style={{ width:Math.round(cnt/maxDept*100)+'%' }}/>
                           </div>
                           <span className="dk-sect-n">{cnt}</span>
-                          <span className="dk-sect-p">{employees.length?Math.round(cnt/employees.length*100):0}%</span>
+                          <span className="dk-sect-p">{hcTotal?Math.round(cnt/hcTotal*100):0}%</span>
                         </div>
                       ))}
                     </div>
                     <div className="dk-sect-total">
                       <span>TOTAL</span>
                       <span/>
-                      <span className="dk-sect-total-n">{employees.length}</span>
+                      <span className="dk-sect-total-n">{hcTotal}</span>
                       <span>100%</span>
                     </div>
                   </>
