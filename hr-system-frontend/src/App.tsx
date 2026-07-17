@@ -14004,6 +14004,14 @@ function App() {
               <span className="theme-toggle-thumb" />
             </span>
           </button>
+
+          {/* Mobile-only: user avatar + logout in the top bar (hidden on desktop via CSS) */}
+          <div className="topbar-mobile-user">
+            <div className="topbar-mobile-avatar" title={currentUserName}>{getInitials(currentUserName)}</div>
+            <button className="topbar-mobile-logout" onClick={logout} type="button" title="Logout" aria-label="Logout">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="15" height="15"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            </button>
+          </div>
         </div>
         <main className="workspace-inner" id="top">
           {activePage === 'overview' && <OverviewPage employees={scopedEmployees} leaveRequests={scopedLeaveRequests} activeLeaves={scopedActiveLeaves} leaveHistory={scopedLeaveHistory} noticeTerminations={scopedNoticeTerminations} completedTerminations={scopedCompletedTerminations} exitInterviews={scopedExitInterviews} medicalCases={scopedMedicalCases} inventoryItems={inventoryItems} passportHandovers={scopedPassportHandovers} onNavigate={setActivePage} currentUserName={currentUserName} />}
