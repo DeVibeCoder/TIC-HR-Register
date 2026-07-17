@@ -449,6 +449,17 @@ type CompletedTerminationRecord = {
   employeeSnapshot?: Employee
 }
 
+// Monthly headcount snapshot — current month kept live, past months frozen.
+type HeadcountSnapshot = {
+  month: string            // 'YYYY-MM'
+  total: number
+  onSite: number
+  offSite: number
+  onLeave: number
+  sections: { dept: string; count: number }[]
+  capturedAt: string
+}
+
 // ── Lightweight localStorage helper (no sample-data fallback) ────────────────
 function tryLoad<T>(key: string): T[] {
   try { return JSON.parse(localStorage.getItem(key) ?? '[]') as T[] } catch { return [] }
@@ -613,6 +624,9 @@ const trainingToDb   = (r: TrainingRecord) => ({ id: r.id, training_title: r.tra
 
 const meetingFromDb = (r: DbRow): MeetingRecord => ({ id: r.id as string, refNumber: r.ref_number as string, date: r.date as string, timeStarted: r.time_started as string, timeEnded: r.time_ended as string, venue: r.venue as string, chairperson: r.chairperson as string, reps: (r.reps ?? []) as MeetingRep[], prevMeetingDate: r.prev_meeting_date as string, deptUpdates: (r.dept_updates ?? []) as MeetingDeptUpdate[], agendaType: (r.agenda_type ?? 'standard') as 'standard'|'custom', customAgenda: r.custom_agenda as string, reviewNotes: r.review_notes as string, additionalSectionNotes: r.additional_section_notes as string, otherMatters: r.other_matters as string, preparedBy: r.prepared_by as string, approvedBy: r.approved_by as string, status: r.status as 'Draft'|'Final', createdAt: r.created_at as string })
 const meetingToDb   = (r: MeetingRecord) => ({ id: r.id, ref_number: r.refNumber, date: r.date, time_started: r.timeStarted, time_ended: r.timeEnded, venue: r.venue, chairperson: r.chairperson, reps: r.reps ?? [], prev_meeting_date: r.prevMeetingDate, dept_updates: r.deptUpdates ?? [], agenda_type: r.agendaType ?? 'standard', custom_agenda: r.customAgenda ?? '', review_notes: r.reviewNotes ?? '', additional_section_notes: r.additionalSectionNotes ?? '', other_matters: r.otherMatters, prepared_by: r.preparedBy, approved_by: r.approvedBy, status: r.status, created_at: r.createdAt })
+
+const hcSnapFromDb = (r: DbRow): HeadcountSnapshot => ({ month: r.month as string, total: r.total as number, onSite: r.on_site as number, offSite: r.off_site as number, onLeave: r.on_leave as number, sections: (r.sections ?? []) as { dept: string; count: number }[], capturedAt: r.captured_at as string })
+const hcSnapToDb   = (r: HeadcountSnapshot) => ({ month: r.month, total: r.total, on_site: r.onSite, off_site: r.offSite, on_leave: r.onLeave, sections: r.sections, captured_at: r.capturedAt })
 
 const bankAccFromDb = (r: DbRow): BankAccountRecord => ({ id: r.id as string, employeeId: r.employee_id as string, fullName: r.full_name as string, department: r.department as string, nationality: r.nationality as string, bank: r.bank as BankName, accountType: r.account_type as AccountType, scheduledDate: r.scheduled_date as string, status: r.status as AccountStatus, remarks: r.remarks as string })
 const bankAccToDb   = (r: BankAccountRecord) => ({ id: r.id, employee_id: r.employeeId, full_name: r.fullName, department: r.department, nationality: r.nationality, bank: r.bank, account_type: r.accountType, scheduled_date: r.scheduledDate, status: r.status, remarks: r.remarks ?? '' })
@@ -1393,7 +1407,7 @@ function OverviewPage({
   employees, leaveRequests, activeLeaves, leaveHistory: _leaveHistory,
   noticeTerminations, completedTerminations, exitInterviews: _exitInterviews,
   medicalCases, inventoryItems: _inventoryItems, passportHandovers: _passportHandovers,
-  onNavigate, currentUserName,
+  headcountSnapshots = [], onNavigate, currentUserName,
 }: {
   employees: Employee[]
   leaveRequests: LeaveRequestRecord[]
@@ -1405,6 +1419,7 @@ function OverviewPage({
   medicalCases: MedicalCaseRecord[]
   inventoryItems: InventoryItem[]
   passportHandovers: PassportHandoverRecord[]
+  headcountSnapshots?: HeadcountSnapshot[]
   onNavigate?: (page: Page) => void
   currentUserName?: string
 }) {
@@ -1423,7 +1438,31 @@ function OverviewPage({
     })
     return Object.entries(d).sort((a, b) => b[1] - a[1])
   }, [employees])
-  const maxDept = deptCounts[0]?.[1] ?? 1
+
+  // ── Headcount month filter ───────────────────────────────────────────────
+  // Current month = live. Past months come from saved snapshots (accurate,
+  // captured from live data during that month) — no unreliable reconstruction.
+  const curMonthKey = new Date().toISOString().slice(0, 7)
+  const [hcMonth, setHcMonth] = useState(curMonthKey)
+  const hcMonthLabel = (key: string) => {
+    if (key === curMonthKey) return 'This Month'
+    const [y, m] = key.split('-')
+    return `${MONTH_NAMES[Number(m) - 1]} ${y}`
+  }
+  // Options: current month + any past month that has a saved snapshot
+  const hcMonthOptions = useMemo(() => {
+    const past = headcountSnapshots.map(s => s.month).filter(m => m < curMonthKey)
+    return [curMonthKey, ...Array.from(new Set(past)).sort().reverse()]
+  }, [headcountSnapshots, curMonthKey])
+  const hcIsCurrent = hcMonth === curMonthKey
+  const hcSnap = hcIsCurrent ? null : headcountSnapshots.find(s => s.month === hcMonth)
+
+  // Section counts for the selected month
+  const hcCounts: [string, number][] = hcIsCurrent
+    ? deptCounts
+    : (hcSnap?.sections ?? []).map(s => [s.dept, s.count] as [string, number]).sort((a, b) => b[1] - a[1])
+  const hcTotal = hcIsCurrent ? employees.length : (hcSnap?.total ?? 0)
+  const maxDept = hcCounts[0]?.[1] ?? 1
 
   // ── Medical leave ────────────────────────────────────────────────────────
   const now = new Date()
@@ -1585,16 +1624,20 @@ function OverviewPage({
               <span className="dk-section-ttl">Headcount by Section</span>
             </div>
             <div className="dk-section-hd-right">
-              <span className="dk-this-month">This Month</span>
+              {hcMonthOptions.length > 1
+                ? <select className="dk-month-select" value={hcMonth} onChange={(e) => setHcMonth(e.target.value)} title="Select month">
+                    {hcMonthOptions.map(key => <option key={key} value={key}>{hcMonthLabel(key)}</option>)}
+                  </select>
+                : <span className="dk-this-month">This Month</span>}
               <button
                 className="dk-icon-btn"
                 type="button"
                 title="Export headcount CSV"
                 aria-label="Export headcount"
-                onClick={() => downloadCsv('headcount-by-section.csv', [
+                onClick={() => downloadCsv(`headcount-${hcMonth}.csv`, [
                   ['SECTION', 'HEADCOUNT', 'PERCENT'],
-                  ...deptCounts.map(([dept, cnt]) => [dept, String(cnt), `${employees.length ? Math.round(cnt / employees.length * 100) : 0}%`]),
-                  ['TOTAL', String(employees.length), '100%'],
+                  ...hcCounts.map(([dept, cnt]) => [dept, String(cnt), `${hcTotal ? Math.round(cnt / hcTotal * 100) : 0}%`]),
+                  ['TOTAL', String(hcTotal), '100%'],
                 ])}
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -1608,9 +1651,13 @@ function OverviewPage({
               <div className="dk-circle-outer">
                 <svg className="dk-donut-svg" width="200" height="200" viewBox="0 0 200 200" style={{ transform:'rotate(-90deg)', position:'absolute', inset:0 }}>
                   <circle cx="100" cy="100" r={dkR} fill="none" stroke="rgba(124,92,255,0.12)" strokeWidth={dkSW}/>
-                  {onSite  > 0 && <circle cx="100" cy="100" r={dkR} fill="none" stroke="url(#dkG1)" strokeWidth={dkSW} strokeDasharray={`${dkSite}  ${dkC-dkSite}`}  strokeDashoffset={0} strokeLinecap="round"/>}
-                  {offSite > 0 && <circle cx="100" cy="100" r={dkR} fill="none" stroke="#F59E0B" strokeWidth={dkSW} strokeDasharray={`${dkOff}   ${dkC-dkOff}`}   strokeDashoffset={-dkOff2} strokeLinecap="round"/>}
-                  {onLeave > 0 && <circle cx="100" cy="100" r={dkR} fill="none" stroke="#60A5FA" strokeWidth={dkSW} strokeDasharray={`${dkLeave} ${dkC-dkLeave}`} strokeDashoffset={-dkOff3} strokeLinecap="round"/>}
+                  {hcIsCurrent ? <>
+                    {onSite  > 0 && <circle cx="100" cy="100" r={dkR} fill="none" stroke="url(#dkG1)" strokeWidth={dkSW} strokeDasharray={`${dkSite}  ${dkC-dkSite}`}  strokeDashoffset={0} strokeLinecap="round"/>}
+                    {offSite > 0 && <circle cx="100" cy="100" r={dkR} fill="none" stroke="#F59E0B" strokeWidth={dkSW} strokeDasharray={`${dkOff}   ${dkC-dkOff}`}   strokeDashoffset={-dkOff2} strokeLinecap="round"/>}
+                    {onLeave > 0 && <circle cx="100" cy="100" r={dkR} fill="none" stroke="#60A5FA" strokeWidth={dkSW} strokeDasharray={`${dkLeave} ${dkC-dkLeave}`} strokeDashoffset={-dkOff3} strokeLinecap="round"/>}
+                  </> : (
+                    (hcSnap?.total ?? 0) > 0 && <circle cx="100" cy="100" r={dkR} fill="none" stroke="url(#dkG1)" strokeWidth={dkSW} strokeDasharray={`${dkC} 0`} strokeLinecap="round"/>
+                  )}
                   <defs>
                     <linearGradient id="dkG1" x1="0%" y1="0%" x2="100%" y2="0%">
                       <stop offset="0%" stopColor="#7C5CFF"/>
@@ -1619,38 +1666,42 @@ function OverviewPage({
                   </defs>
                 </svg>
                 <div className="dk-circle-center">
-                  <span className="dk-circle-n">{cTotal}</span>
+                  <span className="dk-circle-n">{hcIsCurrent ? cTotal : hcTotal}</span>
                   <span className="dk-circle-l">Total Headcount</span>
                 </div>
               </div>
               <div className="dk-donut-legend">
-                <span className="dk-lg"><i style={{ background:'#7C5CFF' }}/>On site {onSite}</span>
-                <span className="dk-lg"><i style={{ background:'#F59E0B' }}/>Off site {offSite}</span>
-                <span className="dk-lg"><i style={{ background:'#60A5FA' }}/>On leave {onLeave}</span>
+                {hcIsCurrent ? <>
+                  <span className="dk-lg"><i style={{ background:'#7C5CFF' }}/>On site {onSite}</span>
+                  <span className="dk-lg"><i style={{ background:'#F59E0B' }}/>Off site {offSite}</span>
+                  <span className="dk-lg"><i style={{ background:'#60A5FA' }}/>On leave {onLeave}</span>
+                </> : (
+                  <span className="dk-lg"><i style={{ background:'#7C5CFF' }}/>{hcMonthLabel(hcMonth)} — {hcTotal} staff</span>
+                )}
               </div>
             </div>
 
             {/* Right: ALL sections with bars (internal scroll only) */}
             <div className="dk-sect-wrap">
-              {deptCounts.length === 0
-                ? <p className="dk-empty">No sections yet.</p>
+              {hcCounts.length === 0
+                ? <p className="dk-empty">No section data for {hcMonthLabel(hcMonth)}.</p>
                 : <>
                     <div className="dk-sect-list">
-                      {deptCounts.map(([dept,cnt])=>(
+                      {hcCounts.map(([dept,cnt])=>(
                         <div key={dept} className="dk-sect-row">
                           <span className="dk-sect-name" title={dept}>{dept}</span>
                           <div className="dk-sect-track">
                             <div className="dk-sect-fill" style={{ width:Math.round(cnt/maxDept*100)+'%' }}/>
                           </div>
                           <span className="dk-sect-n">{cnt}</span>
-                          <span className="dk-sect-p">{employees.length?Math.round(cnt/employees.length*100):0}%</span>
+                          <span className="dk-sect-p">{hcTotal?Math.round(cnt/hcTotal*100):0}%</span>
                         </div>
                       ))}
                     </div>
                     <div className="dk-sect-total">
                       <span>TOTAL</span>
                       <span/>
-                      <span className="dk-sect-total-n">{employees.length}</span>
+                      <span className="dk-sect-total-n">{hcTotal}</span>
                       <span>100%</span>
                     </div>
                   </>
@@ -13290,6 +13341,45 @@ function App() {
     go()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn, refreshKey])
+
+  // ── Monthly headcount snapshots (accurate historical headcount-by-section) ──
+  const [headcountSnapshots, setHeadcountSnapshots] = useState<HeadcountSnapshot[]>([])
+  const snapshotCaptured = useRef(false)
+  useEffect(() => {
+    if (!isLoggedIn) return
+    supabase.from('headcount_snapshots').select('*').then(({ data }) => {
+      if (data) setHeadcountSnapshots(data.map(hcSnapFromDb))
+    })
+  }, [isLoggedIn, refreshKey])
+
+  // Keep the CURRENT month's snapshot up to date from live data (Admin/HR only).
+  // Runs once per session so the current month reflects the latest headcount;
+  // when the month rolls over, the prior month's row is left frozen = history.
+  useEffect(() => {
+    if (!isLoggedIn || !dbLoaded.current || snapshotCaptured.current) return
+    if (employees.length === 0) return
+    if (currentUserRole !== 'Admin' && currentUserRole !== 'HR') return
+    snapshotCaptured.current = true
+
+    const month = new Date().toISOString().slice(0, 7)
+    const d: Record<string, number> = {}
+    let onSite = 0, offSite = 0, onLeave = 0
+    employees.forEach(e => {
+      const dept = normaliseDept(e.department)
+      d[dept] = (d[dept] ?? 0) + 1
+      if (e.siteStatus === 'On Site') onSite++
+      else if (e.siteStatus === 'Off Site') offSite++
+      else if (e.siteStatus === 'On Leave') onLeave++
+    })
+    const snap: HeadcountSnapshot = {
+      month, total: employees.length, onSite, offSite, onLeave,
+      sections: Object.entries(d).map(([dept, count]) => ({ dept, count })),
+      capturedAt: new Date().toISOString(),
+    }
+    setHeadcountSnapshots(prev => [...prev.filter(s => s.month !== month), snap])
+    supabase.from('headcount_snapshots').upsert(hcSnapToDb(snap), { onConflict: 'month' })
+      .then(({ error }) => { if (error) console.error('[headcount snapshot]', error.message) })
+  }, [isLoggedIn, employees, currentUserRole])
   const [showEmployeeForm, setShowEmployeeForm] = useState(false)
   const [employeeMode, setEmployeeMode] = useState<'add' | 'edit'>('add')
   const [employeeForm, setEmployeeForm] = useState<EmployeeForm>(emptyEmployee)
@@ -14021,7 +14111,7 @@ function App() {
           </div>
         </div>
         <main className="workspace-inner" id="top">
-          {activePage === 'overview' && <OverviewPage employees={scopedEmployees} leaveRequests={scopedLeaveRequests} activeLeaves={scopedActiveLeaves} leaveHistory={scopedLeaveHistory} noticeTerminations={scopedNoticeTerminations} completedTerminations={scopedCompletedTerminations} exitInterviews={scopedExitInterviews} medicalCases={scopedMedicalCases} inventoryItems={inventoryItems} passportHandovers={scopedPassportHandovers} onNavigate={setActivePage} currentUserName={currentUserName} />}
+          {activePage === 'overview' && <OverviewPage employees={scopedEmployees} leaveRequests={scopedLeaveRequests} activeLeaves={scopedActiveLeaves} leaveHistory={scopedLeaveHistory} noticeTerminations={scopedNoticeTerminations} completedTerminations={scopedCompletedTerminations} exitInterviews={scopedExitInterviews} medicalCases={scopedMedicalCases} inventoryItems={inventoryItems} passportHandovers={scopedPassportHandovers} headcountSnapshots={headcountSnapshots} onNavigate={setActivePage} currentUserName={currentUserName} />}
           {activePage === 'employees' && <EmployeesPage employees={scopedEmployees} medicalCases={scopedMedicalCases} noticeTerminations={scopedNoticeTerminations} offSiteRecords={scopedOffSiteRecords} onUpdateOffSite={(fn) => setOffSiteRecords(fn)} onAdd={() => { setEmployeeMode('add'); setEmployeeForm(emptyEmployee); setShowEmployeeForm(true) }} onEdit={openEditEmployee} onDelete={deleteEmployee} onExport={exportCsv} onImport={importCsv} onTemplate={downloadTemplate} onShowTasks={() => setShowPendingTasks(true)} isHOD={isHOD} isAdmin={currentUserRole === 'Admin'} isExecutive={isExecutive} />}
           {activePage === 'leave' && <LeavePage employees={scopedEmployees} leaveRequests={scopedLeaveRequests} activeLeaves={scopedActiveLeaves} leaveHistory={scopedLeaveHistory} medicalCases={scopedMedicalCases} isHOD={isHOD} isExecutive={isExecutive} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onSetRequestStep={setLeaveRequestStep} onExtendLeave={extendActiveLeave} onEditActiveLeave={editActiveLeave} onHistoryConfirm={updateHistoryConfirmation} onUpdateMedical={(fn) => setMedicalCases(fn)} />}
           {activePage === 'operations' && <OperationsPage employees={employees} completedTerminations={completedTerminations} activeLeaves={activeLeaves} isHOD={isHOD} userRole={currentUserRole} />}
