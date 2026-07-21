@@ -12660,8 +12660,9 @@ function ReportsPage({
   const periodLabel    = `${MONTH_NAMES[selectedMonth]} ${selectedYear}`
   const generatedOn    = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'})
 
-  // ── Print: open new window with self-contained HTML ─────────────────────
-  const handlePrint = () => {
+  // ── Self-contained report HTML — used by BOTH the on-screen preview
+  //    (iframe) and the print/export window, so they always match. ─────────
+  const reportHtml = (() => {
     // ── Presentation helpers (visualise EXISTING aggregates — no new data) ──
     const esc = (s: unknown) => String(s ?? '').replace(/[&<>]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;' }[c] as string))
     // Restrained, executive palette (dark blues → grey)
@@ -12825,6 +12826,12 @@ table.dt tbody tr{page-break-inside:avoid}
 
 /* Footer (repeats on every page) */
 .rpt-foot{position:fixed;left:0;right:0;bottom:6mm;display:flex;justify-content:space-between;padding:4pt 12mm 0;border-top:1px solid #e2e8f0;font-size:7.5pt;color:#94a3b8}
+/* On screen (preview iframe): document look with margins + footer in flow */
+@media screen{
+  html,body{background:#f1f5f9}
+  body{padding:16pt 20pt 24pt}
+  .rpt-foot{position:static;margin-top:18pt;padding:6pt 0 0}
+}
 </style></head><body>
 
 <div class="rpt-foot">
@@ -12949,10 +12956,13 @@ table.dt tbody tr{page-break-inside:avoid}
 </div>
 
 </body></html>`
+    return html
+  })()
 
+  const handlePrint = () => {
     const win = window.open('', '_blank', 'width=900,height=700')
     if (!win) return
-    win.document.write(html)
+    win.document.write(reportHtml)
     win.document.close()
     win.focus()
     setTimeout(() => { win.print() }, 400)
@@ -13017,246 +13027,7 @@ table.dt tbody tr{page-break-inside:avoid}
           Loading report data…
         </div>
       ) : (
-        <div className="rpt-content">
-
-          {/* ── Executive Summary strip ── */}
-          <div className="rpt-summary-strip">
-            <div className="rpt-summary-hd">Executive Summary — {periodLabel}</div>
-            <div className="rpt-summary-cards">
-              <div className="rpt-sum-card rpt-sum-blue">
-                <div className="rpt-sum-n">{totalEmp}</div>
-                <div className="rpt-sum-l">Total Workforce</div>
-              </div>
-              <div className="rpt-sum-card rpt-sum-purple">
-                <div className="rpt-sum-n">{mLeaveReq.length}</div>
-                <div className="rpt-sum-l">New Leave Requests</div>
-              </div>
-              <div className="rpt-sum-card rpt-sum-red">
-                <div className="rpt-sum-n">{mMedical.length}</div>
-                <div className="rpt-sum-l">Medical Cases</div>
-              </div>
-              <div className="rpt-sum-card rpt-sum-amber">
-                <div className="rpt-sum-n">{mNoticeTerm.length + mCompTerm.length}</div>
-                <div className="rpt-sum-l">Termination Activity</div>
-              </div>
-              <div className="rpt-sum-card rpt-sum-teal">
-                <div className="rpt-sum-n">{mInduction.length + mTraining.length}</div>
-                <div className="rpt-sum-l">Training &amp; Induction</div>
-              </div>
-              <div className="rpt-sum-card rpt-sum-green">
-                <div className="rpt-sum-n">{mRequests.length + mVisits.length}</div>
-                <div className="rpt-sum-l">Activities Logged</div>
-              </div>
-            </div>
-          </div>
-
-          {/* ── Section 1: Workforce ── */}
-          <Sec num="1" title="Workforce Overview" accent="#1e3a5f">
-            <div className="rpt-krow">
-              <K n={totalEmp}   label="Total Strength"      color="#1e3a5f" />
-              <K n={onSite}     label="On Site"             color="#16a34a" />
-              <K n={offSite}    label="Off Site"            color="#d97706" />
-              <K n={onLeaveNow} label="Currently on Leave"  color="#7c3aed" />
-            </div>
-            <div className="rpt-two-col">
-              <div>
-                <div className="rpt-sub-title">By Nationality</div>
-                <table className="rpt-tbl">
-                  <thead><tr><th>Nationality</th><th className="rpt-th-r">No.</th></tr></thead>
-                  <tbody>
-                    {Object.entries(byNat).sort((a,b)=>b[1]-a[1]).map(([n,c])=>(
-                      <tr key={n}><td>{n}</td><td className="rpt-td-r">{c}</td></tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div>
-                <div className="rpt-sub-title">By Section (Top 12)</div>
-                <table className="rpt-tbl">
-                  <thead><tr><th>Section</th><th className="rpt-th-r">No.</th></tr></thead>
-                  <tbody>
-                    {Object.entries(bySec).sort((a,b)=>b[1]-a[1]).slice(0,12).map(([s,c])=>(
-                      <tr key={s}><td>{s}</td><td className="rpt-td-r">{c}</td></tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </Sec>
-
-          {/* ── Section 2: Leave ── */}
-          <Sec num="2" title="Leave" accent="#7c3aed">
-            <div className="rpt-krow">
-              <K n={mLeaveReq.length}  label="New Requests"       color="#7c3aed" />
-              <K n={totalLeaveDays}    label="Total Leave Days"    color="#1e3a5f" />
-              <K n={mLeaveHist.length} label="Returned This Month" color="#16a34a" />
-              <K n={onLeaveNow}        label="Currently Active"    color="#d97706" />
-            </div>
-            <div className="rpt-sub-title">Leave Type Breakdown — New Requests</div>
-            <table className="rpt-tbl">
-              <thead><tr><th>Leave Type</th><th className="rpt-th-r">Requests</th></tr></thead>
-              <tbody>
-                {Object.entries(leaveByType).length > 0
-                  ? Object.entries(leaveByType).map(([t,c])=>(
-                      <tr key={t}><td>{LEAVE_TYPE_LABELS[t]??t}</td><td className="rpt-td-r">{c}</td></tr>
-                    ))
-                  : <NilRow cols={2} />
-                }
-              </tbody>
-            </table>
-          </Sec>
-
-          {/* ── Section 3: Medical ── */}
-          <Sec num="3" title="Medical Cases" accent="#dc2626">
-            <div className="rpt-krow">
-              <K n={mMedical.length}                              label="Total Cases"            color="#dc2626" />
-              <K n={mMedical.filter(r=>r.isUrgent).length}       label="Urgent"                 color="#b91c1c" />
-              <K n={mMedical.filter(r=>r.isAdmitted).length}     label="Hospitalised"           color="#7c3aed" />
-              <K n={totalSickDays}                                label="Sick Leave Days Granted" color="#d97706" />
-            </div>
-            <div className="rpt-sub-title">Case Detail</div>
-            <table className="rpt-tbl">
-              <thead><tr><th>Emp ID</th><th>Name</th><th>Section</th><th>Date</th><th className="rpt-th-c">Sick Days</th><th className="rpt-th-c">Urgent</th><th className="rpt-th-c">Admitted</th></tr></thead>
-              <tbody>
-                {mMedical.length > 0
-                  ? mMedical.map(r=>(
-                      <tr key={r.id}>
-                        <td>{r.employeeId}</td><td>{r.name}</td><td>{r.department}</td>
-                        <td>{formatDateDisplay(r.caseDate)}</td>
-                        <td className="rpt-td-c">{r.sickLeaveDays||0}</td>
-                        <td className="rpt-td-c">{r.isUrgent?<span className="rpt-badge rpt-badge-red">Yes</span>:'—'}</td>
-                        <td className="rpt-td-c">{r.isAdmitted?<span className="rpt-badge rpt-badge-purple">Yes</span>:'—'}</td>
-                      </tr>
-                    ))
-                  : <NilRow cols={7} />
-                }
-              </tbody>
-            </table>
-          </Sec>
-
-          {/* ── Section 4: Termination ── */}
-          <Sec num="4" title="Termination &amp; Separation" accent="#d97706">
-            <div className="rpt-krow">
-              <K n={mNoticeTerm.length}                      label="Notices Submitted"   color="#dc2626" />
-              <K n={mCompTerm.length}                        label="Completed Departures" color="#1e3a5f" />
-              <K n={mExitInt.length}                         label="Exit Interviews"      color="#7c3aed" />
-              <K n={mCompTerm.filter(r=>r.rehireEligible).length} label="Rehire Eligible" color="#16a34a" />
-            </div>
-            <div className="rpt-sub-title">Departures This Period</div>
-            <table className="rpt-tbl">
-              <thead><tr><th>Emp ID</th><th>Name</th><th>Section</th><th>Nationality</th><th>Departure</th><th>Reason</th></tr></thead>
-              <tbody>
-                {mCompTerm.length > 0
-                  ? mCompTerm.map(r=>(
-                      <tr key={r.id}>
-                        <td>{r.employeeId}</td><td>{r.name}</td><td>{r.department}</td>
-                        <td>{r.nationality}</td><td>{formatDateDisplay(r.departureDate)}</td>
-                        <td>{r.reasonForLeaving||'—'}</td>
-                      </tr>
-                    ))
-                  : <NilRow />
-                }
-              </tbody>
-            </table>
-          </Sec>
-
-          {/* ── Section 5: HR Operations ── */}
-          <Sec num="5" title="HR Operations" accent="#0369a1">
-            <div className="rpt-krow">
-              <K n={mInduction.length} label="Induction Sessions"     color="#0369a1" />
-              <K n={inductPax}         label="Induction Participants"  color="#0369a1" sub={mInduction.length?`${mInduction.length} session${mInduction.length!==1?'s':''}`:'—'} />
-              <K n={mTraining.length}  label="Training Sessions"      color="#16a34a" />
-              <K n={trainPax}          label="Training Participants"   color="#16a34a" sub={mTraining.length?`${mTraining.length} session${mTraining.length!==1?'s':''}`:'—'} />
-              <K n={mMeetings.length}  label="Minutes (Final)"        color="#7c3aed" />
-            </div>
-            <div className="rpt-two-col">
-              <div>
-                <div className="rpt-sub-title">Induction Sessions</div>
-                <table className="rpt-tbl">
-                  <thead><tr><th>Ref</th><th>Date</th><th>Conducted By</th><th className="rpt-th-r">Pax</th><th>Status</th></tr></thead>
-                  <tbody>
-                    {mInduction.length > 0
-                      ? mInduction.map(r=>(
-                          <tr key={r.id}><td>{r.refNo}</td><td>{formatDateDisplay(r.inductionDate)}</td><td>{r.conductedBy}</td><td className="rpt-td-r">{r.participants.length}</td><td>{r.status}</td></tr>
-                        ))
-                      : <NilRow cols={5} />
-                    }
-                  </tbody>
-                </table>
-                <div className="rpt-sub-title" style={{ marginTop:14 }}>Meeting Minutes (Final)</div>
-                <table className="rpt-tbl">
-                  <thead><tr><th>Ref No</th><th>Date</th><th>Venue</th><th>Chairperson</th></tr></thead>
-                  <tbody>
-                    {mMeetings.length > 0
-                      ? mMeetings.map(r=>(
-                          <tr key={r.id}><td>{r.refNumber}</td><td>{formatDateDisplay(r.date)}</td><td>{r.venue}</td><td>{r.chairperson}</td></tr>
-                        ))
-                      : <NilRow cols={4} />
-                    }
-                  </tbody>
-                </table>
-              </div>
-              <div>
-                <div className="rpt-sub-title">Training Sessions</div>
-                <table className="rpt-tbl">
-                  <thead><tr><th>Title</th><th>Date</th><th>Type</th><th>Trainer</th><th className="rpt-th-r">Pax</th></tr></thead>
-                  <tbody>
-                    {mTraining.length > 0
-                      ? mTraining.map(r=>(
-                          <tr key={r.id}><td>{r.trainingTitle}</td><td>{formatDateDisplay(r.date)}</td><td>{r.trainingType}</td><td>{r.conductedBy}</td><td className="rpt-td-r">{r.participants.length}</td></tr>
-                        ))
-                      : <NilRow cols={5} />
-                    }
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </Sec>
-
-          {/* ── Section 6: Activities ── */}
-          <Sec num="6" title="Activities" accent="#16a34a">
-            <div className="rpt-krow">
-              <K n={mRequests.length}                              label="Staff Requests"      color="#0369a1" />
-              <K n={mRequests.filter(r=>r.status==='Completed').length} label="Completed"      color="#16a34a" />
-              <K n={mRequests.filter(r=>r.status==='Open').length}      label="Pending"        color="#d97706" />
-              <K n={mVisits.length}                                label="Medical Visits"      color="#7c3aed" />
-            </div>
-            <div className="rpt-two-col">
-              <div>
-                <div className="rpt-sub-title">Staff Requests by Type</div>
-                <table className="rpt-tbl">
-                  <thead><tr><th>Request Type</th><th className="rpt-th-r">No.</th></tr></thead>
-                  <tbody>
-                    {Object.keys(reqByType).length > 0
-                      ? Object.entries(reqByType).sort((a,b)=>b[1]-a[1]).map(([t,c])=>(
-                          <tr key={t}><td>{t}</td><td className="rpt-td-r">{c}</td></tr>
-                        ))
-                      : <NilRow cols={2} />
-                    }
-                  </tbody>
-                </table>
-              </div>
-              <div>
-                <div className="rpt-sub-title">Medical Visits by Type</div>
-                <table className="rpt-tbl">
-                  <thead><tr><th>Visit Type</th><th className="rpt-th-r">No.</th></tr></thead>
-                  <tbody>
-                    {Object.keys(visitByType).length > 0
-                      ? Object.entries(visitByType).sort((a,b)=>b[1]-a[1]).map(([t,c])=>(
-                          <tr key={t}><td>{t}</td><td className="rpt-td-r">{c}</td></tr>
-                        ))
-                      : <NilRow cols={2} />
-                    }
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </Sec>
-
-          <div className="rpt-gen-note">
-            Generated {generatedOn} · Thilafushi Industrial Complex HR System · <em>Confidential</em>
-          </div>
-        </div>
+        <iframe className="rpt-frame" title="Monthly report preview" srcDoc={reportHtml} />
       )}
     </div>
   )

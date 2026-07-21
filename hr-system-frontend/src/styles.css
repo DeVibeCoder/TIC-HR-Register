@@ -11019,6 +11019,20 @@ html { overflow-x: hidden; }
   box-sizing: border-box;
 }
 
+/* Live preview of the exact report document (same HTML as the PDF export) */
+.rpt-frame {
+  width: 100%;
+  height: calc(100vh - 156px);
+  min-height: 480px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f1f5f9;
+  box-shadow: 0 2px 14px rgba(15, 23, 42, 0.08);
+}
+@media (max-width: 768px) {
+  .rpt-frame { height: calc(100svh - 150px); border-radius: 10px; }
+}
+
 /* ── Top bar ── */
 .rpt-topbar {
   display: flex;
