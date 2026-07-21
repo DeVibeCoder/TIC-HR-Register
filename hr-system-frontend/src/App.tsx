@@ -12662,169 +12662,292 @@ function ReportsPage({
 
   // ── Print: open new window with self-contained HTML ─────────────────────
   const handlePrint = () => {
-    const natRows    = Object.entries(byNat).sort((a,b)=>b[1]-a[1]).map(([n,c])=>`<tr><td>${n}</td><td style="text-align:right">${c}</td></tr>`).join('')
-    const secRows    = Object.entries(bySec).sort((a,b)=>b[1]-a[1]).slice(0,12).map(([s,c])=>`<tr><td>${s}</td><td style="text-align:right">${c}</td></tr>`).join('')
-    const ltRows     = Object.entries(leaveByType).map(([t,c])=>`<tr><td>${LEAVE_TYPE_LABELS[t]??t}</td><td style="text-align:right">${c}</td></tr>`).join('')
-    const medRows    = mMedical.map(r=>`<tr><td>${r.employeeId}</td><td>${r.name}</td><td>${r.department}</td><td>${formatDateDisplay(r.caseDate)}</td><td style="text-align:center">${r.sickLeaveDays||0}</td><td style="text-align:center">${r.isUrgent?'Yes':'—'}</td><td style="text-align:center">${r.isAdmitted?'Yes':'—'}</td></tr>`).join('')
-    const termRows   = mCompTerm.map(r=>`<tr><td>${r.employeeId}</td><td>${r.name}</td><td>${r.department}</td><td>${r.nationality}</td><td>${formatDateDisplay(r.departureDate)}</td><td>${r.reasonForLeaving||'—'}</td></tr>`).join('')
-    const indRows    = mInduction.map(r=>`<tr><td>${r.refNo}</td><td>${formatDateDisplay(r.inductionDate)}</td><td>${r.conductedBy}</td><td style="text-align:right">${r.participants.length}</td><td>${r.status}</td></tr>`).join('')
-    const trRows     = mTraining.map(r=>`<tr><td>${r.trainingTitle}</td><td>${formatDateDisplay(r.date)}</td><td>${r.trainingType}</td><td>${r.conductedBy}</td><td style="text-align:right">${r.participants.length}</td></tr>`).join('')
-    const mtgRows    = mMeetings.map(r=>`<tr><td>${r.refNumber}</td><td>${formatDateDisplay(r.date)}</td><td>${r.venue}</td><td>${r.chairperson}</td></tr>`).join('')
-    const reqRows    = Object.entries(reqByType).sort((a,b)=>b[1]-a[1]).map(([t,c])=>`<tr><td>${t}</td><td style="text-align:right">${c}</td></tr>`).join('')
-    const visRows    = Object.entries(visitByType).sort((a,b)=>b[1]-a[1]).map(([t,c])=>`<tr><td>${t}</td><td style="text-align:right">${c}</td></tr>`).join('')
+    // ── Presentation helpers (visualise EXISTING aggregates — no new data) ──
+    const esc = (s: unknown) => String(s ?? '').replace(/[&<>]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;' }[c] as string))
+    // Restrained, executive palette (dark blues → grey)
+    const CH = ['#1e3a5f','#3b6ea5','#5f92c4','#8bb2d9','#b3cce6','#64748b','#94a3b8','#cbd5e1']
 
-    const nil = '<tr><td colspan="10" style="color:#94a3b8;font-style:italic;padding:10px 8px">No records for this period</td></tr>'
-    const tbl = (head: string, body: string) => `<table><thead>${head}</thead><tbody>${body||nil}</tbody></table>`
+    const infoCard = (text: string) => `<div class="info-card"><span class="info-ic">✓</span><span>${esc(text)}</span></div>`
+
+    const donut = (entries: [string, number][], opts: { size?: number; hole?: number; center?: string } = {}) => {
+      const size = opts.size ?? 118, hole = opts.hole ?? 0.6
+      const data = entries.filter(([, v]) => v > 0)
+      const total = data.reduce((s, [, v]) => s + v, 0)
+      if (!total) return ''
+      const cx = size / 2, cy = size / 2, r = size / 2 - 2, ri = r * hole
+      let paths = ''
+      if (data.length === 1) {
+        paths = hole > 0
+          ? `<circle cx="${cx}" cy="${cy}" r="${(r + ri) / 2}" fill="none" stroke="${CH[0]}" stroke-width="${(r - ri).toFixed(1)}"/>`
+          : `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${CH[0]}"/>`
+      } else {
+        let a0 = -Math.PI / 2
+        paths = data.map(([, v], i) => {
+          const frac = v / total, a1 = a0 + frac * 2 * Math.PI
+          const x0 = cx + r * Math.cos(a0), y0 = cy + r * Math.sin(a0)
+          const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1)
+          const large = frac > 0.5 ? 1 : 0
+          let d: string
+          if (hole > 0) {
+            const xi0 = cx + ri * Math.cos(a0), yi0 = cy + ri * Math.sin(a0)
+            const xi1 = cx + ri * Math.cos(a1), yi1 = cy + ri * Math.sin(a1)
+            d = `M${x0.toFixed(2)} ${y0.toFixed(2)} A${r} ${r} 0 ${large} 1 ${x1.toFixed(2)} ${y1.toFixed(2)} L${xi1.toFixed(2)} ${yi1.toFixed(2)} A${ri} ${ri} 0 ${large} 0 ${xi0.toFixed(2)} ${yi0.toFixed(2)} Z`
+          } else {
+            d = `M${cx} ${cy} L${x0.toFixed(2)} ${y0.toFixed(2)} A${r} ${r} 0 ${large} 1 ${x1.toFixed(2)} ${y1.toFixed(2)} Z`
+          }
+          a0 = a1
+          return `<path d="${d}" fill="${CH[i % CH.length]}"/>`
+        }).join('')
+      }
+      const centerHtml = opts.center != null ? `<div class="donut-c"><span class="donut-c-n">${esc(opts.center)}</span><span class="donut-c-l">Total</span></div>` : ''
+      return `<div class="donut-wrap" style="width:${size}px;height:${size}px">${`<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${paths}</svg>`}${centerHtml}</div>`
+    }
+
+    const legend = (entries: [string, number][]) => {
+      const data = entries.filter(([, v]) => v > 0)
+      const total = data.reduce((s, [, v]) => s + v, 0) || 1
+      return `<div class="lgnd">${data.map(([l, v], i) => `<div class="lgnd-row"><span class="lgnd-sw" style="background:${CH[i % CH.length]}"></span><span class="lgnd-l" title="${esc(l)}">${esc(l)}</span><span class="lgnd-v">${v}</span><span class="lgnd-p">${Math.round(v / total * 100)}%</span></div>`).join('')}</div>`
+    }
+
+    const chartCard = (title: string, entries: [string, number][], kind: 'pie' | 'donut', emptyMsg: string) => {
+      const data = entries.filter(([, v]) => v > 0)
+      if (!data.length) return infoCard(emptyMsg)
+      const total = data.reduce((s, [, v]) => s + v, 0)
+      const chart = kind === 'pie' ? donut(data, { hole: 0 }) : donut(data, { hole: 0.6, center: String(total) })
+      return `<div class="card"><div class="card-t">${esc(title)}</div><div class="chart-row">${chart}${legend(data)}</div></div>`
+    }
+
+    const hbarCard = (title: string, entries: [string, number][], emptyMsg: string) => {
+      const data = entries.filter(([, v]) => v > 0)
+      if (!data.length) return infoCard(emptyMsg)
+      const max = Math.max(...data.map(([, v]) => v))
+      return `<div class="card"><div class="card-t">${esc(title)}</div><div class="hbar">${data.map(([l, v], i) => `<div class="hbar-row"><span class="hbar-l" title="${esc(l)}">${esc(l)}</span><span class="hbar-track"><span class="hbar-fill" style="width:${Math.max(4, Math.round(v / max * 100))}%;background:${CH[i % CH.length]}"></span></span><span class="hbar-v">${v}</span></div>`).join('')}</div></div>`
+    }
+
+    const kpi = (n: number | string, label: string, color: string, icon: string) =>
+      `<div class="kpi"><span class="kpi-ic" style="color:${color};background:${color}14">${icon}</span><span class="kpi-b"><span class="kpi-n" style="color:${color}">${n}</span><span class="kpi-l">${esc(label)}</span></span></div>`
+    const stat = (n: number | string, label: string, color: string) =>
+      `<div class="stat"><span class="stat-n" style="color:${color}">${n}</span><span class="stat-l">${esc(label)}</span></div>`
+    const sectionHd = (num: number, title: string) =>
+      `<div class="sec-h"><span class="sec-bar"></span><span class="sec-t">${esc(title)}</span><span class="sec-n">${String(num).padStart(2, '0')}</span></div>`
+
+    // Detailed tables — kept exactly (same data), restyled
+    const dt = (head: string, rows: string) => `<table class="dt"><thead>${head}</thead><tbody>${rows}</tbody></table>`
+    const medRows    = mMedical.map(r=>`<tr><td>${esc(r.employeeId)}</td><td>${esc(r.name)}</td><td>${esc(r.department)}</td><td>${formatDateDisplay(r.caseDate)}</td><td style="text-align:center">${r.sickLeaveDays||0}</td><td style="text-align:center">${r.isUrgent?'Yes':'—'}</td><td style="text-align:center">${r.isAdmitted?'Yes':'—'}</td></tr>`).join('')
+    const termRows   = mCompTerm.map(r=>`<tr><td>${esc(r.employeeId)}</td><td>${esc(r.name)}</td><td>${esc(r.department)}</td><td>${esc(r.nationality)}</td><td>${formatDateDisplay(r.departureDate)}</td><td>${esc(r.reasonForLeaving||'—')}</td></tr>`).join('')
+    const indRows    = mInduction.map(r=>`<tr><td>${esc(r.refNo)}</td><td>${formatDateDisplay(r.inductionDate)}</td><td>${esc(r.conductedBy)}</td><td style="text-align:right">${r.participants.length}</td><td>${esc(r.status)}</td></tr>`).join('')
+    const trRows     = mTraining.map(r=>`<tr><td>${esc(r.trainingTitle)}</td><td>${formatDateDisplay(r.date)}</td><td>${esc(r.trainingType)}</td><td>${esc(r.conductedBy)}</td><td style="text-align:right">${r.participants.length}</td></tr>`).join('')
+    const mtgRows    = mMeetings.map(r=>`<tr><td>${esc(r.refNumber)}</td><td>${formatDateDisplay(r.date)}</td><td>${esc(r.venue)}</td><td>${esc(r.chairperson)}</td></tr>`).join('')
+
+    // Summary aggregates → charts
+    const natEntries  = Object.entries(byNat).sort((a,b)=>b[1]-a[1]) as [string, number][]
+    const secEntries  = (Object.entries(bySec).sort((a,b)=>b[1]-a[1]).slice(0,12)) as [string, number][]
+    const leaveEntries = Object.entries(leaveByType).map(([t,c])=>[LEAVE_TYPE_LABELS[t]??t, c] as [string, number])
+    const reqEntries  = Object.entries(reqByType).sort((a,b)=>b[1]-a[1]) as [string, number][]
+    const visEntries  = Object.entries(visitByType).sort((a,b)=>b[1]-a[1]) as [string, number][]
+    const medBySec    = Object.entries(mMedical.reduce<Record<string,number>>((a,r)=>{ a[r.department]=(a[r.department]??0)+1; return a },{})).sort((a,b)=>b[1]-a[1]) as [string, number][]
+
+    // Icons (inline, monochrome)
+    const IC = {
+      people: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>',
+      cal:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+      med:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v8M8 12h8"/><rect x="3" y="3" width="18" height="18" rx="3"/></svg>',
+      exit:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+      cap:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 2.5 2.5 6 2.5s6-1.5 6-2.5v-5"/></svg>',
+      act:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+    }
 
     const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>HR Monthly Report — ${periodLabel}</title><style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',Arial,sans-serif;font-size:10pt;color:#1e293b;background:#fff;padding:0}
-@page{size:A4;margin:18mm 16mm 18mm 16mm}
-.page-break{page-break-before:always}
-.report-cover{text-align:center;padding:32pt 0 28pt;border-bottom:2px solid #1e3a5f;margin-bottom:24pt}
-.cover-org{font-size:9pt;letter-spacing:.12em;text-transform:uppercase;color:#64748b;margin-bottom:8pt}
-.cover-title{font-size:20pt;font-weight:700;color:#1e3a5f;margin-bottom:6pt}
-.cover-period{font-size:13pt;color:#0369a1;font-weight:600;margin-bottom:10pt}
-.cover-dept{font-size:9pt;color:#64748b}
-.summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10pt;margin:20pt 0}
-.sum-card{border:1px solid #e2e8f0;border-radius:6pt;padding:10pt 12pt;text-align:center}
-.sum-card .num{font-size:22pt;font-weight:700;line-height:1;margin-bottom:3pt}
-.sum-card .lbl{font-size:8pt;text-transform:uppercase;letter-spacing:.07em;color:#64748b;font-weight:600}
-.section{margin-top:20pt}
-.section-hd{font-size:10pt;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#1e3a5f;padding:5pt 8pt;background:#f0f6ff;border-left:3pt solid #1e3a5f;margin-bottom:10pt}
-.stat-row{display:flex;gap:10pt;margin-bottom:10pt;flex-wrap:wrap}
-.stat-box{border:1px solid #e2e8f0;border-radius:5pt;padding:8pt 12pt;min-width:90pt;flex:1}
-.stat-box .n{font-size:18pt;font-weight:700;line-height:1;margin-bottom:2pt}
-.stat-box .l{font-size:7.5pt;text-transform:uppercase;letter-spacing:.06em;color:#64748b;font-weight:600}
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14pt}
-.sub-hd{font-size:8pt;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#475569;margin:8pt 0 5pt;border-bottom:1px solid #e2e8f0;padding-bottom:3pt}
-table{width:100%;border-collapse:collapse;font-size:8.5pt}
-th{background:#f8fafc;border:1px solid #e2e8f0;padding:5pt 7pt;text-align:left;font-size:7.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#475569}
-td{border:1px solid #e2e8f0;padding:5pt 7pt;vertical-align:top}
-tr:nth-child(even) td{background:#fafbfc}
-.nil{color:#94a3b8;font-style:italic}
-.footer{margin-top:28pt;padding-top:8pt;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;font-size:8pt;color:#94a3b8}
+body{font-family:'Segoe UI',Arial,sans-serif;font-size:9.5pt;color:#1e293b;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+@page{size:A4 portrait;margin:12mm 12mm 16mm 12mm}
+@media print{ @page{ @bottom-right{ content:"Page " counter(page) " of " counter(pages); font-family:'Segoe UI',Arial,sans-serif; font-size:7.5pt; color:#94a3b8 } } }
+
+/* Executive dashboard — KPI cards */
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:9pt;margin-bottom:4pt}
+.kpi{display:flex;align-items:center;gap:11pt;background:#fff;border:1px solid #e8edf3;border-radius:12px;padding:11pt 13pt;box-shadow:0 1px 3px rgba(15,23,42,.06);page-break-inside:avoid}
+.kpi-ic{width:27pt;height:27pt;display:grid;place-items:center;border-radius:9px;flex-shrink:0}
+.kpi-ic svg{width:15pt;height:15pt}
+.kpi-b{display:flex;flex-direction:column;min-width:0}
+.kpi-n{font-size:21pt;font-weight:700;line-height:1;letter-spacing:-.01em}
+.kpi-l{font-size:7.2pt;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#64748b;margin-top:3pt}
+
+/* Section */
+.sec{margin-top:15pt}
+.sec-h{display:flex;align-items:center;gap:8pt;margin-bottom:8pt;page-break-after:avoid}
+.sec-bar{width:4px;height:15pt;background:#1e3a5f;border-radius:2px;flex-shrink:0}
+.sec-t{font-size:11.5pt;font-weight:700;color:#1e3a5f}
+.sec-n{margin-left:auto;font-size:8.5pt;font-weight:700;color:#cbd5e1;letter-spacing:.05em}
+
+/* Stat cards */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8pt;margin-bottom:9pt}
+.stats.s5{grid-template-columns:repeat(5,1fr)}
+.stat{background:#fff;border:1px solid #e8edf3;border-radius:10px;padding:9pt 11pt;box-shadow:0 1px 2px rgba(15,23,42,.04);page-break-inside:avoid;display:flex;flex-direction:column}
+.stat-n{font-size:16pt;font-weight:700;line-height:1}
+.stat-l{font-size:6.8pt;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#64748b;margin-top:3pt}
+
+/* Cards & charts */
+.card{background:#fff;border:1px solid #e8edf3;border-radius:12px;padding:11pt 13pt;box-shadow:0 1px 3px rgba(15,23,42,.05);margin-bottom:9pt;page-break-inside:avoid}
+.card-t{font-size:8pt;font-weight:700;color:#334155;margin-bottom:9pt;text-transform:uppercase;letter-spacing:.05em}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:9pt;align-items:start}
+.chart-row{display:flex;align-items:center;gap:14pt}
+.donut-wrap{position:relative;flex-shrink:0}
+.donut-c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.donut-c-n{font-size:15pt;font-weight:700;color:#1e3a5f;line-height:1}
+.donut-c-l{font-size:6pt;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-top:1pt}
+.lgnd{flex:1;display:flex;flex-direction:column;gap:3.5pt;min-width:0}
+.lgnd-row{display:grid;grid-template-columns:10pt 1fr auto 28pt;align-items:center;gap:6pt;font-size:8pt}
+.lgnd-sw{width:8pt;height:8pt;border-radius:2px;flex-shrink:0}
+.lgnd-l{color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lgnd-v{font-weight:700;color:#1e293b}
+.lgnd-p{color:#94a3b8;font-size:7.5pt;text-align:right}
+
+/* Horizontal bars */
+.hbar{display:flex;flex-direction:column;gap:5.5pt}
+.hbar-row{display:grid;grid-template-columns:80pt 1fr 20pt;align-items:center;gap:8pt;font-size:8pt}
+.hbar-l{color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hbar-track{height:9pt;background:#f1f5f9;border-radius:5px;overflow:hidden}
+.hbar-fill{display:block;height:100%;border-radius:5px}
+.hbar-v{font-weight:700;text-align:right;color:#1e293b}
+
+/* Detailed tables */
+.tbl-wrap{margin-bottom:9pt}
+table.dt{width:100%;border-collapse:collapse;font-size:8pt;border-radius:8px;overflow:hidden}
+table.dt thead{display:table-header-group}
+table.dt th{background:#1e3a5f;color:#fff;padding:5.5pt 7pt;text-align:left;font-size:6.8pt;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+table.dt td{padding:5pt 7pt;border-bottom:1px solid #eef2f7;vertical-align:top;color:#334155}
+table.dt tbody tr:nth-child(even) td{background:#f8fafc}
+table.dt tbody tr{page-break-inside:avoid}
+
+/* Info card (empty states) */
+.info-card{display:flex;align-items:center;gap:9pt;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10pt 13pt;font-size:8.5pt;color:#15803d;font-weight:600;margin-bottom:9pt;page-break-inside:avoid}
+.info-ic{display:grid;place-items:center;width:15pt;height:15pt;border-radius:50%;background:#16a34a;color:#fff;font-size:8pt;flex-shrink:0}
+
+/* Footer (repeats on every page) */
+.rpt-foot{position:fixed;left:0;right:0;bottom:6mm;display:flex;justify-content:space-between;padding:4pt 12mm 0;border-top:1px solid #e2e8f0;font-size:7.5pt;color:#94a3b8}
 </style></head><body>
 
-<div class="report-cover">
-  <div class="cover-org">Thilafushi Industrial Complex</div>
-  <div class="cover-title">Human Resources Monthly Report</div>
-  <div class="cover-period">${periodLabel}</div>
-  <div class="cover-dept">Human Resources Department &nbsp;|&nbsp; Confidential</div>
+<div class="rpt-foot">
+  <span>Generated on: ${generatedOn}</span>
+  <span>Confidential</span>
 </div>
 
-<div class="summary-grid">
-  <div class="sum-card"><div class="num" style="color:#1e3a5f">${totalEmp}</div><div class="lbl">Total Employees</div></div>
-  <div class="sum-card"><div class="num" style="color:#7c3aed">${mLeaveReq.length}</div><div class="lbl">New Leave Requests</div></div>
-  <div class="sum-card"><div class="num" style="color:#dc2626">${mMedical.length}</div><div class="lbl">Medical Cases</div></div>
-  <div class="sum-card"><div class="num" style="color:#d97706">${mNoticeTerm.length + mCompTerm.length}</div><div class="lbl">Termination Activity</div></div>
-  <div class="sum-card"><div class="num" style="color:#0369a1">${mInduction.length + mTraining.length}</div><div class="lbl">Training &amp; Induction</div></div>
-  <div class="sum-card"><div class="num" style="color:#16a34a">${mRequests.length + mVisits.length}</div><div class="lbl">Activities Logged</div></div>
-</div>
-
-<div class="section">
-  <div class="section-hd">1. Workforce Overview</div>
-  <div class="stat-row">
-    <div class="stat-box"><div class="n" style="color:#1e3a5f">${totalEmp}</div><div class="l">Total Strength</div></div>
-    <div class="stat-box"><div class="n" style="color:#16a34a">${onSite}</div><div class="l">On Site</div></div>
-    <div class="stat-box"><div class="n" style="color:#d97706">${offSite}</div><div class="l">Off Site</div></div>
-    <div class="stat-box"><div class="n" style="color:#7c3aed">${onLeaveNow}</div><div class="l">Currently on Leave</div></div>
+<div class="sec" style="margin-top:0">
+  ${sectionHd(0, 'Executive Dashboard')}
+  <div class="kpis">
+    ${kpi(totalEmp, 'Total Employees', '#1e3a5f', IC.people)}
+    ${kpi(mLeaveReq.length, 'New Leave Requests', '#3b6ea5', IC.cal)}
+    ${kpi(mMedical.length, 'Medical Cases', '#dc2626', IC.med)}
+    ${kpi(mNoticeTerm.length + mCompTerm.length, 'Termination Activity', '#d97706', IC.exit)}
+    ${kpi(mInduction.length + mTraining.length, 'Training & Induction', '#1e3a5f', IC.cap)}
+    ${kpi(mRequests.length + mVisits.length, 'Activities Logged', '#16a34a', IC.act)}
   </div>
-  <div class="two-col">
+</div>
+
+<div class="sec">
+  ${sectionHd(1, 'Workforce Overview')}
+  <div class="stats">
+    ${stat(totalEmp, 'Total Strength', '#1e3a5f')}
+    ${stat(onSite, 'On Site', '#16a34a')}
+    ${stat(offSite, 'Off Site', '#d97706')}
+    ${stat(onLeaveNow, 'Currently on Leave', '#3b6ea5')}
+  </div>
+  <div class="grid2">
+    ${chartCard('Workforce by Nationality', natEntries, 'donut', 'No workforce data')}
+    ${hbarCard('Workforce by Section (Top 12)', secEntries, 'No section data')}
+  </div>
+</div>
+
+<div class="sec">
+  ${sectionHd(2, 'Leave')}
+  <div class="stats">
+    ${stat(mLeaveReq.length, 'New Requests', '#3b6ea5')}
+    ${stat(totalLeaveDays, 'Total Leave Days', '#1e3a5f')}
+    ${stat(mLeaveHist.length, 'Returned This Period', '#16a34a')}
+    ${stat(onLeaveNow, 'Currently Active', '#d97706')}
+  </div>
+  ${leaveEntries.length === 0
+    ? infoCard('No Leave Requests Recorded This Month')
+    : leaveEntries.length === 1
+      ? `<div class="tbl-wrap"><div class="card-t">New Leave Requests — By Type</div>${dt('<tr><th>Leave Type</th><th style="text-align:right">Requests</th></tr>', leaveEntries.map(([t,c])=>`<tr><td>${esc(t)}</td><td style="text-align:right">${c}</td></tr>`).join(''))}</div>`
+      : chartCard('New Leave Requests — By Type', leaveEntries, 'pie', 'No Leave Requests Recorded This Month')}
+</div>
+
+<div class="sec">
+  ${sectionHd(3, 'Medical Cases')}
+  <div class="stats">
+    ${stat(mMedical.length, 'Total Cases', '#dc2626')}
+    ${stat(mMedical.filter(r=>r.isUrgent).length, 'Urgent Cases', '#b91c1c')}
+    ${stat(mMedical.filter(r=>r.isAdmitted).length, 'Hospitalised', '#3b6ea5')}
+    ${stat(totalSickDays, 'Sick Leave Days', '#d97706')}
+  </div>
+  ${medBySec.length > 0 ? chartCard('Medical Cases by Section', medBySec, 'donut', 'No medical cases') : ''}
+  ${medRows
+    ? `<div class="tbl-wrap"><div class="card-t">Case Detail</div>${dt('<tr><th>Emp ID</th><th>Name</th><th>Section</th><th>Date</th><th style="text-align:center">Sick Days</th><th style="text-align:center">Urgent</th><th style="text-align:center">Admitted</th></tr>', medRows)}</div>`
+    : infoCard('No Medical Cases Recorded This Month')}
+</div>
+
+<div class="sec">
+  ${sectionHd(4, 'Termination & Separation')}
+  <div class="stats">
+    ${stat(mNoticeTerm.length, 'Notices Submitted', '#d97706')}
+    ${stat(mCompTerm.length, 'Completed Departures', '#1e3a5f')}
+    ${stat(mExitInt.length, 'Exit Interviews', '#3b6ea5')}
+    ${stat(mCompTerm.filter(r=>r.rehireEligible).length, 'Rehire Eligible', '#16a34a')}
+  </div>
+  ${termRows
+    ? `<div class="tbl-wrap"><div class="card-t">Departures This Period</div>${dt('<tr><th>Emp ID</th><th>Name</th><th>Section</th><th>Nationality</th><th>Departure Date</th><th>Reason</th></tr>', termRows)}</div>`
+    : infoCard('No Departures Recorded This Month')}
+</div>
+
+<div class="sec">
+  ${sectionHd(5, 'HR Operations')}
+  <div class="stats s5">
+    ${stat(mInduction.length, 'Induction Sessions', '#1e3a5f')}
+    ${stat(inductPax, 'Induction Pax', '#3b6ea5')}
+    ${stat(mTraining.length, 'Training Sessions', '#16a34a')}
+    ${stat(trainPax, 'Training Pax', '#16a34a')}
+    ${stat(mMeetings.length, 'Meeting Minutes', '#3b6ea5')}
+  </div>
+  <div class="grid2">
     <div>
-      <div class="sub-hd">Workforce by Nationality</div>
-      ${tbl('<tr><th>Nationality</th><th style="text-align:right">No.</th></tr>', natRows)}
+      ${indRows
+        ? `<div class="tbl-wrap"><div class="card-t">Induction Sessions</div>${dt('<tr><th>Ref</th><th>Date</th><th>Conducted By</th><th style="text-align:right">Pax</th><th>Status</th></tr>', indRows)}</div>`
+        : infoCard('No Induction Sessions Recorded This Month')}
+      ${mtgRows
+        ? `<div class="tbl-wrap"><div class="card-t">Meeting Minutes</div>${dt('<tr><th>Ref No</th><th>Date</th><th>Venue</th><th>Chairperson</th></tr>', mtgRows)}</div>`
+        : infoCard('No Meeting Minutes Recorded This Month')}
     </div>
     <div>
-      <div class="sub-hd">Workforce by Section (Top 12)</div>
-      ${tbl('<tr><th>Section</th><th style="text-align:right">No.</th></tr>', secRows)}
-    </div>
-  </div>
-</div>
-
-<div class="section page-break">
-  <div class="section-hd">2. Leave</div>
-  <div class="stat-row">
-    <div class="stat-box"><div class="n" style="color:#7c3aed">${mLeaveReq.length}</div><div class="l">New Requests</div></div>
-    <div class="stat-box"><div class="n" style="color:#0369a1">${totalLeaveDays}</div><div class="l">Total Leave Days</div></div>
-    <div class="stat-box"><div class="n" style="color:#16a34a">${mLeaveHist.length}</div><div class="l">Returned This Period</div></div>
-    <div class="stat-box"><div class="n" style="color:#d97706">${onLeaveNow}</div><div class="l">Currently Active</div></div>
-  </div>
-  <div class="sub-hd">New Leave Requests — By Type</div>
-  ${tbl('<tr><th>Leave Type</th><th style="text-align:right">No. of Requests</th></tr>', ltRows)}
-</div>
-
-<div class="section">
-  <div class="section-hd">3. Medical Cases</div>
-  <div class="stat-row">
-    <div class="stat-box"><div class="n" style="color:#dc2626">${mMedical.length}</div><div class="l">Total Cases</div></div>
-    <div class="stat-box"><div class="n" style="color:#b91c1c">${mMedical.filter(r=>r.isUrgent).length}</div><div class="l">Urgent Cases</div></div>
-    <div class="stat-box"><div class="n" style="color:#7c3aed">${mMedical.filter(r=>r.isAdmitted).length}</div><div class="l">Hospitalised</div></div>
-    <div class="stat-box"><div class="n" style="color:#d97706">${totalSickDays}</div><div class="l">Sick Leave Days Granted</div></div>
-  </div>
-  <div class="sub-hd">Case Detail</div>
-  ${tbl('<tr><th>Emp ID</th><th>Name</th><th>Section</th><th>Date</th><th style="text-align:center">Sick Days</th><th style="text-align:center">Urgent</th><th style="text-align:center">Admitted</th></tr>', medRows)}
-</div>
-
-<div class="section page-break">
-  <div class="section-hd">4. Termination &amp; Separation</div>
-  <div class="stat-row">
-    <div class="stat-box"><div class="n" style="color:#dc2626">${mNoticeTerm.length}</div><div class="l">Notices Submitted</div></div>
-    <div class="stat-box"><div class="n" style="color:#0f172a">${mCompTerm.length}</div><div class="l">Completed Departures</div></div>
-    <div class="stat-box"><div class="n" style="color:#7c3aed">${mExitInt.length}</div><div class="l">Exit Interviews</div></div>
-    <div class="stat-box"><div class="n" style="color:#16a34a">${mCompTerm.filter(r=>r.rehireEligible).length}</div><div class="l">Rehire Eligible</div></div>
-  </div>
-  <div class="sub-hd">Departures This Period</div>
-  ${tbl('<tr><th>Emp ID</th><th>Name</th><th>Section</th><th>Nationality</th><th>Departure Date</th><th>Reason</th></tr>', termRows)}
-</div>
-
-<div class="section">
-  <div class="section-hd">5. HR Operations</div>
-  <div class="stat-row">
-    <div class="stat-box"><div class="n" style="color:#0369a1">${mInduction.length}</div><div class="l">Induction Sessions</div></div>
-    <div class="stat-box"><div class="n" style="color:#0369a1">${inductPax}</div><div class="l">Induction Participants</div></div>
-    <div class="stat-box"><div class="n" style="color:#16a34a">${mTraining.length}</div><div class="l">Training Sessions</div></div>
-    <div class="stat-box"><div class="n" style="color:#16a34a">${trainPax}</div><div class="l">Training Participants</div></div>
-    <div class="stat-box"><div class="n" style="color:#7c3aed">${mMeetings.length}</div><div class="l">Meeting Minutes (Final)</div></div>
-  </div>
-  <div class="two-col">
-    <div>
-      <div class="sub-hd">Induction Sessions</div>
-      ${tbl('<tr><th>Ref</th><th>Date</th><th>Conducted By</th><th style="text-align:right">Pax</th><th>Status</th></tr>', indRows)}
-      <div class="sub-hd" style="margin-top:10pt">Meeting Minutes</div>
-      ${tbl('<tr><th>Ref No</th><th>Date</th><th>Venue</th><th>Chairperson</th></tr>', mtgRows)}
-    </div>
-    <div>
-      <div class="sub-hd">Training Sessions</div>
-      ${tbl('<tr><th>Title</th><th>Date</th><th>Type</th><th>Trainer</th><th style="text-align:right">Pax</th></tr>', trRows)}
-    </div>
-  </div>
-</div>
-
-<div class="section page-break">
-  <div class="section-hd">6. Activities</div>
-  <div class="stat-row">
-    <div class="stat-box"><div class="n" style="color:#0369a1">${mRequests.length}</div><div class="l">Staff Requests</div></div>
-    <div class="stat-box"><div class="n" style="color:#16a34a">${mRequests.filter(r=>r.status==='Completed').length}</div><div class="l">Requests Completed</div></div>
-    <div class="stat-box"><div class="n" style="color:#d97706">${mRequests.filter(r=>r.status==='Open').length}</div><div class="l">Requests Pending</div></div>
-    <div class="stat-box"><div class="n" style="color:#7c3aed">${mVisits.length}</div><div class="l">Medical Visits</div></div>
-  </div>
-  <div class="two-col">
-    <div>
-      <div class="sub-hd">Staff Requests — By Type</div>
-      ${tbl('<tr><th>Request Type</th><th style="text-align:right">No.</th></tr>', reqRows)}
-    </div>
-    <div>
-      <div class="sub-hd">Medical Visits — By Type</div>
-      ${tbl('<tr><th>Visit Type</th><th style="text-align:right">No.</th></tr>', visRows)}
+      ${trRows
+        ? `<div class="tbl-wrap"><div class="card-t">Training Sessions</div>${dt('<tr><th>Title</th><th>Date</th><th>Type</th><th>Trainer</th><th style="text-align:right">Pax</th></tr>', trRows)}</div>`
+        : infoCard('No Training Sessions Recorded This Month')}
     </div>
   </div>
 </div>
 
-<div class="footer">
-  <span>Thilafushi Industrial Complex — Human Resources Department</span>
-  <span>Generated: ${generatedOn} &nbsp;·&nbsp; CONFIDENTIAL</span>
+<div class="sec">
+  ${sectionHd(6, 'Activities')}
+  <div class="stats">
+    ${stat(mRequests.length, 'Staff Requests', '#1e3a5f')}
+    ${stat(mRequests.filter(r=>r.status==='Completed').length, 'Requests Completed', '#16a34a')}
+    ${stat(mRequests.filter(r=>r.status==='Open').length, 'Requests Pending', '#d97706')}
+    ${stat(mVisits.length, 'Medical Visits', '#3b6ea5')}
+  </div>
+  <div class="grid2">
+    ${reqEntries.length === 0
+      ? infoCard('No Staff Requests Recorded This Month')
+      : reqEntries.length === 1
+        ? `<div class="tbl-wrap"><div class="card-t">Staff Requests — By Type</div>${dt('<tr><th>Request Type</th><th style="text-align:right">No.</th></tr>', reqEntries.map(([t,c])=>`<tr><td>${esc(t)}</td><td style="text-align:right">${c}</td></tr>`).join(''))}</div>`
+        : chartCard('Staff Requests — By Type', reqEntries, 'pie', 'No Staff Requests Recorded This Month')}
+    ${visEntries.length === 0
+      ? infoCard('No Medical Visits Recorded This Month')
+      : visEntries.length === 1
+        ? `<div class="tbl-wrap"><div class="card-t">Medical Visits — By Type</div>${dt('<tr><th>Visit Type</th><th style="text-align:right">No.</th></tr>', visEntries.map(([t,c])=>`<tr><td>${esc(t)}</td><td style="text-align:right">${c}</td></tr>`).join(''))}</div>`
+        : chartCard('Medical Visits — By Type', visEntries, 'donut', 'No Medical Visits Recorded This Month')}
+  </div>
 </div>
+
 </body></html>`
 
     const win = window.open('', '_blank', 'width=900,height=700')
