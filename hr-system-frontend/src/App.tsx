@@ -4359,9 +4359,12 @@ function LeavePage({
   onExtendLeave,
   onEditActiveLeave,
   onHistoryConfirm,
+  onDeleteHistory,
+  onEditHistory,
   onUpdateMedical,
   isHOD = false,
   isExecutive = false,
+  isAdmin = false,
 }: {
   employees: Employee[]
   leaveRequests: LeaveRequestRecord[]
@@ -4375,9 +4378,12 @@ function LeavePage({
   onExtendLeave: (updated: ActiveLeaveRecord) => void
   onEditActiveLeave: (updated: ActiveLeaveRecord) => void
   onHistoryConfirm: (id: string, confirmation: HistoryConfirmation) => void
+  onDeleteHistory: (id: string) => void
+  onEditHistory: (updated: LeaveHistoryRecord) => void
   onUpdateMedical: (fn: (prev: MedicalCaseRecord[]) => MedicalCaseRecord[]) => void
   isHOD?: boolean
   isExecutive?: boolean
+  isAdmin?: boolean
 }) {
   const [activeLeaveView, setActiveLeaveView] = useState<LeaveView>('request')
 
@@ -4405,6 +4411,7 @@ function LeavePage({
   const [historyMonthFilter, setHistoryMonthFilter] = useState<'All' | string>('All')
   const [historyDepartmentFilter, setHistoryDepartmentFilter] = useState('All Departments')
   const [viewingProgress, setViewingProgress] = useState<LeaveHistoryRecord | null>(null)
+  const [editingHistory, setEditingHistory] = useState<LeaveHistoryRecord | null>(null)
 
   const historyMonths = useMemo(() => {
     const keys = Array.from(new Set(leaveHistory.map((record) => monthKey(record.returnDate)).filter(Boolean)))
@@ -4722,12 +4729,19 @@ function LeavePage({
                       </td>
                       <td className="leave-remarks-cell">{record.remarks || <span className="muted-dash">—</span>}</td>
                       <td className="leave-status-cell-sm">{record.confirmation ? <StatusBadge status={record.confirmation} /> : <div className="row-actions history-confirm-actions"><button className="mini-button vwh" onClick={() => onHistoryConfirm(record.id, 'Returned')} type="button">Returned</button><button className="mini-button danger vwh" onClick={() => onHistoryConfirm(record.id, 'Not Returned')} type="button">Not Returned</button></div>}</td>
-                      <td><button className="action-glyph" onClick={() => setViewingProgress(record)} type="button" title="View Progress" style={{ fontSize: '1rem' }}>👁</button></td>
+                      <td>
+                        <div className="row-actions">
+                          <button className="action-glyph" onClick={() => setViewingProgress(record)} type="button" title="View Progress" style={{ fontSize: '1rem' }}>👁</button>
+                          {isAdmin && <button className="action-glyph edit vwh" onClick={() => setEditingHistory(record)} type="button" title="Edit">✎</button>}
+                          {isAdmin && <button className="action-glyph delete vwh" onClick={() => { if (window.confirm(`Delete this leave history record for ${record.name}? This is used to remove duplicates and cannot be undone.`)) onDeleteHistory(record.id) }} type="button" title="Delete">🗑</button>}
+                        </div>
+                      </td>
                     </tr>
                   )
                 })}
               </tbody></table>
             </div>
+            {editingHistory && <ActiveLeaveEditModal record={editingHistory as unknown as ActiveLeaveRecord} onClose={() => setEditingHistory(null)} onSave={(r) => { onEditHistory(r as unknown as LeaveHistoryRecord); setEditingHistory(null) }} />}
           </>
         )}
 
@@ -8774,7 +8788,8 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/>
 <title>Briefing Meeting Minutes — ${esc(record.refNumber)}</title>
 <style>
-  @page { size:A4 portrait; margin:12mm 15mm 14mm 15mm; }
+  @page { size:A4 portrait; margin:12mm 15mm 18mm 15mm; }
+  @media print { @page { @bottom-right { content:"Page " counter(page) " of " counter(pages); font-family:Arial,Helvetica,sans-serif; font-size:8pt; color:#2f78c5 } } }
   *,*::before,*::after { box-sizing:border-box; }
   body { font-family:Arial,Helvetica,sans-serif; font-size:11pt; color:#111; background:#e8e8e8; margin:0; padding:0; }
   .pbar { display:flex; align-items:center; gap:14px; padding:10px 20px; background:#1e1b4b; position:sticky; top:0; z-index:10; font-family:system-ui,sans-serif; font-size:13px; }
@@ -8816,26 +8831,22 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   .disc-ul { margin:0; padding-left:14pt; }
   .disc-ul li { font-size:10pt; margin-bottom:2pt; }
 
-  /* Closing */
-  .closing-note { text-align:center; border:0.7pt solid #aaa; padding:4pt 8pt; margin:10pt 0 8pt; font-size:9pt; color:#555; font-style:italic; }
-  .sig-grid { display:grid; grid-template-columns:1fr 1fr; gap:32pt; margin-top:6pt; }
-  .sig-box { border:0.7pt solid #aaa; padding:8pt 12pt 7pt; }
-  .sig-by { font-size:9pt; margin-bottom:12pt; }
-  .sig-line { border-bottom:0.7pt solid #888; margin-bottom:4pt; height:12pt; }
-  .sig-name { font-size:9pt; font-weight:700; }
-  .sig-role { font-size:9pt; text-transform:uppercase; }
+  /* Closing — compact signature boxes */
+  .closing-note { text-align:center; border:0.7pt solid #aaa; padding:3pt 8pt; margin:8pt 0 6pt; font-size:8.5pt; color:#555; font-style:italic; }
+  .sig-grid { display:grid; grid-template-columns:1fr 1fr; gap:24pt; margin-top:5pt; }
+  .sig-box { border:0.7pt solid #aaa; border-radius:3pt; padding:6pt 10pt 5pt; }
+  .sig-by { font-size:8pt; margin-bottom:8pt; }
+  .sig-line { border-bottom:0.7pt solid #888; margin-bottom:3pt; height:9pt; }
+  .sig-name { font-size:8.5pt; font-weight:700; }
+  .sig-role { font-size:8pt; text-transform:uppercase; }
 
   /* Section dept boxes — never split across pages */
   .dept-box { page-break-inside:avoid; break-inside:avoid; }
 
-  /* Document frame — <tfoot> auto-repeats the footer on EVERY printed page */
-  .doc { width:100%; border-collapse:collapse; }
-  .doc > tbody > tr > td { padding:0; vertical-align:top; }
-  .doc > tfoot { display:table-footer-group; }
-  .doc > tfoot > tr > td { padding:0; vertical-align:bottom; }
+  /* Footer — pinned to the bottom of EVERY page (incl. the signature page) */
   .pg-footer {
     border-top:1pt solid #2f78c5;
-    padding-top:5pt; margin-top:10pt;
+    padding-top:5pt; margin-top:12pt;
     font-size:8.5pt; color:#2f78c5;
     text-align:left;
   }
@@ -8847,15 +8858,10 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
     .wrap { max-width:none; margin:0; padding:0; gap:0; }
     .page { box-shadow:none; padding:0; }
     .pgbrk { page-break-before:always; }
-    /* Full-height table so the tfoot is pushed to the bottom of every
-       page — including the short last page */
-    html, body { height:100%; }
-    .wrap { height:100%; }
-    .doc { height:100%; }
-    .doc > tbody { height:100%; }
-    .doc > tbody > tr { height:100%; }
-    .doc > tbody > tr > td { height:100%; }
-    .pg-footer { margin-top:6pt; }
+    .pg-footer {
+      position:fixed; left:0; right:0; bottom:6mm;
+      margin:0; padding-top:4pt; background:#fff;
+    }
   }
 </style></head><body>
 <div class="pbar">
@@ -8863,9 +8869,6 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   <span>Briefing Meeting Minutes — ${esc(record.refNumber)}</span>
 </div>
 <div class="wrap">
-<table class="doc">
-<tfoot><tr><td>${footerHtml}</td></tr></tfoot>
-<tbody><tr><td>
 
 <!-- PAGE 1 -->
 <div class="page">
@@ -9012,9 +9015,8 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   </div>
 </div>
 
-</td></tr></tbody>
-</table>
 </div>
+${footerHtml}
 </body></html>`
   const win = window.open('', '_blank')
   if (win) { win.document.write(html); win.document.close() }
@@ -13640,6 +13642,13 @@ function App() {
     }))
   }
 
+  const deleteLeaveHistory = (id: string) => {
+    setLeaveHistory((current) => current.filter((record) => record.id !== id))
+  }
+  const editLeaveHistory = (updated: LeaveHistoryRecord) => {
+    setLeaveHistory((current) => current.map((record) => record.id === updated.id ? updated : record))
+  }
+
   const updateHistoryConfirmation = (id: string, confirmation: HistoryConfirmation) => {
     setLeaveHistory((current) => current.map((record) => record.id === id ? { ...record, confirmation } : record))
 
@@ -14034,7 +14043,7 @@ function App() {
         <main className="workspace-inner" id="top">
           {activePage === 'overview' && <OverviewPage employees={scopedEmployees} leaveRequests={scopedLeaveRequests} activeLeaves={scopedActiveLeaves} leaveHistory={scopedLeaveHistory} noticeTerminations={scopedNoticeTerminations} completedTerminations={scopedCompletedTerminations} exitInterviews={scopedExitInterviews} medicalCases={scopedMedicalCases} inventoryItems={inventoryItems} passportHandovers={scopedPassportHandovers} headcountSnapshots={headcountSnapshots} onNavigate={setActivePage} currentUserName={currentUserName} />}
           {activePage === 'employees' && <EmployeesPage employees={scopedEmployees} medicalCases={scopedMedicalCases} noticeTerminations={scopedNoticeTerminations} offSiteRecords={scopedOffSiteRecords} onUpdateOffSite={(fn) => setOffSiteRecords(fn)} onAdd={() => { setEmployeeMode('add'); setEmployeeForm(emptyEmployee); setShowEmployeeForm(true) }} onEdit={openEditEmployee} onDelete={deleteEmployee} onExport={exportCsv} onImport={importCsv} onTemplate={downloadTemplate} onShowTasks={() => setShowPendingTasks(true)} isHOD={isHOD} isAdmin={currentUserRole === 'Admin'} isExecutive={isExecutive} />}
-          {activePage === 'leave' && <LeavePage employees={scopedEmployees} leaveRequests={scopedLeaveRequests} activeLeaves={scopedActiveLeaves} leaveHistory={scopedLeaveHistory} medicalCases={scopedMedicalCases} isHOD={isHOD} isExecutive={isExecutive} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onSetRequestStep={setLeaveRequestStep} onExtendLeave={extendActiveLeave} onEditActiveLeave={editActiveLeave} onHistoryConfirm={updateHistoryConfirmation} onUpdateMedical={(fn) => setMedicalCases(fn)} />}
+          {activePage === 'leave' && <LeavePage employees={scopedEmployees} leaveRequests={scopedLeaveRequests} activeLeaves={scopedActiveLeaves} leaveHistory={scopedLeaveHistory} medicalCases={scopedMedicalCases} isHOD={isHOD} isExecutive={isExecutive} isAdmin={isAdmin} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onSetRequestStep={setLeaveRequestStep} onExtendLeave={extendActiveLeave} onEditActiveLeave={editActiveLeave} onHistoryConfirm={updateHistoryConfirmation} onDeleteHistory={deleteLeaveHistory} onEditHistory={editLeaveHistory} onUpdateMedical={(fn) => setMedicalCases(fn)} />}
           {activePage === 'operations' && <OperationsPage employees={employees} completedTerminations={completedTerminations} activeLeaves={activeLeaves} isHOD={isHOD} userRole={currentUserRole} />}
           {activePage === 'activities' && <ActivitiesPage employees={scopedEmployees} passportHandovers={scopedPassportHandovers} onUpdatePassport={(fn) => setPassportHandovers(fn)} tripRequests={tripRequests} onUpdateTripRequests={(fn) => setTripRequests(fn)} inventoryItems={inventoryItems} inventoryUsage={inventoryUsage} inventoryOrders={inventoryOrders} onUpdateInventoryItems={(fn) => setInventoryItems(fn)} onUpdateInventoryUsage={(fn) => setInventoryUsage(fn)} onUpdateInventoryOrders={(fn) => setInventoryOrders(fn)} isHOD={isHOD} isHR={isHR} isExecutive={isExecutive} isTripReqApprover={isTripReqApprover} currentUserSections={currentUserSections} currentUserName={currentUserName} />}
           {activePage === 'termination' && <TerminationPage noticeTerminations={scopedNoticeTerminations} completedTerminations={scopedCompletedTerminations} exitInterviews={scopedExitInterviews} employees={scopedEmployees} isHOD={isHOD} isExecutive={isExecutive} isAdmin={isAdmin} onAdd={openAddTermination} onEdit={openEditTermination} onSetStage={setTerminationStage} onDelete={deleteTermination} onRevert={revertTermination} onViewDetails={(record) => setTerminationDetails(record)} onUpdateExitInterviews={(fn) => setExitInterviews(fn)} />}
