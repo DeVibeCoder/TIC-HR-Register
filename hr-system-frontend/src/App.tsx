@@ -354,6 +354,19 @@ type IncidentRecord = {
 type TerminationStage = 'Letter Submitted' | 'Exit Interview' | 'Ticket' | 'Pending Departure'
 type TerminationTab = 'notice' | 'history' | 'exit-interview'
 type TerminationType = 'Resignation' | 'Dismissal' | 'Probation End' | 'Contract Expiry' | 'Absconded' | 'Other'
+// Colour chip per termination type (bg, border, text)
+const TERM_TYPE_COLORS: Record<string, { bg: string; bd: string; fg: string }> = {
+  'Resignation':     { bg: '#dbeafe', bd: '#93c5fd', fg: '#1e40af' },
+  'Dismissal':       { bg: '#fee2e2', bd: '#fca5a5', fg: '#991b1b' },
+  'Probation End':   { bg: '#fef3c7', bd: '#fcd34d', fg: '#92400e' },
+  'Contract Expiry': { bg: '#e0e7ff', bd: '#a5b4fc', fg: '#3730a3' },
+  'Absconded':       { bg: '#fce7f3', bd: '#f9a8d4', fg: '#9d174d' },
+  'Other':           { bg: '#f1f5f9', bd: '#cbd5e1', fg: '#475569' },
+}
+const TermTypeChip = ({ type }: { type: string }) => {
+  const c = TERM_TYPE_COLORS[type] ?? TERM_TYPE_COLORS['Other']
+  return <span className="req-type-chip" style={{ background: c.bg, borderColor: c.bd, color: c.fg }}>{type}</span>
+}
 
 type EISatisfactionLevel = 'Very Satisfied' | 'Satisfied' | 'Dissatisfied' | ''
 
@@ -8363,7 +8376,7 @@ function ExitInterviewSection({ records, onUpdate, employees, isHOD = false, isE
                     <td className="name-cell">{r.name}</td>
                     <td>{r.department}</td>
                     <td>{formatDateDisplay(r.departureDate)}</td>
-                    <td><span className="req-type-chip">{r.terminationType}</span></td>
+                    <td><TermTypeChip type={r.terminationType} /></td>
                     <td>
                       {r.rehireEligible
                         ? <span className="doc-yes" style={{ fontSize: '0.75rem', fontWeight: 700 }}>Yes</span>
@@ -8421,6 +8434,7 @@ function TerminationPage({
   onViewDetails,
   onUpdateExitInterviews,
   onRevert,
+  onDeleteCompleted,
   isHOD = false,
   isExecutive = false,
   isAdmin = false,
@@ -8436,6 +8450,7 @@ function TerminationPage({
   onViewDetails: (record: EnhancedTerminationRecord | CompletedTerminationRecord) => void
   onUpdateExitInterviews: (fn: (prev: ExitInterviewRecord[]) => ExitInterviewRecord[]) => void
   onRevert?: (record: CompletedTerminationRecord | EnhancedTerminationRecord) => void
+  onDeleteCompleted?: (id: string) => void
   isHOD?: boolean
   isExecutive?: boolean
   isAdmin?: boolean
@@ -8443,8 +8458,9 @@ function TerminationPage({
   const [activeTab, setActiveTab] = useState<TerminationTab>('notice')
   const [noticeSearch, setNoticeSearch] = useState('')
   const [completedSearch, setCompletedSearch] = useState('')
-  const [noticeDepartmentFilter, setNoticeDepartmentFilter] = useState('All Departments')
-  const [completedDepartmentFilter, setCompletedDepartmentFilter] = useState('All Departments')
+  const [noticeDepartmentFilter, setNoticeDepartmentFilter] = useState('All Sections')
+  const [completedDepartmentFilter, setCompletedDepartmentFilter] = useState('All Sections')
+  const [completedMonthFilter, setCompletedMonthFilter] = useState<'All' | string>('All')
   const [noticeStageFilter, setNoticeStageFilter] = useState<'All' | TerminationStage>('All')
   const [expandedTermId, setExpandedTermId] = useState<string | null>(null)
 
@@ -8458,21 +8474,23 @@ function TerminationPage({
     return `${years}y ${months}m`
   }
 
-  const noticeDepartments = useMemo(() => ['All Departments', ...Array.from(new Set(noticeTerminations.map((r) => r.department))).sort()], [noticeTerminations])
-  const completedDepartments = useMemo(() => ['All Departments', ...Array.from(new Set(completedTerminations.map((r) => r.department))).sort()], [completedTerminations])
+  const noticeDepartments = useMemo(() => ['All Sections', ...departmentsList], [])
+  const completedDepartments = useMemo(() => ['All Sections', ...departmentsList], [])
+  const completedMonths = useMemo(() => Array.from(new Set(completedTerminations.map((r) => monthKey(r.departureDate)).filter(Boolean))).sort().reverse(), [completedTerminations])
 
   const noticeRows = useMemo(() => noticeTerminations.filter((r) => {
     const t = noticeSearch.trim().toLowerCase()
     return (!t || `${r.employeeId} ${r.name} ${r.department} ${r.nationality}`.toLowerCase().includes(t))
-      && (noticeDepartmentFilter === 'All Departments' || r.department === noticeDepartmentFilter)
+      && (noticeDepartmentFilter === 'All Sections' || r.department === noticeDepartmentFilter)
       && (noticeStageFilter === 'All' || r.currentStage === noticeStageFilter)
   }).sort((a, b) => a.departureDate.localeCompare(b.departureDate)), [noticeTerminations, noticeSearch, noticeDepartmentFilter, noticeStageFilter])
 
   const completedRows = useMemo(() => completedTerminations.filter((r) => {
     const t = completedSearch.trim().toLowerCase()
     return (!t || `${r.employeeId} ${r.name} ${r.department} ${r.nationality}`.toLowerCase().includes(t))
-      && (completedDepartmentFilter === 'All Departments' || r.department === completedDepartmentFilter)
-  }).sort((a, b) => a.departureDate.localeCompare(b.departureDate)), [completedTerminations, completedSearch, completedDepartmentFilter])
+      && (completedDepartmentFilter === 'All Sections' || r.department === completedDepartmentFilter)
+      && (completedMonthFilter === 'All' || monthKey(r.departureDate) === completedMonthFilter)
+  }).sort((a, b) => a.departureDate.localeCompare(b.departureDate)), [completedTerminations, completedSearch, completedDepartmentFilter, completedMonthFilter])
 
   return (
     <>
@@ -8597,6 +8615,7 @@ function TerminationPage({
             <div className="table-toolbar leave-toolbar termination-topbar termination-topbar-completed">
               <label className="search-field"><span>Search</span><input onChange={(e) => setCompletedSearch(e.target.value)} placeholder="Employee, ID, department…" type="text" value={completedSearch} /></label>
               <label><span>Section</span><select onChange={(e) => setCompletedDepartmentFilter(e.target.value)} value={completedDepartmentFilter}>{completedDepartments.map((d) => <option key={d}>{d}</option>)}</select></label>
+              <label><span>Month</span><select onChange={(e) => setCompletedMonthFilter(e.target.value)} value={completedMonthFilter}><option value="All">All Months</option>{completedMonths.map((k) => <option key={k} value={k}>{formatMonthLabel(k)}</option>)}</select></label>
             </div>
             <div className="employee-table-shell compact-scroll termination-table-shell">
               <table className="data-table termination-table compact">
@@ -8614,12 +8633,15 @@ function TerminationPage({
                         <td>{getDuration(r.dateOfJoin)}</td>
                         <td>{formatDateDisplay(r.lastWorkingDate)}</td>
                         <td>{formatDateDisplay(r.departureDate)}</td>
-                        <td><span className="req-type-chip">{r.terminationType}</span></td>
+                        <td><TermTypeChip type={r.terminationType} /></td>
                         <td className="termination-actions">
                           <div className="row-actions">
                             <button className="action-glyph" onClick={() => onViewDetails(r)} type="button" title="View">👁</button>
                             {isAdmin && onRevert && (
                               <button className="action-glyph vwh" onClick={() => onRevert(r)} type="button" title="Revert — restore employee & undo this termination">↩</button>
+                            )}
+                            {isAdmin && onDeleteCompleted && (
+                              <button className="action-glyph delete vwh" onClick={() => { if (window.confirm(`Delete this departure record for ${r.name}? Use this to remove accidental duplicates (the employee is NOT restored). This cannot be undone.`)) onDeleteCompleted(r.id) }} type="button" title="Delete duplicate">🗑</button>
                             )}
                           </div>
                         </td>
@@ -13847,6 +13869,12 @@ function App() {
     setNoticeTerminations((current) => current.filter((record) => record.id !== id))
   }
 
+  // Delete a completed (history) termination record — used to remove accidental
+  // duplicates. Does NOT restore the employee (use Revert for that).
+  const deleteCompletedTermination = (id: string) => {
+    setCompletedTerminations((current) => current.filter((record) => record.id !== id))
+  }
+
   // Admin-only: undo a termination (including an accidental one) and restore the employee.
   const revertTermination = (rec: CompletedTerminationRecord | EnhancedTerminationRecord) => {
     if (!window.confirm(`Revert termination for ${rec.name}?\n\nThis restores the employee to the Employees list and removes this termination record and any linked exit interview.`)) return
@@ -14140,7 +14168,7 @@ function App() {
           {activePage === 'leave' && <LeavePage employees={scopedEmployees} leaveRequests={scopedLeaveRequests} activeLeaves={scopedActiveLeaves} leaveHistory={scopedLeaveHistory} medicalCases={scopedMedicalCases} isHOD={isHOD} isExecutive={isExecutive} isAdmin={isAdmin} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onSetRequestStep={setLeaveRequestStep} onExtendLeave={extendActiveLeave} onEditActiveLeave={editActiveLeave} onHistoryConfirm={updateHistoryConfirmation} onDeleteHistory={deleteLeaveHistory} onEditHistory={editLeaveHistory} onUpdateMedical={(fn) => setMedicalCases(fn)} />}
           {activePage === 'operations' && <OperationsPage employees={employees} completedTerminations={completedTerminations} activeLeaves={activeLeaves} isHOD={isHOD} userRole={currentUserRole} />}
           {activePage === 'activities' && <ActivitiesPage employees={scopedEmployees} passportHandovers={scopedPassportHandovers} onUpdatePassport={(fn) => setPassportHandovers(fn)} tripRequests={tripRequests} onUpdateTripRequests={(fn) => setTripRequests(fn)} inventoryItems={inventoryItems} inventoryUsage={inventoryUsage} inventoryOrders={inventoryOrders} onUpdateInventoryItems={(fn) => setInventoryItems(fn)} onUpdateInventoryUsage={(fn) => setInventoryUsage(fn)} onUpdateInventoryOrders={(fn) => setInventoryOrders(fn)} isHOD={isHOD} isHR={isHR} isExecutive={isExecutive} isAdmin={isAdmin} isTripReqApprover={isTripReqApprover} currentUserSections={currentUserSections} currentUserName={currentUserName} />}
-          {activePage === 'termination' && <TerminationPage noticeTerminations={scopedNoticeTerminations} completedTerminations={scopedCompletedTerminations} exitInterviews={scopedExitInterviews} employees={scopedEmployees} isHOD={isHOD} isExecutive={isExecutive} isAdmin={isAdmin} onAdd={openAddTermination} onEdit={openEditTermination} onSetStage={setTerminationStage} onDelete={deleteTermination} onRevert={revertTermination} onViewDetails={(record) => setTerminationDetails(record)} onUpdateExitInterviews={(fn) => setExitInterviews(fn)} />}
+          {activePage === 'termination' && <TerminationPage noticeTerminations={scopedNoticeTerminations} completedTerminations={scopedCompletedTerminations} exitInterviews={scopedExitInterviews} employees={scopedEmployees} isHOD={isHOD} isExecutive={isExecutive} isAdmin={isAdmin} onAdd={openAddTermination} onEdit={openEditTermination} onSetStage={setTerminationStage} onDelete={deleteTermination} onDeleteCompleted={deleteCompletedTermination} onRevert={revertTermination} onViewDetails={(record) => setTerminationDetails(record)} onUpdateExitInterviews={(fn) => setExitInterviews(fn)} />}
           {activePage === 'reports' && <ReportsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} noticeTerminations={noticeTerminations} completedTerminations={completedTerminations} exitInterviews={exitInterviews} medicalCases={medicalCases} />}
           {activePage === 'settings' && <SettingsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} onReset={() => setResetStep(1)} currentUserName={currentUserName} loggedInUser={currentProfile} users={users} onUpdateUsers={(fn) => setUsers(fn)} />}
         </main>
