@@ -10647,13 +10647,14 @@ const priorityColors: Record<RequestPriority, string> = {
   High: 'req-priority-high',
 }
 
-function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOnly = false }: {
+function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOnly = false, isAdmin = false }: {
   records: StaffRequestRecord[]
   employees: Employee[]
   onUpdate: (fn: (prev: StaffRequestRecord[]) => StaffRequestRecord[]) => void
   onBack?: () => void
   isHOD?: boolean
   isReadOnly?: boolean
+  isAdmin?: boolean
 }) {
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('All')
@@ -10698,6 +10699,49 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
   // Status badge colours for requests
   const reqStatusClass = (s: string) => s === 'Open' ? 'status-badge open' : s === 'Completed' ? 'status-badge approved' : 'status-badge rejected'
 
+  const downloadReqTemplate = () => downloadCsv('staff-requests-template.csv', [
+    ['EMP ID', 'NAME', 'SECTION', 'TYPE', 'PRIORITY', 'DESCRIPTION', 'SUBMITTED DATE', 'STATUS', 'ACTION TAKEN'],
+    ['12345', 'EXAMPLE EMPLOYEE', 'ADMINISTRATION', 'Documents', 'Medium', 'Sample request description', '2026-07-01', 'Open', ''],
+  ])
+  const exportReq = () => downloadCsv('staff-requests.csv', [
+    ['ID', 'EMP ID', 'NAME', 'SECTION', 'TYPE', 'PRIORITY', 'DESCRIPTION', 'SUBMITTED DATE', 'STATUS', 'CLOSED DATE', 'ACTION TAKEN'],
+    ...records.map(r => [r.id, r.employeeId, r.employeeName, r.section, r.requestType, r.priority, r.description, r.submittedDate, r.status, r.completedDate, r.actionTaken]),
+  ])
+  const importReq = () => {
+    const input = document.createElement('input')
+    input.type = 'file'; input.accept = '.csv,text/csv'
+    input.onchange = async () => {
+      const file = input.files?.[0]; if (!file) return
+      const rows = parseCsv(await file.text())
+      if (rows.length < 2) return
+      const hdr = rows[0].map(h => h.toLowerCase().replace(/[^a-z0-9]/g, ''))
+      const ci = (terms: string[]) => terms.map(t => hdr.indexOf(t)).find(i => i >= 0) ?? -1
+      const g = (row: string[], idx: number) => idx >= 0 ? (row[idx] ?? '').trim() : ''
+      const iEmp = ci(['empid','employeeid']); const iName = ci(['name','employeename']); const iSec = ci(['section','department'])
+      const iType = ci(['type','requesttype']); const iPri = ci(['priority']); const iDesc = ci(['description'])
+      const iSub = ci(['submitteddate','submitted','date']); const iStat = ci(['status']); const iAct = ci(['actiontaken','action'])
+      const empMap = new Map(employees.map(e => [e.employeeId, e]))
+      const types = ['Documents','Villa Metrics','Yono App','Wifi','IT','Leave','Transfer','Meals & Stay','Other']
+      const imported: StaffRequestRecord[] = rows.slice(1).filter(r => r.some(c => c.trim())).map((r, i) => {
+        const empId = g(r, iEmp); const emp = empMap.get(empId)
+        const type = types.find(t => t.toLowerCase() === g(r, iType).toLowerCase()) ?? 'Other'
+        const pri = (['Low','Medium','High'].find(p => p.toLowerCase() === g(r, iPri).toLowerCase()) ?? 'Medium') as RequestPriority
+        const status = (['Open','Completed','Rejected'].find(s => s.toLowerCase() === g(r, iStat).toLowerCase()) ?? 'Open') as StaffRequestRecord['status']
+        return {
+          id: `REQ-IMP-${Date.now()}-${i}`,
+          employeeId: empId, employeeName: g(r, iName) || emp?.fullName || '', section: g(r, iSec) || emp?.department || '',
+          department: emp?.department || g(r, iSec), requestType: type as StaffRequestRecord['requestType'], priority: pri,
+          description: g(r, iDesc), submittedDate: g(r, iSub) || new Date().toISOString().slice(0, 10),
+          completedDate: '', status, actionTaken: g(r, iAct), locked: status !== 'Open',
+        }
+      })
+      if (imported.length === 0) { alert('No valid rows found in the CSV.'); return }
+      onUpdate(prev => [...imported, ...prev])
+      alert(`✓ Import successful — ${imported.length} request(s) added.`)
+    }
+    input.click()
+  }
+
   return (
     <>
       <section className="employee-workspace">
@@ -10712,6 +10756,9 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
             </select>
           </label>
           <label><span>Status</span><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="All">All Statuses</option><option>Open</option><option>Completed</option><option>Rejected</option></select></label>
+          {isAdmin && <button className="primary-button vwh" type="button" onClick={downloadReqTemplate}>Template</button>}
+          {isAdmin && <button className="primary-button vwh" type="button" onClick={importReq}>Import</button>}
+          {isAdmin && <button className="primary-button vwh" type="button" onClick={exportReq}>Export</button>}
           {!isReadOnly && <button className="primary-button vwh" type="button" onClick={() => setEditing(newReq())}>+ Add Request</button>}
         </div>
         <div className="employee-table-shell compact-scroll">
@@ -10831,12 +10878,13 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
   )
 }
 
-function VisitsSection({ records, employees, onUpdate, isReadOnly = false }: {
+function VisitsSection({ records, employees, onUpdate, isReadOnly = false, isAdmin = false }: {
   records: VisitRecord[]
   employees: Employee[]
   onUpdate: (fn: (prev: VisitRecord[]) => VisitRecord[]) => void
   onBack?: () => void
   isReadOnly?: boolean
+  isAdmin?: boolean
 }) {
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('All')
@@ -10858,6 +10906,47 @@ function VisitsSection({ records, employees, onUpdate, isReadOnly = false }: {
     visitDate: new Date().toISOString().slice(0, 10), status: 'Scheduled', remarks: '',
   })
 
+  const visitTypes: VisitRecord['visitType'][] = ['Visa Medical', 'Photo', 'Passport Renewal', 'Embassy Letter Collection', 'Biometric Update']
+  const downloadVisitTemplate = () => downloadCsv('visits-template.csv', [
+    ['EMP ID', 'NAME', 'SECTION', 'NIC/PP NO', 'NATIONALITY', 'VISIT TYPE', 'VISIT DATE', 'STATUS', 'REMARKS'],
+    ['12345', 'EXAMPLE EMPLOYEE', 'ADMINISTRATION', 'A1234567', 'BANGLADESH', 'Visa Medical', '2026-07-01', 'Scheduled', ''],
+  ])
+  const exportVisits = () => downloadCsv('visits.csv', [
+    ['EMP ID', 'NAME', 'SECTION', 'NIC/PP NO', 'NATIONALITY', 'VISIT TYPE', 'VISIT DATE', 'STATUS', 'REMARKS'],
+    ...records.map(r => [r.employeeId, r.employeeName, r.department, r.nicPassportNo, r.nationality, r.visitType, r.visitDate, r.status, r.remarks]),
+  ])
+  const importVisits = () => {
+    const input = document.createElement('input')
+    input.type = 'file'; input.accept = '.csv,text/csv'
+    input.onchange = async () => {
+      const file = input.files?.[0]; if (!file) return
+      const rows = parseCsv(await file.text())
+      if (rows.length < 2) return
+      const hdr = rows[0].map(h => h.toLowerCase().replace(/[^a-z0-9]/g, ''))
+      const ci = (terms: string[]) => terms.map(t => hdr.indexOf(t)).find(i => i >= 0) ?? -1
+      const g = (row: string[], idx: number) => idx >= 0 ? (row[idx] ?? '').trim() : ''
+      const iEmp = ci(['empid','employeeid']); const iName = ci(['name','employeename']); const iSec = ci(['section','department'])
+      const iNic = ci(['nicppno','nicpp','passportno','nic']); const iNat = ci(['nationality'])
+      const iType = ci(['visittype','type']); const iDate = ci(['visitdate','date']); const iStat = ci(['status']); const iRem = ci(['remarks'])
+      const empMap = new Map(employees.map(e => [e.employeeId, e]))
+      const imported: VisitRecord[] = rows.slice(1).filter(r => r.some(c => c.trim())).map((r, i) => {
+        const empId = g(r, iEmp); const emp = empMap.get(empId)
+        const type = visitTypes.find(t => t.toLowerCase() === g(r, iType).toLowerCase()) ?? 'Visa Medical'
+        const status = (['Scheduled','Completed','Cancelled'].find(s => s.toLowerCase() === g(r, iStat).toLowerCase()) ?? 'Scheduled') as VisitRecord['status']
+        return {
+          id: `VIS-IMP-${Date.now()}-${i}`,
+          employeeId: empId, employeeName: g(r, iName) || emp?.fullName || '', department: g(r, iSec) || emp?.department || '',
+          nicPassportNo: g(r, iNic) || emp?.nicPassportNo || '', nationality: g(r, iNat) || emp?.nationality || '',
+          visitType: type, visitDate: g(r, iDate) || new Date().toISOString().slice(0, 10), status, remarks: g(r, iRem),
+        }
+      })
+      if (imported.length === 0) { alert('No valid rows found in the CSV.'); return }
+      onUpdate(prev => [...imported, ...prev])
+      alert(`✓ Import successful — ${imported.length} visit(s) added.`)
+    }
+    input.click()
+  }
+
   return (
     <>
       <section className="employee-workspace">
@@ -10871,6 +10960,9 @@ function VisitsSection({ records, employees, onUpdate, isReadOnly = false }: {
             </select>
           </label>
           <label><span>Status</span><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="All">All Statuses</option><option>Scheduled</option><option>Completed</option><option>Cancelled</option></select></label>
+          {isAdmin && <button className="primary-button vwh" type="button" onClick={downloadVisitTemplate}>Template</button>}
+          {isAdmin && <button className="primary-button vwh" type="button" onClick={importVisits}>Import</button>}
+          {isAdmin && <button className="primary-button vwh" type="button" onClick={exportVisits}>Export</button>}
           {!isReadOnly && <button className="primary-button vwh" type="button" onClick={() => setEditing(newVisit())}>+ Add Visit</button>}
         </div>
         <div className="employee-table-shell compact-scroll">
@@ -11649,6 +11741,7 @@ function ActivitiesPage({
   isHOD = false,
   isHR = false,
   isExecutive = false,
+  isAdmin = false,
   isTripReqApprover = false,
   currentUserSections = [],
   currentUserName = '',
@@ -11667,6 +11760,7 @@ function ActivitiesPage({
   isHOD?: boolean
   isExecutive?: boolean
   isHR?: boolean
+  isAdmin?: boolean
   isTripReqApprover?: boolean
   currentUserSections?: string[]
   currentUserName?: string
@@ -11717,8 +11811,8 @@ function ActivitiesPage({
         {(!isHOD || isTripReqApprover) && !isHR && !isExecutive && <button className={activeSection === 'tripreq' ? 'active' : ''} onClick={() => setActiveSection('tripreq')} type="button">Trip Req</button>}
         {!isHOD && !isHR && !isExecutive && <button className={activeSection === 'inventory' ? 'active' : ''} onClick={() => setActiveSection('inventory')} type="button">Inventory</button>}
       </div>
-      {activeSection === 'requests' && <RequestsSection records={scopedStaffRequests} employees={employees} onUpdate={setStaffRequests} onBack={() => {}} isHOD={isHOD} isReadOnly={isExecutive} />}
-      {activeSection === 'visits' && <VisitsSection records={scopedVisitRecords} employees={employees} onUpdate={setVisitRecords} onBack={() => {}} isReadOnly={isExecutive} />}
+      {activeSection === 'requests' && <RequestsSection records={scopedStaffRequests} employees={employees} onUpdate={setStaffRequests} onBack={() => {}} isHOD={isHOD} isReadOnly={isExecutive} isAdmin={isAdmin} />}
+      {activeSection === 'visits' && <VisitsSection records={scopedVisitRecords} employees={employees} onUpdate={setVisitRecords} onBack={() => {}} isReadOnly={isExecutive} isAdmin={isAdmin} />}
       {!isHOD && !isExecutive && activeSection === 'incidents' && <IncidentsSection records={incidentRecords} employees={employees} onUpdate={setIncidentRecords} onBack={() => {}} />}
       {!isHOD && !isExecutive && activeSection === 'passport' && <PassportTrackingSection records={passportHandovers} employees={employees} onUpdate={onUpdatePassport} />}
       {(!isHOD || isTripReqApprover) && !isHR && !isExecutive && activeSection === 'tripreq' && <TripReqSection records={tripRequests} employees={employees} onUpdate={onUpdateTripRequests} currentUserName={currentUserName} canApprove={isTripReqApprover} />}
@@ -14045,7 +14139,7 @@ function App() {
           {activePage === 'employees' && <EmployeesPage employees={scopedEmployees} medicalCases={scopedMedicalCases} noticeTerminations={scopedNoticeTerminations} offSiteRecords={scopedOffSiteRecords} onUpdateOffSite={(fn) => setOffSiteRecords(fn)} onAdd={() => { setEmployeeMode('add'); setEmployeeForm(emptyEmployee); setShowEmployeeForm(true) }} onEdit={openEditEmployee} onDelete={deleteEmployee} onExport={exportCsv} onImport={importCsv} onTemplate={downloadTemplate} onShowTasks={() => setShowPendingTasks(true)} isHOD={isHOD} isAdmin={currentUserRole === 'Admin'} isExecutive={isExecutive} />}
           {activePage === 'leave' && <LeavePage employees={scopedEmployees} leaveRequests={scopedLeaveRequests} activeLeaves={scopedActiveLeaves} leaveHistory={scopedLeaveHistory} medicalCases={scopedMedicalCases} isHOD={isHOD} isExecutive={isExecutive} isAdmin={isAdmin} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onSetRequestStep={setLeaveRequestStep} onExtendLeave={extendActiveLeave} onEditActiveLeave={editActiveLeave} onHistoryConfirm={updateHistoryConfirmation} onDeleteHistory={deleteLeaveHistory} onEditHistory={editLeaveHistory} onUpdateMedical={(fn) => setMedicalCases(fn)} />}
           {activePage === 'operations' && <OperationsPage employees={employees} completedTerminations={completedTerminations} activeLeaves={activeLeaves} isHOD={isHOD} userRole={currentUserRole} />}
-          {activePage === 'activities' && <ActivitiesPage employees={scopedEmployees} passportHandovers={scopedPassportHandovers} onUpdatePassport={(fn) => setPassportHandovers(fn)} tripRequests={tripRequests} onUpdateTripRequests={(fn) => setTripRequests(fn)} inventoryItems={inventoryItems} inventoryUsage={inventoryUsage} inventoryOrders={inventoryOrders} onUpdateInventoryItems={(fn) => setInventoryItems(fn)} onUpdateInventoryUsage={(fn) => setInventoryUsage(fn)} onUpdateInventoryOrders={(fn) => setInventoryOrders(fn)} isHOD={isHOD} isHR={isHR} isExecutive={isExecutive} isTripReqApprover={isTripReqApprover} currentUserSections={currentUserSections} currentUserName={currentUserName} />}
+          {activePage === 'activities' && <ActivitiesPage employees={scopedEmployees} passportHandovers={scopedPassportHandovers} onUpdatePassport={(fn) => setPassportHandovers(fn)} tripRequests={tripRequests} onUpdateTripRequests={(fn) => setTripRequests(fn)} inventoryItems={inventoryItems} inventoryUsage={inventoryUsage} inventoryOrders={inventoryOrders} onUpdateInventoryItems={(fn) => setInventoryItems(fn)} onUpdateInventoryUsage={(fn) => setInventoryUsage(fn)} onUpdateInventoryOrders={(fn) => setInventoryOrders(fn)} isHOD={isHOD} isHR={isHR} isExecutive={isExecutive} isAdmin={isAdmin} isTripReqApprover={isTripReqApprover} currentUserSections={currentUserSections} currentUserName={currentUserName} />}
           {activePage === 'termination' && <TerminationPage noticeTerminations={scopedNoticeTerminations} completedTerminations={scopedCompletedTerminations} exitInterviews={scopedExitInterviews} employees={scopedEmployees} isHOD={isHOD} isExecutive={isExecutive} isAdmin={isAdmin} onAdd={openAddTermination} onEdit={openEditTermination} onSetStage={setTerminationStage} onDelete={deleteTermination} onRevert={revertTermination} onViewDetails={(record) => setTerminationDetails(record)} onUpdateExitInterviews={(fn) => setExitInterviews(fn)} />}
           {activePage === 'reports' && <ReportsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} noticeTerminations={noticeTerminations} completedTerminations={completedTerminations} exitInterviews={exitInterviews} medicalCases={medicalCases} />}
           {activePage === 'settings' && <SettingsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} onReset={() => setResetStep(1)} currentUserName={currentUserName} loggedInUser={currentProfile} users={users} onUpdateUsers={(fn) => setUsers(fn)} />}
