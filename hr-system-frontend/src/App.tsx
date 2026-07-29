@@ -12711,6 +12711,8 @@ const LEAVE_TYPE_LABELS: Record<string, string> = {
   PT: 'Part-Time Leave', CC: 'Casual / Compensatory Leave', SL: 'Sick Leave (SL)',
 }
 
+type PublishedReport = { month: string; html: string; status: string; generatedBy: string; generatedAt: string }
+
 function ReportsPage({
   employees,
   leaveRequests,
@@ -12720,6 +12722,8 @@ function ReportsPage({
   completedTerminations,
   exitInterviews,
   medicalCases,
+  isAdmin = false,
+  currentUserName = '',
 }: {
   employees: Employee[]
   leaveRequests: LeaveRequestRecord[]
@@ -12729,10 +12733,14 @@ function ReportsPage({
   completedTerminations: CompletedTerminationRecord[]
   exitInterviews: ExitInterviewRecord[]
   medicalCases: MedicalCaseRecord[]
+  isAdmin?: boolean
+  currentUserName?: string
 }) {
   const now = new Date()
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth())
   const [selectedYear,  setSelectedYear]  = useState(now.getFullYear())
+  const [publishedReports, setPublishedReports] = useState<PublishedReport[]>([])
+  const [publishing, setPublishing] = useState(false)
 
   const [inductionRecords, setInductionRecords] = useState<InductionRecord[]>([])
   const [trainingRecords,  setTrainingRecords]  = useState<TrainingRecord[]>([])
@@ -12755,6 +12763,9 @@ function ReportsPage({
       if (sr.data)  setStaffRequests(sr.data.map(staffReqFromDb))
       if (vr.data)  setVisitRecords(vr.data.map(visitFromDb))
       setLoading(false)
+    })
+    supabase.from('monthly_reports').select('*').then(({ data }) => {
+      if (data) setPublishedReports(data.map((r: DbRow) => ({ month: r.month as string, html: r.html as string, status: r.status as string, generatedBy: (r.generated_by ?? '') as string, generatedAt: r.generated_at as string })))
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -12887,11 +12898,28 @@ function ReportsPage({
 
     // Summary aggregates → charts
     const natEntries  = Object.entries(byNat).sort((a,b)=>b[1]-a[1]) as [string, number][]
-    const secEntries  = (Object.entries(bySec).sort((a,b)=>b[1]-a[1]).slice(0,12)) as [string, number][]
+    const secEntries  = (Object.entries(bySec).sort((a,b)=>b[1]-a[1])) as [string, number][]   // ALL sections
     const leaveEntries = Object.entries(leaveByType).map(([t,c])=>[LEAVE_TYPE_LABELS[t]??t, c] as [string, number])
     const reqEntries  = Object.entries(reqByType).sort((a,b)=>b[1]-a[1]) as [string, number][]
     const visEntries  = Object.entries(visitByType).sort((a,b)=>b[1]-a[1]) as [string, number][]
     const medBySec    = Object.entries(mMedical.reduce<Record<string,number>>((a,r)=>{ a[r.department]=(a[r.department]??0)+1; return a },{})).sort((a,b)=>b[1]-a[1]) as [string, number][]
+
+    // New hires this month (joined in the selected month)
+    const newHires = employees.filter(e => inMonth(e.dateOfJoin)).sort((a,b)=>a.dateOfJoin.localeCompare(b.dateOfJoin))
+    const newHireRows = newHires.map(e => `<tr><td>${esc(e.employeeId)}</td><td>${esc(e.fullName)}</td><td>${esc(e.designation)}</td><td>${esc(e.department)}</td><td>${formatDateDisplay(e.dateOfJoin)}</td></tr>`).join('')
+
+    // Two-column section bars (all sections)
+    const secBars = (entries: [string, number][]) => {
+      const data = entries.filter(([,v])=>v>0)
+      if (!data.length) return infoCard('No section data')
+      const max = Math.max(...data.map(([,v])=>v))
+      const bar = ([l,v]: [string, number], i: number) => `<div class="hbar-row"><span class="hbar-l" title="${esc(l)}">${esc(l)}</span><span class="hbar-track"><span class="hbar-fill" style="width:${Math.max(4,Math.round(v/max*100))}%;background:${CH[i%CH.length]}"></span></span><span class="hbar-v">${v}</span></div>`
+      const mid = Math.ceil(data.length / 2)
+      const col1 = data.slice(0, mid).map((e,i)=>bar(e,i)).join('')
+      const col2 = data.slice(mid).map((e,i)=>bar(e,i+mid)).join('')
+      return `<div class="card"><div class="card-t">Workforce by Section</div><div class="secbar-grid"><div class="hbar">${col1}</div><div class="hbar">${col2}</div></div></div>`
+    }
+    const letterheadUrl = `${window.location.origin}/letterhead.png`
 
     // Icons (inline, monochrome)
     const IC = {
@@ -12969,6 +12997,19 @@ table.dt tbody tr{page-break-inside:avoid}
 .info-card{display:flex;align-items:center;gap:9pt;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10pt 13pt;font-size:8.5pt;color:#15803d;font-weight:600;margin-bottom:9pt;page-break-inside:avoid}
 .info-ic{display:grid;place-items:center;width:15pt;height:15pt;border-radius:50%;background:#16a34a;color:#fff;font-size:8pt;flex-shrink:0}
 
+/* Report header (matches minutes letterhead) + title */
+.rpt-head{text-align:center;padding-bottom:6pt;margin-bottom:8pt;border-bottom:1.5px solid #1e3a5f}
+.rpt-head img{max-width:100%;max-height:80pt;display:inline-block;mix-blend-mode:multiply}
+.rpt-title{display:flex;align-items:center;justify-content:center;gap:8pt;margin-bottom:12pt}
+.rpt-title h1{font-size:15pt;font-weight:800;color:#1e3a5f;letter-spacing:.01em}
+.rpt-title .rpt-title-sep{color:#cbd5e1;font-weight:400}
+.rpt-title .rpt-title-mo{color:#3b6ea5}
+/* Two-column section bars */
+.secbar-grid{display:grid;grid-template-columns:1fr 1fr;gap:6pt 18pt}
+/* Info card (empty states) */
+.info-card{display:flex;align-items:center;gap:9pt;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10pt 13pt;font-size:8.5pt;color:#15803d;font-weight:600;margin-bottom:9pt;page-break-inside:avoid}
+.info-ic{display:grid;place-items:center;width:15pt;height:15pt;border-radius:50%;background:#16a34a;color:#fff;font-size:8pt;flex-shrink:0}
+
 /* Footer (repeats on every page) */
 .rpt-foot{position:fixed;left:0;right:0;bottom:6mm;display:flex;justify-content:space-between;padding:4pt 12mm 0;border-top:1px solid #e2e8f0;font-size:7.5pt;color:#94a3b8}
 /* On screen (preview iframe): document look with margins + footer in flow */
@@ -12982,6 +13023,13 @@ table.dt tbody tr{page-break-inside:avoid}
 <div class="rpt-foot">
   <span>Generated on: ${generatedOn}</span>
   <span>Confidential</span>
+</div>
+
+<div class="rpt-head">
+  <img src="${letterheadUrl}" alt="Letterhead" onerror="this.style.display='none'"/>
+</div>
+<div class="rpt-title">
+  <h1>Monthly HR Report <span class="rpt-title-sep">|</span> <span class="rpt-title-mo">${MONTH_NAMES[selectedMonth]} ${selectedYear}</span></h1>
 </div>
 
 <div class="sec" style="margin-top:0">
@@ -13004,10 +13052,11 @@ table.dt tbody tr{page-break-inside:avoid}
     ${stat(offSite, 'Off Site', '#d97706')}
     ${stat(onLeaveNow, 'Currently on Leave', '#3b6ea5')}
   </div>
-  <div class="grid2">
-    ${chartCard('Workforce by Nationality', natEntries, 'donut', 'No workforce data')}
-    ${hbarCard('Workforce by Section (Top 12)', secEntries, 'No section data')}
-  </div>
+  ${chartCard('Workforce by Nationality', natEntries, 'donut', 'No workforce data')}
+  ${secBars(secEntries)}
+  ${newHireRows
+    ? `<div class="tbl-wrap"><div class="card-t">New Hires This Month (${newHires.length})</div>${dt('<tr><th>Emp ID</th><th>Name</th><th>Position</th><th>Section</th><th>Date of Join</th></tr>', newHireRows)}</div>`
+    : infoCard('No New Hires Recorded This Month')}
 </div>
 
 <div class="sec">
@@ -13033,10 +13082,9 @@ table.dt tbody tr{page-break-inside:avoid}
     ${stat(mMedical.filter(r=>r.isAdmitted).length, 'Hospitalised', '#3b6ea5')}
     ${stat(totalSickDays, 'Sick Leave Days', '#d97706')}
   </div>
-  ${medBySec.length > 0 ? chartCard('Medical Cases by Section', medBySec, 'donut', 'No medical cases') : ''}
-  ${medRows
-    ? `<div class="tbl-wrap"><div class="card-t">Case Detail</div>${dt('<tr><th>Emp ID</th><th>Name</th><th>Section</th><th>Date</th><th style="text-align:center">Sick Days</th><th style="text-align:center">Urgent</th><th style="text-align:center">Admitted</th></tr>', medRows)}</div>`
-    : infoCard('No Medical Cases Recorded This Month')}
+  ${mMedical.length === 0
+    ? infoCard('No Medical Cases Recorded This Month')
+    : (medBySec.length > 0 ? chartCard('Medical Cases by Section', medBySec, 'donut', 'No medical cases') : '')}
 </div>
 
 <div class="sec">
@@ -13084,7 +13132,7 @@ table.dt tbody tr{page-break-inside:avoid}
     ${stat(mRequests.length, 'Staff Requests', '#1e3a5f')}
     ${stat(mRequests.filter(r=>r.status==='Completed').length, 'Requests Completed', '#16a34a')}
     ${stat(mRequests.filter(r=>r.status==='Open').length, 'Requests Pending', '#d97706')}
-    ${stat(mVisits.length, 'Medical Visits', '#3b6ea5')}
+    ${stat(mVisits.length, 'Visits', '#3b6ea5')}
   </div>
   <div class="grid2">
     ${reqEntries.length === 0
@@ -13093,10 +13141,10 @@ table.dt tbody tr{page-break-inside:avoid}
         ? `<div class="tbl-wrap"><div class="card-t">Staff Requests — By Type</div>${dt('<tr><th>Request Type</th><th style="text-align:right">No.</th></tr>', reqEntries.map(([t,c])=>`<tr><td>${esc(t)}</td><td style="text-align:right">${c}</td></tr>`).join(''))}</div>`
         : chartCard('Staff Requests — By Type', reqEntries, 'pie', 'No Staff Requests Recorded This Month')}
     ${visEntries.length === 0
-      ? infoCard('No Medical Visits Recorded This Month')
+      ? infoCard('No Visits Recorded This Month')
       : visEntries.length === 1
-        ? `<div class="tbl-wrap"><div class="card-t">Medical Visits — By Type</div>${dt('<tr><th>Visit Type</th><th style="text-align:right">No.</th></tr>', visEntries.map(([t,c])=>`<tr><td>${esc(t)}</td><td style="text-align:right">${c}</td></tr>`).join(''))}</div>`
-        : chartCard('Medical Visits — By Type', visEntries, 'donut', 'No Medical Visits Recorded This Month')}
+        ? `<div class="tbl-wrap"><div class="card-t">Visits — By Type</div>${dt('<tr><th>Visit Type</th><th style="text-align:right">No.</th></tr>', visEntries.map(([t,c])=>`<tr><td>${esc(t)}</td><td style="text-align:right">${c}</td></tr>`).join(''))}</div>`
+        : chartCard('Visits — By Type', visEntries, 'donut', 'No Visits Recorded This Month')}
   </div>
 </div>
 
@@ -13104,13 +13152,32 @@ table.dt tbody tr{page-break-inside:avoid}
     return html
   })()
 
+  const reportMonthKey = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`
+  const published = publishedReports.find((r) => r.month === reportMonthKey)
+  // Admin previews live data; everyone else sees the published snapshot only.
+  const displayHtml = isAdmin ? reportHtml : (published?.html ?? '')
+
   const handlePrint = () => {
     const win = window.open('', '_blank', 'width=900,height=700')
     if (!win) return
-    win.document.write(reportHtml)
+    win.document.write(displayHtml || reportHtml)
     win.document.close()
     win.focus()
     setTimeout(() => { win.print() }, 400)
+  }
+
+  const publishReport = async () => {
+    if (!window.confirm(`Publish the ${periodLabel} report? This finalises it and makes it visible to all other users.`)) return
+    setPublishing(true)
+    const generatedAt = new Date().toISOString()
+    const { error } = await supabase.from('monthly_reports').upsert(
+      { month: reportMonthKey, html: reportHtml, status: 'final', generated_by: currentUserName, generated_at: generatedAt },
+      { onConflict: 'month' },
+    )
+    setPublishing(false)
+    if (error) { alert('Failed to publish report: ' + error.message); return }
+    setPublishedReports((prev) => [...prev.filter((r) => r.month !== reportMonthKey), { month: reportMonthKey, html: reportHtml, status: 'final', generatedBy: currentUserName, generatedAt }])
+    alert(`✓ Report published for ${periodLabel}. Other users can now view it.`)
   }
 
   // ── On-screen stat card ─────────────────────────────────────────────────
@@ -13160,19 +13227,46 @@ table.dt tbody tr{page-break-inside:avoid}
             </select>
           </label>
         </div>
-        <button className="primary-button rpt-print-btn" onClick={handlePrint} type="button">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-          Print / Export PDF
-        </button>
+        {/* Status pill */}
+        {published
+          ? <span className="rpt-status rpt-status-final" title={`Published by ${published.generatedBy || 'Admin'} on ${new Date(published.generatedAt).toLocaleDateString('en-GB')}`}>● Published</span>
+          : <span className="rpt-status rpt-status-draft">● Not published</span>}
+        {/* Admin: publish + print. Others: print only if published. */}
+        {isAdmin && (
+          <button className="primary-button rpt-print-btn" onClick={publishReport} type="button" disabled={publishing}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            {publishing ? 'Publishing…' : published ? 'Re-publish' : 'Publish Report'}
+          </button>
+        )}
+        {(isAdmin || published) && (
+          <button className="quiet-button rpt-print-btn" onClick={handlePrint} type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Print / Export PDF
+          </button>
+        )}
       </div>
+
+      {isAdmin && (
+        <div className="rpt-admin-note">
+          {published
+            ? <>You are viewing a <strong>live preview</strong> of the current data. The published version was finalised on {new Date(published.generatedAt).toLocaleDateString('en-GB')}. Click <strong>Re-publish</strong> to update what other users see.</>
+            : <>You are viewing a <strong>live preview</strong>. Click <strong>Publish Report</strong> to finalise it — only then can other users view it.</>}
+        </div>
+      )}
 
       {loading ? (
         <div className="rpt-loading">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation:'spin 1s linear infinite' }}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
           Loading report data…
         </div>
+      ) : displayHtml ? (
+        <iframe className="rpt-frame" title="Monthly report" srcDoc={displayHtml} />
       ) : (
-        <iframe className="rpt-frame" title="Monthly report preview" srcDoc={reportHtml} />
+        <div className="rpt-empty-report">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <p><strong>No published report for {periodLabel}.</strong></p>
+          <p>The HR administrator has not published a report for this month yet.</p>
+        </div>
       )}
     </div>
   )
@@ -14169,7 +14263,7 @@ function App() {
           {activePage === 'operations' && <OperationsPage employees={employees} completedTerminations={completedTerminations} activeLeaves={activeLeaves} isHOD={isHOD} userRole={currentUserRole} />}
           {activePage === 'activities' && <ActivitiesPage employees={scopedEmployees} passportHandovers={scopedPassportHandovers} onUpdatePassport={(fn) => setPassportHandovers(fn)} tripRequests={tripRequests} onUpdateTripRequests={(fn) => setTripRequests(fn)} inventoryItems={inventoryItems} inventoryUsage={inventoryUsage} inventoryOrders={inventoryOrders} onUpdateInventoryItems={(fn) => setInventoryItems(fn)} onUpdateInventoryUsage={(fn) => setInventoryUsage(fn)} onUpdateInventoryOrders={(fn) => setInventoryOrders(fn)} isHOD={isHOD} isHR={isHR} isExecutive={isExecutive} isAdmin={isAdmin} isTripReqApprover={isTripReqApprover} currentUserSections={currentUserSections} currentUserName={currentUserName} />}
           {activePage === 'termination' && <TerminationPage noticeTerminations={scopedNoticeTerminations} completedTerminations={scopedCompletedTerminations} exitInterviews={scopedExitInterviews} employees={scopedEmployees} isHOD={isHOD} isExecutive={isExecutive} isAdmin={isAdmin} onAdd={openAddTermination} onEdit={openEditTermination} onSetStage={setTerminationStage} onDelete={deleteTermination} onDeleteCompleted={deleteCompletedTermination} onRevert={revertTermination} onViewDetails={(record) => setTerminationDetails(record)} onUpdateExitInterviews={(fn) => setExitInterviews(fn)} />}
-          {activePage === 'reports' && <ReportsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} noticeTerminations={noticeTerminations} completedTerminations={completedTerminations} exitInterviews={exitInterviews} medicalCases={medicalCases} />}
+          {activePage === 'reports' && <ReportsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} noticeTerminations={noticeTerminations} completedTerminations={completedTerminations} exitInterviews={exitInterviews} medicalCases={medicalCases} isAdmin={isAdmin} currentUserName={currentUserName} />}
           {activePage === 'settings' && <SettingsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} onReset={() => setResetStep(1)} currentUserName={currentUserName} loggedInUser={currentProfile} users={users} onUpdateUsers={(fn) => setUsers(fn)} />}
         </main>
       </div> {/* .workspace */}

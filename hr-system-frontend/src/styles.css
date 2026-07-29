@@ -11026,6 +11026,23 @@ html { overflow-x: hidden; }
   box-sizing: border-box;
 }
 
+/* Report publish status pill + admin note + empty state */
+.rpt-status { font-size: 0.72rem; font-weight: 700; padding: 5px 12px; border-radius: 999px; white-space: nowrap; }
+.rpt-status-final { color: #15803d; background: #dcfce7; border: 1px solid #86efac; }
+.rpt-status-draft { color: #b45309; background: #fef3c7; border: 1px solid #fcd34d; }
+.rpt-admin-note {
+  font-size: 0.78rem; color: #475569; background: #f1f5f9;
+  border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px 14px;
+}
+[data-theme="dark"] .rpt-admin-note { background: rgba(255,255,255,.04); color: #94a3b8; border-color: rgba(255,255,255,.08); }
+.rpt-empty-report {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 8px; text-align: center; padding: 60px 20px; color: #94a3b8;
+  border: 1.5px dashed #d8dee9; border-radius: 12px; min-height: 320px;
+}
+.rpt-empty-report p { margin: 0; font-size: 0.85rem; }
+.rpt-empty-report p strong { color: #475569; }
+
 /* Live preview of the exact report document (same HTML as the PDF export) */
 .rpt-frame {
   width: 100%;
