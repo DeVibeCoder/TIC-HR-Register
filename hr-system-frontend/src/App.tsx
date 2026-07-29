@@ -8,7 +8,7 @@ type SiteStatus = 'On Site' | 'Off Site' | 'On Leave'
 type RecordStatus = 'Pending' | 'Active'
 type LeaveView = 'request' | 'active' | 'history' | 'medical'
 type PageSize = 50 | 100 | 'All'
-type LeaveTypeCode = 'AL' | 'FRL' | 'NP' | 'PT' | 'CC'
+type LeaveTypeCode = 'AL' | 'FRL' | 'NP' | 'PT' | 'CC' | 'SL'
 type LeaveRequestStep = 'Letter Submitted' | 'Approved' | 'Dates Shared' | 'Ticket Booked' | 'Pending Departure'
 type HistoryConfirmation = 'Returned' | 'Not Returned'
 
@@ -740,6 +740,7 @@ const leaveTypeOptions: Array<{ code: LeaveTypeCode; label: string }> = [
   { code: 'NP', label: 'No Pay' },
   { code: 'PT', label: 'Paternity' },
   { code: 'CC', label: 'Circumcision' },
+  { code: 'SL', label: 'Sick Leave (SL)' },
 ]
 
 const requestSteps: LeaveRequestStep[] = ['Letter Submitted', 'Approved', 'Dates Shared', 'Ticket Booked', 'Pending Departure']
@@ -1360,6 +1361,7 @@ const leaveTypeMeta: Record<LeaveTypeCode, { bg: string; border: string; color: 
   NP:  { bg: '#fee2e2', border: '#fca5a5', color: '#7f1d1d' },
   PT:  { bg: '#dbeafe', border: '#93c5fd', color: '#1e3a5f' },
   CC:  { bg: '#ede9fe', border: '#a78bfa', color: '#4c1d95' },
+  SL:  { bg: '#fef9c3', border: '#fde047', color: '#713f12' },
 }
 
 function LeaveTypeBadge({ code }: { code: LeaveTypeCode }) {
@@ -2359,9 +2361,20 @@ function EmployeesPage({ employees, onAdd, onEdit, onDelete, onExport, onImport,
         && (status === 'All Statuses' || (status === 'Sick Leave' ? onLeaveIds.has(employee.employeeId) : employee.siteStatus === status))
         && (nationality === 'All Nationalities' || employee.nationality === nationality)
     }).sort((a, b) => {
+      // Emp ID sorts numerically (ascending-aware); it's also the tie-breaker
+      // for every other column so rows within a section are ordered by Emp ID.
+      const empIdCmp = () => {
+        const na = parseInt(a.employeeId, 10), nb = parseInt(b.employeeId, 10)
+        if (!isNaN(na) && !isNaN(nb) && na !== nb) return na - nb
+        return String(a.employeeId).localeCompare(String(b.employeeId), undefined, { numeric: true })
+      }
+      if (sortKey === 'employeeId') {
+        return sortAsc ? empIdCmp() : -empIdCmp()
+      }
       const va = String(a[sortKey] ?? '').toLowerCase()
       const vb = String(b[sortKey] ?? '').toLowerCase()
-      return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va)
+      const primary = sortAsc ? va.localeCompare(vb) : vb.localeCompare(va)
+      return primary !== 0 ? primary : empIdCmp()
     })
   }, [department, employees, nationality, query, sortAsc, sortKey, status])
 
@@ -2631,6 +2644,12 @@ function LeaveFormModal({
           <button className="quiet-button light" onClick={onClose} type="button">Cancel</button>
           <button className="primary-button" disabled={!canSave} onClick={() => {
             if (!selectedEmp) return
+            const finalStep: LeaveRequestStep = skipProgress ? 'Pending Departure' : step
+            const today = new Date().toISOString().slice(0, 10)
+            // Stamp a date for the current step (e.g. Letter Submitted) so new
+            // requests carry a date; keep any dates already recorded.
+            const prevDates = initialRecord?.stepDates ?? {}
+            const stepDates = { ...prevDates, [finalStep]: prevDates[finalStep] ?? today }
             onSave({
               id: initialRecord?.id ?? `LVR-${Date.now()}`,
               employeeId: selectedEmp.employeeId,
@@ -2641,7 +2660,8 @@ function LeaveFormModal({
               departureDate,
               returnDate,
               days: totalDays,
-              step: skipProgress ? 'Pending Departure' : step,
+              step: finalStep,
+              stepDates,
               skipProgress,
               remarks,
             })
@@ -3915,7 +3935,7 @@ function MedicalLeaveSection({ records, employees, onUpdate, isReadOnly = false 
   const [search, setSearch] = useState('')
   const [mcFilter, setMcFilter] = useState<'All' | 'Yes' | 'No'>('All')
   const [deptFilter, setDeptFilter] = useState('All Departments')
-  const [monthFilter, setMonthFilter] = useState<'All' | string>('All')
+  const [monthFilter, setMonthFilter] = useState<'All' | string>(() => new Date().toISOString().slice(0, 7))
   const [editing, setEditing] = useState<MedicalCaseRecord | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [showAnalytics, setShowAnalytics] = useState(false)
@@ -3923,8 +3943,9 @@ function MedicalLeaveSection({ records, employees, onUpdate, isReadOnly = false 
   const today = new Date().toISOString().slice(0, 10)
 
   const months = useMemo(() => {
-    const keys = Array.from(new Set(records.map((r) => monthKey(r.caseDate)).filter(Boolean)))
-    return keys.sort().reverse()
+    const keys = new Set(records.map((r) => monthKey(r.caseDate)).filter(Boolean))
+    keys.add(new Date().toISOString().slice(0, 7)) // always allow the current month
+    return Array.from(keys).sort().reverse()
   }, [records])
 
   const filtered = useMemo(() => records.filter((r) => {
@@ -4366,7 +4387,10 @@ function LeavePage({
   const [requestSearch, setRequestSearch] = useState('')
   const [requestTypeFilter, setRequestTypeFilter] = useState<'All' | LeaveTypeCode>('All')
   const [requestDepartmentFilter, setRequestDepartmentFilter] = useState('All Departments')
+  const [requestMonthFilter, setRequestMonthFilter] = useState<'All' | string>('All')
   const [expandedReqId, setExpandedReqId] = useState<string | null>(null)
+
+  const requestMonths = useMemo(() => Array.from(new Set(leaveRequests.map((r) => monthKey(r.departureDate)).filter(Boolean))).sort().reverse(), [leaveRequests])
 
   const [activeSearch, setActiveSearch] = useState('')
   const [activeTypeFilter, setActiveTypeFilter] = useState<'All' | LeaveTypeCode>('All')
@@ -4391,9 +4415,10 @@ function LeavePage({
     const matchesSearch = leaveSearchText(record).includes(requestSearch.trim().toLowerCase())
     const matchesType = requestTypeFilter === 'All' || record.leaveTypeCode === requestTypeFilter
     const matchesDepartment = requestDepartmentFilter === 'All Departments' || record.department === requestDepartmentFilter
+    const matchesMonth = requestMonthFilter === 'All' || monthKey(record.departureDate) === requestMonthFilter
     const matchesHodScope = !isHOD || record.step === 'Pending Departure'
-    return matchesSearch && matchesType && matchesDepartment && matchesHodScope
-  }).sort((a, b) => a.departureDate.localeCompare(b.departureDate)), [leaveRequests, requestSearch, requestTypeFilter, requestDepartmentFilter, isHOD])
+    return matchesSearch && matchesType && matchesDepartment && matchesMonth && matchesHodScope
+  }).sort((a, b) => a.departureDate.localeCompare(b.departureDate)), [leaveRequests, requestSearch, requestTypeFilter, requestDepartmentFilter, requestMonthFilter, isHOD])
 
   const activeRows = useMemo(() => activeLeaves.filter((record) => {
     const matchesSearch = leaveSearchText(record).includes(activeSearch.trim().toLowerCase())
@@ -4437,11 +4462,12 @@ function LeavePage({
 
         {activeLeaveView === 'request' && (
           <>
-            <div className="table-toolbar leave-toolbar leave-toolbar-3 leave-toolbar-has-btn">
+            <div className="table-toolbar leave-toolbar leave-toolbar-4 leave-toolbar-has-btn">
               <label className="search-field"><span>Search</span><input type="text" value={requestSearch} onChange={(event) => setRequestSearch(event.target.value)} placeholder="Employee, ID, purpose" /></label>
               <label><span>Leave Type</span><select value={requestTypeFilter} onChange={(event) => setRequestTypeFilter(event.target.value as 'All' | LeaveTypeCode)}><option value="All">All Types</option>{leaveTypeOptions.map((item) => <option key={item.code} value={item.code}>{item.label} ({item.code})</option>)}</select></label>
               <label><span>Section</span><select value={requestDepartmentFilter} onChange={(event) => setRequestDepartmentFilter(event.target.value)}><option>All Departments</option>{departmentsList.map((item) => <option key={item}>{item}</option>)}</select></label>
-              {!isExecutive && <button className="primary-button toolbar-add-btn vwh" onClick={onAddRequest} type="button">Add Leave Request</button>}
+              <label><span>Month</span><select value={requestMonthFilter} onChange={(event) => setRequestMonthFilter(event.target.value)}><option value="All">All Months</option>{requestMonths.map((k) => <option key={k} value={k}>{formatMonthLabel(k)}</option>)}</select></label>
+              {!isExecutive && <button className="primary-button toolbar-add-btn vwh" onClick={onAddRequest} type="button">Add</button>}
             </div>
             <div className="employee-table-shell compact-scroll">
               <table className="data-table leave-table">
@@ -4459,9 +4485,10 @@ function LeavePage({
                     const isLast = stepIdx === requestSteps.length - 1
                     const nextStep = isLast ? null : requestSteps[stepIdx + 1]
                     const isExp = expandedReqId === record.id
+                    const moClass = record.departureDate && ((new Date(record.departureDate).getMonth() + 1) % 2 === 1) ? ' lr-mrow-odd' : ' lr-mrow-even'
                     return (
                       <Fragment key={record.id}>
-                        <tr className={`lr-row${isExp ? ' lr-row-open' : ''}`} onClick={() => setExpandedReqId(isExp ? null : record.id)}>
+                        <tr className={`lr-row${moClass}${isExp ? ' lr-row-open' : ''}`} onClick={() => setExpandedReqId(isExp ? null : record.id)}>
                           <td className="lr-expand-td"><span className={`mc-arrow${isExp ? ' mc-arrow-open' : ''}`}>›</span></td>
                           <td>{record.employeeId}</td>
                           <td>{record.name}</td>
@@ -6229,16 +6256,16 @@ function PersonalFilesSection({ records, onUpdate, employees = [], isAdmin = fal
           </table>
         </div>
 
-        {pageSize !== 'All' && totalPages > 1 && (
-          <div className="pagination-bar">
-            <button className="page-btn" onClick={() => setPage(1)} disabled={safePage === 1} type="button">«</button>
-            <button className="page-btn" onClick={() => setPage(p => Math.max(1, p-1))} disabled={safePage === 1} type="button">‹</button>
-            <span className="page-info">Page {safePage} of {totalPages} · {filtered.length} records</span>
-            <button className="page-btn" onClick={() => setPage(p => Math.min(totalPages, p+1))} disabled={safePage === totalPages} type="button">›</button>
-            <button className="page-btn" onClick={() => setPage(totalPages)} disabled={safePage === totalPages} type="button">»</button>
+        {filtered.length > 0 && (
+          <div className="table-footer">
+            <span>Showing {rows.length ? (pageSize === 'All' ? 1 : (safePage - 1) * pageSize + 1) : 0}–{pageSize === 'All' ? filtered.length : Math.min(safePage * pageSize, filtered.length)} of {filtered.length}</span>
+            <div>
+              <button className="quiet-button light" disabled={safePage === 1 || pageSize === 'All'} onClick={() => setPage((current) => Math.max(1, current - 1))} type="button">Previous</button>
+              <strong>{safePage} / {totalPages}</strong>
+              <button className="quiet-button light" disabled={safePage === totalPages || pageSize === 'All'} onClick={() => setPage((current) => Math.min(totalPages, current + 1))} type="button">Next</button>
+            </div>
           </div>
         )}
-        {pageSize === 'All' && <div className="pagination-bar"><span className="page-info">{filtered.length} records total</span></div>}
       </section>
 
       {editingFile && <PersonalFileModal file={editingFile} onClose={() => setEditingFileNo(null)} onSave={saveFile} />}
@@ -12563,7 +12590,7 @@ const MONTH_NAMES = ['January','February','March','April','May','June','July','A
 
 const LEAVE_TYPE_LABELS: Record<string, string> = {
   AL: 'Annual Leave', FRL: 'Free Repatriation Leave', NP: 'No Pay Leave',
-  PT: 'Part-Time Leave', CC: 'Casual / Compensatory Leave',
+  PT: 'Part-Time Leave', CC: 'Casual / Compensatory Leave', SL: 'Sick Leave (SL)',
 }
 
 function ReportsPage({
