@@ -13005,7 +13005,7 @@ function ReportsPage({
     // Detailed tables — kept exactly (same data), restyled
     const dt = (head: string, rows: string) => `<table class="dt"><thead>${head}</thead><tbody>${rows}</tbody></table>`
     const medRows    = mMedical.map(r=>`<tr><td>${esc(r.employeeId)}</td><td>${esc(r.name)}</td><td>${esc(r.department)}</td><td>${formatDateDisplay(r.caseDate)}</td><td style="text-align:center">${r.sickLeaveDays||0}</td><td style="text-align:center">${r.isUrgent?'Yes':'—'}</td><td style="text-align:center">${r.isAdmitted?'Yes':'—'}</td></tr>`).join('')
-    const termRows   = mCompTerm.map(r=>`<tr><td>${esc(r.employeeId)}</td><td>${esc(r.name)}</td><td>${esc(r.department)}</td><td>${esc(r.nationality)}</td><td>${formatDateDisplay(r.departureDate)}</td><td>${esc(r.reasonForLeaving||'—')}</td></tr>`).join('')
+    const termRows   = mCompTerm.map(r=>`<tr><td>${esc(r.employeeId)}</td><td>${esc(r.name)}</td><td>${esc(r.department)}</td><td>${esc(r.designation||'—')}</td><td>${esc(r.nationality)}</td><td>${formatDateDisplay(r.departureDate)}</td><td>${esc(r.terminationType||'—')}</td><td>${esc(r.reasonForLeaving||'—')}</td></tr>`).join('')
     const indRows    = mInduction.map(r=>`<tr><td>${esc(r.refNo)}</td><td>${formatDateDisplay(r.inductionDate)}</td><td>${esc(r.conductedBy)}</td><td style="text-align:right">${r.participants.length}</td><td>${esc(r.status)}</td></tr>`).join('')
     const trRows     = mTraining.map(r=>`<tr><td>${esc(r.trainingTitle)}</td><td>${formatDateDisplay(r.date)}</td><td>${esc(r.trainingType)}</td><td>${esc(r.conductedBy)}</td><td style="text-align:right">${r.participants.length}</td></tr>`).join('')
     const mtgRows    = mMeetings.map(r=>`<tr><td>${esc(r.refNumber)}</td><td>${formatDateDisplay(r.date)}</td><td>${esc(r.venue)}</td><td>${esc(r.chairperson)}</td></tr>`).join('')
@@ -13023,15 +13023,15 @@ function ReportsPage({
     const newHireRows = newHires.map(e => `<tr><td>${esc(e.employeeId)}</td><td>${esc(e.fullName)}</td><td>${esc(e.designation)}</td><td>${esc(e.department)}</td><td>${formatDateDisplay(e.dateOfJoin)}</td></tr>`).join('')
 
     // Two-column section bars (all sections)
-    const secBars = (entries: [string, number][]) => {
+    const secBars = (entries: [string, number][], title: string, emptyMsg = 'No section data') => {
       const data = entries.filter(([,v])=>v>0)
-      if (!data.length) return infoCard('No section data')
+      if (!data.length) return infoCard(emptyMsg)
       const max = Math.max(...data.map(([,v])=>v))
       const bar = ([l,v]: [string, number], i: number) => `<div class="hbar-row"><span class="hbar-l" title="${esc(l)}">${esc(l)}</span><span class="hbar-track"><span class="hbar-fill" style="width:${Math.max(4,Math.round(v/max*100))}%;background:${CH[i%CH.length]}"></span></span><span class="hbar-v">${v}</span></div>`
       const mid = Math.ceil(data.length / 2)
       const col1 = data.slice(0, mid).map((e,i)=>bar(e,i)).join('')
       const col2 = data.slice(mid).map((e,i)=>bar(e,i+mid)).join('')
-      return `<div class="card"><div class="card-t">Workforce by Section</div><div class="secbar-grid"><div class="hbar">${col1}</div><div class="hbar">${col2}</div></div></div>`
+      return `<div class="card"><div class="card-t">${esc(title)}</div><div class="secbar-grid"><div class="hbar">${col1}</div><div class="hbar">${col2}</div></div></div>`
     }
     const letterheadUrl = `${window.location.origin}/letterhead.png`
 
@@ -13048,7 +13048,7 @@ function ReportsPage({
     const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>HR Monthly Report — ${periodLabel}</title><style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',Arial,sans-serif;font-size:9.5pt;color:#1e293b;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-@page{size:A4 portrait;margin:12mm 12mm 16mm 12mm}
+@page{size:A4 portrait;margin:12mm 12mm 22mm 12mm}
 @media print{ @page{ @bottom-right{ content:"Page " counter(page) " of " counter(pages); font-family:'Segoe UI',Arial,sans-serif; font-size:7.5pt; color:#94a3b8 } } }
 
 /* Executive dashboard — KPI cards */
@@ -13167,7 +13167,7 @@ table.dt tbody tr{page-break-inside:avoid}
     ${stat(onLeaveNow, 'Currently on Leave', '#3b6ea5')}
   </div>
   ${chartCard('Workforce by Nationality', natEntries, 'donut', 'No workforce data')}
-  ${secBars(secEntries)}
+  ${secBars(secEntries, 'Workforce by Section')}
   ${newHireRows
     ? `<div class="tbl-wrap"><div class="card-t">New Hires This Month (${newHires.length})</div>${dt('<tr><th>Emp ID</th><th>Name</th><th>Position</th><th>Section</th><th>Date of Join</th></tr>', newHireRows)}</div>`
     : infoCard('No New Hires Recorded This Month')}
@@ -13198,7 +13198,7 @@ table.dt tbody tr{page-break-inside:avoid}
   </div>
   ${mMedical.length === 0
     ? infoCard('No Medical Cases Recorded This Month')
-    : (medBySec.length > 0 ? chartCard('Medical Cases by Section', medBySec, 'donut', 'No medical cases') : '')}
+    : (medBySec.length > 0 ? secBars(medBySec, 'Medical Cases by Section', 'No medical cases') : '')}
 </div>
 
 <div class="sec">
@@ -13210,7 +13210,7 @@ table.dt tbody tr{page-break-inside:avoid}
     ${stat(mCompTerm.filter(r=>r.rehireEligible).length, 'Rehire Eligible', '#16a34a')}
   </div>
   ${termRows
-    ? `<div class="tbl-wrap"><div class="card-t">Departures This Period</div>${dt('<tr><th>Emp ID</th><th>Name</th><th>Section</th><th>Nationality</th><th>Departure Date</th><th>Reason</th></tr>', termRows)}</div>`
+    ? `<div class="tbl-wrap"><div class="card-t">Departures This Period</div>${dt('<tr><th>Emp ID</th><th>Name</th><th>Section</th><th>Designation</th><th>Nationality</th><th>Departure Date</th><th>Type</th><th>Reason</th></tr>', termRows)}</div>`
     : infoCard('No Departures Recorded This Month')}
 </div>
 
@@ -13228,9 +13228,6 @@ table.dt tbody tr{page-break-inside:avoid}
       ${indRows
         ? `<div class="tbl-wrap"><div class="card-t">Induction Sessions</div>${dt('<tr><th>Ref</th><th>Date</th><th>Conducted By</th><th style="text-align:right">Pax</th><th>Status</th></tr>', indRows)}</div>`
         : infoCard('No Induction Sessions Recorded This Month')}
-      ${mtgRows
-        ? `<div class="tbl-wrap"><div class="card-t">Meeting Minutes</div>${dt('<tr><th>Ref No</th><th>Date</th><th>Venue</th><th>Chairperson</th></tr>', mtgRows)}</div>`
-        : infoCard('No Meeting Minutes Recorded This Month')}
     </div>
     <div>
       ${trRows
@@ -13238,6 +13235,9 @@ table.dt tbody tr{page-break-inside:avoid}
         : infoCard('No Training Sessions Recorded This Month')}
     </div>
   </div>
+  ${mtgRows
+    ? `<div class="tbl-wrap"><div class="card-t">Meeting Minutes</div>${dt('<tr><th style="width:16%">Ref No</th><th style="width:14%">Date</th><th style="width:45%">Venue</th><th style="width:25%">Chairperson</th></tr>', mtgRows)}</div>`
+    : infoCard('No Meeting Minutes Recorded This Month')}
 </div>
 
 <div class="sec">
