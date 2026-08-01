@@ -1329,6 +1329,20 @@ function PageHeader(_props: { eyebrow: string; title: string; subtitle?: string 
   return null
 }
 
+// Normalise imported dates (DD-MM-YYYY, DD/MM/YYYY, DD-Mon-YYYY, YYYY-MM-DD…) → YYYY-MM-DD
+function normImportDate(raw: string): string {
+  const s = (raw ?? '').trim()
+  if (!s) return ''
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s
+  const dmY = /^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/.exec(s)
+  if (dmY) return `${dmY[3]}-${dmY[2].padStart(2, '0')}-${dmY[1].padStart(2, '0')}`
+  const monthMap: Record<string, string> = { jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12' }
+  const dMonY = /^(\d{1,2})[-/ ]([A-Za-z]{3,})[-/ ](\d{2,4})$/.exec(s)
+  if (dMonY) { const m = monthMap[dMonY[2].toLowerCase().slice(0, 3)]; const y = dMonY[3].length === 2 ? `20${dMonY[3]}` : dMonY[3]; if (m) return `${y}-${m}-${dMonY[1].padStart(2, '0')}` }
+  const d = new Date(s)
+  return isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10)
+}
+
 function downloadCsv(filename: string, rows: string[][]) {
   const csv = rows.map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(',')).join('\n')
   const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }))
@@ -10683,16 +10697,24 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('All')
   const [statusFilter, setStatusFilter] = useState('All')
+  const [monthFilter, setMonthFilter] = useState<'All' | string>(() => new Date().toISOString().slice(0, 7))
   const [editing, setEditing] = useState<StaffRequestRecord | null>(null)
   const [updateModal, setUpdateModal] = useState<StaffRequestRecord | null>(null)
   const [updateAction, setUpdateAction] = useState('')
   const [updateNewStatus, setUpdateNewStatus] = useState<'Completed' | 'Rejected'>('Completed')
 
+  const reqMonths = useMemo(() => {
+    const keys = new Set(records.map((r) => monthKey(r.submittedDate)).filter(Boolean))
+    keys.add(new Date().toISOString().slice(0, 7))
+    return Array.from(keys).sort().reverse()
+  }, [records])
+
   const filtered = useMemo(() => records.filter((r) =>
     `${r.employeeId} ${r.employeeName} ${r.section} ${r.department} ${r.requestType} ${r.description}`.toLowerCase().includes(search.toLowerCase())
     && (typeFilter === 'All' || r.requestType === typeFilter)
     && (statusFilter === 'All' || r.status === statusFilter)
-  ), [records, search, typeFilter, statusFilter])
+    && (monthFilter === 'All' || monthKey(r.submittedDate) === monthFilter)
+  ), [records, search, typeFilter, statusFilter, monthFilter])
 
   const save = (r: StaffRequestRecord) => { onUpdate((prev) => {
     const idx = prev.findIndex((x) => x.id === r.id)
@@ -10755,7 +10777,7 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
           id: `REQ-IMP-${Date.now()}-${i}`,
           employeeId: empId, employeeName: g(r, iName) || emp?.fullName || '', section: g(r, iSec) || emp?.department || '',
           department: emp?.department || g(r, iSec), requestType: type as StaffRequestRecord['requestType'], priority: pri,
-          description: g(r, iDesc), submittedDate: g(r, iSub) || new Date().toISOString().slice(0, 10),
+          description: g(r, iDesc), submittedDate: normImportDate(g(r, iSub)) || new Date().toISOString().slice(0, 10),
           completedDate: '', status, actionTaken: g(r, iAct), locked: status !== 'Open',
         }
       })
@@ -10780,6 +10802,7 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
             </select>
           </label>
           <label><span>Status</span><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="All">All Statuses</option><option>Open</option><option>Completed</option><option>Rejected</option></select></label>
+          <label><span>Month</span><select value={monthFilter} onChange={(e) => setMonthFilter(e.target.value)}><option value="All">All Months</option>{reqMonths.map((k) => <option key={k} value={k}>{formatMonthLabel(k)}</option>)}</select></label>
           {isAdmin && <button className="primary-button vwh" type="button" onClick={downloadReqTemplate}>Template</button>}
           {isAdmin && <button className="primary-button vwh" type="button" onClick={importReq}>Import</button>}
           {isAdmin && <button className="primary-button vwh" type="button" onClick={exportReq}>Export</button>}
@@ -10961,14 +10984,29 @@ function VisitsSection({ records, employees, onUpdate, isReadOnly = false, isAdm
           id: `VIS-IMP-${Date.now()}-${i}`,
           employeeId: empId, employeeName: g(r, iName) || emp?.fullName || '', department: g(r, iSec) || emp?.department || '',
           nicPassportNo: g(r, iNic) || emp?.nicPassportNo || '', nationality: g(r, iNat) || emp?.nationality || '',
-          visitType: type, visitDate: g(r, iDate) || new Date().toISOString().slice(0, 10), status, remarks: g(r, iRem),
+          visitType: type, visitDate: normImportDate(g(r, iDate)) || new Date().toISOString().slice(0, 10), status, remarks: g(r, iRem),
         }
       })
       if (imported.length === 0) { alert('No valid rows found in the CSV.'); return }
-      onUpdate(prev => [...imported, ...prev])
-      alert(`✓ Import successful — ${imported.length} visit(s) added.`)
+      // De-duplicate: skip rows that already exist (same employee + type + date)
+      onUpdate(prev => {
+        const keyOf = (v: VisitRecord) => `${v.employeeId}|${v.visitType}|${v.visitDate}`
+        const existing = new Set(prev.map(keyOf))
+        const seen = new Set<string>()
+        const fresh = imported.filter(v => { const k = keyOf(v); if (existing.has(k) || seen.has(k)) return false; seen.add(k); return true })
+        const skipped = imported.length - fresh.length
+        setTimeout(() => alert(`✓ Import complete — ${fresh.length} visit(s) added${skipped ? `, ${skipped} duplicate(s) skipped` : ''}.`), 0)
+        return [...fresh, ...prev]
+      })
     }
     input.click()
+  }
+
+  const removeAllVisits = () => {
+    if (records.length === 0) { alert('There are no visits to remove.'); return }
+    if (!window.confirm(`Remove ALL ${records.length} visit records? This clears the list so you can import a fresh set. This cannot be undone.`)) return
+    onUpdate(() => [])
+    supabase.from('visit_records').delete().not('id', 'is', null).then(({ error }) => { if (error) alert('Cleared in app, but database delete failed: ' + error.message) })
   }
 
   return (
@@ -10987,6 +11025,7 @@ function VisitsSection({ records, employees, onUpdate, isReadOnly = false, isAdm
           {isAdmin && <button className="primary-button vwh" type="button" onClick={downloadVisitTemplate}>Template</button>}
           {isAdmin && <button className="primary-button vwh" type="button" onClick={importVisits}>Import</button>}
           {isAdmin && <button className="primary-button vwh" type="button" onClick={exportVisits}>Export</button>}
+          {isAdmin && <button className="danger-button vwh" type="button" onClick={removeAllVisits}>Remove All</button>}
           {!isReadOnly && <button className="primary-button vwh" type="button" onClick={() => setEditing(newVisit())}>+ Add Visit</button>}
         </div>
         <div className="employee-table-shell compact-scroll">
