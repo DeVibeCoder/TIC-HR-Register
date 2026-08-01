@@ -308,6 +308,7 @@ type StaffRequestRecord = {
   completedDate: string
   status: 'Open' | 'Completed' | 'Rejected'
   actionTaken: string
+  attendedBy?: string   // who handled the request
   locked?: boolean   // true once Completed or Rejected — cannot change status again
 }
 
@@ -644,8 +645,8 @@ const hcSnapToDb   = (r: HeadcountSnapshot) => ({ month: r.month, total: r.total
 const bankAccFromDb = (r: DbRow): BankAccountRecord => ({ id: r.id as string, employeeId: r.employee_id as string, fullName: r.full_name as string, department: r.department as string, nationality: r.nationality as string, bank: r.bank as BankName, accountType: r.account_type as AccountType, scheduledDate: r.scheduled_date as string, status: r.status as AccountStatus, remarks: r.remarks as string })
 const bankAccToDb   = (r: BankAccountRecord) => ({ id: r.id, employee_id: r.employeeId, full_name: r.fullName, department: r.department, nationality: r.nationality, bank: r.bank, account_type: r.accountType, scheduled_date: r.scheduledDate, status: r.status, remarks: r.remarks ?? '' })
 
-const staffReqFromDb = (r: DbRow): StaffRequestRecord => ({ id: r.id as string, employeeId: r.employee_id as string, employeeName: r.employee_name as string, section: r.section as string, department: r.department as string, requestType: r.request_type as StaffRequestRecord['requestType'], priority: r.priority as RequestPriority, description: r.description as string, submittedDate: r.submitted_date as string, completedDate: r.completed_date as string, status: (r.status === 'Resolved' || r.status === 'In Progress' ? 'Completed' : r.status) as StaffRequestRecord['status'], actionTaken: r.action_taken as string, locked: (r.locked ?? (r.status === 'Completed' || r.status === 'Rejected' || r.status === 'Resolved')) as boolean })
-const staffReqToDb   = (r: StaffRequestRecord) => ({ id: r.id, employee_id: r.employeeId, employee_name: r.employeeName, section: r.section, department: r.department, request_type: r.requestType, priority: r.priority, description: r.description, submitted_date: r.submittedDate, completed_date: r.completedDate, status: r.status, action_taken: r.actionTaken, locked: r.locked ?? false })
+const staffReqFromDb = (r: DbRow): StaffRequestRecord => ({ id: r.id as string, employeeId: r.employee_id as string, employeeName: r.employee_name as string, section: r.section as string, department: r.department as string, requestType: r.request_type as StaffRequestRecord['requestType'], priority: r.priority as RequestPriority, description: r.description as string, submittedDate: r.submitted_date as string, completedDate: r.completed_date as string, status: (r.status === 'Resolved' || r.status === 'In Progress' ? 'Completed' : r.status) as StaffRequestRecord['status'], actionTaken: r.action_taken as string, attendedBy: (r.attended_by ?? '') as string, locked: (r.locked ?? (r.status === 'Completed' || r.status === 'Rejected' || r.status === 'Resolved')) as boolean })
+const staffReqToDb   = (r: StaffRequestRecord) => ({ id: r.id, employee_id: r.employeeId, employee_name: r.employeeName, section: r.section, department: r.department, request_type: r.requestType, priority: r.priority, description: r.description, submitted_date: r.submittedDate, completed_date: r.completedDate, status: r.status, action_taken: r.actionTaken, attended_by: r.attendedBy ?? '', locked: r.locked ?? false })
 
 const visitFromDb = (r: DbRow): VisitRecord => ({ id: r.id as string, employeeId: r.employee_id as string, employeeName: r.employee_name as string, department: r.department as string, nicPassportNo: r.nic_passport_no as string, nationality: r.nationality as string, visitType: r.visit_type as VisitRecord['visitType'], visitDate: r.visit_date as string, status: r.status as VisitRecord['status'], remarks: r.remarks as string })
 const visitToDb   = (r: VisitRecord) => ({ id: r.id, employee_id: r.employeeId, employee_name: r.employeeName, department: r.department, nic_passport_no: r.nicPassportNo, nationality: r.nationality, visit_type: r.visitType, visit_date: r.visitDate, status: r.status, remarks: r.remarks })
@@ -10774,6 +10775,7 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
   const [editing, setEditing] = useState<StaffRequestRecord | null>(null)
   const [updateModal, setUpdateModal] = useState<StaffRequestRecord | null>(null)
   const [updateAction, setUpdateAction] = useState('')
+  const [updateAttendedBy, setUpdateAttendedBy] = useState('')
   const [updateNewStatus, setUpdateNewStatus] = useState<'Completed' | 'Rejected'>('Completed')
 
   const reqMonths = useMemo(() => {
@@ -10799,32 +10801,33 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
 
   const openUpdate = (r: StaffRequestRecord) => {
     setUpdateAction(r.actionTaken || '')
+    setUpdateAttendedBy(r.attendedBy || '')
     setUpdateNewStatus('Completed')
     setUpdateModal(r)
   }
 
   const confirmUpdate = () => {
     if (!updateModal) return
-    save({ ...updateModal, status: updateNewStatus, actionTaken: updateAction, completedDate: new Date().toISOString().slice(0,10), locked: true })
+    save({ ...updateModal, status: updateNewStatus, actionTaken: updateAction, attendedBy: updateAttendedBy, completedDate: new Date().toISOString().slice(0,10), locked: true })
     setUpdateModal(null)
   }
 
   const newReq = (): StaffRequestRecord => ({
     id: 'REQ-new', employeeId: '', employeeName: '', section: '', department: '', requestType: 'Documents',
     priority: 'Medium', description: '', submittedDate: new Date().toISOString().slice(0, 10),
-    completedDate: '', status: 'Open', actionTaken: '', locked: false,
+    completedDate: '', status: 'Open', actionTaken: '', attendedBy: '', locked: false,
   })
 
   // Status badge colours for requests
   const reqStatusClass = (s: string) => s === 'Open' ? 'status-badge open' : s === 'Completed' ? 'status-badge approved' : 'status-badge rejected'
 
   const downloadReqTemplate = () => downloadCsv('staff-requests-template.csv', [
-    ['EMP ID', 'NAME', 'SECTION', 'TYPE', 'PRIORITY', 'DESCRIPTION', 'SUBMITTED DATE', 'STATUS', 'ACTION TAKEN'],
-    ['12345', 'EXAMPLE EMPLOYEE', 'ADMINISTRATION', 'Documents', 'Medium', 'Sample request description', '2026-07-01', 'Open', ''],
+    ['EMP ID', 'NAME', 'SECTION', 'TYPE', 'PRIORITY', 'DESCRIPTION', 'SUBMITTED DATE', 'STATUS', 'ATTENDED BY', 'ACTION TAKEN'],
+    ['12345', 'EXAMPLE EMPLOYEE', 'ADMINISTRATION', 'Documents', 'Medium', 'Sample request description', '2026-07-01', 'Open', 'HR OFFICER', ''],
   ])
   const exportReq = () => downloadCsv('staff-requests.csv', [
-    ['ID', 'EMP ID', 'NAME', 'SECTION', 'TYPE', 'PRIORITY', 'DESCRIPTION', 'SUBMITTED DATE', 'STATUS', 'CLOSED DATE', 'ACTION TAKEN'],
-    ...records.map(r => [r.id, r.employeeId, r.employeeName, r.section, r.requestType, r.priority, r.description, r.submittedDate, r.status, r.completedDate, r.actionTaken]),
+    ['ID', 'EMP ID', 'NAME', 'SECTION', 'TYPE', 'PRIORITY', 'DESCRIPTION', 'SUBMITTED DATE', 'STATUS', 'CLOSED DATE', 'ATTENDED BY', 'ACTION TAKEN'],
+    ...records.map(r => [r.id, r.employeeId, r.employeeName, r.section, r.requestType, r.priority, r.description, r.submittedDate, r.status, r.completedDate, r.attendedBy ?? '', r.actionTaken]),
   ])
   const importReq = () => {
     const input = document.createElement('input')
@@ -10838,7 +10841,7 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
       const g = (row: string[], idx: number) => idx >= 0 ? (row[idx] ?? '').trim() : ''
       const iEmp = ci(['empid','employeeid']); const iName = ci(['name','employeename']); const iSec = ci(['section','department'])
       const iType = ci(['type','requesttype']); const iPri = ci(['priority']); const iDesc = ci(['description'])
-      const iSub = ci(['submitteddate','submitted','date']); const iStat = ci(['status']); const iAct = ci(['actiontaken','action'])
+      const iSub = ci(['submitteddate','submitted','date']); const iStat = ci(['status']); const iAct = ci(['actiontaken','action']); const iAtt = ci(['attendedby','attended'])
       const empMap = new Map(employees.map(e => [e.employeeId, e]))
       const types = ['Documents','Villa Metrics','Yono App','Wifi','IT','Leave','Transfer','Meals & Stay','Other']
       const imported: StaffRequestRecord[] = rows.slice(1).filter(r => r.some(c => c.trim())).map((r, i) => {
@@ -10851,7 +10854,7 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
           employeeId: empId, employeeName: g(r, iName) || emp?.fullName || '', section: g(r, iSec) || emp?.department || '',
           department: emp?.department || g(r, iSec), requestType: type as StaffRequestRecord['requestType'], priority: pri,
           description: g(r, iDesc), submittedDate: normImportDate(g(r, iSub)) || new Date().toISOString().slice(0, 10),
-          completedDate: '', status, actionTaken: g(r, iAct), locked: status !== 'Open',
+          completedDate: '', status, actionTaken: g(r, iAct), attendedBy: g(r, iAtt), locked: status !== 'Open',
         }
       })
       if (imported.length === 0) { alert('No valid rows found in the CSV.'); return }
@@ -10895,13 +10898,14 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
                 <th>Description</th>
                 <th style={{textAlign:'center'}}>Status</th>
                 <th style={{textAlign:'center',whiteSpace:'nowrap'}}>Closed Date</th>
+                <th style={{whiteSpace:'nowrap'}}>Attended By</th>
                 <th>Action Taken</th>
                 <th style={{textAlign:'center'}}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0
-                ? <tr><td colSpan={12} className="empty-row">No requests found</td></tr>
+                ? <tr><td colSpan={13} className="empty-row">No requests found</td></tr>
                 : filtered.map((r) => (
                   <tr key={r.id}>
                     <td style={{maxWidth:84, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', fontSize:'0.75rem', color:'var(--ink)', fontWeight:700}} title={r.id}>{r.id}</td>
@@ -10920,6 +10924,7 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
                       <span className={reqStatusClass(r.status)}>{r.status}</span>
                     </td>
                     <td style={{textAlign:'center',fontSize:'0.8rem',whiteSpace:'nowrap'}}>{r.completedDate ? formatDateDisplay(r.completedDate) : '—'}</td>
+                    <td style={{whiteSpace:'nowrap', fontSize:'0.8rem'}}>{r.attendedBy || '—'}</td>
                     <td style={{maxWidth:180}}>
                       <span title={r.actionTaken || undefined} style={{ display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden', fontSize:'0.82rem', lineHeight:'1.4', color:'var(--ink)' }}>
                         {r.actionTaken || '—'}
@@ -10974,6 +10979,12 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
                     color: updateNewStatus==='Rejected'?'#dc2626':'var(--muted)', fontWeight:700, cursor:'pointer', fontSize:'0.88rem' }}
                 >✕ Reject</button>
               </div>
+              <label style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:12 }}>
+                <span style={{ fontSize:'0.78rem', fontWeight:700, color:'var(--ink)' }}>Attended By</span>
+                <input value={updateAttendedBy} onChange={e => setUpdateAttendedBy(e.target.value)}
+                  placeholder="Who handled this request"
+                  style={{ padding:'8px 10px', borderRadius:8, border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', width:'100%', boxSizing:'border-box' }} />
+              </label>
               <label style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:16 }}>
                 <span style={{ fontSize:'0.78rem', fontWeight:700, color:'var(--ink)' }}>Action Taken <span style={{ fontWeight:400, color:'var(--muted)' }}>(required)</span></span>
                 <textarea value={updateAction} onChange={e => setUpdateAction(e.target.value)}
