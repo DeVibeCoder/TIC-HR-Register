@@ -8339,9 +8339,39 @@ function ExitInterviewSection({ records, onUpdate, employees, isHOD = false, isE
   const del = (id: string) => onUpdate((prev) => prev.filter((x) => x.id !== id))
 
   const exportReport = () => {
-    const headers = ['ID','Employee','Designation','Section','Nationality','Departure','Type','Status','Rehire','Interviewer','InterviewDate']
-    const rows = filtered.map((r) => [r.id, r.name, r.designation, r.department, r.nationality, formatDateDisplay(r.departureDate), r.terminationType, eiStatus(r), r.rehireEligible ? 'Yes' : 'No', r.interviewerName, r.interviewDate])
-    downloadCsv('exit-interview-report.csv', [headers, ...rows])
+    const headers = ['EMP ID','NAME','DESIGNATION','SECTION','NATIONALITY','DEPARTURE DATE','TYPE','JOIN DATE','REHIRE','INTERVIEWER','INTERVIEW DATE']
+    const rows = records.map((r) => [r.employeeId, r.name, r.designation, r.department, r.nationality, r.departureDate, r.terminationType, r.joinDate ?? '', r.rehireEligible ? 'Yes' : 'No', r.interviewerName, r.interviewDate])
+    downloadCsv('exit-interviews.csv', [headers, ...rows])
+  }
+  const downloadEiTemplate = () => downloadCsv('exit-interviews-template.csv', [
+    ['EMP ID','NAME','DESIGNATION','SECTION','NATIONALITY','DEPARTURE DATE','TYPE','JOIN DATE','REHIRE','INTERVIEWER','INTERVIEW DATE'],
+    ['12345','EXAMPLE EMPLOYEE','STOREKEEPER','STORES','BANGLADESH','2026-07-05','Resignation','2015-01-01','Yes','HR OFFICER','2026-07-03'],
+  ])
+  const importEi = () => {
+    const input = document.createElement('input'); input.type = 'file'; input.accept = '.csv,text/csv'
+    input.onchange = async () => {
+      const file = input.files?.[0]; if (!file) return
+      const rows = parseCsv(await file.text()); if (rows.length < 2) return
+      const hdr = rows[0].map(h => h.toLowerCase().replace(/[^a-z0-9]/g, ''))
+      const ci = (terms: string[]) => terms.map(t => hdr.indexOf(t)).find(i => i >= 0) ?? -1
+      const g = (row: string[], idx: number) => idx >= 0 ? (row[idx] ?? '').trim() : ''
+      const iEmp=ci(['empid','employeeid']),iName=ci(['name']),iDesig=ci(['designation']),iSec=ci(['section','department']),iNat=ci(['nationality']),iDep=ci(['departuredate','departure']),iType=ci(['type','terminationtype']),iJoin=ci(['joindate','dateofjoin']),iRehire=ci(['rehire','rehireeligible']),iInt=ci(['interviewer','interviewername']),iIntD=ci(['interviewdate'])
+      const types: TerminationType[] = ['Resignation','Dismissal','Probation End','Contract Expiry','Absconded','Other']
+      const imported: ExitInterviewRecord[] = rows.slice(1).filter(r => r.some(c => c.trim())).map((r, i) => ({
+        id: `EI-IMP-${Date.now()}-${i}`, employeeId: g(r, iEmp), name: g(r, iName), department: g(r, iSec), designation: g(r, iDesig),
+        nationality: g(r, iNat), terminationType: (types.find(t => t.toLowerCase() === g(r, iType).toLowerCase()) ?? 'Resignation'),
+        departureDate: normImportDate(g(r, iDep)), periodOfService: '', joinDate: normImportDate(g(r, iJoin)),
+        rehireEligible: /^(y|yes|true|1)$/i.test(g(r, iRehire)) || g(r, iRehire) === '', interviewDate: normImportDate(g(r, iIntD)),
+        skipped: false, skipReason: '', involuntaryReasons: [], voluntaryReasons: [], invOther: '', volOther: '',
+        employeeComments: '', questionnaire: blankQuestionnaire(), areasToImprove: '',
+        q1:'',q2:'',q3:'',q4:'',q5:'',q6:'',q7:'',q8:'',q9:'',q10:'',q11:'',q12:'',q13:'',q14:'',
+        interviewerComments: '', interviewerName: g(r, iInt),
+      }))
+      if (imported.length === 0) { alert('No valid rows found in the CSV.'); return }
+      onUpdate(prev => [...imported, ...prev])
+      alert(`✓ Import successful — ${imported.length} exit interview(s) added as drafts.`)
+    }
+    input.click()
   }
 
   return (
@@ -8363,6 +8393,8 @@ function ExitInterviewSection({ records, onUpdate, employees, isHOD = false, isE
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
           Analytics
         </button>
+        {isAdmin && <button className="quiet-button light" type="button" onClick={downloadEiTemplate}>Template</button>}
+        {isAdmin && <button className="quiet-button light" type="button" onClick={importEi}>Import</button>}
         <button className="quiet-button light" type="button" onClick={exportReport}>⬇ Export</button>
       </div>
 
@@ -8451,6 +8483,7 @@ function TerminationPage({
   onUpdateExitInterviews,
   onRevert,
   onDeleteCompleted,
+  onImportCompleted,
   isHOD = false,
   isExecutive = false,
   isAdmin = false,
@@ -8467,6 +8500,7 @@ function TerminationPage({
   onUpdateExitInterviews: (fn: (prev: ExitInterviewRecord[]) => ExitInterviewRecord[]) => void
   onRevert?: (record: CompletedTerminationRecord | EnhancedTerminationRecord) => void
   onDeleteCompleted?: (id: string) => void
+  onImportCompleted?: (records: CompletedTerminationRecord[]) => void
   isHOD?: boolean
   isExecutive?: boolean
   isAdmin?: boolean
@@ -8507,6 +8541,42 @@ function TerminationPage({
       && (completedDepartmentFilter === 'All Sections' || r.department === completedDepartmentFilter)
       && (completedMonthFilter === 'All' || monthKey(r.departureDate) === completedMonthFilter)
   }).sort((a, b) => a.departureDate.localeCompare(b.departureDate)), [completedTerminations, completedSearch, completedDepartmentFilter, completedMonthFilter])
+
+  // ── History (completed terminations) template / export / import ─────────
+  const termTypes: TerminationType[] = ['Resignation', 'Dismissal', 'Probation End', 'Contract Expiry', 'Absconded', 'Other']
+  const downloadHistTemplate = () => downloadCsv('termination-history-template.csv', [
+    ['EMP ID', 'NAME', 'SECTION', 'DESIGNATION', 'NATIONALITY', 'PASSPORT NO', 'WP NO', 'DATE OF JOIN', 'LAST WORKING DATE', 'DEPARTURE DATE', 'TYPE', 'REASON', 'REHIRE ELIGIBLE'],
+    ['12345', 'EXAMPLE EMPLOYEE', 'STORES', 'STOREKEEPER', 'BANGLADESH', 'A1234567', 'WP123456', '2015-01-01', '2026-06-30', '2026-07-05', 'Resignation', 'Personal reasons', 'Yes'],
+  ])
+  const exportHist = () => downloadCsv('termination-history.csv', [
+    ['EMP ID', 'NAME', 'SECTION', 'DESIGNATION', 'NATIONALITY', 'PASSPORT NO', 'WP NO', 'DATE OF JOIN', 'LAST WORKING DATE', 'DEPARTURE DATE', 'TYPE', 'REASON', 'REHIRE ELIGIBLE'],
+    ...completedTerminations.map(r => [r.employeeId, r.name, r.department, r.designation, r.nationality, r.passportNo, r.wpNo, r.dateOfJoin, r.lastWorkingDate, r.departureDate, r.terminationType, r.reasonForLeaving, r.rehireEligible ? 'Yes' : 'No']),
+  ])
+  const importHist = () => {
+    const input = document.createElement('input'); input.type = 'file'; input.accept = '.csv,text/csv'
+    input.onchange = async () => {
+      const file = input.files?.[0]; if (!file) return
+      const rows = parseCsv(await file.text()); if (rows.length < 2) return
+      const hdr = rows[0].map(h => h.toLowerCase().replace(/[^a-z0-9]/g, ''))
+      const ci = (terms: string[]) => terms.map(t => hdr.indexOf(t)).find(i => i >= 0) ?? -1
+      const g = (row: string[], idx: number) => idx >= 0 ? (row[idx] ?? '').trim() : ''
+      const iEmp=ci(['empid','employeeid']),iName=ci(['name']),iSec=ci(['section','department']),iDesig=ci(['designation']),iNat=ci(['nationality']),iPp=ci(['passportno','passport']),iWp=ci(['wpno','workpermit']),iDoj=ci(['dateofjoin','doj']),iLwd=ci(['lastworkingdate','lastworking']),iDep=ci(['departuredate','departure']),iType=ci(['type','terminationtype']),iReason=ci(['reason','reasonforleaving']),iRehire=ci(['rehireeligible','rehire'])
+      const imported: CompletedTerminationRecord[] = rows.slice(1).filter(r => r.some(c => c.trim())).map((r, i) => {
+        const type = termTypes.find(t => t.toLowerCase() === g(r, iType).toLowerCase()) ?? 'Other'
+        return {
+          id: `COMP-IMP-${Date.now()}-${i}`, employeeId: g(r, iEmp), name: g(r, iName), department: g(r, iSec), designation: g(r, iDesig),
+          nationality: g(r, iNat), passportNo: g(r, iPp), wpNo: g(r, iWp), dateOfJoin: normImportDate(g(r, iDoj)),
+          lastWorkingDate: normImportDate(g(r, iLwd)), departureDate: normImportDate(g(r, iDep)) || normImportDate(g(r, iLwd)),
+          currentStage: 'Pending Departure' as TerminationStage, rehireEligible: /^(y|yes|true|1)$/i.test(g(r, iRehire)),
+          exitInterviewCompleted: false, reasonForLeaving: g(r, iReason), comments: '', terminationType: type,
+        }
+      })
+      if (imported.length === 0) { alert('No valid rows found in the CSV.'); return }
+      onImportCompleted?.(imported)
+      alert(`✓ Import successful — ${imported.length} departure record(s) added.`)
+    }
+    input.click()
+  }
 
   return (
     <>
@@ -8632,6 +8702,9 @@ function TerminationPage({
               <label className="search-field"><span>Search</span><input onChange={(e) => setCompletedSearch(e.target.value)} placeholder="Employee, ID, department…" type="text" value={completedSearch} /></label>
               <label><span>Section</span><select onChange={(e) => setCompletedDepartmentFilter(e.target.value)} value={completedDepartmentFilter}>{completedDepartments.map((d) => <option key={d}>{d}</option>)}</select></label>
               <label><span>Month</span><select onChange={(e) => setCompletedMonthFilter(e.target.value)} value={completedMonthFilter}><option value="All">All Months</option>{completedMonths.map((k) => <option key={k} value={k}>{formatMonthLabel(k)}</option>)}</select></label>
+              {isAdmin && <button className="primary-button vwh" type="button" onClick={downloadHistTemplate}>Template</button>}
+              {isAdmin && <button className="primary-button vwh" type="button" onClick={importHist}>Import</button>}
+              {isAdmin && <button className="primary-button vwh" type="button" onClick={exportHist}>Export</button>}
             </div>
             <div className="employee-table-shell compact-scroll termination-table-shell">
               <table className="data-table termination-table compact">
@@ -14011,6 +14084,9 @@ function App() {
   const deleteCompletedTermination = (id: string) => {
     setCompletedTerminations((current) => current.filter((record) => record.id !== id))
   }
+  const importCompletedTerminations = (imported: CompletedTerminationRecord[]) => {
+    setCompletedTerminations((current) => [...imported, ...current])
+  }
 
   // Admin-only: undo a termination (including an accidental one) and restore the employee.
   const revertTermination = (rec: CompletedTerminationRecord | EnhancedTerminationRecord) => {
@@ -14305,7 +14381,7 @@ function App() {
           {activePage === 'leave' && <LeavePage employees={scopedEmployees} leaveRequests={scopedLeaveRequests} activeLeaves={scopedActiveLeaves} leaveHistory={scopedLeaveHistory} medicalCases={scopedMedicalCases} isHOD={isHOD} isExecutive={isExecutive} isAdmin={isAdmin} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onSetRequestStep={setLeaveRequestStep} onExtendLeave={extendActiveLeave} onEditActiveLeave={editActiveLeave} onHistoryConfirm={updateHistoryConfirmation} onDeleteHistory={deleteLeaveHistory} onEditHistory={editLeaveHistory} onUpdateMedical={(fn) => setMedicalCases(fn)} />}
           {activePage === 'operations' && <OperationsPage employees={employees} completedTerminations={completedTerminations} activeLeaves={activeLeaves} isHOD={isHOD} userRole={currentUserRole} />}
           {activePage === 'activities' && <ActivitiesPage employees={scopedEmployees} passportHandovers={scopedPassportHandovers} onUpdatePassport={(fn) => setPassportHandovers(fn)} tripRequests={tripRequests} onUpdateTripRequests={(fn) => setTripRequests(fn)} inventoryItems={inventoryItems} inventoryUsage={inventoryUsage} inventoryOrders={inventoryOrders} onUpdateInventoryItems={(fn) => setInventoryItems(fn)} onUpdateInventoryUsage={(fn) => setInventoryUsage(fn)} onUpdateInventoryOrders={(fn) => setInventoryOrders(fn)} isHOD={isHOD} isHR={isHR} isExecutive={isExecutive} isAdmin={isAdmin} isTripReqApprover={isTripReqApprover} currentUserSections={currentUserSections} currentUserName={currentUserName} />}
-          {activePage === 'termination' && <TerminationPage noticeTerminations={scopedNoticeTerminations} completedTerminations={scopedCompletedTerminations} exitInterviews={scopedExitInterviews} employees={scopedEmployees} isHOD={isHOD} isExecutive={isExecutive} isAdmin={isAdmin} onAdd={openAddTermination} onEdit={openEditTermination} onSetStage={setTerminationStage} onDelete={deleteTermination} onDeleteCompleted={deleteCompletedTermination} onRevert={revertTermination} onViewDetails={(record) => setTerminationDetails(record)} onUpdateExitInterviews={(fn) => setExitInterviews(fn)} />}
+          {activePage === 'termination' && <TerminationPage noticeTerminations={scopedNoticeTerminations} completedTerminations={scopedCompletedTerminations} exitInterviews={scopedExitInterviews} employees={scopedEmployees} isHOD={isHOD} isExecutive={isExecutive} isAdmin={isAdmin} onAdd={openAddTermination} onEdit={openEditTermination} onSetStage={setTerminationStage} onDelete={deleteTermination} onDeleteCompleted={deleteCompletedTermination} onImportCompleted={importCompletedTerminations} onRevert={revertTermination} onViewDetails={(record) => setTerminationDetails(record)} onUpdateExitInterviews={(fn) => setExitInterviews(fn)} />}
           {activePage === 'reports' && <ReportsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} noticeTerminations={noticeTerminations} completedTerminations={completedTerminations} exitInterviews={exitInterviews} medicalCases={medicalCases} isAdmin={isAdmin} currentUserName={currentUserName} />}
           {activePage === 'settings' && <SettingsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} onReset={() => setResetStep(1)} currentUserName={currentUserName} loggedInUser={currentProfile} users={users} onUpdateUsers={(fn) => setUsers(fn)} />}
         </main>
