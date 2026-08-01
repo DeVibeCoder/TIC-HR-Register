@@ -4223,9 +4223,11 @@ function LeaveExtendModal({ record, editExtension, onClose, onSave }: {
   const [reason, setReason] = useState(editExtension?.reason ?? '')
   const [extLeaveType, setExtLeaveType] = useState<LeaveTypeCode>(editExtension?.leaveTypeCode ?? record.leaveTypeCode)
 
-  // Freeze original values before the very first extension
-  const originalReturn = record.originalReturnDate ?? record.returnDate
-  const originalDays   = record.originalDays ?? record.days
+  // Freeze original values before the very first extension.
+  // NB: these come from the DB as '' / 0 for non-extended leaves, so use a
+  // truthy fallback (not ??) — otherwise the new return date computes as blank.
+  const originalReturn = record.originalReturnDate || record.returnDate
+  const originalDays   = record.originalDays || record.days
 
   // Compute new return date from originalReturn + all extension days (including this one)
   const newReturnDate = useMemo(() => {
@@ -8804,7 +8806,7 @@ function printMeetingMinutes(record: MeetingRecord, employees: Employee[], activ
   // Footer — placed in <tfoot> so the browser auto-repeats it on every printed page
   const footerHtml =
     `<div class="pg-footer">
-      <span class="pf-ref">BRIEFING MEETING MINUTES &mdash; ${esc(refSeq)}</span>
+      <span class="pf-ref">MORNING BRIEFING MINUTES - ${esc(refSeq)}</span>
     </div>`
 
   const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/>
@@ -10181,7 +10183,7 @@ function OperationsPage({ employees, completedTerminations, activeLeaves, isHOD 
       {activeSection === 'induction' && <InductionSection employees={employees} records={inductionRecords} onUpdate={setInductionRecords} onBack={() => {}} isReadOnly={userRole === 'Executive'} />}
       {activeSection === 'training'  && <TrainingSection records={trainingRecords} employees={employees} onUpdate={setTrainingRecords} onBack={() => {}} isReadOnly={userRole === 'Executive'} />}
       {activeSection === 'bank'      && <BankAccountSection employees={employees} records={bankAccountRecords} onUpdate={setBankAccountRecords} onBack={() => {}} />}
-      {activeSection === 'meetings'  && <MeetingsSection records={(isHOD || userRole === 'Executive') ? meetingRecords.filter(r => r.status === 'Final') : meetingRecords} onUpdate={setMeetingRecords} employees={employees} activeLeaves={activeLeaves} isReadOnly={userRole === 'Executive'} />}
+      {activeSection === 'meetings'  && <MeetingsSection records={(isHOD || userRole === 'Executive' || userRole === 'HR') ? meetingRecords.filter(r => r.status === 'Final') : meetingRecords} onUpdate={setMeetingRecords} employees={employees} activeLeaves={activeLeaves} isReadOnly={userRole === 'Executive' || userRole === 'HR'} />}
     </>
   )
 }
@@ -11827,7 +11829,7 @@ function ActivitiesPage({
       <div className="section-inline-tabs">
         <button className={activeSection === 'requests' ? 'active' : ''} onClick={() => setActiveSection('requests')} type="button">Requests</button>
         <button className={activeSection === 'visits' ? 'active' : ''} onClick={() => setActiveSection('visits')} type="button">Visits</button>
-        {!isHOD && !isExecutive && <button className={activeSection === 'incidents' ? 'active' : ''} onClick={() => setActiveSection('incidents')} type="button">Incidents</button>}
+        {!isHOD && !isExecutive && !isHR && <button className={activeSection === 'incidents' ? 'active' : ''} onClick={() => setActiveSection('incidents')} type="button">Incidents</button>}
         {!isHOD && !isExecutive && <button className={activeSection === 'passport' ? 'active' : ''} onClick={() => setActiveSection('passport')} type="button">Passports</button>}
         {/* Trip Req: visible to non-HOD/HR staff AND to the designated Trip Req approver (ali41966) */}
         {(!isHOD || isTripReqApprover) && !isHR && !isExecutive && <button className={activeSection === 'tripreq' ? 'active' : ''} onClick={() => setActiveSection('tripreq')} type="button">Trip Req</button>}
@@ -11835,7 +11837,7 @@ function ActivitiesPage({
       </div>
       {activeSection === 'requests' && <RequestsSection records={scopedStaffRequests} employees={employees} onUpdate={setStaffRequests} onBack={() => {}} isHOD={isHOD} isReadOnly={isExecutive} isAdmin={isAdmin} />}
       {activeSection === 'visits' && <VisitsSection records={scopedVisitRecords} employees={employees} onUpdate={setVisitRecords} onBack={() => {}} isReadOnly={isExecutive} isAdmin={isAdmin} />}
-      {!isHOD && !isExecutive && activeSection === 'incidents' && <IncidentsSection records={incidentRecords} employees={employees} onUpdate={setIncidentRecords} onBack={() => {}} />}
+      {!isHOD && !isExecutive && !isHR && activeSection === 'incidents' && <IncidentsSection records={incidentRecords} employees={employees} onUpdate={setIncidentRecords} onBack={() => {}} />}
       {!isHOD && !isExecutive && activeSection === 'passport' && <PassportTrackingSection records={passportHandovers} employees={employees} onUpdate={onUpdatePassport} />}
       {(!isHOD || isTripReqApprover) && !isHR && !isExecutive && activeSection === 'tripreq' && <TripReqSection records={tripRequests} employees={employees} onUpdate={onUpdateTripRequests} currentUserName={currentUserName} canApprove={isTripReqApprover} />}
       {!isHOD && !isHR && !isExecutive && activeSection === 'inventory' && <InventorySection items={inventoryItems} usage={inventoryUsage} orders={inventoryOrders} onUpdateItems={onUpdateInventoryItems} onUpdateUsage={onUpdateInventoryUsage} onUpdateOrders={onUpdateInventoryOrders} employees={employees} />}
@@ -13854,6 +13856,8 @@ function App() {
 
   const deleteLeaveHistory = (id: string) => {
     setLeaveHistory((current) => current.filter((record) => record.id !== id))
+    // Delete directly from the DB too, so it can't reappear after a re-fetch.
+    supabase.from('leave_history').delete().eq('id', id).then(({ error }) => { if (error) console.error('[leave history delete]', error.message) })
   }
   const editLeaveHistory = (updated: LeaveHistoryRecord) => {
     setLeaveHistory((current) => current.map((record) => record.id === updated.id ? updated : record))

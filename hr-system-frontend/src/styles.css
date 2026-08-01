@@ -7451,13 +7451,13 @@ input::-webkit-credentials-auto-fill-button { visibility: hidden; pointer-events
 .lr-row { cursor: pointer; transition: background 100ms; }
 .lr-row:hover { background: #f8fafc; }
 .lr-row-open { background: #f0f4ff !important; }
-/* Alternating month row tints (leave requests) — two light theme colours */
-.leave-table tbody tr.lr-mrow-odd td  { background: #f3f0ff; }
-.leave-table tbody tr.lr-mrow-even td { background: #eef4fb; }
-.leave-table tbody tr.lr-row-open td  { background: #e5ddff !important; }
-[data-theme="dark"] .leave-table tbody tr.lr-mrow-odd td  { background: rgba(124,92,255,.10); }
-[data-theme="dark"] .leave-table tbody tr.lr-mrow-even td { background: rgba(96,165,250,.08); }
-[data-theme="dark"] .leave-table tbody tr.lr-row-open td  { background: rgba(124,92,255,.18) !important; }
+/* Alternating month row tints (leave requests) — two clearly visible theme colours */
+.leave-table tbody tr.lr-mrow-odd td  { background: #e0e7ff; }   /* indigo tint */
+.leave-table tbody tr.lr-mrow-even td { background: #d1fae5; }   /* teal/green tint */
+.leave-table tbody tr.lr-row-open td  { background: #c7d2fe !important; }
+[data-theme="dark"] .leave-table tbody tr.lr-mrow-odd td  { background: rgba(129,140,248,.20); }
+[data-theme="dark"] .leave-table tbody tr.lr-mrow-even td { background: rgba(52,211,153,.16); }
+[data-theme="dark"] .leave-table tbody tr.lr-row-open td  { background: rgba(129,140,248,.30) !important; }
 
 /* Inline status pill */
 .lr-status-pill {
