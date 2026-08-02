@@ -747,6 +747,14 @@ const CHAIRPERSON_OPTIONS = [
 ]
 
 const nationalities = ['MALDIVES', 'INDIA', 'BANGLADESH', 'SRI LANKA', 'NEPAL', 'FINLAND', 'MALAYSIA', 'PHILIPPINES', 'MYANMAR', 'PAKISTAN']
+// Broad country-name list for the Add Employee nationality suggestions (free text still allowed)
+const COUNTRY_NAMES = [
+  'MALDIVES','INDIA','BANGLADESH','SRI LANKA','NEPAL','PAKISTAN','PHILIPPINES','MYANMAR','MALAYSIA','FINLAND',
+  'AFGHANISTAN','AUSTRALIA','BHUTAN','BRAZIL','CANADA','CHINA','EGYPT','ETHIOPIA','FRANCE','GERMANY',
+  'GHANA','INDONESIA','IRAN','IRAQ','ITALY','JAPAN','JORDAN','KENYA','SOUTH KOREA','KUWAIT',
+  'LEBANON','MOROCCO','NIGERIA','OMAN','QATAR','RUSSIA','SAUDI ARABIA','SINGAPORE','SOUTH AFRICA','SPAIN',
+  'SUDAN','THAILAND','TURKEY','UGANDA','UKRAINE','UNITED ARAB EMIRATES','UNITED KINGDOM','UNITED STATES','VIETNAM','YEMEN',
+]
 
 const leaveTypeOptions: Array<{ code: LeaveTypeCode; label: string }> = [
   { code: 'AL', label: 'Annual Leave' },
@@ -1877,7 +1885,7 @@ function EmployeeFormModal({ form, mode, onClose, onSave, setForm }: {
             <label className="ef-span3"><span>Full Name</span><input disabled={mode === 'edit'} value={form.fullName} onChange={(e) => update('fullName', e.target.value)} placeholder="Full name as per passport / NIC" /></label>
             <label><span>Date of Birth</span><input type="date" value={form.dateOfBirth} onChange={(e) => update('dateOfBirth', e.target.value)} /></label>
             <label><span>Gender</span><select value={form.gender ?? ''} onChange={(e) => update('gender', e.target.value)}><option value="">— Select —</option><option>Male</option><option>Female</option></select></label>
-            <label><span>Nationality</span><select value={form.nationality} onChange={(e) => update('nationality', e.target.value)}>{nationalities.map((n) => <option key={n}>{n}</option>)}</select></label>
+            <label><span>Nationality</span><input list="emp-country-list" value={form.nationality} onChange={(e) => update('nationality', e.target.value.toUpperCase())} placeholder="Type country name…" autoComplete="off" /><datalist id="emp-country-list">{COUNTRY_NAMES.map((n) => <option key={n} value={n} />)}</datalist></label>
             <label className="ef-span2"><span>NIC / Passport No</span><input value={form.nicPassportNo} onChange={(e) => update('nicPassportNo', e.target.value)} placeholder="NIC or passport number" /></label>
             <label><span>Mobile No</span><input value={form.mobileNo} onChange={(e) => update('mobileNo', e.target.value)} placeholder="+960 xxx xxxx" /></label>
           </div>
@@ -8703,9 +8711,13 @@ function TerminationPage({
               <label className="search-field"><span>Search</span><input onChange={(e) => setCompletedSearch(e.target.value)} placeholder="Employee, ID, department…" type="text" value={completedSearch} /></label>
               <label><span>Section</span><select onChange={(e) => setCompletedDepartmentFilter(e.target.value)} value={completedDepartmentFilter}>{completedDepartments.map((d) => <option key={d}>{d}</option>)}</select></label>
               <label><span>Month</span><select onChange={(e) => setCompletedMonthFilter(e.target.value)} value={completedMonthFilter}><option value="All">All Months</option>{completedMonths.map((k) => <option key={k} value={k}>{formatMonthLabel(k)}</option>)}</select></label>
-              {isAdmin && <button className="primary-button vwh" type="button" onClick={downloadHistTemplate}>Template</button>}
-              {isAdmin && <button className="primary-button vwh" type="button" onClick={importHist}>Import</button>}
-              {isAdmin && <button className="primary-button vwh" type="button" onClick={exportHist}>Export</button>}
+              {isAdmin && (
+                <div className="term-hist-actions">
+                  <button className="primary-button vwh" type="button" onClick={downloadHistTemplate}>Template</button>
+                  <button className="primary-button vwh" type="button" onClick={importHist}>Import</button>
+                  <button className="primary-button vwh" type="button" onClick={exportHist}>Export</button>
+                </div>
+              )}
             </div>
             <div className="employee-table-shell compact-scroll termination-table-shell">
               <table className="data-table termination-table compact">
@@ -11020,13 +11032,21 @@ function VisitsSection({ records, employees, onUpdate, isReadOnly = false, isAdm
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('All')
   const [statusFilter, setStatusFilter] = useState('All')
+  const [monthFilter, setMonthFilter] = useState<'All' | string>(() => new Date().toISOString().slice(0, 7))
   const [editing, setEditing] = useState<VisitRecord | null>(null)
+
+  const visitMonths = useMemo(() => {
+    const keys = new Set(records.map((r) => monthKey(r.visitDate)).filter(Boolean))
+    keys.add(new Date().toISOString().slice(0, 7))
+    return Array.from(keys).sort().reverse()
+  }, [records])
 
   const filtered = useMemo(() => records.filter((r) =>
     `${r.employeeId} ${r.employeeName} ${r.department} ${r.nationality} ${r.nicPassportNo}`.toLowerCase().includes(search.toLowerCase())
     && (typeFilter === 'All' || r.visitType === typeFilter)
     && (statusFilter === 'All' || r.status === statusFilter)
-  ), [records, search, typeFilter, statusFilter])
+    && (monthFilter === 'All' || monthKey(r.visitDate) === monthFilter)
+  ).sort((a, b) => (a.visitDate || '').localeCompare(b.visitDate || '')), [records, search, typeFilter, statusFilter, monthFilter])
 
   const save = (r: VisitRecord) => { onUpdate((prev) => { const idx = prev.findIndex((x) => x.id === r.id); return idx >= 0 ? prev.map((x) => x.id === r.id ? r : x) : [...prev, r] }); setEditing(null) }
   const del = (id: string) => onUpdate((prev) => prev.filter((x) => x.id !== id))
@@ -11086,13 +11106,6 @@ function VisitsSection({ records, employees, onUpdate, isReadOnly = false, isAdm
     input.click()
   }
 
-  const removeAllVisits = () => {
-    if (records.length === 0) { alert('There are no visits to remove.'); return }
-    if (!window.confirm(`Remove ALL ${records.length} visit records? This clears the list so you can import a fresh set. This cannot be undone.`)) return
-    onUpdate(() => [])
-    supabase.from('visit_records').delete().not('id', 'is', null).then(({ error }) => { if (error) alert('Cleared in app, but database delete failed: ' + error.message) })
-  }
-
   return (
     <>
       <section className="employee-workspace">
@@ -11106,10 +11119,10 @@ function VisitsSection({ records, employees, onUpdate, isReadOnly = false, isAdm
             </select>
           </label>
           <label><span>Status</span><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="All">All Statuses</option><option>Scheduled</option><option>Completed</option><option>Cancelled</option></select></label>
+          <label><span>Month</span><select value={monthFilter} onChange={(e) => setMonthFilter(e.target.value)}><option value="All">All Months</option>{visitMonths.map((k) => <option key={k} value={k}>{formatMonthLabel(k)}</option>)}</select></label>
           {isAdmin && <button className="primary-button vwh" type="button" onClick={downloadVisitTemplate}>Template</button>}
           {isAdmin && <button className="primary-button vwh" type="button" onClick={importVisits}>Import</button>}
           {isAdmin && <button className="primary-button vwh" type="button" onClick={exportVisits}>Export</button>}
-          {isAdmin && <button className="danger-button vwh" type="button" onClick={removeAllVisits}>Remove All</button>}
           {!isReadOnly && <button className="primary-button vwh" type="button" onClick={() => setEditing(newVisit())}>+ Add Visit</button>}
         </div>
         <div className="employee-table-shell compact-scroll">

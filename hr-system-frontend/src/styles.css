@@ -2529,6 +2529,15 @@ button.step-pill:hover { filter: brightness(0.98); }
 .termination-topbar.leave-toolbar-has-btn {
   grid-template-columns: minmax(240px, 1fr) 180px 170px auto;
 }
+/* History (completed) toolbar: keep Template/Import/Export on one line */
+.term-hist-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  align-items: flex-end;
+  flex-wrap: nowrap;
+}
+.term-hist-actions .primary-button { flex-shrink: 0; white-space: nowrap; }
 
 .termination-search,
 .termination-filter {
