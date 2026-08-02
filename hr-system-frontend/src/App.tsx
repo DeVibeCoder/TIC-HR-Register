@@ -747,14 +747,6 @@ const CHAIRPERSON_OPTIONS = [
 ]
 
 const nationalities = ['MALDIVES', 'INDIA', 'BANGLADESH', 'SRI LANKA', 'NEPAL', 'FINLAND', 'MALAYSIA', 'PHILIPPINES', 'MYANMAR', 'PAKISTAN']
-// Broad country-name list for the Add Employee nationality suggestions (free text still allowed)
-const COUNTRY_NAMES = [
-  'MALDIVES','INDIA','BANGLADESH','SRI LANKA','NEPAL','PAKISTAN','PHILIPPINES','MYANMAR','MALAYSIA','FINLAND',
-  'AFGHANISTAN','AUSTRALIA','BHUTAN','BRAZIL','CANADA','CHINA','EGYPT','ETHIOPIA','FRANCE','GERMANY',
-  'GHANA','INDONESIA','IRAN','IRAQ','ITALY','JAPAN','JORDAN','KENYA','SOUTH KOREA','KUWAIT',
-  'LEBANON','MOROCCO','NIGERIA','OMAN','QATAR','RUSSIA','SAUDI ARABIA','SINGAPORE','SOUTH AFRICA','SPAIN',
-  'SUDAN','THAILAND','TURKEY','UGANDA','UKRAINE','UNITED ARAB EMIRATES','UNITED KINGDOM','UNITED STATES','VIETNAM','YEMEN',
-]
 
 const leaveTypeOptions: Array<{ code: LeaveTypeCode; label: string }> = [
   { code: 'AL', label: 'Annual Leave' },
@@ -1885,7 +1877,7 @@ function EmployeeFormModal({ form, mode, onClose, onSave, setForm }: {
             <label className="ef-span3"><span>Full Name</span><input disabled={mode === 'edit'} value={form.fullName} onChange={(e) => update('fullName', e.target.value)} placeholder="Full name as per passport / NIC" /></label>
             <label><span>Date of Birth</span><input type="date" value={form.dateOfBirth} onChange={(e) => update('dateOfBirth', e.target.value)} /></label>
             <label><span>Gender</span><select value={form.gender ?? ''} onChange={(e) => update('gender', e.target.value)}><option value="">— Select —</option><option>Male</option><option>Female</option></select></label>
-            <label><span>Nationality</span><input list="emp-country-list" value={form.nationality} onChange={(e) => update('nationality', e.target.value.toUpperCase())} placeholder="Type country name…" autoComplete="off" /><datalist id="emp-country-list">{COUNTRY_NAMES.map((n) => <option key={n} value={n} />)}</datalist></label>
+            <label><span>Nationality</span><input value={form.nationality} onChange={(e) => update('nationality', e.target.value.toUpperCase())} placeholder="Type country name…" autoComplete="off" /></label>
             <label className="ef-span2"><span>NIC / Passport No</span><input value={form.nicPassportNo} onChange={(e) => update('nicPassportNo', e.target.value)} placeholder="NIC or passport number" /></label>
             <label><span>Mobile No</span><input value={form.mobileNo} onChange={(e) => update('mobileNo', e.target.value)} placeholder="+960 xxx xxxx" /></label>
           </div>
