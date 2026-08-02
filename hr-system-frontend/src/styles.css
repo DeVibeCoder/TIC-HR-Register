@@ -5557,6 +5557,34 @@ input::-webkit-credentials-auto-fill-button { visibility: hidden; pointer-events
   gap: 12px 14px;
 }
 
+/* Nationality custom autocomplete (matches shown only while typing) */
+.ef-nat-field { position: relative; }
+.ef-nat-suggest {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  margin-top: 3px;
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 9px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14);
+  overflow: hidden;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.ef-nat-opt {
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  color: #1e293b;
+  cursor: pointer;
+}
+.ef-nat-opt:hover { background: #ede9fe; color: #5b21b6; }
+[data-theme="dark"] .ef-nat-suggest { background: #1e1b2e; border-color: rgba(255,255,255,.12); }
+[data-theme="dark"] .ef-nat-opt { color: #e2e8f0; }
+[data-theme="dark"] .ef-nat-opt:hover { background: rgba(124,92,255,.22); color: #fff; }
+
 .emp-form-grid label {
   display: flex;
   flex-direction: column;

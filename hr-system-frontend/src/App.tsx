@@ -1868,6 +1868,18 @@ function EmployeeFormModal({ form, mode, onClose, onSave, setForm }: {
   }
   const wpDisabled = form.nationality === 'MALDIVES'
 
+  // Custom nationality autocomplete — only shows matches while typing (no
+  // full list, no dropdown button).
+  const [natOpen, setNatOpen] = useState(false)
+  const natMatches = useMemo(() => {
+    const q = (form.nationality ?? '').trim().toUpperCase()
+    if (!q) return []
+    return COUNTRY_NAMES
+      .filter((c) => c.includes(q) && c !== q)
+      .sort((a, b) => (a.startsWith(q) ? 0 : 1) - (b.startsWith(q) ? 0 : 1))
+      .slice(0, 8)
+  }, [form.nationality])
+
   return (
     <div className="modal-backdrop" role="presentation">
       <section className="registration-modal emp-form-modal" role="dialog" aria-modal="true" aria-labelledby="registration-title">
@@ -1885,7 +1897,23 @@ function EmployeeFormModal({ form, mode, onClose, onSave, setForm }: {
             <label className="ef-span3"><span>Full Name</span><input disabled={mode === 'edit'} value={form.fullName} onChange={(e) => update('fullName', e.target.value)} placeholder="Full name as per passport / NIC" /></label>
             <label><span>Date of Birth</span><input type="date" value={form.dateOfBirth} onChange={(e) => update('dateOfBirth', e.target.value)} /></label>
             <label><span>Gender</span><select value={form.gender ?? ''} onChange={(e) => update('gender', e.target.value)}><option value="">— Select —</option><option>Male</option><option>Female</option></select></label>
-            <label><span>Nationality</span><input list="emp-country-list" value={form.nationality} onChange={(e) => update('nationality', e.target.value.toUpperCase())} placeholder="Type country name…" autoComplete="off" /><datalist id="emp-country-list">{COUNTRY_NAMES.map((n) => <option key={n} value={n} />)}</datalist></label>
+            <label className="ef-nat-field"><span>Nationality</span>
+              <input
+                value={form.nationality}
+                onChange={(e) => { update('nationality', e.target.value.toUpperCase()); setNatOpen(true) }}
+                onFocus={() => setNatOpen(true)}
+                onBlur={() => setTimeout(() => setNatOpen(false), 150)}
+                placeholder="Type country name…"
+                autoComplete="off"
+              />
+              {natOpen && natMatches.length > 0 && (
+                <div className="ef-nat-suggest">
+                  {natMatches.map((c) => (
+                    <div key={c} className="ef-nat-opt" onMouseDown={() => { update('nationality', c); setNatOpen(false) }}>{c}</div>
+                  ))}
+                </div>
+              )}
+            </label>
             <label className="ef-span2"><span>NIC / Passport No</span><input value={form.nicPassportNo} onChange={(e) => update('nicPassportNo', e.target.value)} placeholder="NIC or passport number" /></label>
             <label><span>Mobile No</span><input value={form.mobileNo} onChange={(e) => update('mobileNo', e.target.value)} placeholder="+960 xxx xxxx" /></label>
           </div>
