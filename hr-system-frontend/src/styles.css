@@ -2200,6 +2200,15 @@ h2 { margin: 0; color: #111; font-size: 0.95rem; line-height: 1.2; }
 .training-table td:last-child .ind-actions { justify-content: center; }
 .leave-workspace .status-badge { min-height: 24px; font-size: 0.66rem; padding: 0 10px; }
 
+/* Induction list table — gradient header row, black & white body */
+.induction-table-bw thead th {
+  background: linear-gradient(135deg, #111827 0%, #374151 100%) !important;
+  color: #fff !important;
+  border-color: #1f2937 !important;
+}
+.induction-table-bw tbody td { color: #111827; }
+[data-theme="dark"] .induction-table-bw tbody td { color: var(--ink); }
+
 .leave-section-tabs {
   display: flex;
   gap: 6px;

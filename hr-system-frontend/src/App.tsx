@@ -180,9 +180,26 @@ type InductionParticipant = {
   employeeId: string
   name: string
   nicPassportNo: string
+  designation?: string // job title
   section: string      // sub-unit within the org (HR, Stores, Operations…)
   department: string   // organisation / company name
 }
+
+// Fixed induction summary topics — shown on every induction document and
+// pre-filled in the Add Induction form's "topics covered".
+const INDUCTION_TOPICS = [
+  'COMPANY AND LEADERSHIP',
+  'CODE OF CONDUCT',
+  'EMPLOYMENT',
+  'LEAVE',
+  'RESIGNATION & TERMINATION',
+  'DAILY OPERATION',
+  'HOUSEKEEPING',
+  'MESS HALL',
+  'LOSS PREVENTION',
+  'DIGITAL TOOLS',
+  'MEET THE TEAM',
+]
 
 type InductionRecord = {
   id: string
@@ -4848,7 +4865,7 @@ function InductionModal({ employees, record, onClose, onSave }: {
   const [remarks, setRemarks] = useState(record.remarks)
 
   // Start with at least one blank row when creating new, else existing participants
-  const blankRow = (): InductionParticipant => ({ employeeId: '', name: '', nicPassportNo: '', section: '', department: '' })
+  const blankRow = (): InductionParticipant => ({ employeeId: '', name: '', nicPassportNo: '', designation: '', section: '', department: '' })
   const [participants, setParticipants] = useState<InductionParticipant[]>(
     record.participants.length > 0 ? record.participants : [blankRow()]
   )
@@ -4975,9 +4992,10 @@ function InductionModal({ employees, record, onClose, onSave }: {
                   <th style={{ width: 30 }}>#</th>
                   <th style={{ width: 76 }}>Emp ID</th>
                   <th>Full Name</th>
-                  <th style={{ width: 110 }}>NIC / PP No</th>
-                  <th style={{ width: 116 }}>Section</th>
-                  <th style={{ width: 140 }}>Department</th>
+                  <th style={{ width: 100 }}>NIC / PP No</th>
+                  <th style={{ width: 120 }}>Designation</th>
+                  <th style={{ width: 110 }}>Section</th>
+                  <th style={{ width: 130 }}>Department</th>
                   <th style={{ width: 30 }}></th>
                 </tr>
               </thead>
@@ -4988,6 +5006,7 @@ function InductionModal({ employees, record, onClose, onSave }: {
                     <td><input className="cell-input" value={p.employeeId} onChange={(e) => updateRow(i, 'employeeId', e.target.value)} placeholder="ID" /></td>
                     <td><input className="cell-input cell-input-name" value={p.name} onChange={(e) => updateRow(i, 'name', e.target.value)} placeholder="Full name" /></td>
                     <td><input className="cell-input" value={p.nicPassportNo} onChange={(e) => updateRow(i, 'nicPassportNo', e.target.value)} placeholder="NIC or PP" /></td>
+                    <td><input className="cell-input" value={p.designation ?? ''} onChange={(e) => updateRow(i, 'designation', e.target.value)} placeholder="Designation" /></td>
                     <td><input className="cell-input" value={p.section} onChange={(e) => updateRow(i, 'section', e.target.value)} placeholder="e.g. HR, Stores" /></td>
                     <td><input className="cell-input" value={p.department} onChange={(e) => updateRow(i, 'department', e.target.value)} placeholder="e.g. Thilafushi Industrial Complex" /></td>
                     <td>
@@ -5188,10 +5207,11 @@ function InductionParticipantsModal({ record, onClose }: { record: InductionReco
           <colgroup>
             <col style={{ width: '4%' }} />
             <col style={{ width: '10%' }} />
-            <col style={{ width: '26%' }} />
+            <col style={{ width: '24%' }} />
+            <col style={{ width: '14%' }} />
             <col style={{ width: '16%' }} />
             <col style={{ width: '14%' }} />
-            <col style={{ width: '30%' }} />
+            <col style={{ width: '18%' }} />
           </colgroup>
           <thead>
             <tr>
@@ -5199,19 +5219,21 @@ function InductionParticipantsModal({ record, onClose }: { record: InductionReco
               <th style={{ textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>Emp ID</th>
               <th style={{ textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>Full Name</th>
               <th style={{ textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>NIC / PP No</th>
+              <th style={{ textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>Designation</th>
               <th style={{ textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>Section</th>
               <th style={{ textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>Department</th>
             </tr>
           </thead>
           <tbody>
             {record.participants.length === 0 ? (
-              <tr><td colSpan={6} className="empty-row">No participants recorded for this session.</td></tr>
+              <tr><td colSpan={7} className="empty-row">No participants recorded for this session.</td></tr>
             ) : record.participants.map((p, i) => (
               <tr key={i}>
                 <td style={{ textAlign: 'center' }}>{i + 1}</td>
                 <td>{p.employeeId || '—'}</td>
                 <td>{p.name}</td>
                 <td>{p.nicPassportNo || '—'}</td>
+                <td>{p.designation || '—'}</td>
                 <td>{p.section || '—'}</td>
                 <td style={{ textTransform: 'uppercase' }}>{p.department || '—'}</td>
               </tr>
@@ -5237,23 +5259,24 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
   const esc = (s: string) =>
     s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
+  const empDir = new Map(employees.map((e) => [e.employeeId, e]))
+  const pDesig = (p: InductionParticipant) => p.designation || empDir.get(p.employeeId)?.designation || ''
   const filledRows = record.participants.map((p, i) => `
     <tr>
       <td class="tc">${i + 1}</td>
       <td>${esc(p.employeeId || '')}</td>
       <td>${esc(p.name)}</td>
       <td>${esc(p.nicPassportNo || '')}</td>
+      <td>${esc(pDesig(p))}</td>
       <td>${esc(p.section || '')}</td>
       <td style="text-transform:uppercase">${esc(p.department || '')}</td>
-      <td class="sig-cell"></td>
     </tr>`).join('')
 
   const emptyCount = Math.max(0, 8 - record.participants.length)
   const emptyRows = Array.from({ length: emptyCount }, (_, i) => `
     <tr>
       <td class="tc">${record.participants.length + i + 1}</td>
-      <td></td><td></td><td></td><td></td><td></td>
-      <td class="sig-cell"></td>
+      <td></td><td></td><td></td><td></td><td></td><td></td>
     </tr>`).join('')
 
   const defaultContent = `
@@ -5296,81 +5319,92 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
     .a4-wrap { max-width: 210mm; margin: 24px auto; display: flex; flex-direction: column; gap: 20px; padding-bottom: 40px; }
     .a4-page { background: #fff; box-shadow: 0 4px 20px rgba(30,27,75,0.16); min-height: 297mm; overflow: hidden; display: flex; flex-direction: column; }
 
-    /* ══ HEADER BANNER — white bg, colored text ══ */
+    /* ══ HEADER BANNER — dark gradient, keeps colour (only coloured area) ══ */
     .doc-hdr {
-      background: #fff;
-      padding: 12pt 20pt 10pt;
+      background: linear-gradient(135deg, #1e1b4b 0%, #4338ca 100%);
+      padding: 12pt 22pt 11pt;
       display: flex; justify-content: space-between; align-items: center;
-      border-bottom: 2.5pt solid #4f46e5;
     }
-    .hdr-brand { font-size: 24pt; font-weight: 900; color: #3730a3; letter-spacing: 5px; line-height: 1; font-family: Arial, sans-serif; }
-    .hdr-co { font-size: 7pt; color: #6b7280; letter-spacing: 0.4px; margin-top: 3pt; }
+    .hdr-brand { font-size: 24pt; font-weight: 900; color: #fff; letter-spacing: 5px; line-height: 1; font-family: Arial, sans-serif; }
+    .hdr-co { font-size: 7pt; color: rgba(255,255,255,0.75); letter-spacing: 0.4px; margin-top: 3pt; }
     .hdr-right { text-align: right; }
-    .hdr-dept-lbl { font-size: 7pt; color: #4f46e5; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; }
-    .hdr-doc-title { font-size: 13pt; font-weight: 900; color: #1e1b4b; letter-spacing: 1px; margin-top: 2pt; font-family: Arial, sans-serif; }
+    .hdr-dept-lbl { font-size: 9pt; color: #fff; letter-spacing: 1px; font-weight: 800; }
+    .hdr-doc-title { font-size: 12pt; font-weight: 900; color: rgba(255,255,255,0.85); letter-spacing: 1px; margin-top: 3pt; font-family: Arial, sans-serif; }
     .hdr-accent { height: 0; }
 
-    /* ══ PAGE BODY ══ */
-    .page-body { padding: 12pt 20pt 16pt; flex: 1; }
+    /* ══ PAGE BODY (wider) ══ */
+    .page-body { padding: 14pt 16pt 16pt; flex: 1; }
 
-    /* ── Info table ── */
-    .info-tbl { width: 100%; border-collapse: collapse; margin-bottom: 12pt; }
-    .info-tbl td { padding: 4pt 8pt; font-size: 8pt; border: 0.75pt solid #d1d5db; vertical-align: middle; }
-    .info-tbl .lbl {
-      font-weight: 700; color: #4338ca; background: #fff;
-      width: 100pt; white-space: nowrap;
+    /* ── Info table — gradient header row, B&W body ── */
+    .info-tbl { width: 100%; border-collapse: collapse; margin-bottom: 14pt; table-layout: fixed; }
+    .info-tbl thead th {
+      background: linear-gradient(135deg, #111827 0%, #374151 100%);
+      color: #fff; padding: 5pt 6pt; font-size: 6.8pt; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.4px; text-align: left;
+      border: 0.75pt solid #111827;
     }
+    .info-tbl tbody td { padding: 5pt 6pt; font-size: 8pt; border: 0.75pt solid #cbd5e1; vertical-align: middle; color: #111; }
     .status-badge {
-      display: inline-block; color: #166534; border: 1pt solid #166534;
+      display: inline-block; color: #111; border: 1pt solid #4b5563;
       padding: 1pt 7pt; border-radius: 10pt; font-weight: 700; font-size: 7.5pt;
     }
 
-    /* ── Section heading bar — no fill ── */
+    /* ── Section heading bar — B&W ── */
     .sec-hdr {
-      color: #4338ca; background: #fff;
-      padding: 5pt 0 3pt; font-size: 8pt; font-weight: 800;
-      text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0;
-      border-bottom: 1.5pt solid #4338ca;
+      color: #111; background: #fff;
+      padding: 5pt 0 3pt; font-size: 8.5pt; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 2px; margin-bottom: 6pt;
+      border-bottom: 1.5pt solid #111;
     }
 
-    /* ── Participants table ── */
+    /* ── Participants table — gradient header, B&W body ── */
     table.p-tbl { width: 100%; border-collapse: collapse; margin-bottom: 12pt; font-size: 7.5pt; table-layout: fixed; }
     .p-tbl thead th {
-      background: #fff; color: #1e1b4b;
-      padding: 4.5pt 5pt; text-align: left; font-weight: 800; font-size: 7.5pt;
-      border-top: 1.5pt solid #4338ca; border-bottom: 1.5pt solid #4338ca;
-      border-left: 0.75pt solid #d1d5db; border-right: 0.75pt solid #d1d5db;
-      text-transform: uppercase; letter-spacing: 0.5px;
+      background: linear-gradient(135deg, #111827 0%, #374151 100%); color: #fff;
+      padding: 4.5pt 5pt; text-align: left; font-weight: 700; font-size: 7pt;
+      border: 0.75pt solid #111827;
+      text-transform: uppercase; letter-spacing: 0.4px;
     }
     .p-tbl thead th.tc { text-align: center; }
-    .p-tbl tbody td { border: 0.75pt solid #d1d5db; padding: 3.5pt 5pt; vertical-align: middle; }
+    .p-tbl tbody td { border: 0.75pt solid #cbd5e1; padding: 3.5pt 5pt; vertical-align: middle; color: #111; }
+    .p-tbl tbody tr:nth-child(even) td { background: #f8fafc; }
     .p-tbl .tc { text-align: center; }
-    .p-tbl .sig-cell { height: 18pt; }
 
     /* ── Signature block — only Conducted By ── */
     .sig-row { display: flex; gap: 14pt; margin-top: 14pt; }
-    .sig-block { flex: 1; max-width: 200pt; border: 0.75pt solid #9ca3af; border-top: 2pt solid #4338ca; }
+    .sig-block { flex: 1; max-width: 220pt; border: 0.75pt solid #9ca3af; border-top: 2pt solid #111; }
     .sig-space { height: 46pt; }
-    .sig-info { padding: 4pt 8pt; border-top: 0.75pt solid #d1d5db; }
-    .sig-role { font-size: 7pt; color: #4338ca; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2pt; }
-    .sig-person { font-weight: 700; font-size: 8.5pt; color: #1e1b4b; text-transform: uppercase; }
+    .sig-info { padding: 4pt 8pt; border-top: 0.75pt solid #cbd5e1; }
+    .sig-role { font-size: 7pt; color: #374151; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2pt; }
+    .sig-person { font-weight: 700; font-size: 8.5pt; color: #111; text-transform: uppercase; }
     .sig-desig { font-size: 7.5pt; color: #374151; margin-top: 1pt; }
 
-    /* ══ PAGE 2 ══ */
+    /* ══ PAGE 2 — summary / areas covered ══ */
     .p2-meta-bar {
       display: flex; gap: 24pt;
-      border-left: 2.5pt solid #4338ca; border: 0.75pt solid #d1d5db; border-left-width: 2.5pt;
-      padding: 5pt 10pt; margin-bottom: 12pt; font-size: 8pt;
+      border: 0.75pt solid #cbd5e1; border-left: 2.5pt solid #111;
+      padding: 5pt 10pt; margin-bottom: 14pt; font-size: 8pt;
     }
     .summary-hdg {
-      font-size: 9pt; font-weight: 800; color: #4338ca;
-      border-bottom: 1.5pt solid #4338ca; padding-bottom: 4pt; margin-bottom: 10pt;
+      font-size: 10pt; font-weight: 800; color: #111;
+      border-bottom: 1.5pt solid #111; padding-bottom: 4pt; margin-bottom: 6pt;
+    }
+    .summary-intro { font-size: 8.5pt; color: #374151; margin-bottom: 10pt; }
+    .topics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6pt 20pt; }
+    .topic-item {
+      display: flex; align-items: center; gap: 8pt;
+      border: 0.75pt solid #cbd5e1; border-left: 2.5pt solid #111;
+      padding: 6pt 10pt; font-size: 8.5pt; font-weight: 700; color: #111;
+    }
+    .topic-num {
+      display: inline-grid; place-items: center; width: 15pt; height: 15pt; flex-shrink: 0;
+      background: #111; color: #fff; border-radius: 50%; font-size: 7pt; font-weight: 800;
     }
     .content-text { font-size: 8.5pt; line-height: 1.65; color: #1a1a2e; }
     .content-text p { margin: 0 0 6pt; }
     .remarks-box {
-      margin-top: 12pt; padding: 6pt 10pt;
-      border-left: 2.5pt solid #4338ca; border: 0.75pt solid #d1d5db; border-left-width: 2.5pt; font-size: 8pt;
+      margin-top: 14pt; padding: 6pt 10pt;
+      border: 0.75pt solid #cbd5e1; border-left: 2.5pt solid #111; font-size: 8pt;
     }
 
     /* ── Print overrides ── */
@@ -5401,7 +5435,7 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
         <div class="hdr-co">Thilafushi Industrial Complex Pvt. Ltd. &nbsp;·&nbsp; Maldives</div>
       </div>
       <div class="hdr-right">
-        <div class="hdr-dept-lbl">Human Resources</div>
+        <div class="hdr-dept-lbl">VHPL | Thilafushi Industrial Complex</div>
         <div class="hdr-doc-title">STAFF INDUCTION</div>
       </div>
     </div>
@@ -5409,26 +5443,24 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
     <div class="page-body">
 
       <table class="info-tbl">
+        <thead>
+          <tr>
+            <th>Ref No</th>
+            <th>Date</th>
+            <th>Department</th>
+            <th>Conducted By</th>
+            <th>Status</th>
+            <th>No. of Participants</th>
+          </tr>
+        </thead>
         <tbody>
           <tr>
-            <td class="lbl">Reference No.</td>
             <td>${esc(fullRef)}</td>
-            <td class="lbl">Status</td>
-            <td><span class="status-badge">${esc(record.status)}</span></td>
-          </tr>
-          <tr>
-            <td class="lbl">Date</td>
             <td>${dateStr}</td>
-            <td class="lbl">No. of Participants</td>
+            <td style="text-transform:uppercase">Thilafushi Industrial Complex</td>
+            <td>${esc(conductedByDisplay)}</td>
+            <td><span class="status-badge">${esc(record.status)}</span></td>
             <td>${countStr}</td>
-          </tr>
-          <tr>
-            <td class="lbl">Department</td>
-            <td colspan="3" style="text-transform:uppercase">Thilafushi Industrial Complex</td>
-          </tr>
-          <tr>
-            <td class="lbl">Conducted By</td>
-            <td colspan="3">${esc(conductedByDisplay)}</td>
           </tr>
         </tbody>
       </table>
@@ -5437,13 +5469,13 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
       <table class="p-tbl">
         <thead>
           <tr>
-            <th style="width:20pt" class="tc">#</th>
-            <th style="width:50pt">Emp ID</th>
+            <th style="width:18pt" class="tc">#</th>
+            <th style="width:48pt">Emp ID</th>
             <th>Full Name</th>
-            <th style="width:78pt">NIC / Passport</th>
-            <th style="width:66pt">Section</th>
-            <th style="width:100pt">Department</th>
-            <th style="width:58pt">Signature</th>
+            <th style="width:72pt">NIC / Passport</th>
+            <th style="width:92pt">Designation</th>
+            <th style="width:78pt">Section</th>
+            <th style="width:96pt">Department</th>
           </tr>
         </thead>
         <tbody>
@@ -5474,7 +5506,7 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
         <div class="hdr-co">Thilafushi Industrial Complex Pvt. Ltd. &nbsp;·&nbsp; Maldives</div>
       </div>
       <div class="hdr-right">
-        <div class="hdr-dept-lbl">Human Resources</div>
+        <div class="hdr-dept-lbl">VHPL | Thilafushi Industrial Complex</div>
         <div class="hdr-doc-title">STAFF INDUCTION</div>
       </div>
     </div>
@@ -5487,8 +5519,13 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
       </div>
 
       <div class="summary-hdg">Summary</div>
-      <div class="content-text">${contentHtml}</div>
+      <div class="summary-intro">The below areas are covered in the induction:</div>
+      <div class="topics-grid">
+        ${INDUCTION_TOPICS.map((t, i) => `<div class="topic-item"><span class="topic-num">${i + 1}</span>${esc(t)}</div>`).join('')}
+      </div>
 
+      ${record.inductionContent && record.inductionContent.trim() && !INDUCTION_TOPICS.every(t => record.inductionContent.includes(t))
+        ? `<div class="remarks-box"><strong>Additional notes:</strong><br>${contentHtml}</div>` : ''}
       ${record.remarks ? `<div class="remarks-box"><strong>Remarks:</strong>&nbsp; ${esc(record.remarks)}</div>` : ''}
 
     </div>
@@ -6112,15 +6149,6 @@ function PersonalFilesSection({ records, onUpdate, employees = [], isAdmin = fal
       .then(({ error }) => { if (error) console.error('[PF delete]', error.message) })
   }
 
-  const removeAllFiles = async () => {
-    if (records.length === 0) { alert('There are no personal files to remove.'); return }
-    const ok = await confirmDelete(`Remove ALL ${records.length} personal files? This clears the entire list and cannot be undone.`)
-    if (!ok) return
-    onUpdate(() => [])
-    const { error } = await supabase.from('personal_files').delete().not('file_no', 'is', null)
-    if (error) alert(`Cleared in app, but database delete failed: ${error.message}`)
-    else alert('All personal files have been removed.')
-  }
 
   const downloadPfTemplate = () => downloadCsv('personal-files-template.csv', [
     ['PF NO', 'EMP ID', 'NAME', 'SECTION', 'DESIGNATION', 'PP NO', 'WP NO', 'DOJ', 'STATUS', 'COC', 'JD', 'EA'],
@@ -6283,7 +6311,6 @@ function PersonalFilesSection({ records, onUpdate, employees = [], isAdmin = fal
             {isAdmin && <>
               <button className="primary-button vwh" type="button" onClick={downloadPfTemplate} title="Download CSV template">Template</button>
               <button className="primary-button vwh" type="button" onClick={importPfCsv} title="Import from CSV">Import</button>
-              <button className="danger-button vwh" type="button" onClick={removeAllFiles} title="Remove all personal files">Remove All</button>
             </>}
             <button className="primary-button vwh" type="button" onClick={() => { setPickerSearch(''); setShowPicker(true) }}>+ Add Staff</button>
           </div>
@@ -6400,12 +6427,13 @@ function PersonalFilesSection({ records, onUpdate, employees = [], isAdmin = fal
   )
 }
 
-function InductionSection({ employees, records, onUpdate, isReadOnly = false }: {
+function InductionSection({ employees, records, onUpdate, isReadOnly = false, isAdmin = false }: {
   employees: Employee[]
   records: InductionRecord[]
   onUpdate: (fn: (prev: InductionRecord[]) => InductionRecord[]) => void
   onBack?: () => void
   isReadOnly?: boolean
+  isAdmin?: boolean
 }) {
   const [search, setSearch] = useState('')
   const [editing, setEditing] = useState<InductionRecord | null>(null)
@@ -6427,6 +6455,52 @@ function InductionSection({ employees, records, onUpdate, isReadOnly = false }: 
 
   const deleteRecord = (id: string) => onUpdate((prev) => prev.filter((r) => r.id !== id))
 
+  // ── Induction template / export / import (one row per participant) ──────
+  const IND_HEADERS = ['REF NO', 'DATE', 'CONDUCTED BY', 'STATUS', 'EMP ID', 'NAME', 'NIC/PP NO', 'DESIGNATION', 'SECTION', 'DEPARTMENT']
+  const downloadIndTemplate = () => downloadCsv('induction-template.csv', [
+    IND_HEADERS,
+    ['001', '2026-07-01', 'HR OFFICER', 'Completed', '12345', 'EXAMPLE EMPLOYEE', 'A1234567', 'STOREKEEPER', 'STORES', 'THILAFUSHI INDUSTRIAL COMPLEX'],
+  ])
+  const exportInd = () => downloadCsv('induction-sessions.csv', [
+    IND_HEADERS,
+    ...records.flatMap((r) => (r.participants.length ? r.participants : [{ employeeId: '', name: '', nicPassportNo: '', designation: '', section: '', department: '' } as InductionParticipant])
+      .map((p) => [r.refNo, r.inductionDate, r.conductedBy, r.status, p.employeeId, p.name, p.nicPassportNo, p.designation ?? '', p.section, p.department])),
+  ])
+  const importInd = () => {
+    const input = document.createElement('input'); input.type = 'file'; input.accept = '.csv,text/csv'
+    input.onchange = async () => {
+      const file = input.files?.[0]; if (!file) return
+      const csvRows = parseCsv(await file.text()); if (csvRows.length < 2) return
+      const hdr = csvRows[0].map(h => h.toLowerCase().replace(/[^a-z0-9]/g, ''))
+      const ci = (terms: string[]) => terms.map(t => hdr.indexOf(t)).find(i => i >= 0) ?? -1
+      const g = (row: string[], idx: number) => idx >= 0 ? (row[idx] ?? '').trim() : ''
+      const iRef=ci(['refno','ref']),iDate=ci(['date','inductiondate']),iCond=ci(['conductedby']),iStat=ci(['status']),iEmp=ci(['empid','employeeid']),iName=ci(['name']),iNic=ci(['nicppno','nicpp','passportno']),iDesig=ci(['designation']),iSec=ci(['section']),iDept=ci(['department'])
+      const empMap = new Map(employees.map(e => [e.employeeId, e]))
+      const bySession = new Map<string, InductionRecord>()
+      csvRows.slice(1).filter(r => r.some(c => c.trim())).forEach((r) => {
+        const refNo = g(r, iRef) || '001'
+        const date = normImportDate(g(r, iDate)) || new Date().toISOString().slice(0, 10)
+        const key = `${refNo}|${date}`
+        if (!bySession.has(key)) {
+          const status = (['Completed','Pending','Scheduled'].find(s => s.toLowerCase() === g(r, iStat).toLowerCase()) ?? 'Completed') as InductionRecord['status']
+          bySession.set(key, { id: `IND-IMP-${Date.now()}-${bySession.size}`, refNo, inductionDate: date, conductedBy: g(r, iCond), conductedByEmpId: undefined, participants: [], inductionContent: INDUCTION_TOPICS.join('\n'), status, remarks: '' })
+        }
+        const empId = g(r, iEmp); const emp = empMap.get(empId)
+        if (empId || g(r, iName)) {
+          bySession.get(key)!.participants.push({
+            employeeId: empId, name: g(r, iName) || emp?.fullName || '', nicPassportNo: g(r, iNic) || emp?.nicPassportNo || '',
+            designation: g(r, iDesig) || emp?.designation || '', section: g(r, iSec) || emp?.department || '', department: g(r, iDept) || 'THILAFUSHI INDUSTRIAL COMPLEX',
+          })
+        }
+      })
+      const imported = Array.from(bySession.values())
+      if (imported.length === 0) { alert('No valid rows found in the CSV.'); return }
+      onUpdate(prev => [...imported, ...prev])
+      alert(`✓ Import successful — ${imported.length} induction session(s) added.`)
+    }
+    input.click()
+  }
+
   const nextRefNo = (): string => {
     const currentYear = new Date().getFullYear().toString()
     const thisYearRecords = records.filter((r) => r.inductionDate.startsWith(currentYear))
@@ -6444,7 +6518,7 @@ function InductionSection({ employees, records, onUpdate, isReadOnly = false }: 
     conductedBy: '',
     conductedByEmpId: undefined,
     participants: [],
-    inductionContent: '',
+    inductionContent: INDUCTION_TOPICS.join('\n'),
     status: 'Completed',
     remarks: '',
   })
@@ -6457,23 +6531,27 @@ function InductionSection({ employees, records, onUpdate, isReadOnly = false }: 
             <span>Search</span>
             <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Ref no, conducted by, participant name" />
           </label>
+          {isAdmin && <button className="primary-button vwh" onClick={downloadIndTemplate} type="button">Template</button>}
+          {isAdmin && <button className="primary-button vwh" onClick={importInd} type="button">Import</button>}
+          <button className="primary-button vwh" onClick={exportInd} type="button">Export</button>
           {!isReadOnly && <button className="primary-button vwh" onClick={() => setEditing(newRecord())} type="button">Add Session</button>}
         </div>
         <div className="employee-table-shell compact-scroll">
-          <table className="data-table induction-table">
+          <table className="data-table induction-table induction-table-bw">
             <thead>
               <tr>
                 <th>Ref No</th>
                 <th>Date</th>
                 <th>Conducted By</th>
-                <th>Participants</th>
+                <th>Status</th>
+                <th>No. of Participants</th>
                 <th>Remarks</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {rows.length === 0 ? (
-                <tr><td colSpan={6} className="empty-row">No induction sessions found.</td></tr>
+                <tr><td colSpan={7} className="empty-row">No induction sessions found.</td></tr>
               ) : rows.map((record) => (
                 <tr key={record.id}>
                   <td>
@@ -6483,10 +6561,11 @@ function InductionSection({ employees, records, onUpdate, isReadOnly = false }: 
                   </td>
                   <td>{record.inductionDate ? formatDateDisplay(record.inductionDate) : '—'}</td>
                   <td>{record.conductedBy || '—'}</td>
-                  <td>
+                  <td><span className={`status-badge ${record.status === 'Completed' ? 'completed' : record.status === 'Scheduled' ? 'open' : 'under-review'}`}>{record.status}</span></td>
+                  <td style={{ textAlign: 'center' }}>
                     {record.participants.length > 0 ? (
                       <button className="participants-count-btn" onClick={() => setViewingParticipants(record)} type="button">
-                        {record.participants.length} participant{record.participants.length !== 1 ? 's' : ''}
+                        {record.participants.length}
                       </button>
                     ) : (
                       <span className="no-participants-text">—</span>
@@ -10308,7 +10387,7 @@ function OperationsPage({ employees, completedTerminations, activeLeaves, isHOD 
         </button>
       </div>
       {activeSection === 'files'     && <PersonalFilesSection records={personalFiles} onUpdate={setPersonalFiles} employees={employees} isAdmin={userRole === 'Admin'} />}
-      {activeSection === 'induction' && <InductionSection employees={employees} records={inductionRecords} onUpdate={setInductionRecords} onBack={() => {}} isReadOnly={userRole === 'Executive'} />}
+      {activeSection === 'induction' && <InductionSection employees={employees} records={inductionRecords} onUpdate={setInductionRecords} onBack={() => {}} isReadOnly={userRole === 'Executive'} isAdmin={userRole === 'Admin'} />}
       {activeSection === 'training'  && <TrainingSection records={trainingRecords} employees={employees} onUpdate={setTrainingRecords} onBack={() => {}} isReadOnly={userRole === 'Executive'} />}
       {activeSection === 'bank'      && <BankAccountSection employees={employees} records={bankAccountRecords} onUpdate={setBankAccountRecords} onBack={() => {}} />}
       {activeSection === 'meetings'  && <MeetingsSection records={(isHOD || userRole === 'Executive' || userRole === 'HR') ? meetingRecords.filter(r => r.status === 'Final') : meetingRecords} onUpdate={setMeetingRecords} employees={employees} activeLeaves={activeLeaves} isReadOnly={userRole === 'Executive' || userRole === 'HR'} />}
