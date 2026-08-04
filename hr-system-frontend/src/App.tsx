@@ -4015,7 +4015,7 @@ function MedicalLeaveSection({ records, employees, onUpdate, isReadOnly = false 
 }) {
   const [search, setSearch] = useState('')
   const [mcFilter, setMcFilter] = useState<'All' | 'Yes' | 'No'>('All')
-  const [deptFilter, setDeptFilter] = useState('All Departments')
+  const [deptFilter, setDeptFilter] = useState('All Sections')
   const [monthFilter, setMonthFilter] = useState<'All' | string>(() => new Date().toISOString().slice(0, 7))
   const [editing, setEditing] = useState<MedicalCaseRecord | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
@@ -4033,16 +4033,19 @@ function MedicalLeaveSection({ records, employees, onUpdate, isReadOnly = false 
     const text = [r.employeeId, r.name, r.department, r.reason, r.hospital].join(' ').toLowerCase()
     const matchSearch = text.includes(search.trim().toLowerCase())
     const matchMc = mcFilter === 'All' || (mcFilter === 'Yes' ? r.mcProvided : !r.mcProvided)
-    const matchDept = deptFilter === 'All Departments' || r.department === deptFilter
+    const matchDept = deptFilter === 'All Sections' || r.department === deptFilter
     const matchMonth = monthFilter === 'All' || monthKey(r.caseDate) === monthFilter
     return matchSearch && matchMc && matchDept && matchMonth
   }).sort((a, b) => b.caseDate.localeCompare(a.caseDate)), [records, search, mcFilter, deptFilter, monthFilter])
 
-  const totalCases    = records.length
-  const todayVisits   = records.filter((r) => r.caseDate === today).length
-  const mcProvided    = records.filter((r) => r.mcProvided).length
-  const onSickToday   = records.filter((r) => r.sickLeaveFrom <= today && r.sickLeaveTo >= today).length
-  const admittedCount = records.filter((r) => r.isAdmitted).length
+  // KPI cards reflect the selected month (default current month); 'All' = all-time
+  const monthScoped = useMemo(() => monthFilter === 'All' ? records : records.filter((r) => monthKey(r.caseDate) === monthFilter), [records, monthFilter])
+  const scopeLabel    = monthFilter === 'All' ? 'All Months' : formatMonthLabel(monthFilter)
+  const totalCases    = monthScoped.length
+  const mcProvided    = monthScoped.filter((r) => r.mcProvided).length
+  const sickDaysTotal = monthScoped.reduce((s, r) => s + (r.sickLeaveDays || 0), 0)
+  const urgentCount   = monthScoped.filter((r) => r.isUrgent).length
+  const admittedCount = monthScoped.filter((r) => r.isAdmitted).length
 
   const newCase = (): MedicalCaseRecord => ({
     id: 'MC-new', caseDate: today, employeeId: '', name: '', department: '',
@@ -4062,23 +4065,23 @@ function MedicalLeaveSection({ records, employees, onUpdate, isReadOnly = false 
 
   return (
     <>
-      {/* Compact KPI bar */}
-      <div className="mc-kpi-bar">
+      {/* KPI bar — scoped to the selected month */}
+      <div className="mc-kpi-bar mc-kpi-bar-lg">
         <div className="mc-kpi-chip mc-kpi-blue">
           <span className="mc-kpi-num">{totalCases}</span>
           <span className="mc-kpi-lbl">Total Cases</span>
-        </div>
-        <div className="mc-kpi-chip mc-kpi-purple">
-          <span className="mc-kpi-num">{todayVisits}</span>
-          <span className="mc-kpi-lbl">Today's Cases</span>
         </div>
         <div className="mc-kpi-chip mc-kpi-green">
           <span className="mc-kpi-num">{mcProvided}</span>
           <span className="mc-kpi-lbl">MC Provided</span>
         </div>
         <div className="mc-kpi-chip mc-kpi-amber">
-          <span className="mc-kpi-num">{onSickToday}</span>
-          <span className="mc-kpi-lbl">On Sick Leave</span>
+          <span className="mc-kpi-num">{sickDaysTotal}</span>
+          <span className="mc-kpi-lbl">Sick Leave Days</span>
+        </div>
+        <div className="mc-kpi-chip mc-kpi-purple">
+          <span className="mc-kpi-num">{urgentCount}</span>
+          <span className="mc-kpi-lbl">Urgent Cases</span>
         </div>
         <div className="mc-kpi-chip mc-kpi-red">
           <span className="mc-kpi-num">{admittedCount}</span>
@@ -4100,7 +4103,7 @@ function MedicalLeaveSection({ records, employees, onUpdate, isReadOnly = false 
         </label>
         <label><span>Section</span>
           <select value={deptFilter} onChange={(e) => setDeptFilter(e.target.value)}>
-            <option>All Departments</option>
+            <option>All Sections</option>
             {departmentsList.map((d) => <option key={d}>{d}</option>)}
           </select>
         </label>
