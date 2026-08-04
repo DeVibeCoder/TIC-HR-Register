@@ -8624,6 +8624,7 @@ function TerminationPage({
   onUpdateExitInterviews,
   onRevert,
   onDeleteCompleted,
+  onEditCompleted,
   onImportCompleted,
   isHOD = false,
   isExecutive = false,
@@ -8641,6 +8642,7 @@ function TerminationPage({
   onUpdateExitInterviews: (fn: (prev: ExitInterviewRecord[]) => ExitInterviewRecord[]) => void
   onRevert?: (record: CompletedTerminationRecord | EnhancedTerminationRecord) => void
   onDeleteCompleted?: (id: string) => void
+  onEditCompleted?: (record: CompletedTerminationRecord) => void
   onImportCompleted?: (records: CompletedTerminationRecord[]) => void
   isHOD?: boolean
   isExecutive?: boolean
@@ -8654,6 +8656,7 @@ function TerminationPage({
   const [completedMonthFilter, setCompletedMonthFilter] = useState<'All' | string>('All')
   const [noticeStageFilter, setNoticeStageFilter] = useState<'All' | TerminationStage>('All')
   const [expandedTermId, setExpandedTermId] = useState<string | null>(null)
+  const [editingCompleted, setEditingCompleted] = useState<CompletedTerminationRecord | null>(null)
 
   const getDuration = (joinDate: string) => {
     if (!joinDate) return '-'
@@ -8871,6 +8874,9 @@ function TerminationPage({
                         <td className="termination-actions">
                           <div className="row-actions">
                             <button className="action-glyph" onClick={() => onViewDetails(r)} type="button" title="View">👁</button>
+                            {isAdmin && onEditCompleted && (
+                              <button className="action-glyph edit vwh" onClick={() => setEditingCompleted(r)} type="button" title="Edit — correct this record without reverting">✎</button>
+                            )}
                             {isAdmin && onRevert && (
                               <button className="action-glyph vwh" onClick={() => onRevert(r)} type="button" title="Revert — restore employee & undo this termination">↩</button>
                             )}
@@ -8898,7 +8904,134 @@ function TerminationPage({
           />
         )}
       </section>
+      {editingCompleted && onEditCompleted && (
+        <CompletedTerminationEditModal
+          record={editingCompleted}
+          onClose={() => setEditingCompleted(null)}
+          onSave={(updated) => { onEditCompleted(updated); setEditingCompleted(null) }}
+        />
+      )}
     </>
+  )
+}
+
+function CompletedTerminationEditModal({ record, onClose, onSave }: {
+  record: CompletedTerminationRecord
+  onClose: () => void
+  onSave: (r: CompletedTerminationRecord) => void
+}) {
+  const [name, setName] = useState(record.name)
+  const [employeeId, setEmployeeId] = useState(record.employeeId)
+  const [department, setDepartment] = useState(record.department)
+  const [designation, setDesignation] = useState(record.designation)
+  const [nationality, setNationality] = useState(record.nationality)
+  const [passportNo, setPassportNo] = useState(record.passportNo)
+  const [wpNo, setWpNo] = useState(record.wpNo)
+  const [dateOfJoin, setDateOfJoin] = useState(record.dateOfJoin)
+  const [lastWorkingDate, setLastWorkingDate] = useState(record.lastWorkingDate)
+  const [departureDate, setDepartureDate] = useState(record.departureDate)
+  const [terminationType, setTerminationType] = useState<TerminationType>(record.terminationType)
+  const [rehireEligible, setRehireEligible] = useState(record.rehireEligible)
+  const [reasonForLeaving, setReasonForLeaving] = useState(record.reasonForLeaving)
+  const [comments, setComments] = useState(record.comments)
+
+  const termTypes: TerminationType[] = ['Resignation', 'Dismissal', 'Probation End', 'Contract Expiry', 'Absconded', 'Other']
+  const fieldStyle = { padding: '7px 10px', borderRadius: '7px', border: '1.5px solid rgba(124,58,237,0.2)', fontSize: '0.85rem', background: '#fff', width: '100%' }
+
+  const save = (e: FormEvent) => {
+    e.preventDefault()
+    onSave({ ...record, name, employeeId, department, designation, nationality, passportNo, wpNo, dateOfJoin, lastWorkingDate, departureDate, terminationType, rehireEligible, reasonForLeaving, comments })
+  }
+
+  return (
+    <div className="modal-backdrop" role="presentation">
+      <section className="registration-modal" role="dialog" aria-modal="true">
+        <div className="modal-header">
+          <div>
+            <p className="eyebrow">Termination · History</p>
+            <h2>Edit Departure Record</h2>
+            <p style={{ fontSize:'0.8rem', color:'var(--muted)' }}>Correct this record without reverting the employee.</p>
+          </div>
+          <button className="icon-button" onClick={onClose} type="button">×</button>
+        </div>
+        <form onSubmit={save}>
+          <div className="trn-modal-card" style={{ marginBottom: '14px' }}>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'10px' }}>
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                <span className="trn-modal-field-lbl">Emp ID</span>
+                <input value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} style={fieldStyle} />
+              </label>
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px', gridColumn:'span 2' }}>
+                <span className="trn-modal-field-lbl">Name</span>
+                <input value={name} onChange={(e) => setName(e.target.value)} required style={fieldStyle} />
+              </label>
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                <span className="trn-modal-field-lbl">Section</span>
+                <input value={department} onChange={(e) => setDepartment(e.target.value)} style={fieldStyle} />
+              </label>
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                <span className="trn-modal-field-lbl">Designation</span>
+                <input value={designation} onChange={(e) => setDesignation(e.target.value)} style={fieldStyle} />
+              </label>
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                <span className="trn-modal-field-lbl">Nationality</span>
+                <input value={nationality} onChange={(e) => setNationality(e.target.value)} style={fieldStyle} />
+              </label>
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                <span className="trn-modal-field-lbl">Passport No</span>
+                <input value={passportNo} onChange={(e) => setPassportNo(e.target.value)} style={fieldStyle} />
+              </label>
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                <span className="trn-modal-field-lbl">WP No</span>
+                <input value={wpNo} onChange={(e) => setWpNo(e.target.value)} style={fieldStyle} />
+              </label>
+            </div>
+          </div>
+          <div className="trn-modal-card" style={{ marginBottom: '14px' }}>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'10px' }}>
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                <span className="trn-modal-field-lbl">Date of Join</span>
+                <input type="date" value={dateOfJoin} onChange={(e) => setDateOfJoin(e.target.value)} style={fieldStyle} />
+              </label>
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                <span className="trn-modal-field-lbl">Last Working Date</span>
+                <input type="date" value={lastWorkingDate} onChange={(e) => setLastWorkingDate(e.target.value)} style={fieldStyle} />
+              </label>
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                <span className="trn-modal-field-lbl">Departure Date</span>
+                <input type="date" value={departureDate} onChange={(e) => setDepartureDate(e.target.value)} style={fieldStyle} />
+              </label>
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                <span className="trn-modal-field-lbl">Type</span>
+                <select value={terminationType} onChange={(e) => setTerminationType(e.target.value as TerminationType)} style={fieldStyle}>
+                  {termTypes.map((t) => <option key={t}>{t}</option>)}
+                </select>
+              </label>
+              <label style={{ display:'flex', flexDirection:'row', alignItems:'center', gap:'8px', marginTop:'22px' }}>
+                <input type="checkbox" checked={rehireEligible} onChange={(e) => setRehireEligible(e.target.checked)} />
+                <span className="trn-modal-field-lbl" style={{ margin:0 }}>Rehire Eligible</span>
+              </label>
+            </div>
+          </div>
+          <div className="trn-modal-card">
+            <label style={{ display:'flex', flexDirection:'column', gap:'4px', marginBottom:10 }}>
+              <span className="trn-modal-field-lbl">Reason for Leaving</span>
+              <textarea value={reasonForLeaving} onChange={(e) => setReasonForLeaving(e.target.value)} rows={2}
+                style={{ padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#fff', resize:'vertical' }} />
+            </label>
+            <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+              <span className="trn-modal-field-lbl">Comments</span>
+              <textarea value={comments} onChange={(e) => setComments(e.target.value)} rows={2}
+                style={{ padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#fff', resize:'vertical' }} />
+            </label>
+          </div>
+          <div className="modal-actions">
+            <button className="quiet-button light" onClick={onClose} type="button">Cancel</button>
+            <button className="primary-button" type="submit">Save Changes</button>
+          </div>
+        </form>
+      </section>
+    </div>
   )
 }
 
@@ -14285,6 +14418,11 @@ function App() {
   const deleteCompletedTermination = (id: string) => {
     setCompletedTerminations((current) => current.filter((record) => record.id !== id))
   }
+  // Admin-only: edit a completed (history) termination record in place, without
+  // reverting the employee — for correcting data entered incorrectly.
+  const editCompletedTermination = (updated: CompletedTerminationRecord) => {
+    setCompletedTerminations((current) => current.map((record) => record.id === updated.id ? updated : record))
+  }
   const importCompletedTerminations = (imported: CompletedTerminationRecord[]) => {
     setCompletedTerminations((current) => [...imported, ...current])
   }
@@ -14582,7 +14720,7 @@ function App() {
           {activePage === 'leave' && <LeavePage employees={scopedEmployees} leaveRequests={scopedLeaveRequests} activeLeaves={scopedActiveLeaves} leaveHistory={scopedLeaveHistory} medicalCases={scopedMedicalCases} isHOD={isHOD} isExecutive={isExecutive} isAdmin={isAdmin} onAddRequest={() => { setEditingLeaveRequest(null); setShowLeaveForm(true) }} onEditRequest={(record) => { setEditingLeaveRequest(record); setShowLeaveForm(true) }} onDeleteRequest={deleteLeaveRequest} onSetRequestStep={setLeaveRequestStep} onExtendLeave={extendActiveLeave} onEditActiveLeave={editActiveLeave} onHistoryConfirm={updateHistoryConfirmation} onDeleteHistory={deleteLeaveHistory} onEditHistory={editLeaveHistory} onUpdateMedical={(fn) => setMedicalCases(fn)} />}
           {activePage === 'operations' && <OperationsPage employees={employees} completedTerminations={completedTerminations} activeLeaves={activeLeaves} isHOD={isHOD} userRole={currentUserRole} />}
           {activePage === 'activities' && <ActivitiesPage employees={scopedEmployees} passportHandovers={scopedPassportHandovers} onUpdatePassport={(fn) => setPassportHandovers(fn)} tripRequests={tripRequests} onUpdateTripRequests={(fn) => setTripRequests(fn)} inventoryItems={inventoryItems} inventoryUsage={inventoryUsage} inventoryOrders={inventoryOrders} onUpdateInventoryItems={(fn) => setInventoryItems(fn)} onUpdateInventoryUsage={(fn) => setInventoryUsage(fn)} onUpdateInventoryOrders={(fn) => setInventoryOrders(fn)} isHOD={isHOD} isHR={isHR} isExecutive={isExecutive} isAdmin={isAdmin} isTripReqApprover={isTripReqApprover} currentUserSections={currentUserSections} currentUserName={currentUserName} />}
-          {activePage === 'termination' && <TerminationPage noticeTerminations={scopedNoticeTerminations} completedTerminations={scopedCompletedTerminations} exitInterviews={scopedExitInterviews} employees={scopedEmployees} isHOD={isHOD} isExecutive={isExecutive} isAdmin={isAdmin} onAdd={openAddTermination} onEdit={openEditTermination} onSetStage={setTerminationStage} onDelete={deleteTermination} onDeleteCompleted={deleteCompletedTermination} onImportCompleted={importCompletedTerminations} onRevert={revertTermination} onViewDetails={(record) => setTerminationDetails(record)} onUpdateExitInterviews={(fn) => setExitInterviews(fn)} />}
+          {activePage === 'termination' && <TerminationPage noticeTerminations={scopedNoticeTerminations} completedTerminations={scopedCompletedTerminations} exitInterviews={scopedExitInterviews} employees={scopedEmployees} isHOD={isHOD} isExecutive={isExecutive} isAdmin={isAdmin} onAdd={openAddTermination} onEdit={openEditTermination} onSetStage={setTerminationStage} onDelete={deleteTermination} onDeleteCompleted={deleteCompletedTermination} onEditCompleted={editCompletedTermination} onImportCompleted={importCompletedTerminations} onRevert={revertTermination} onViewDetails={(record) => setTerminationDetails(record)} onUpdateExitInterviews={(fn) => setExitInterviews(fn)} />}
           {activePage === 'reports' && <ReportsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} leaveHistory={leaveHistory} noticeTerminations={noticeTerminations} completedTerminations={completedTerminations} exitInterviews={exitInterviews} medicalCases={medicalCases} isAdmin={isAdmin} currentUserName={currentUserName} />}
           {activePage === 'settings' && <SettingsPage employees={employees} leaveRequests={leaveRequests} activeLeaves={activeLeaves} onReset={() => setResetStep(1)} currentUserName={currentUserName} loggedInUser={currentProfile} users={users} onUpdateUsers={(fn) => setUsers(fn)} />}
         </main>
