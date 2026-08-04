@@ -2933,32 +2933,32 @@ function PassportTrackingSection({ records, employees, onUpdate }: {
     ppHandoverPerson:'', ppReceivedByHO:'', remarks:'',
   })
 
-  const statCards = [
-    { label:'Total',      val: records.length,                                                                   c:'#475569', bg:'#f8fafc' },
-    { label:'With Staff', val: records.filter(r => r.ppIssuedToStaff && !r.ppReturnedDate).length,              c:'#2563eb', bg:'#eff6ff' },
-    { label:'Returned',   val: records.filter(r => r.ppReturnedDate && !r.ppSentToHO).length,                   c:'#d97706', bg:'#fef3c7' },
-    { label:'Sent to HO', val: records.filter(r => r.ppSentToHO && !r.ppReceivedByHO).length,                   c:'#7c3aed', bg:'#f5f3ff' },
-    { label:'Complete',   val: records.filter(r => r.ppReceivedByHO).length,                                    c:'#16a34a', bg:'#dcfce7' },
+  const statCards: { label: string; val: number; cls: string }[] = [
+    { label:'Total',      val: records.length,                                              cls:'' },
+    { label:'With Staff', val: records.filter(r => r.ppIssuedToStaff && !r.ppReturnedDate).length, cls:'mc-kpi-blue' },
+    { label:'Returned',   val: records.filter(r => r.ppReturnedDate && !r.ppSentToHO).length,      cls:'mc-kpi-amber' },
+    { label:'Sent to HO', val: records.filter(r => r.ppSentToHO && !r.ppReceivedByHO).length,      cls:'mc-kpi-purple' },
+    { label:'Complete',   val: records.filter(r => r.ppReceivedByHO).length,                       cls:'mc-kpi-green' },
   ]
 
   return (
     <section className="employee-workspace pp-workspace">
 
-      <div className="pp-stat-strip">
+      <div className="mc-kpi-bar mc-kpi-bar-lg">
         {statCards.map(s => (
-          <div key={s.label} className="pp-stat-card" style={{ background:s.bg }}>
-            <span style={{ fontSize:'1.4rem', fontWeight:800, color:s.c, lineHeight:1 }}>{s.val}</span>
-            <span style={{ fontSize:'0.67rem', color:'#64748b', marginTop:2 }}>{s.label}</span>
+          <div key={s.label} className={`mc-kpi-chip ${s.cls}`}>
+            <span className="mc-kpi-num">{s.val}</span>
+            <span className="mc-kpi-lbl">{s.label}</span>
           </div>
         ))}
       </div>
 
-      <div className="table-toolbar leave-toolbar leave-toolbar-has-btn" style={{ flexWrap:'wrap', gap:'6px 10px' }}>
-        <label className="search-field" style={{ flex:'1 1 200px' }}>
+      <div className="table-toolbar activities-toolbar">
+        <label className="search-field">
           <span>Search</span>
           <input type="text" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Name, Emp ID, PP No" />
         </label>
-        <label style={{ flex:'0 0 auto' }}>
+        <label>
           <span>Purpose</span>
           <select value={purpose} onChange={e=>setPurpose(e.target.value)}>
             {['All','AL','New Staff','Embassy','Other'].map(p=><option key={p}>{p}</option>)}

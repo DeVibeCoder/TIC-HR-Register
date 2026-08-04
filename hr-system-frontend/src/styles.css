@@ -9643,22 +9643,22 @@ html { overflow-x: hidden; }
 }
 
 .pp-thead-group th.pp-th-recv {
-  background: #1e4d3a;
-  color: rgba(255,255,255,0.92);
+  background: linear-gradient(135deg, #6d28d9 0%, #7c3aed 100%);
+  color: rgba(255,255,255,0.95);
   text-align: center;
   font-size: 0.66rem;
   letter-spacing: 0.08em;
 }
 .pp-thead-group th.pp-th-send {
-  background: #7c4a03;
-  color: rgba(255,255,255,0.92);
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+  color: rgba(255,255,255,0.95);
   text-align: center;
   font-size: 0.66rem;
   letter-spacing: 0.08em;
 }
 .pp-thead-group th.pp-th-action {
-  background: #1e293b;
-  color: rgba(255,255,255,0.85);
+  background: #4c1d95;
+  color: rgba(255,255,255,0.9);
   text-align: center;
   border-radius: 0 6px 0 0;
 }
@@ -9672,13 +9672,13 @@ html { overflow-x: hidden; }
   font-size: 0.67rem;
 }
 
-/* Subtle phase tinting — lighter, less distracting */
-.pp-table tbody td:nth-child(-n+8)                 { background: rgba(22,163,74,0.028); }
-.pp-table tbody td:nth-child(n+9):nth-child(-n+14) { background: rgba(217,119,6,0.025); }
-.pp-table tr:hover td:nth-child(-n+8)                 { background: rgba(22,163,74,0.07); }
-.pp-table tr:hover td:nth-child(n+9):nth-child(-n+14) { background: rgba(217,119,6,0.065); }
-.pp-table tbody td:nth-child(8)  { border-right: 2px solid rgba(187,247,208,0.7); }
-.pp-table tbody td:nth-child(14) { border-right: 2px solid rgba(253,230,138,0.7); }
+/* Subtle phase tinting — theme violet, light and non-distracting */
+.pp-table tbody td:nth-child(-n+8)                 { background: rgba(124,58,237,0.028); }
+.pp-table tbody td:nth-child(n+9):nth-child(-n+14) { background: rgba(168,85,247,0.03); }
+.pp-table tr:hover td:nth-child(-n+8)                 { background: rgba(124,58,237,0.07); }
+.pp-table tr:hover td:nth-child(n+9):nth-child(-n+14) { background: rgba(168,85,247,0.07); }
+.pp-table tbody td:nth-child(8)  { border-right: 2px solid rgba(196,181,253,0.7); }
+.pp-table tbody td:nth-child(14) { border-right: 2px solid rgba(233,213,255,0.8); }
 
 /* Modal sections — receiving (green) vs sending (orange) get tinted panels */
 .pp-recv-section, .pp-send-section { padding: 12px; border-radius: 0 8px 8px 0; }
