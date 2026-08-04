@@ -386,6 +386,19 @@ const TermTypeChip = ({ type }: { type: string }) => {
   return <span className="req-type-chip" style={{ background: c.bg, borderColor: c.bd, color: c.fg }}>{type}</span>
 }
 
+// Colour chip per visit type
+const VISIT_TYPE_COLORS: Record<string, { bg: string; bd: string; fg: string }> = {
+  'Visa Medical':              { bg: '#dbeafe', bd: '#93c5fd', fg: '#1e40af' },
+  'Photo':                     { bg: '#ede9fe', bd: '#c4b5fd', fg: '#5b21b6' },
+  'Passport Renewal':          { bg: '#dcfce7', bd: '#86efac', fg: '#166534' },
+  'Embassy Letter Collection': { bg: '#fef3c7', bd: '#fcd34d', fg: '#92400e' },
+  'Biometric Update':          { bg: '#ccfbf1', bd: '#5eead4', fg: '#115e59' },
+}
+const VisitTypeChip = ({ type }: { type: string }) => {
+  const c = VISIT_TYPE_COLORS[type] ?? { bg: '#f1f5f9', bd: '#cbd5e1', fg: '#475569' }
+  return <span className="req-type-chip" style={{ background: c.bg, borderColor: c.bd, color: c.fg }}>{type}</span>
+}
+
 type EISatisfactionLevel = 'Very Satisfied' | 'Satisfied' | 'Dissatisfied' | ''
 
 type EIQuestionnaire = {
@@ -10649,10 +10662,6 @@ function VisitModal({ record, employees, onClose, onSave }: {
                 </select>
               </label>
             </div>
-            <div className="trn-modal-field-block" style={{ marginTop: '10px', marginBottom: 0 }}>
-              <span className="trn-modal-field-lbl">Remarks</span>
-              <input value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="Optional notes" style={{ ...fieldStyle, marginTop: '4px' }} />
-            </div>
           </div>
 
           <div className="modal-actions">
@@ -11158,6 +11167,9 @@ function VisitsSection({ records, employees, onUpdate, isReadOnly = false, isAdm
     && (monthFilter === 'All' || monthKey(r.visitDate) === monthFilter)
   ).sort((a, b) => (a.visitDate || '').localeCompare(b.visitDate || '')), [records, search, typeFilter, statusFilter, monthFilter])
 
+  // Top cards — total + by type, scoped to the selected month (All = all-time)
+  const monthVisits = useMemo(() => monthFilter === 'All' ? records : records.filter((r) => monthKey(r.visitDate) === monthFilter), [records, monthFilter])
+
   const save = (r: VisitRecord) => { onUpdate((prev) => { const idx = prev.findIndex((x) => x.id === r.id); return idx >= 0 ? prev.map((x) => x.id === r.id ? r : x) : [...prev, r] }); setEditing(null) }
   const del = (id: string) => onUpdate((prev) => prev.filter((x) => x.id !== id))
 
@@ -11168,6 +11180,7 @@ function VisitsSection({ records, employees, onUpdate, isReadOnly = false, isAdm
   })
 
   const visitTypes: VisitRecord['visitType'][] = ['Visa Medical', 'Photo', 'Passport Renewal', 'Embassy Letter Collection', 'Biometric Update']
+  const visitTypeCounts = visitTypes.map((t) => [t, monthVisits.filter((v) => v.visitType === t).length] as [VisitRecord['visitType'], number])
   const downloadVisitTemplate = () => downloadCsv('visits-template.csv', [
     ['EMP ID', 'NAME', 'SECTION', 'NIC/PP NO', 'NATIONALITY', 'VISIT TYPE', 'VISIT DATE', 'STATUS', 'REMARKS'],
     ['12345', 'EXAMPLE EMPLOYEE', 'ADMINISTRATION', 'A1234567', 'BANGLADESH', 'Visa Medical', '2026-07-01', 'Scheduled', ''],
@@ -11219,6 +11232,18 @@ function VisitsSection({ records, employees, onUpdate, isReadOnly = false, isAdm
   return (
     <>
       <section className="employee-workspace">
+        <div className="mc-kpi-bar mc-kpi-bar-lg" style={{ marginBottom: 10 }}>
+          <div className="mc-kpi-chip mc-kpi-blue">
+            <span className="mc-kpi-num">{monthVisits.length}</span>
+            <span className="mc-kpi-lbl">Total Visits</span>
+          </div>
+          {visitTypeCounts.map(([t, c]) => (
+            <div key={t} className="mc-kpi-chip">
+              <span className="mc-kpi-num">{c}</span>
+              <span className="mc-kpi-lbl">{t}</span>
+            </div>
+          ))}
+        </div>
         <div className="table-toolbar activities-toolbar">
           <label className="search-field"><span>Search</span><input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="ID, name, NIC/PP, department" /></label>
           <label><span>Type</span>
@@ -11245,13 +11270,12 @@ function VisitsSection({ records, employees, onUpdate, isReadOnly = false, isAdm
                 <th>NIC / PP No.</th><th>Nationality</th>
                 <th style={{textAlign:'center', minWidth:160}}>Visit Type</th>
                 <th style={{textAlign:'center'}}>Status</th>
-                <th>Remarks</th>
                 <th style={{textAlign:'center'}}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0
-                ? <tr><td colSpan={11} className="empty-row">No visits found</td></tr>
+                ? <tr><td colSpan={10} className="empty-row">No visits found</td></tr>
                 : filtered.map((r, i) => (
                   <tr key={r.id}>
                     <td style={{textAlign:'center'}}>{i + 1}</td>
@@ -11261,9 +11285,8 @@ function VisitsSection({ records, employees, onUpdate, isReadOnly = false, isAdm
                     <td>{r.department}</td>
                     <td>{r.nicPassportNo || '—'}</td>
                     <td>{r.nationality}</td>
-                    <td style={{textAlign:'center'}}><span className="req-type-chip">{r.visitType}</span></td>
+                    <td style={{textAlign:'center'}}><VisitTypeChip type={r.visitType} /></td>
                     <td style={{textAlign:'center'}}><StatusBadge status={r.status} /></td>
-                    <td style={{maxWidth:200, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', color:'#64748b', fontSize:'0.82rem'}}>{r.remarks || '—'}</td>
                     <td style={{textAlign:'center'}}>
                       <div className="row-actions">
                         {!isReadOnly && <button className="action-glyph edit vwh" title="Edit" onClick={() => setEditing(r)} type="button">✎</button>}
