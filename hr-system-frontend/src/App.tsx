@@ -319,13 +319,16 @@ type StaffRequestRecord = {
   section: string
   department: string
   requestType: 'Documents' | 'Villa Metrics' | 'Yono App' | 'Wifi' | 'IT' | 'Leave' | 'Transfer' | 'Meals & Stay' | 'Other'
+  location: string      // where the request originates / applies
   priority: RequestPriority
   description: string
   submittedDate: string
   completedDate: string
+  assignedTo: string    // who the request is assigned to
   status: 'Open' | 'Completed' | 'Rejected'
   actionTaken: string
   attendedBy?: string   // who handled the request
+  remarks?: string      // free-text notes
   locked?: boolean   // true once Completed or Rejected — cannot change status again
 }
 
@@ -675,8 +678,8 @@ const hcSnapToDb   = (r: HeadcountSnapshot) => ({ month: r.month, total: r.total
 const bankAccFromDb = (r: DbRow): BankAccountRecord => ({ id: r.id as string, employeeId: r.employee_id as string, fullName: r.full_name as string, department: r.department as string, nationality: r.nationality as string, bank: r.bank as BankName, accountType: r.account_type as AccountType, scheduledDate: r.scheduled_date as string, status: r.status as AccountStatus, remarks: r.remarks as string })
 const bankAccToDb   = (r: BankAccountRecord) => ({ id: r.id, employee_id: r.employeeId, full_name: r.fullName, department: r.department, nationality: r.nationality, bank: r.bank, account_type: r.accountType, scheduled_date: r.scheduledDate, status: r.status, remarks: r.remarks ?? '' })
 
-const staffReqFromDb = (r: DbRow): StaffRequestRecord => ({ id: r.id as string, employeeId: r.employee_id as string, employeeName: r.employee_name as string, section: r.section as string, department: r.department as string, requestType: r.request_type as StaffRequestRecord['requestType'], priority: r.priority as RequestPriority, description: r.description as string, submittedDate: r.submitted_date as string, completedDate: r.completed_date as string, status: (r.status === 'Resolved' || r.status === 'In Progress' ? 'Completed' : r.status) as StaffRequestRecord['status'], actionTaken: r.action_taken as string, attendedBy: (r.attended_by ?? '') as string, locked: (r.locked ?? (r.status === 'Completed' || r.status === 'Rejected' || r.status === 'Resolved')) as boolean })
-const staffReqToDb   = (r: StaffRequestRecord) => ({ id: r.id, employee_id: r.employeeId, employee_name: r.employeeName, section: r.section, department: r.department, request_type: r.requestType, priority: r.priority, description: r.description, submitted_date: r.submittedDate, completed_date: r.completedDate, status: r.status, action_taken: r.actionTaken, attended_by: r.attendedBy ?? '', locked: r.locked ?? false })
+const staffReqFromDb = (r: DbRow): StaffRequestRecord => ({ id: r.id as string, employeeId: r.employee_id as string, employeeName: r.employee_name as string, section: r.section as string, department: r.department as string, requestType: r.request_type as StaffRequestRecord['requestType'], location: (r.location ?? '') as string, priority: r.priority as RequestPriority, description: r.description as string, submittedDate: r.submitted_date as string, completedDate: r.completed_date as string, assignedTo: (r.assigned_to ?? '') as string, status: (r.status === 'Resolved' || r.status === 'In Progress' ? 'Completed' : r.status) as StaffRequestRecord['status'], actionTaken: r.action_taken as string, attendedBy: (r.attended_by ?? '') as string, remarks: (r.remarks ?? '') as string, locked: (r.locked ?? (r.status === 'Completed' || r.status === 'Rejected' || r.status === 'Resolved')) as boolean })
+const staffReqToDb   = (r: StaffRequestRecord) => ({ id: r.id, employee_id: r.employeeId, employee_name: r.employeeName, section: r.section, department: r.department, request_type: r.requestType, location: r.location ?? '', priority: r.priority, description: r.description, submitted_date: r.submittedDate, completed_date: r.completedDate, assigned_to: r.assignedTo ?? '', status: r.status, action_taken: r.actionTaken, attended_by: r.attendedBy ?? '', remarks: r.remarks ?? '', locked: r.locked ?? false })
 
 const visitFromDb = (r: DbRow): VisitRecord => ({ id: r.id as string, employeeId: r.employee_id as string, employeeName: r.employee_name as string, department: r.department as string, nicPassportNo: r.nic_passport_no as string, nationality: r.nationality as string, visitType: r.visit_type as VisitRecord['visitType'], visitDate: r.visit_date as string, status: r.status as VisitRecord['status'], remarks: r.remarks as string })
 const visitToDb   = (r: VisitRecord) => ({ id: r.id, employee_id: r.employeeId, employee_name: r.employeeName, department: r.department, nic_passport_no: r.nicPassportNo, nationality: r.nationality, visit_type: r.visitType, visit_date: r.visitDate, status: r.status, remarks: r.remarks })
@@ -1133,12 +1136,12 @@ const initialTrainingRecords: TrainingRecord[] = [
   },
 ]
 const initialStaffRequests: StaffRequestRecord[] = [
-  { id: 'REQ-2026-001', employeeId: '53979', employeeName: 'NAVEEN SEKAR', section: 'STORES', department: 'THILAFUSHI INDUSTRIAL COMPLEX', requestType: 'Other', priority: 'High', description: 'Room C-14 has a broken ceiling fan and leaking roof. Requested urgent repair before monsoon season.', submittedDate: '2026-05-10', completedDate: '', status: 'Open', actionTaken: 'Maintenance team scheduled for 30 May', locked: false },
-  { id: 'REQ-2026-002', employeeId: '50427', employeeName: 'MD SAIFUR RAHMAN', section: 'STORES', department: 'THILAFUSHI INDUSTRIAL COMPLEX', requestType: 'Documents', priority: 'High', description: 'Work permit renewal required. Current WP expires on 27 Jun 2026. Requesting HR to initiate renewal process with Immigration.', submittedDate: '2026-05-15', completedDate: '', status: 'Open', actionTaken: '', locked: false },
-  { id: 'REQ-2026-003', employeeId: '58692', employeeName: 'SHANTUMON PATHIYIL CHACKO', section: 'HUMAN RESOURCES', department: 'THILAFUSHI INDUSTRIAL COMPLEX', requestType: 'IT', priority: 'Medium', description: 'Laptop screen flickering intermittently. Affects HR system data entry. Requesting replacement or repair.', submittedDate: '2026-04-22', completedDate: '2026-04-30', status: 'Completed', actionTaken: 'New laptop issued on 30 April', locked: true },
-  { id: 'REQ-2026-004', employeeId: '57637', employeeName: 'MUNI ACHARI GUNTI KOVALA', section: 'CAFE', department: 'THILAFUSHI INDUSTRIAL COMPLEX', requestType: 'Transfer', priority: 'Medium', description: 'Requesting department transfer to Kitchen. Have 8 years of culinary experience and believe skills are better utilised there.', submittedDate: '2026-05-08', completedDate: '2026-05-20', status: 'Rejected', actionTaken: 'Transfer declined — CAFE currently understaffed', locked: true },
-  { id: 'REQ-2026-005', employeeId: '59217', employeeName: 'RAJKUMAR GUPTA', section: 'MECHANICAL', department: 'THILAFUSHI INDUSTRIAL COMPLEX', requestType: 'Leave', priority: 'Low', description: 'Requesting 2 days emergency leave on 5-6 June 2026 to handle urgent banking matters in Male.', submittedDate: '2026-05-25', completedDate: '', status: 'Open', actionTaken: '', locked: false },
-  { id: 'REQ-2026-006', employeeId: '61245', employeeName: 'ARUSHULLA RASHID', section: 'HUMAN RESOURCES', department: 'THILAFUSHI INDUSTRIAL COMPLEX', requestType: 'IT', priority: 'Low', description: 'Requesting ergonomic chair for HR office workstation. Current chair causing back strain during extended working hours.', submittedDate: '2026-05-02', completedDate: '2026-05-14', status: 'Completed', actionTaken: 'Ergonomic chair procured and delivered', locked: true },
+  { id: 'REQ-2026-001', employeeId: '53979', employeeName: 'NAVEEN SEKAR', section: 'STORES', department: 'THILAFUSHI INDUSTRIAL COMPLEX', requestType: 'Other', location: 'Accommodation Block C', priority: 'High', description: 'Room C-14 has a broken ceiling fan and leaking roof. Requested urgent repair before monsoon season.', submittedDate: '2026-05-10', completedDate: '', assignedTo: 'Maintenance Team', status: 'Open', actionTaken: 'Maintenance team scheduled for 30 May', attendedBy: '', remarks: '', locked: false },
+  { id: 'REQ-2026-002', employeeId: '50427', employeeName: 'MD SAIFUR RAHMAN', section: 'STORES', department: 'THILAFUSHI INDUSTRIAL COMPLEX', requestType: 'Documents', location: 'HR Office', priority: 'High', description: 'Work permit renewal required. Current WP expires on 27 Jun 2026. Requesting HR to initiate renewal process with Immigration.', submittedDate: '2026-05-15', completedDate: '', assignedTo: 'HR Officer', status: 'Open', actionTaken: '', attendedBy: '', remarks: '', locked: false },
+  { id: 'REQ-2026-003', employeeId: '58692', employeeName: 'SHANTUMON PATHIYIL CHACKO', section: 'HUMAN RESOURCES', department: 'THILAFUSHI INDUSTRIAL COMPLEX', requestType: 'IT', location: 'HR Office', priority: 'Medium', description: 'Laptop screen flickering intermittently. Affects HR system data entry. Requesting replacement or repair.', submittedDate: '2026-04-22', completedDate: '2026-04-30', assignedTo: 'IT Support', status: 'Completed', actionTaken: 'New laptop issued on 30 April', attendedBy: 'IT Support', remarks: '', locked: true },
+  { id: 'REQ-2026-004', employeeId: '57637', employeeName: 'MUNI ACHARI GUNTI KOVALA', section: 'CAFE', department: 'THILAFUSHI INDUSTRIAL COMPLEX', requestType: 'Transfer', location: 'Cafe', priority: 'Medium', description: 'Requesting department transfer to Kitchen. Have 8 years of culinary experience and believe skills are better utilised there.', submittedDate: '2026-05-08', completedDate: '2026-05-20', assignedTo: 'HR Manager', status: 'Rejected', actionTaken: 'Transfer declined — CAFE currently understaffed', attendedBy: 'HR Manager', remarks: '', locked: true },
+  { id: 'REQ-2026-005', employeeId: '59217', employeeName: 'RAJKUMAR GUPTA', section: 'MECHANICAL', department: 'THILAFUSHI INDUSTRIAL COMPLEX', requestType: 'Leave', location: 'Workshop', priority: 'Low', description: 'Requesting 2 days emergency leave on 5-6 June 2026 to handle urgent banking matters in Male.', submittedDate: '2026-05-25', completedDate: '', assignedTo: 'HR Officer', status: 'Open', actionTaken: '', attendedBy: '', remarks: '', locked: false },
+  { id: 'REQ-2026-006', employeeId: '61245', employeeName: 'ARUSHULLA RASHID', section: 'HUMAN RESOURCES', department: 'THILAFUSHI INDUSTRIAL COMPLEX', requestType: 'IT', location: 'HR Office', priority: 'Low', description: 'Requesting ergonomic chair for HR office workstation. Current chair causing back strain during extended working hours.', submittedDate: '2026-05-02', completedDate: '2026-05-14', assignedTo: 'Admin', status: 'Completed', actionTaken: 'Ergonomic chair procured and delivered', attendedBy: 'Admin', remarks: '', locked: true },
 ]
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -10430,12 +10433,15 @@ function StaffRequestModal({ record, employees, onClose, onSave }: {
   const [department, setDepartment] = useState(record.department)
   const [empFromDB, setEmpFromDB] = useState(!!record.employeeId && !!record.employeeName)
   const [requestType, setRequestType] = useState<StaffRequestRecord['requestType']>(record.requestType)
+  const [location, setLocation] = useState(record.location ?? '')
   const [priority, setPriority] = useState<RequestPriority>(record.priority)
   const [description, setDescription] = useState(record.description)
   const [submittedDate, setSubmittedDate] = useState(record.submittedDate)
   const [completedDate, setCompletedDate] = useState(record.completedDate)
+  const [assignedTo, setAssignedTo] = useState(record.assignedTo ?? '')
   const [status, setStatus] = useState<StaffRequestRecord['status']>(record.status)
   const [actionTaken, setActionTaken] = useState(record.actionTaken)
+  const [remarks, setRemarks] = useState(record.remarks ?? '')
 
   const empDir = useMemo(() => new Map(employees.map((e) => [e.employeeId.trim().toUpperCase(), e])), [employees])
 
@@ -10454,7 +10460,7 @@ function StaffRequestModal({ record, employees, onClose, onSave }: {
 
   const save = (e: FormEvent) => {
     e.preventDefault()
-    onSave({ ...record, id: record.id, employeeId, employeeName, section, department, requestType, priority, description, submittedDate, completedDate: isNew ? '' : completedDate, status: isNew ? 'Open' : status, actionTaken: isNew ? '' : actionTaken, locked: record.locked ?? false })
+    onSave({ ...record, id: record.id, employeeId, employeeName, section, department, requestType, location, priority, description, submittedDate, completedDate: isNew ? '' : completedDate, assignedTo, status: isNew ? 'Open' : status, actionTaken: isNew ? '' : actionTaken, remarks, locked: record.locked ?? false })
   }
 
   const fieldStyle = { padding: '7px 10px', borderRadius: '7px', border: '1.5px solid rgba(124,58,237,0.2)', fontSize: '0.85rem', background: '#fff', width: '100%' }
@@ -10501,7 +10507,7 @@ function StaffRequestModal({ record, employees, onClose, onSave }: {
           <div className="trn-modal-card" style={{ marginBottom: '14px' }}>
             <div className="trn-modal-detail-row">
               <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
-                <span className="trn-modal-field-lbl">Request Type</span>
+                <span className="trn-modal-field-lbl">Request Category</span>
                 <select value={requestType} onChange={(e) => setRequestType(e.target.value as StaffRequestRecord['requestType'])} style={fieldStyle}>
                   <option>Documents</option><option>Villa Metrics</option><option>Yono App</option>
                   <option>Wifi</option><option>IT</option><option>Leave</option>
@@ -10509,15 +10515,31 @@ function StaffRequestModal({ record, employees, onClose, onSave }: {
                 </select>
               </label>
               <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                <span className="trn-modal-field-lbl">Location</span>
+                <input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Where the request applies" style={fieldStyle} />
+              </label>
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
                 <span className="trn-modal-field-lbl">Priority</span>
                 <select value={priority} onChange={(e) => setPriority(e.target.value as RequestPriority)} style={fieldStyle}>
                   <option value="Low">Low</option><option value="Medium">Medium</option><option value="High">High</option>
                 </select>
               </label>
+            </div>
+            <div className="trn-modal-detail-row" style={{ marginTop: 10 }}>
               <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
-                <span className="trn-modal-field-lbl">Submitted Date</span>
+                <span className="trn-modal-field-lbl">Date Raised</span>
                 <input type="date" value={submittedDate} onChange={(e) => setSubmittedDate(e.target.value)} required style={fieldStyle} />
               </label>
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                <span className="trn-modal-field-lbl">Assigned To</span>
+                <input value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} placeholder="Person / team handling it" style={fieldStyle} />
+              </label>
+              {!isNew ? (
+                <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                  <span className="trn-modal-field-lbl">Date Completed</span>
+                  <input type="date" value={completedDate} onChange={(e) => setCompletedDate(e.target.value)} style={fieldStyle} />
+                </label>
+              ) : <div />}
             </div>
             <div style={{ marginTop:10, padding:'8px 12px', background:'rgba(124,58,237,0.06)', borderRadius:7, border:'1px solid rgba(124,58,237,0.12)' }}>
               <span style={{ fontSize:'0.78rem', color:'var(--ink,#374151)' }}>
@@ -10531,20 +10553,25 @@ function StaffRequestModal({ record, employees, onClose, onSave }: {
             </div>
           </div>
 
-          {/* Description + Action Taken */}
+          {/* Description + Action Taken + Remarks */}
           <div className="trn-modal-card">
             <label style={{ display:'flex', flexDirection:'column', gap:'4px', marginBottom:10 }}>
-              <span className="trn-modal-field-lbl">Description</span>
+              <span className="trn-modal-field-lbl">Request Description</span>
               <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Brief description of the request" rows={2}
                 style={{ padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#fff', resize:'vertical' }} />
             </label>
             {!isNew && (
-              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px', marginBottom:10 }}>
                 <span className="trn-modal-field-lbl">Action Taken</span>
                 <textarea value={actionTaken} onChange={(e) => setActionTaken(e.target.value)} placeholder="Notes or resolution details" rows={2}
                   style={{ padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#fff', resize:'vertical' }} />
               </label>
             )}
+            <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+              <span className="trn-modal-field-lbl">Remarks</span>
+              <textarea value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="Additional notes (optional)" rows={2}
+                style={{ padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#fff', resize:'vertical' }} />
+            </label>
           </div>
 
           <div className="modal-actions">
@@ -10951,20 +10978,21 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
 
   const newReq = (): StaffRequestRecord => ({
     id: 'REQ-new', employeeId: '', employeeName: '', section: '', department: '', requestType: 'Documents',
-    priority: 'Medium', description: '', submittedDate: new Date().toISOString().slice(0, 10),
-    completedDate: '', status: 'Open', actionTaken: '', attendedBy: '', locked: false,
+    location: '', priority: 'Medium', description: '', submittedDate: new Date().toISOString().slice(0, 10),
+    completedDate: '', assignedTo: '', status: 'Open', actionTaken: '', attendedBy: '', remarks: '', locked: false,
   })
 
   // Status badge colours for requests
   const reqStatusClass = (s: string) => s === 'Open' ? 'status-badge open' : s === 'Completed' ? 'status-badge approved' : 'status-badge rejected'
 
+  const REQ_HEADERS = ['DATE RAISED', 'EMP ID', 'NAME', 'SECTION', 'LOCATION', 'REQUEST CATEGORY', 'REQUEST DESCRIPTION', 'PRIORITY', 'ASSIGNED TO', 'ACTION TAKEN', 'STATUS', 'DATE COMPLETED', 'ATTENDED BY', 'REMARKS']
   const downloadReqTemplate = () => downloadCsv('staff-requests-template.csv', [
-    ['EMP ID', 'NAME', 'SECTION', 'TYPE', 'PRIORITY', 'DESCRIPTION', 'SUBMITTED DATE', 'STATUS', 'ATTENDED BY', 'ACTION TAKEN'],
-    ['12345', 'EXAMPLE EMPLOYEE', 'ADMINISTRATION', 'Documents', 'Medium', 'Sample request description', '2026-07-01', 'Open', 'HR OFFICER', ''],
+    REQ_HEADERS,
+    ['2026-07-01', '12345', 'EXAMPLE EMPLOYEE', 'ADMINISTRATION', 'HR Office', 'Documents', 'Sample request description', 'Medium', 'HR Officer', '', 'Open', '', 'HR OFFICER', ''],
   ])
   const exportReq = () => downloadCsv('staff-requests.csv', [
-    ['ID', 'EMP ID', 'NAME', 'SECTION', 'TYPE', 'PRIORITY', 'DESCRIPTION', 'SUBMITTED DATE', 'STATUS', 'CLOSED DATE', 'ATTENDED BY', 'ACTION TAKEN'],
-    ...records.map(r => [r.id, r.employeeId, r.employeeName, r.section, r.requestType, r.priority, r.description, r.submittedDate, r.status, r.completedDate, r.attendedBy ?? '', r.actionTaken]),
+    REQ_HEADERS,
+    ...records.map(r => [r.submittedDate, r.employeeId, r.employeeName, r.section, r.location ?? '', r.requestType, r.description, r.priority, r.assignedTo ?? '', r.actionTaken, r.status, r.completedDate, r.attendedBy ?? '', r.remarks ?? '']),
   ])
   const importReq = () => {
     const input = document.createElement('input')
@@ -10977,8 +11005,10 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
       const ci = (terms: string[]) => terms.map(t => hdr.indexOf(t)).find(i => i >= 0) ?? -1
       const g = (row: string[], idx: number) => idx >= 0 ? (row[idx] ?? '').trim() : ''
       const iEmp = ci(['empid','employeeid']); const iName = ci(['name','employeename']); const iSec = ci(['section','department'])
-      const iType = ci(['type','requesttype']); const iPri = ci(['priority']); const iDesc = ci(['description'])
-      const iSub = ci(['submitteddate','submitted','date']); const iStat = ci(['status']); const iAct = ci(['actiontaken','action']); const iAtt = ci(['attendedby','attended'])
+      const iLoc = ci(['location'])
+      const iType = ci(['requestcategory','category','type','requesttype']); const iPri = ci(['priority']); const iDesc = ci(['requestdescription','description'])
+      const iSub = ci(['dateraised','submitteddate','submitted','date']); const iStat = ci(['status']); const iAct = ci(['actiontaken','action']); const iAtt = ci(['attendedby','attended'])
+      const iAssign = ci(['assignedto','assigned']); const iComp = ci(['datecompleted','completeddate','closeddate','completed']); const iRem = ci(['remarks','remark'])
       const empMap = new Map(employees.map(e => [e.employeeId, e]))
       const types = ['Documents','Villa Metrics','Yono App','Wifi','IT','Leave','Transfer','Meals & Stay','Other']
       const imported: StaffRequestRecord[] = rows.slice(1).filter(r => r.some(c => c.trim())).map((r, i) => {
@@ -10989,9 +11019,9 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
         return {
           id: `REQ-IMP-${Date.now()}-${i}`,
           employeeId: empId, employeeName: g(r, iName) || emp?.fullName || '', section: g(r, iSec) || emp?.department || '',
-          department: emp?.department || g(r, iSec), requestType: type as StaffRequestRecord['requestType'], priority: pri,
+          department: emp?.department || g(r, iSec), requestType: type as StaffRequestRecord['requestType'], location: g(r, iLoc), priority: pri,
           description: g(r, iDesc), submittedDate: normImportDate(g(r, iSub)) || new Date().toISOString().slice(0, 10),
-          completedDate: '', status, actionTaken: g(r, iAct), attendedBy: g(r, iAtt), locked: status !== 'Open',
+          completedDate: normImportDate(g(r, iComp)) || '', assignedTo: g(r, iAssign), status, actionTaken: g(r, iAct), attendedBy: g(r, iAtt), remarks: g(r, iRem), locked: status !== 'Open',
         }
       })
       if (imported.length === 0) { alert('No valid rows found in the CSV.'); return }
@@ -11025,36 +11055,44 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
           <table className="data-table">
             <thead>
               <tr>
-                <th style={{whiteSpace:'nowrap'}}>ID</th>
-                <th style={{textAlign:'center',whiteSpace:'nowrap'}}>Submitted</th>
-                <th>Emp ID</th>
+                <th style={{textAlign:'center',whiteSpace:'nowrap'}}>Date Raised</th>
+                <th style={{whiteSpace:'nowrap'}}>Emp ID</th>
                 <th>Name</th>
                 <th>Section</th>
-                <th style={{textAlign:'center'}}>Type</th>
+                <th style={{whiteSpace:'nowrap'}}>Location</th>
+                <th style={{textAlign:'center',whiteSpace:'nowrap'}}>Request Category</th>
+                <th>Request Description</th>
                 <th style={{textAlign:'center'}}>Priority</th>
-                <th>Description</th>
-                <th style={{textAlign:'center'}}>Status</th>
-                <th style={{textAlign:'center',whiteSpace:'nowrap'}}>Closed Date</th>
-                <th style={{whiteSpace:'nowrap'}}>Attended By</th>
+                <th style={{whiteSpace:'nowrap'}}>Assigned To</th>
                 <th>Action Taken</th>
+                <th style={{textAlign:'center'}}>Status</th>
+                <th style={{textAlign:'center',whiteSpace:'nowrap'}}>Date Completed</th>
+                <th style={{whiteSpace:'nowrap'}}>Attended By</th>
+                <th>Remarks</th>
                 <th style={{textAlign:'center'}}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0
-                ? <tr><td colSpan={13} className="empty-row">No requests found</td></tr>
+                ? <tr><td colSpan={15} className="empty-row">No requests found</td></tr>
                 : filtered.map((r) => (
                   <tr key={r.id}>
-                    <td style={{maxWidth:84, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', fontSize:'0.75rem', color:'var(--ink)', fontWeight:700}} title={r.id}>{r.id}</td>
                     <td style={{textAlign:'center',fontSize:'0.8rem',whiteSpace:'nowrap'}}>{formatDateDisplay(r.submittedDate)}</td>
                     <td style={{whiteSpace:'nowrap', fontSize:'0.8rem'}}>{r.employeeId || '—'}</td>
                     <td style={{whiteSpace:'nowrap', fontWeight:600}}>{r.employeeName}</td>
                     <td style={{whiteSpace:'nowrap', fontSize:'0.8rem'}}>{r.section || '—'}</td>
+                    <td style={{whiteSpace:'nowrap', fontSize:'0.8rem'}}>{r.location || '—'}</td>
                     <td style={{textAlign:'center'}}><span className="req-type-chip">{r.requestType}</span></td>
-                    <td style={{textAlign:'center'}}><span className={`req-priority-badge ${priorityColors[r.priority]}`}>{r.priority}</span></td>
-                    <td style={{minWidth:220, maxWidth:320}}>
+                    <td style={{minWidth:200, maxWidth:300}}>
                       <span title={r.description || undefined} style={{ display:'-webkit-box', WebkitLineClamp:3, WebkitBoxOrient:'vertical', overflow:'hidden', fontSize:'0.81rem', lineHeight:'1.45', color:'var(--ink)' }}>
                         {r.description || '—'}
+                      </span>
+                    </td>
+                    <td style={{textAlign:'center'}}><span className={`req-priority-badge ${priorityColors[r.priority]}`}>{r.priority}</span></td>
+                    <td style={{whiteSpace:'nowrap', fontSize:'0.8rem'}}>{r.assignedTo || '—'}</td>
+                    <td style={{maxWidth:180}}>
+                      <span title={r.actionTaken || undefined} style={{ display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden', fontSize:'0.82rem', lineHeight:'1.4', color:'var(--ink)' }}>
+                        {r.actionTaken || '—'}
                       </span>
                     </td>
                     <td style={{textAlign:'center', whiteSpace:'nowrap'}}>
@@ -11062,9 +11100,9 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
                     </td>
                     <td style={{textAlign:'center',fontSize:'0.8rem',whiteSpace:'nowrap'}}>{r.completedDate ? formatDateDisplay(r.completedDate) : '—'}</td>
                     <td style={{whiteSpace:'nowrap', fontSize:'0.8rem'}}>{r.attendedBy || '—'}</td>
-                    <td style={{maxWidth:180}}>
-                      <span title={r.actionTaken || undefined} style={{ display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden', fontSize:'0.82rem', lineHeight:'1.4', color:'var(--ink)' }}>
-                        {r.actionTaken || '—'}
+                    <td style={{maxWidth:160}}>
+                      <span title={r.remarks || undefined} style={{ display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden', fontSize:'0.82rem', lineHeight:'1.4', color:'var(--ink)' }}>
+                        {r.remarks || '—'}
                       </span>
                     </td>
                     <td style={{textAlign:'center',whiteSpace:'nowrap'}}>
