@@ -6676,10 +6676,10 @@ input::-webkit-credentials-auto-fill-button { visibility: hidden; pointer-events
   color: #1e293b;
   line-height: 1.4;
 }
-/* ── Branded header (PDF-matching) ── */
+/* ── Header (PDF-matching) — light blue ── */
 .ind-prev-doc-hdr {
-  background: linear-gradient(135deg, #3730a3 0%, #4f46e5 100%);
-  padding: 10px 14px 9px;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  padding: 12px 16px 11px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -6687,16 +6687,30 @@ input::-webkit-credentials-auto-fill-button { visibility: hidden; pointer-events
   border-radius: 6px 6px 0 0;
   -webkit-print-color-adjust: exact; print-color-adjust: exact;
 }
-.ind-prev-brand { font-size: 1.05rem; font-weight: 900; color: #fff; letter-spacing: 4px; line-height: 1; }
-.ind-prev-co { font-size: 0.56rem; color: #e0d9ff; margin-top: 2px; letter-spacing: 0.2px; }
 .ind-prev-hdr-right { text-align: right; }
-.ind-prev-dept-lbl { font-size: 0.52rem; color: #c7d2fe; letter-spacing: 1.5px; text-transform: uppercase; }
-.ind-prev-doc-title { font-size: 0.80rem; font-weight: 900; color: #fff; letter-spacing: 1.5px; margin-top: 2px; }
+.ind-prev-dept-lbl { font-size: 0.80rem; color: #1e3a5f; letter-spacing: 0.5px; font-weight: 800; }
+.ind-prev-doc-title { font-size: 1.05rem; font-weight: 900; color: #1e3a5f; letter-spacing: 1px; }
 .ind-prev-hdr-accent {
-  height: 2.5px;
-  background: linear-gradient(90deg, #a5b4fc, #c4b5fd, #a5b4fc);
+  height: 2px;
+  background: #60a5fa;
   margin: 0 -24px 12px;
 }
+/* Green status bubble in preview info table */
+.ind-pi-status-bubble {
+  display: inline-block;
+  color: #166534; background: #dcfce7; border: 1px solid #86efac;
+  padding: 1px 10px; border-radius: 10px; font-weight: 700; font-size: 0.72rem;
+}
+/* Conducted-by line in preview (completed doc — no signature) */
+.ind-prev-conducted {
+  margin-top: 14px;
+  padding-top: 8px;
+  border-top: 1px solid #cbd5e1;
+  font-size: 0.82rem;
+}
+.ind-prev-conducted-lbl { font-weight: 700; color: #374151; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.72rem; }
+.ind-prev-conducted-name { font-weight: 700; color: #111; text-transform: uppercase; margin-left: 6px; }
+.ind-prev-conducted-desig { color: #374151; margin-left: 4px; }
 /* Info table */
 .ind-prev-info {
   width: 100%;

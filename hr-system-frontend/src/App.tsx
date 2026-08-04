@@ -1297,7 +1297,7 @@ function inductionYear(inductionDate?: string): string {
 }
 
 function fullInductionRef(refNo: string, inductionDate?: string): string {
-  return `VHPL/TIC/HR/IND/${inductionYear(inductionDate)}/${refNo.padStart(3, '0')}`
+  return `HR/IND/${inductionYear(inductionDate)}/${refNo.padStart(3, '0')}`
 }
 
 function shortInductionRef(refNo: string, inductionDate?: string): string {
@@ -5073,27 +5073,25 @@ function InductionViewModal({ record, employees = [], onClose, onPrint }: {
         <div className="ind-preview-scroll">
           <div className="ind-preview-doc">
 
-            {/* ── Branded header ── */}
-            <div className="ind-prev-doc-hdr">
+            {/* ── Header — light blue, STAFF INDUCTION left / Human Resource right ── */}
+            <div className="ind-prev-doc-hdr ind-prev-doc-hdr-blue">
               <div>
-                <div className="ind-prev-brand">VHPL</div>
-                <div className="ind-prev-co">Thilafushi Industrial Complex Pvt. Ltd.</div>
+                <div className="ind-prev-doc-title">STAFF INDUCTION</div>
               </div>
               <div className="ind-prev-hdr-right">
-                <div className="ind-prev-dept-lbl">Human Resources</div>
-                <div className="ind-prev-doc-title">STAFF INDUCTION</div>
+                <div className="ind-prev-dept-lbl">Human Resource</div>
               </div>
             </div>
             <div className="ind-prev-hdr-accent"></div>
 
-            {/* ── Info table ── */}
+            {/* ── Info table (no Conducted By — shown at bottom) ── */}
             <table className="ind-prev-info">
               <tbody>
                 <tr>
                   <td className="ind-pi-lbl">Reference No:</td>
                   <td className="ind-pi-val">{fullRef}</td>
                   <td className="ind-pi-lbl">Status:</td>
-                  <td className="ind-pi-val ind-pi-completed">{record.status}</td>
+                  <td className="ind-pi-val"><span className="ind-pi-status-bubble">{record.status}</span></td>
                 </tr>
                 <tr>
                   <td className="ind-pi-lbl">Date:</td>
@@ -5105,10 +5103,6 @@ function InductionViewModal({ record, employees = [], onClose, onPrint }: {
                   <td className="ind-pi-lbl">Department:</td>
                   <td className="ind-pi-val" colSpan={3} style={{ textTransform: 'uppercase' }}>Thilafushi Industrial Complex</td>
                 </tr>
-                <tr>
-                  <td className="ind-pi-lbl">Conducted by:</td>
-                  <td className="ind-pi-val" colSpan={3}>{conductedByDisplay}</td>
-                </tr>
               </tbody>
             </table>
 
@@ -5117,12 +5111,12 @@ function InductionViewModal({ record, employees = [], onClose, onPrint }: {
             <table className="data-table ind-prev-ptbl">
               <colgroup>
                 <col style={{ width: '4%' }} />
-                <col style={{ width: '9%' }} />
-                <col style={{ width: '24%' }} />
-                <col style={{ width: '14%' }} />
+                <col style={{ width: '10%' }} />
+                <col style={{ width: '26%' }} />
+                <col style={{ width: '15%' }} />
+                <col style={{ width: '19%' }} />
                 <col style={{ width: '13%' }} />
-                <col style={{ width: '22%' }} />
-                <col style={{ width: '14%' }} />
+                <col style={{ width: '13%' }} />
               </colgroup>
               <thead>
                 <tr>
@@ -5130,9 +5124,9 @@ function InductionViewModal({ record, employees = [], onClose, onPrint }: {
                   <th>Emp ID</th>
                   <th>Full Name</th>
                   <th>NIC / PP No</th>
+                  <th>Designation</th>
                   <th>Section</th>
                   <th>Department</th>
-                  <th>Signature</th>
                 </tr>
               </thead>
               <tbody>
@@ -5144,32 +5138,19 @@ function InductionViewModal({ record, employees = [], onClose, onPrint }: {
                     <td>{p.employeeId || '—'}</td>
                     <td>{p.name}</td>
                     <td>{p.nicPassportNo || '—'}</td>
+                    <td>{p.designation || '—'}</td>
                     <td>{p.section || '—'}</td>
                     <td style={{ textTransform: 'uppercase' }}>{p.department || '—'}</td>
-                    <td className="ind-sig-cell-view"></td>
                   </tr>
                 ))}
               </tbody>
             </table>
 
-            {/* ── Signature blocks ── */}
-            <div className="ind-prev-sig-row">
-              <div className="ind-prev-sig-block">
-                <div className="ind-prev-sig-space"></div>
-                <div className="ind-prev-sig-btm">
-                  <div className="ind-prev-sig-role">Conducted By</div>
-                  <div className="ind-prev-sig-name">{conductedByDisplay}</div>
-                  {conductedByDesig && <div className="ind-prev-sig-desig">{conductedByDesig}</div>}
-                </div>
-              </div>
-              <div className="ind-prev-sig-block">
-                <div className="ind-prev-sig-space"></div>
-                <div className="ind-prev-sig-btm">
-                  <div className="ind-prev-sig-role">Approved By</div>
-                  <div className="ind-prev-sig-name">Arushulla Rashid (50814)</div>
-                  <div className="ind-prev-sig-desig">Administrator</div>
-                </div>
-              </div>
+            {/* ── Conducted-by line (completed doc — no signature) ── */}
+            <div className="ind-prev-conducted">
+              <span className="ind-prev-conducted-lbl">Conducted By:</span>
+              <span className="ind-prev-conducted-name">{conductedByDisplay}</span>
+              {conductedByDesig && <span className="ind-prev-conducted-desig">— {conductedByDesig}</span>}
             </div>
 
             {/* ── Page 2 preview ── */}
@@ -5335,34 +5316,34 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
     .a4-wrap { max-width: 210mm; margin: 24px auto; display: flex; flex-direction: column; gap: 20px; padding-bottom: 40px; }
     .a4-page { background: #fff; box-shadow: 0 4px 20px rgba(30,27,75,0.16); min-height: 297mm; overflow: hidden; display: flex; flex-direction: column; }
 
-    /* ══ HEADER BANNER — dark gradient, keeps colour (only coloured area) ══ */
+    /* ══ HEADER BANNER — light blue ══ */
     .doc-hdr {
-      background: linear-gradient(135deg, #1e1b4b 0%, #4338ca 100%);
-      padding: 12pt 22pt 11pt;
+      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+      padding: 14pt 22pt 13pt;
       display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1.5pt solid #60a5fa;
     }
-    .hdr-brand { font-size: 24pt; font-weight: 900; color: #fff; letter-spacing: 5px; line-height: 1; font-family: Arial, sans-serif; }
-    .hdr-co { font-size: 7pt; color: rgba(255,255,255,0.75); letter-spacing: 0.4px; margin-top: 3pt; }
     .hdr-right { text-align: right; }
-    .hdr-dept-lbl { font-size: 9pt; color: #fff; letter-spacing: 1px; font-weight: 800; }
-    .hdr-doc-title { font-size: 12pt; font-weight: 900; color: rgba(255,255,255,0.85); letter-spacing: 1px; margin-top: 3pt; font-family: Arial, sans-serif; }
+    .hdr-dept-lbl { font-size: 11pt; color: #1e3a5f; letter-spacing: 0.5px; font-weight: 800; }
+    .hdr-doc-title { font-size: 16pt; font-weight: 900; color: #1e3a5f; letter-spacing: 1px; font-family: Arial, sans-serif; }
     .hdr-accent { height: 0; }
 
     /* ══ PAGE BODY (wider) ══ */
     .page-body { padding: 14pt 16pt 16pt; flex: 1; }
 
-    /* ── Info table — gradient header row, B&W body ── */
-    .info-tbl { width: 100%; border-collapse: collapse; margin-bottom: 14pt; table-layout: fixed; }
+    /* ── Info table — gradient header row, auto-fit columns ── */
+    .info-tbl { width: 100%; border-collapse: collapse; margin-bottom: 14pt; table-layout: auto; }
     .info-tbl thead th {
       background: linear-gradient(135deg, #111827 0%, #374151 100%);
-      color: #fff; padding: 5pt 6pt; font-size: 6.8pt; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.4px; text-align: left;
+      color: #fff; padding: 5pt 8pt; font-size: 6.8pt; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.4px; text-align: left; white-space: nowrap;
       border: 0.75pt solid #111827;
     }
-    .info-tbl tbody td { padding: 5pt 6pt; font-size: 8pt; border: 0.75pt solid #cbd5e1; vertical-align: middle; color: #111; }
+    .info-tbl tbody td { padding: 5pt 8pt; font-size: 8pt; border: 0.75pt solid #cbd5e1; vertical-align: middle; color: #111; white-space: nowrap; }
+    /* Green status bubble */
     .status-badge {
-      display: inline-block; color: #111; border: 1pt solid #4b5563;
-      padding: 1pt 7pt; border-radius: 10pt; font-weight: 700; font-size: 7.5pt;
+      display: inline-block; color: #166534; background: #dcfce7; border: 1pt solid #86efac;
+      padding: 1.5pt 9pt; border-radius: 10pt; font-weight: 700; font-size: 7.5pt;
     }
 
     /* ── Section heading bar — B&W ── */
@@ -5386,14 +5367,11 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
     .p-tbl tbody tr:nth-child(even) td { background: #f8fafc; }
     .p-tbl .tc { text-align: center; }
 
-    /* ── Signature block — only Conducted By ── */
-    .sig-row { display: flex; gap: 14pt; margin-top: 14pt; }
-    .sig-block { flex: 1; max-width: 220pt; border: 0.75pt solid #9ca3af; border-top: 2pt solid #111; }
-    .sig-space { height: 46pt; }
-    .sig-info { padding: 4pt 8pt; border-top: 0.75pt solid #cbd5e1; }
-    .sig-role { font-size: 7pt; color: #374151; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2pt; }
-    .sig-person { font-weight: 700; font-size: 8.5pt; color: #111; text-transform: uppercase; }
-    .sig-desig { font-size: 7.5pt; color: #374151; margin-top: 1pt; }
+    /* ── Conducted-by line (completed doc — no signature) ── */
+    .conducted-line { margin-top: 16pt; padding-top: 8pt; border-top: 0.75pt solid #cbd5e1; font-size: 9pt; }
+    .conducted-lbl { font-weight: 700; color: #374151; text-transform: uppercase; letter-spacing: 0.5px; font-size: 8pt; }
+    .conducted-name { font-weight: 700; color: #111; text-transform: uppercase; margin-left: 6pt; }
+    .conducted-desig { color: #374151; margin-left: 4pt; }
 
     /* ══ PAGE 2 — summary / areas covered ══ */
     .p2-meta-bar {
@@ -5447,12 +5425,10 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
   <div class="a4-page">
     <div class="doc-hdr">
       <div>
-        <div class="hdr-brand">VHPL</div>
-        <div class="hdr-co">Thilafushi Industrial Complex Pvt. Ltd. &nbsp;·&nbsp; Maldives</div>
+        <div class="hdr-doc-title">STAFF INDUCTION</div>
       </div>
       <div class="hdr-right">
-        <div class="hdr-dept-lbl">VHPL | Thilafushi Industrial Complex</div>
-        <div class="hdr-doc-title">STAFF INDUCTION</div>
+        <div class="hdr-dept-lbl">Human Resource</div>
       </div>
     </div>
     <div class="hdr-accent"></div>
@@ -5464,7 +5440,6 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
             <th>Ref No</th>
             <th>Date</th>
             <th>Department</th>
-            <th>Conducted By</th>
             <th>Status</th>
             <th>No. of Participants</th>
           </tr>
@@ -5474,7 +5449,6 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
             <td>${esc(fullRef)}</td>
             <td>${dateStr}</td>
             <td style="text-transform:uppercase">Thilafushi Industrial Complex</td>
-            <td>${esc(conductedByDisplay)}</td>
             <td><span class="status-badge">${esc(record.status)}</span></td>
             <td>${countStr}</td>
           </tr>
@@ -5500,15 +5474,10 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
         </tbody>
       </table>
 
-      <div class="sig-row">
-        <div class="sig-block">
-          <div class="sig-space"></div>
-          <div class="sig-info">
-            <div class="sig-role">Conducted By</div>
-            <div class="sig-person">${esc(conductedByDisplay)}</div>
-            ${conductedByDesig ? `<div class="sig-desig">${esc(conductedByDesig)}</div>` : ''}
-          </div>
-        </div>
+      <div class="conducted-line">
+        <span class="conducted-lbl">Conducted By:</span>
+        <span class="conducted-name">${esc(conductedByDisplay)}</span>
+        ${conductedByDesig ? `<span class="conducted-desig">— ${esc(conductedByDesig)}</span>` : ''}
       </div>
 
     </div>
@@ -5518,12 +5487,10 @@ function printInductionRecord(record: InductionRecord, employees: Employee[] = [
   <div class="a4-page page-break">
     <div class="doc-hdr">
       <div>
-        <div class="hdr-brand">VHPL</div>
-        <div class="hdr-co">Thilafushi Industrial Complex Pvt. Ltd. &nbsp;·&nbsp; Maldives</div>
+        <div class="hdr-doc-title">STAFF INDUCTION</div>
       </div>
       <div class="hdr-right">
-        <div class="hdr-dept-lbl">VHPL | Thilafushi Industrial Complex</div>
-        <div class="hdr-doc-title">STAFF INDUCTION</div>
+        <div class="hdr-dept-lbl">Human Resource</div>
       </div>
     </div>
     <div class="hdr-accent"></div>
@@ -6452,14 +6419,32 @@ function InductionSection({ employees, records, onUpdate, isReadOnly = false, is
   isAdmin?: boolean
 }) {
   const [search, setSearch] = useState('')
+  const [monthFilter, setMonthFilter] = useState<string>(() => monthKey(new Date().toISOString().slice(0, 10)))
   const [editing, setEditing] = useState<InductionRecord | null>(null)
   const [viewing, setViewing] = useState<InductionRecord | null>(null)
   const [viewingParticipants, setViewingParticipants] = useState<InductionRecord | null>(null)
 
+  // Distinct months present in the data (newest first) for the month filter
+  const availableMonths = useMemo(() => {
+    const set = new Set<string>()
+    set.add(monthKey(new Date().toISOString().slice(0, 10)))
+    records.forEach((r) => { if (r.inductionDate) set.add(monthKey(r.inductionDate)) })
+    return Array.from(set).sort((a, b) => b.localeCompare(a))
+  }, [records])
+
   const rows = useMemo(() => records.filter((r) => {
     const participantText = r.participants.map((p) => `${p.employeeId} ${p.name}`).join(' ')
-    return !search.trim() || [r.refNo, r.conductedBy, participantText].join(' ').toLowerCase().includes(search.trim().toLowerCase())
-  }).sort((a, b) => b.inductionDate.localeCompare(a.inductionDate)), [records, search])
+    const matchSearch = !search.trim() || [r.refNo, r.conductedBy, participantText].join(' ').toLowerCase().includes(search.trim().toLowerCase())
+    const matchMonth = monthFilter === 'All' || (r.inductionDate && monthKey(r.inductionDate) === monthFilter)
+    return matchSearch && matchMonth
+  }).sort((a, b) => b.inductionDate.localeCompare(a.inductionDate)), [records, search, monthFilter])
+
+  // ── Top KPI cards ────────────────────────────────────────────────
+  const scoped = useMemo(() => monthFilter === 'All' ? records : records.filter((r) => r.inductionDate && monthKey(r.inductionDate) === monthFilter), [records, monthFilter])
+  const currentMonthKey = monthKey(new Date().toISOString().slice(0, 10))
+  const totalInductions = scoped.length
+  const totalStaff = scoped.reduce((sum, r) => sum + r.participants.length, 0)
+  const currentMonthInductions = records.filter((r) => r.inductionDate && monthKey(r.inductionDate) === currentMonthKey).length
 
   const saveRecord = (record: InductionRecord) => {
     onUpdate((prev) => {
@@ -6542,10 +6527,31 @@ function InductionSection({ employees, records, onUpdate, isReadOnly = false, is
   return (
     <>
       <section className="employee-workspace">
+        <div className="mc-kpi-bar mc-kpi-bar-lg">
+          <div className="mc-kpi-chip">
+            <span className="mc-kpi-num">{totalInductions}</span>
+            <span className="mc-kpi-lbl">Inductions {monthFilter === 'All' ? '(All Time)' : 'This Period'}</span>
+          </div>
+          <div className="mc-kpi-chip">
+            <span className="mc-kpi-num">{totalStaff}</span>
+            <span className="mc-kpi-lbl">Staff Inducted</span>
+          </div>
+          <div className="mc-kpi-chip">
+            <span className="mc-kpi-num">{currentMonthInductions}</span>
+            <span className="mc-kpi-lbl">This Month</span>
+          </div>
+        </div>
         <div className="table-toolbar ops-section-toolbar">
           <label className="search-field">
             <span>Search</span>
             <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Ref no, conducted by, participant name" />
+          </label>
+          <label className="search-field">
+            <span>Month</span>
+            <select value={monthFilter} onChange={(e) => setMonthFilter(e.target.value)}>
+              <option value="All">All Months</option>
+              {availableMonths.map((m) => <option key={m} value={m}>{formatMonthLabel(m)}</option>)}
+            </select>
           </label>
           {isAdmin && <button className="io-btn vwh" onClick={downloadIndTemplate} type="button">Template</button>}
           {isAdmin && <button className="io-btn vwh" onClick={importInd} type="button">Import</button>}
