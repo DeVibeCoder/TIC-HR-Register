@@ -6309,8 +6309,8 @@ function PersonalFilesSection({ records, onUpdate, employees = [], isAdmin = fal
           {/* Action buttons — pushed to the right */}
           <div className="pf-toolbar-actions">
             {isAdmin && <>
-              <button className="primary-button vwh" type="button" onClick={downloadPfTemplate} title="Download CSV template">Template</button>
-              <button className="primary-button vwh" type="button" onClick={importPfCsv} title="Import from CSV">Import</button>
+              <button className="io-btn vwh" type="button" onClick={downloadPfTemplate} title="Download CSV template">Template</button>
+              <button className="io-btn vwh" type="button" onClick={importPfCsv} title="Import from CSV">Import</button>
             </>}
             <button className="primary-button vwh" type="button" onClick={() => { setPickerSearch(''); setShowPicker(true) }}>+ Add Staff</button>
           </div>
@@ -6531,9 +6531,9 @@ function InductionSection({ employees, records, onUpdate, isReadOnly = false, is
             <span>Search</span>
             <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Ref no, conducted by, participant name" />
           </label>
-          {isAdmin && <button className="primary-button vwh" onClick={downloadIndTemplate} type="button">Template</button>}
-          {isAdmin && <button className="primary-button vwh" onClick={importInd} type="button">Import</button>}
-          <button className="primary-button vwh" onClick={exportInd} type="button">Export</button>
+          {isAdmin && <button className="io-btn vwh" onClick={downloadIndTemplate} type="button">Template</button>}
+          {isAdmin && <button className="io-btn vwh" onClick={importInd} type="button">Import</button>}
+          <button className="io-btn vwh" onClick={exportInd} type="button">Export</button>
           {!isReadOnly && <button className="primary-button vwh" onClick={() => setEditing(newRecord())} type="button">Add Session</button>}
         </div>
         <div className="employee-table-shell compact-scroll">
@@ -8509,9 +8509,9 @@ function ExitInterviewSection({ records, onUpdate, employees, isHOD = false, isE
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
           Analytics
         </button>
-        {isAdmin && <button className="quiet-button light" type="button" onClick={downloadEiTemplate}>Template</button>}
-        {isAdmin && <button className="quiet-button light" type="button" onClick={importEi}>Import</button>}
-        <button className="quiet-button light" type="button" onClick={exportReport}>⬇ Export</button>
+        {isAdmin && <button className="io-btn" type="button" onClick={downloadEiTemplate}>Template</button>}
+        {isAdmin && <button className="io-btn" type="button" onClick={importEi}>Import</button>}
+        <button className="io-btn" type="button" onClick={exportReport}>⬇ Export</button>
       </div>
 
       {/* Table */}
@@ -8820,9 +8820,9 @@ function TerminationPage({
               <label><span>Month</span><select onChange={(e) => setCompletedMonthFilter(e.target.value)} value={completedMonthFilter}><option value="All">All Months</option>{completedMonths.map((k) => <option key={k} value={k}>{formatMonthLabel(k)}</option>)}</select></label>
               {isAdmin && (
                 <div className="term-hist-actions">
-                  <button className="primary-button vwh" type="button" onClick={downloadHistTemplate}>Template</button>
-                  <button className="primary-button vwh" type="button" onClick={importHist}>Import</button>
-                  <button className="primary-button vwh" type="button" onClick={exportHist}>Export</button>
+                  <button className="io-btn vwh" type="button" onClick={downloadHistTemplate}>Template</button>
+                  <button className="io-btn vwh" type="button" onClick={importHist}>Import</button>
+                  <button className="io-btn vwh" type="button" onClick={exportHist}>Export</button>
                 </div>
               )}
             </div>
@@ -10998,9 +10998,9 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
           </label>
           <label><span>Status</span><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="All">All Statuses</option><option>Open</option><option>Completed</option><option>Rejected</option></select></label>
           <label><span>Month</span><select value={monthFilter} onChange={(e) => setMonthFilter(e.target.value)}><option value="All">All Months</option>{reqMonths.map((k) => <option key={k} value={k}>{formatMonthLabel(k)}</option>)}</select></label>
-          {isAdmin && <button className="primary-button vwh" type="button" onClick={downloadReqTemplate}>Template</button>}
-          {isAdmin && <button className="primary-button vwh" type="button" onClick={importReq}>Import</button>}
-          {isAdmin && <button className="primary-button vwh" type="button" onClick={exportReq}>Export</button>}
+          {isAdmin && <button className="io-btn vwh" type="button" onClick={downloadReqTemplate}>Template</button>}
+          {isAdmin && <button className="io-btn vwh" type="button" onClick={importReq}>Import</button>}
+          {isAdmin && <button className="io-btn vwh" type="button" onClick={exportReq}>Export</button>}
           {!isReadOnly && <button className="primary-button vwh" type="button" onClick={() => setEditing(newReq())}>+ Add Request</button>}
         </div>
         <div className="employee-table-shell compact-scroll">
@@ -11227,9 +11227,9 @@ function VisitsSection({ records, employees, onUpdate, isReadOnly = false, isAdm
           </label>
           <label><span>Status</span><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="All">All Statuses</option><option>Scheduled</option><option>Completed</option><option>Cancelled</option></select></label>
           <label><span>Month</span><select value={monthFilter} onChange={(e) => setMonthFilter(e.target.value)}><option value="All">All Months</option>{visitMonths.map((k) => <option key={k} value={k}>{formatMonthLabel(k)}</option>)}</select></label>
-          {isAdmin && <button className="primary-button vwh" type="button" onClick={downloadVisitTemplate}>Template</button>}
-          {isAdmin && <button className="primary-button vwh" type="button" onClick={importVisits}>Import</button>}
-          {isAdmin && <button className="primary-button vwh" type="button" onClick={exportVisits}>Export</button>}
+          {isAdmin && <button className="io-btn vwh" type="button" onClick={downloadVisitTemplate}>Template</button>}
+          {isAdmin && <button className="io-btn vwh" type="button" onClick={importVisits}>Import</button>}
+          {isAdmin && <button className="io-btn vwh" type="button" onClick={exportVisits}>Export</button>}
           {!isReadOnly && <button className="primary-button vwh" type="button" onClick={() => setEditing(newVisit())}>+ Add Visit</button>}
         </div>
         <div className="employee-table-shell compact-scroll">
@@ -12072,11 +12072,11 @@ function ActivitiesPage({
       <div className="section-inline-tabs">
         <button className={activeSection === 'requests' ? 'active' : ''} onClick={() => setActiveSection('requests')} type="button">Requests</button>
         <button className={activeSection === 'visits' ? 'active' : ''} onClick={() => setActiveSection('visits')} type="button">Visits</button>
-        {!isHOD && !isExecutive && !isHR && <button className={activeSection === 'incidents' ? 'active' : ''} onClick={() => setActiveSection('incidents')} type="button">Incidents</button>}
         {!isHOD && !isExecutive && <button className={activeSection === 'passport' ? 'active' : ''} onClick={() => setActiveSection('passport')} type="button">Passports</button>}
         {/* Trip Req: visible to non-HOD/HR staff AND to the designated Trip Req approver (ali41966) */}
         {(!isHOD || isTripReqApprover) && !isHR && !isExecutive && <button className={activeSection === 'tripreq' ? 'active' : ''} onClick={() => setActiveSection('tripreq')} type="button">Trip Req</button>}
         {!isHOD && !isHR && !isExecutive && <button className={activeSection === 'inventory' ? 'active' : ''} onClick={() => setActiveSection('inventory')} type="button">Inventory</button>}
+        {!isHOD && !isExecutive && !isHR && <button className={activeSection === 'incidents' ? 'active' : ''} onClick={() => setActiveSection('incidents')} type="button">Incidents</button>}
       </div>
       {activeSection === 'requests' && <RequestsSection records={scopedStaffRequests} employees={employees} onUpdate={setStaffRequests} onBack={() => {}} isHOD={isHOD} isReadOnly={isExecutive} isAdmin={isAdmin} />}
       {activeSection === 'visits' && <VisitsSection records={scopedVisitRecords} employees={employees} onUpdate={setVisitRecords} onBack={() => {}} isReadOnly={isExecutive} isAdmin={isAdmin} />}
