@@ -7219,6 +7219,120 @@ input::-webkit-credentials-auto-fill-button { visibility: hidden; pointer-events
   border: 1px solid rgba(91,33,182,0.18);
 }
 
+/* ── Requests table — auto-fit, tighter, wrapping short columns ── */
+.req-table { table-layout: auto; width: 100%; }
+.req-table thead th { padding: 7px 8px; }
+.req-table tbody td { padding: 6px 8px; vertical-align: top; }
+/* Give Request & Action columns the room; cap the rest */
+.req-table .req-col-wide { min-width: 190px; }
+.req-table th:nth-child(2),  /* Employee */
+.req-table th:nth-child(4),  /* Section */
+.req-table th:nth-child(5),  /* Location */
+.req-table th:nth-child(9) { /* Assigned To */
+  max-width: 120px;
+}
+/* Clamp helpers — long names/section/location wrap to 2 lines */
+.req-clamp2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.3;
+  word-break: break-word;
+}
+.req-clamp3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.35;
+  word-break: break-word;
+}
+/* Highlight rows still Open */
+.req-table tbody tr.req-row-open td { background: rgba(37,99,235,0.05); }
+.req-table tbody tr.req-row-open:hover td { background: rgba(37,99,235,0.09); }
+.req-table tbody tr.req-row-open td:first-child { box-shadow: inset 3px 0 0 #2563eb; }
+[data-theme="dark"] .req-table tbody tr.req-row-open td { background: rgba(96,165,250,0.10); }
+
+/* Status-update button — tidy circular tinted icon */
+.req-proceed-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  border: 1px solid rgba(22,163,74,0.28);
+  background: rgba(22,163,74,0.10);
+  color: #16a34a;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.req-proceed-btn:hover { background: rgba(22,163,74,0.2); transform: translateY(-1px); }
+.req-proceed-btn:active { transform: translateY(0); }
+[data-theme="dark"] .req-proceed-btn { background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.35); color: #4ade80; }
+
+/* ── New/Edit request form — sectioned card layout ── */
+.req-modal { max-width: 640px; }
+.req-form-section {
+  background: rgba(124,58,237,0.035);
+  border: 1px solid rgba(124,58,237,0.12);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+[data-theme="dark"] .req-form-section {
+  background: rgba(167,139,250,0.06);
+  border-color: rgba(167,139,250,0.16);
+}
+.req-form-section-title {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #7c3aed;
+  margin: 0 0 12px;
+}
+[data-theme="dark"] .req-form-section-title { color: #c4b5fd; }
+.req-complete-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.req-complete-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(22,163,74,0.35);
+  background: transparent;
+  color: #16a34a;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.req-complete-toggle .req-complete-toggle-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  background: transparent;
+  transition: background 0.15s;
+}
+.req-complete-toggle.on {
+  background: rgba(22,163,74,0.12);
+  border-color: #16a34a;
+}
+.req-complete-toggle.on .req-complete-toggle-dot { background: #16a34a; }
+.req-complete-hint {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin: 0;
+}
+
 /* ════════════════════════════════════════════════════════
    LOGIN — entrance animations + floating HR elements
    ════════════════════════════════════════════════════════ */

@@ -10553,6 +10553,9 @@ function OperationsPage({ employees, completedTerminations, activeLeaves, isHOD 
   )
 }
 
+// People who handle / attend requests — used in the "Handled By" dropdowns.
+const REQUEST_HANDLERS = ['SHANTUMON', 'ARUSHULLA']
+
 function StaffRequestModal({ record, employees, onClose, onSave }: {
   record: StaffRequestRecord
   employees: Employee[]
@@ -10570,11 +10573,14 @@ function StaffRequestModal({ record, employees, onClose, onSave }: {
   const [priority, setPriority] = useState<RequestPriority>(record.priority)
   const [description, setDescription] = useState(record.description)
   const [submittedDate, setSubmittedDate] = useState(record.submittedDate)
-  const [completedDate, setCompletedDate] = useState(record.completedDate)
+  const [completedDate, setCompletedDate] = useState(record.completedDate || new Date().toISOString().slice(0, 10))
   const [assignedTo, setAssignedTo] = useState(record.assignedTo ?? '')
-  const [status, setStatus] = useState<StaffRequestRecord['status']>(record.status)
+  const [status] = useState<StaffRequestRecord['status']>(record.status)
   const [actionTaken, setActionTaken] = useState(record.actionTaken)
-  const [remarks, setRemarks] = useState(record.remarks ?? '')
+  const [attendedBy, setAttendedBy] = useState(record.attendedBy ?? '')
+  // Completion toggle — for a NEW request this lets the whole thing be logged as
+  // already completed in one entry. For an existing record it reflects its status.
+  const [markCompleted, setMarkCompleted] = useState(!isNew && record.status !== 'Open')
 
   const empDir = useMemo(() => new Map(employees.map((e) => [e.employeeId.trim().toUpperCase(), e])), [employees])
 
@@ -10593,15 +10599,29 @@ function StaffRequestModal({ record, employees, onClose, onSave }: {
 
   const save = (e: FormEvent) => {
     e.preventDefault()
-    onSave({ ...record, id: record.id, employeeId, employeeName, section, department, requestType, location, priority, description, submittedDate, completedDate: isNew ? '' : completedDate, assignedTo, status: isNew ? 'Open' : status, actionTaken: isNew ? '' : actionTaken, remarks, locked: record.locked ?? false })
+    // A NEW request is completed only if the toggle is on; an existing record
+    // keeps whatever status it already has (changed via the table ⟳ icon).
+    const completing = isNew ? markCompleted : record.status !== 'Open'
+    const newStatus: StaffRequestRecord['status'] = isNew ? (markCompleted ? 'Completed' : 'Open') : status
+    onSave({
+      ...record, id: record.id, employeeId, employeeName, section, department,
+      requestType, location, priority, description, submittedDate, assignedTo,
+      status: newStatus,
+      completedDate: completing ? (completedDate || new Date().toISOString().slice(0, 10)) : '',
+      actionTaken: completing ? actionTaken : (isNew ? '' : actionTaken),
+      attendedBy: completing ? attendedBy : (record.attendedBy ?? ''),
+      remarks: record.remarks ?? '',
+      locked: isNew ? markCompleted : (record.locked ?? false),
+    })
   }
 
   const fieldStyle = { padding: '7px 10px', borderRadius: '7px', border: '1.5px solid rgba(124,58,237,0.2)', fontSize: '0.85rem', background: '#fff', width: '100%' }
   const roStyle    = { ...fieldStyle, background: '#f8fafc', color: '#374151' }
+  const showCompletion = isNew ? markCompleted : record.status !== 'Open'
 
   return (
     <div className="modal-backdrop" role="presentation">
-      <section className="registration-modal" role="dialog" aria-modal="true">
+      <section className="registration-modal req-modal" role="dialog" aria-modal="true">
         <div className="modal-header">
           <div>
             <p className="eyebrow">Activities · Requests</p>
@@ -10610,12 +10630,13 @@ function StaffRequestModal({ record, employees, onClose, onSave }: {
           <button className="icon-button" onClick={onClose} type="button">×</button>
         </div>
         <form onSubmit={save}>
-          {/* Employee card */}
-          <div className="trn-modal-card" style={{ marginBottom: '14px' }}>
-            <div style={{ display:'flex', flexDirection:'column', gap:4, marginBottom:10 }}>
+          {/* ── Employee ─────────────────────────────────────────── */}
+          <div className="req-form-section">
+            <p className="req-form-section-title">Employee</p>
+            <div style={{ display:'flex', flexDirection:'column', gap:4, marginBottom:12 }}>
               <span className="trn-modal-field-lbl">Employee ID</span>
               <input value={employeeId} onChange={(e) => handleEmpIdChange(e.target.value)}
-                placeholder="Enter ID to auto-fill name, section and department" style={{ ...fieldStyle, maxWidth:240 }} />
+                placeholder="Enter ID to auto-fill name, section and department" style={{ ...fieldStyle, maxWidth:260 }} />
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'10px' }}>
               <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
@@ -10636,11 +10657,12 @@ function StaffRequestModal({ record, employees, onClose, onSave }: {
             </div>
           </div>
 
-          {/* Request details card */}
-          <div className="trn-modal-card" style={{ marginBottom: '14px' }}>
+          {/* ── Request details ──────────────────────────────────── */}
+          <div className="req-form-section">
+            <p className="req-form-section-title">Request Details</p>
             <div className="trn-modal-detail-row">
               <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
-                <span className="trn-modal-field-lbl">Request Category</span>
+                <span className="trn-modal-field-lbl">Category</span>
                 <select value={requestType} onChange={(e) => setRequestType(e.target.value as StaffRequestRecord['requestType'])} style={fieldStyle}>
                   <option>Documents</option><option>Villa Metrics</option><option>Yono App</option>
                   <option>Wifi</option><option>IT</option><option>Leave</option>
@@ -10663,53 +10685,67 @@ function StaffRequestModal({ record, employees, onClose, onSave }: {
                 <span className="trn-modal-field-lbl">Date Raised</span>
                 <input type="date" value={submittedDate} onChange={(e) => setSubmittedDate(e.target.value)} required style={fieldStyle} />
               </label>
-              <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+              <label style={{ display:'flex', flexDirection:'column', gap:'4px', gridColumn:'span 2' }}>
                 <span className="trn-modal-field-lbl">Assigned To</span>
                 <input value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} placeholder="Person / team handling it" style={fieldStyle} />
               </label>
-              {!isNew ? (
-                <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
-                  <span className="trn-modal-field-lbl">Date Completed</span>
-                  <input type="date" value={completedDate} onChange={(e) => setCompletedDate(e.target.value)} style={fieldStyle} />
-                </label>
-              ) : <div />}
             </div>
-            <div style={{ marginTop:10, padding:'8px 12px', background:'rgba(124,58,237,0.06)', borderRadius:7, border:'1px solid rgba(124,58,237,0.12)' }}>
-              <span style={{ fontSize:'0.78rem', color:'var(--ink,#374151)' }}>
-                {isNew
-                  ? <>Status will be set to <strong>Open</strong> automatically on creation.</>
-                  : record.locked
-                    ? <>Status: <strong>{status}</strong> — locked and cannot be changed.</>
-                    : <>Status: <strong>{status}</strong> — use the ⟳ proceed icon in the table to update.</>
-                }
-              </span>
-            </div>
+            <label style={{ display:'flex', flexDirection:'column', gap:'4px', marginTop:10 }}>
+              <span className="trn-modal-field-lbl">Request Description</span>
+              <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Brief description of the request" rows={3}
+                style={{ padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#fff', resize:'vertical' }} />
+            </label>
           </div>
 
-          {/* Description + Action Taken + Remarks */}
-          <div className="trn-modal-card">
-            <label style={{ display:'flex', flexDirection:'column', gap:'4px', marginBottom:10 }}>
-              <span className="trn-modal-field-lbl">Request Description</span>
-              <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Brief description of the request" rows={2}
-                style={{ padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#fff', resize:'vertical' }} />
-            </label>
-            {!isNew && (
-              <label style={{ display:'flex', flexDirection:'column', gap:'4px', marginBottom:10 }}>
-                <span className="trn-modal-field-lbl">Action Taken</span>
-                <textarea value={actionTaken} onChange={(e) => setActionTaken(e.target.value)} placeholder="Notes or resolution details" rows={2}
-                  style={{ padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#fff', resize:'vertical' }} />
-              </label>
+          {/* ── Completion ───────────────────────────────────────── */}
+          <div className="req-form-section">
+            <div className="req-complete-head">
+              <p className="req-form-section-title" style={{ margin:0 }}>Completion</p>
+              {isNew ? (
+                <button
+                  type="button"
+                  className={`req-complete-toggle${markCompleted ? ' on' : ''}`}
+                  onClick={() => setMarkCompleted((v) => !v)}
+                  aria-pressed={markCompleted}
+                >
+                  <span className="req-complete-toggle-dot" />
+                  {markCompleted ? 'Completed' : 'Mark as Completed'}
+                </button>
+              ) : (
+                <span className={`status-badge ${record.status === 'Open' ? 'open' : record.status === 'Completed' ? 'approved' : 'rejected'}`}>{record.status}</span>
+              )}
+            </div>
+            {isNew && !markCompleted && (
+              <p className="req-complete-hint">This request will be logged as <strong>Open</strong>. Toggle above to record it as already completed in one go.</p>
             )}
-            <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
-              <span className="trn-modal-field-lbl">Remarks</span>
-              <textarea value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="Additional notes (optional)" rows={2}
-                style={{ padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#fff', resize:'vertical' }} />
-            </label>
+            {showCompletion && (
+              <>
+                <div className="trn-modal-detail-row">
+                  <label style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                    <span className="trn-modal-field-lbl">Date Completed</span>
+                    <input type="date" value={completedDate} onChange={(e) => setCompletedDate(e.target.value)} style={fieldStyle} />
+                  </label>
+                  <label style={{ display:'flex', flexDirection:'column', gap:'4px', gridColumn:'span 2' }}>
+                    <span className="trn-modal-field-lbl">Handled By</span>
+                    <select value={attendedBy} onChange={(e) => setAttendedBy(e.target.value)} style={fieldStyle}>
+                      <option value="">— Select —</option>
+                      {REQUEST_HANDLERS.map((h) => <option key={h}>{h}</option>)}
+                      {attendedBy && !REQUEST_HANDLERS.includes(attendedBy) && <option>{attendedBy}</option>}
+                    </select>
+                  </label>
+                </div>
+                <label style={{ display:'flex', flexDirection:'column', gap:'4px', marginTop:10 }}>
+                  <span className="trn-modal-field-lbl">Action Taken</span>
+                  <textarea value={actionTaken} onChange={(e) => setActionTaken(e.target.value)} placeholder="Notes or resolution details" rows={2}
+                    style={{ padding:'7px 10px', borderRadius:'7px', border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', background:'#fff', resize:'vertical' }} />
+                </label>
+              </>
+            )}
           </div>
 
           <div className="modal-actions">
             <button className="quiet-button light" onClick={onClose} type="button">Cancel</button>
-            <button className="primary-button" type="submit">{isNew ? 'Add Request' : 'Save Changes'}</button>
+            <button className="primary-button" type="submit">{isNew ? (markCompleted ? 'Add Completed Request' : 'Add Request') : 'Save Changes'}</button>
           </div>
         </form>
       </section>
@@ -11086,7 +11122,7 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
     && (typeFilter === 'All' || r.requestType === typeFilter)
     && (statusFilter === 'All' || r.status === statusFilter)
     && (monthFilter === 'All' || monthKey(r.submittedDate) === monthFilter)
-  ), [records, search, typeFilter, statusFilter, monthFilter])
+  ).sort((a, b) => (b.submittedDate || '').localeCompare(a.submittedDate || '')), [records, search, typeFilter, statusFilter, monthFilter])
 
   const save = (r: StaffRequestRecord) => { onUpdate((prev) => {
     const idx = prev.findIndex((x) => x.id === r.id)
@@ -11118,14 +11154,14 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
   // Status badge colours for requests
   const reqStatusClass = (s: string) => s === 'Open' ? 'status-badge open' : s === 'Completed' ? 'status-badge approved' : 'status-badge rejected'
 
-  const REQ_HEADERS = ['DATE RAISED', 'EMP ID', 'NAME', 'SECTION', 'LOCATION', 'REQUEST CATEGORY', 'REQUEST DESCRIPTION', 'PRIORITY', 'ASSIGNED TO', 'ACTION TAKEN', 'STATUS', 'DATE COMPLETED', 'ATTENDED BY', 'REMARKS']
+  const REQ_HEADERS = ['DATE', 'EMPLOYEE', 'ID', 'SECTION', 'LOCATION', 'CATEGORY', 'REQUEST', 'PRIORITY', 'ASSIGNED TO', 'ACTION', 'STATUS', 'COMPLETED', 'HANDLED BY', 'REMARKS']
   const downloadReqTemplate = () => downloadCsv('staff-requests-template.csv', [
     REQ_HEADERS,
-    ['2026-07-01', '12345', 'EXAMPLE EMPLOYEE', 'ADMINISTRATION', 'HR Office', 'Documents', 'Sample request description', 'Medium', 'HR Officer', '', 'Open', '', 'HR OFFICER', ''],
+    ['2026-07-01', 'EXAMPLE EMPLOYEE', '12345', 'ADMINISTRATION', 'HR Office', 'Documents', 'Sample request description', 'Medium', 'HR Officer', '', 'Open', '', 'SHANTUMON', ''],
   ])
   const exportReq = () => downloadCsv('staff-requests.csv', [
     REQ_HEADERS,
-    ...records.map(r => [r.submittedDate, r.employeeId, r.employeeName, r.section, r.location ?? '', r.requestType, r.description, r.priority, r.assignedTo ?? '', r.actionTaken, r.status, r.completedDate, r.attendedBy ?? '', r.remarks ?? '']),
+    ...records.map(r => [r.submittedDate, r.employeeName, r.employeeId, r.section, r.location ?? '', r.requestType, r.description, r.priority, r.assignedTo ?? '', r.actionTaken, r.status, r.completedDate, r.attendedBy ?? '', r.remarks ?? '']),
   ])
   const importReq = () => {
     const input = document.createElement('input')
@@ -11137,11 +11173,11 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
       const hdr = rows[0].map(h => h.toLowerCase().replace(/[^a-z0-9]/g, ''))
       const ci = (terms: string[]) => terms.map(t => hdr.indexOf(t)).find(i => i >= 0) ?? -1
       const g = (row: string[], idx: number) => idx >= 0 ? (row[idx] ?? '').trim() : ''
-      const iEmp = ci(['empid','employeeid']); const iName = ci(['name','employeename']); const iSec = ci(['section','department'])
+      const iEmp = ci(['id','empid','employeeid']); const iName = ci(['employee','name','employeename']); const iSec = ci(['section','department'])
       const iLoc = ci(['location'])
-      const iType = ci(['requestcategory','category','type','requesttype']); const iPri = ci(['priority']); const iDesc = ci(['requestdescription','description'])
-      const iSub = ci(['dateraised','submitteddate','submitted','date']); const iStat = ci(['status']); const iAct = ci(['actiontaken','action']); const iAtt = ci(['attendedby','attended'])
-      const iAssign = ci(['assignedto','assigned']); const iComp = ci(['datecompleted','completeddate','closeddate','completed']); const iRem = ci(['remarks','remark'])
+      const iType = ci(['category','requestcategory','type','requesttype']); const iPri = ci(['priority']); const iDesc = ci(['request','requestdescription','description'])
+      const iSub = ci(['date','dateraised','submitteddate','submitted']); const iStat = ci(['status']); const iAct = ci(['action','actiontaken']); const iAtt = ci(['handledby','attendedby','attended'])
+      const iAssign = ci(['assignedto','assigned']); const iComp = ci(['completed','datecompleted','completeddate','closeddate']); const iRem = ci(['remarks','remark'])
       const empMap = new Map(employees.map(e => [e.employeeId, e]))
       const types = ['Documents','Villa Metrics','Yono App','Wifi','IT','Leave','Transfer','Meals & Stay','Other']
       const imported: StaffRequestRecord[] = rows.slice(1).filter(r => r.some(c => c.trim())).map((r, i) => {
@@ -11185,65 +11221,60 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
           {!isReadOnly && <button className="primary-button vwh" type="button" onClick={() => setEditing(newReq())}>+ Add Request</button>}
         </div>
         <div className="employee-table-shell compact-scroll">
-          <table className="data-table">
+          <table className="data-table req-table">
             <thead>
               <tr>
-                <th style={{textAlign:'center',whiteSpace:'nowrap'}}>Date Raised</th>
-                <th style={{whiteSpace:'nowrap'}}>Emp ID</th>
-                <th>Name</th>
+                <th style={{textAlign:'center',whiteSpace:'nowrap'}}>Date</th>
+                <th>Employee</th>
+                <th style={{whiteSpace:'nowrap'}}>ID</th>
                 <th>Section</th>
-                <th style={{whiteSpace:'nowrap'}}>Location</th>
-                <th style={{textAlign:'center',whiteSpace:'nowrap'}}>Request Category</th>
-                <th>Request Description</th>
+                <th>Location</th>
+                <th style={{textAlign:'center',whiteSpace:'nowrap'}}>Category</th>
+                <th className="req-col-wide">Request</th>
                 <th style={{textAlign:'center'}}>Priority</th>
-                <th style={{whiteSpace:'nowrap'}}>Assigned To</th>
-                <th>Action Taken</th>
+                <th>Assigned To</th>
+                <th className="req-col-wide">Action</th>
                 <th style={{textAlign:'center'}}>Status</th>
-                <th style={{textAlign:'center',whiteSpace:'nowrap'}}>Date Completed</th>
-                <th style={{whiteSpace:'nowrap'}}>Attended By</th>
-                <th>Remarks</th>
+                <th style={{textAlign:'center',whiteSpace:'nowrap'}}>Completed</th>
+                <th>Handled By</th>
                 <th style={{textAlign:'center'}}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0
-                ? <tr><td colSpan={15} className="empty-row">No requests found</td></tr>
+                ? <tr><td colSpan={14} className="empty-row">No requests found</td></tr>
                 : filtered.map((r) => (
-                  <tr key={r.id}>
-                    <td style={{textAlign:'center',fontSize:'0.8rem',whiteSpace:'nowrap'}}>{formatDateDisplay(r.submittedDate)}</td>
-                    <td style={{whiteSpace:'nowrap', fontSize:'0.8rem'}}>{r.employeeId || '—'}</td>
-                    <td style={{whiteSpace:'nowrap', fontWeight:600}}>{r.employeeName}</td>
-                    <td style={{whiteSpace:'nowrap', fontSize:'0.8rem'}}>{r.section || '—'}</td>
-                    <td style={{whiteSpace:'nowrap', fontSize:'0.8rem'}}>{r.location || '—'}</td>
+                  <tr key={r.id} className={r.status === 'Open' ? 'req-row-open' : ''}>
+                    <td style={{textAlign:'center',fontSize:'0.78rem',whiteSpace:'nowrap'}}>{formatDateDisplay(r.submittedDate)}</td>
+                    <td className="req-clamp2" style={{fontWeight:600}}>{r.employeeName}</td>
+                    <td style={{whiteSpace:'nowrap', fontSize:'0.78rem'}}>{r.employeeId || '—'}</td>
+                    <td className="req-clamp2" style={{fontSize:'0.78rem'}}>{r.section || '—'}</td>
+                    <td className="req-clamp2" style={{fontSize:'0.78rem'}}>{r.location || '—'}</td>
                     <td style={{textAlign:'center'}}><span className="req-type-chip">{r.requestType}</span></td>
-                    <td style={{minWidth:200, maxWidth:300}}>
-                      <span title={r.description || undefined} style={{ display:'-webkit-box', WebkitLineClamp:3, WebkitBoxOrient:'vertical', overflow:'hidden', fontSize:'0.81rem', lineHeight:'1.45', color:'var(--ink)' }}>
+                    <td className="req-col-wide">
+                      <span className="req-clamp3" title={r.description || undefined} style={{ fontSize:'0.81rem', color:'var(--ink)' }}>
                         {r.description || '—'}
                       </span>
                     </td>
                     <td style={{textAlign:'center'}}><span className={`req-priority-badge ${priorityColors[r.priority]}`}>{r.priority}</span></td>
-                    <td style={{whiteSpace:'nowrap', fontSize:'0.8rem'}}>{r.assignedTo || '—'}</td>
-                    <td style={{maxWidth:180}}>
-                      <span title={r.actionTaken || undefined} style={{ display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden', fontSize:'0.82rem', lineHeight:'1.4', color:'var(--ink)' }}>
+                    <td className="req-clamp2" style={{fontSize:'0.78rem'}}>{r.assignedTo || '—'}</td>
+                    <td className="req-col-wide">
+                      <span className="req-clamp3" title={r.actionTaken || undefined} style={{ fontSize:'0.81rem', color:'var(--ink)' }}>
                         {r.actionTaken || '—'}
                       </span>
                     </td>
                     <td style={{textAlign:'center', whiteSpace:'nowrap'}}>
                       <span className={reqStatusClass(r.status)}>{r.status}</span>
                     </td>
-                    <td style={{textAlign:'center',fontSize:'0.8rem',whiteSpace:'nowrap'}}>{r.completedDate ? formatDateDisplay(r.completedDate) : '—'}</td>
-                    <td style={{whiteSpace:'nowrap', fontSize:'0.8rem'}}>{r.attendedBy || '—'}</td>
-                    <td style={{maxWidth:160}}>
-                      <span title={r.remarks || undefined} style={{ display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden', fontSize:'0.82rem', lineHeight:'1.4', color:'var(--ink)' }}>
-                        {r.remarks || '—'}
-                      </span>
-                    </td>
+                    <td style={{textAlign:'center',fontSize:'0.78rem',whiteSpace:'nowrap'}}>{r.completedDate ? formatDateDisplay(r.completedDate) : '—'}</td>
+                    <td className="req-clamp2" style={{fontSize:'0.78rem'}}>{r.attendedBy || '—'}</td>
                     <td style={{textAlign:'center',whiteSpace:'nowrap'}}>
                       <div className="row-actions" style={{ flexWrap: 'nowrap' }}>
-                        {/* Proceed icon — only for Open, non-locked, non-HOD, non-ReadOnly */}
+                        {/* Status update — only for Open, non-locked, non-HOD, non-ReadOnly */}
                         {!isHOD && !isReadOnly && !r.locked && r.status === 'Open' && (
-                          <button className="action-glyph vwh" title="Status Update" onClick={() => openUpdate(r)} type="button"
-                            style={{ fontSize:'0.9rem', color:'#7c3aed' }}>⟳</button>
+                          <button className="req-proceed-btn" title="Update status" onClick={() => openUpdate(r)} type="button" aria-label="Update status">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                          </button>
                         )}
                         {!isReadOnly && <button className="action-glyph edit vwh" title="Edit" onClick={() => setEditing(r)} type="button">✎</button>}
                         {!isHOD && !isReadOnly && <button className="action-glyph delete vwh" title="Delete" onClick={() => del(r.id)} type="button">🗑</button>}
@@ -11288,10 +11319,13 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
                 >✕ Reject</button>
               </div>
               <label style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:12 }}>
-                <span style={{ fontSize:'0.78rem', fontWeight:700, color:'var(--ink)' }}>Attended By</span>
-                <input value={updateAttendedBy} onChange={e => setUpdateAttendedBy(e.target.value)}
-                  placeholder="Who handled this request"
-                  style={{ padding:'8px 10px', borderRadius:8, border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', width:'100%', boxSizing:'border-box' }} />
+                <span style={{ fontSize:'0.78rem', fontWeight:700, color:'var(--ink)' }}>Handled By</span>
+                <select value={updateAttendedBy} onChange={e => setUpdateAttendedBy(e.target.value)}
+                  style={{ padding:'8px 10px', borderRadius:8, border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', width:'100%', boxSizing:'border-box' }}>
+                  <option value="">— Select —</option>
+                  {REQUEST_HANDLERS.map((h) => <option key={h}>{h}</option>)}
+                  {updateAttendedBy && !REQUEST_HANDLERS.includes(updateAttendedBy) && <option>{updateAttendedBy}</option>}
+                </select>
               </label>
               <label style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:16 }}>
                 <span style={{ fontSize:'0.78rem', fontWeight:700, color:'var(--ink)' }}>Action Taken <span style={{ fontWeight:400, color:'var(--muted)' }}>(required)</span></span>
