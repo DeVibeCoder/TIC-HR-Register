@@ -4299,11 +4299,12 @@ function ActiveLeaveEditModal({ record, onClose, onSave }: {
   )
 }
 
-function LeaveExtendModal({ record, editExtension, onClose, onSave }: {
+function LeaveExtendModal({ record, editExtension, onClose, onSave, contextLabel = 'Active Leave' }: {
   record: ActiveLeaveRecord
   editExtension?: LeaveExtension          // if set → edit mode; else → add mode
   onClose: () => void
   onSave: (updated: ActiveLeaveRecord) => void
+  contextLabel?: string
 }) {
   const isEditMode = !!editExtension
   const [additionalDays, setAdditionalDays] = useState(editExtension?.additionalDays ?? 7)
@@ -4361,7 +4362,7 @@ function LeaveExtendModal({ record, editExtension, onClose, onSave }: {
       <section className="registration-modal" role="dialog" aria-modal="true">
         <div className="modal-header">
           <div>
-            <p className="eyebrow">Active Leave — {isEditMode ? 'Edit Extension' : 'Add Extension'}</p>
+            <p className="eyebrow">{contextLabel} — {isEditMode ? 'Edit Extension' : 'Add Extension'}</p>
             <h2>{isEditMode ? 'Edit Extension' : 'Extend Leave'} — {record.name}</h2>
             <p style={{ fontSize: '0.82rem', color: '#64748b' }}>
               {record.employeeId} · Original: <strong>{leaveTypeOptions.find(l => l.code === record.leaveTypeCode)?.label ?? record.leaveTypeCode}</strong>
@@ -4514,6 +4515,7 @@ function LeavePage({
   const [historyDepartmentFilter, setHistoryDepartmentFilter] = useState('All Departments')
   const [viewingProgress, setViewingProgress] = useState<LeaveHistoryRecord | null>(null)
   const [editingHistory, setEditingHistory] = useState<LeaveHistoryRecord | null>(null)
+  const [extendingHistory, setExtendingHistory] = useState<LeaveHistoryRecord | null>(null)
 
   const historyMonths = useMemo(() => {
     const keys = Array.from(new Set(leaveHistory.map((record) => monthKey(record.returnDate)).filter(Boolean)))
@@ -4834,6 +4836,7 @@ function LeavePage({
                       <td>
                         <div className="row-actions">
                           <button className="action-glyph" onClick={() => setViewingProgress(record)} type="button" title="View Progress" style={{ fontSize: '1rem' }}>👁</button>
+                          {!isExecutive && <button className="action-glyph vwh" onClick={() => setExtendingHistory(record)} type="button" title={histExt ? 'Edit extension' : 'Record extension (did not return on time)'} style={{ fontSize: '0.95rem' }}>📅</button>}
                           {isAdmin && <button className="action-glyph edit vwh" onClick={() => setEditingHistory(record)} type="button" title="Edit">✎</button>}
                           {isAdmin && <button className="action-glyph delete vwh" onClick={() => { if (window.confirm(`Delete this leave history record for ${record.name}? This is used to remove duplicates and cannot be undone.`)) onDeleteHistory(record.id) }} type="button" title="Delete">🗑</button>}
                         </div>
@@ -4844,6 +4847,7 @@ function LeavePage({
               </tbody></table>
             </div>
             {editingHistory && <ActiveLeaveEditModal record={editingHistory as unknown as ActiveLeaveRecord} onClose={() => setEditingHistory(null)} onSave={(r) => { onEditHistory(r as unknown as LeaveHistoryRecord); setEditingHistory(null) }} />}
+            {extendingHistory && <LeaveExtendModal contextLabel="Leave History" record={extendingHistory as unknown as ActiveLeaveRecord} editExtension={extendingHistory.extensions?.[0]} onClose={() => setExtendingHistory(null)} onSave={(r) => { onEditHistory(r as unknown as LeaveHistoryRecord); setExtendingHistory(null) }} />}
           </>
         )}
 
@@ -11131,6 +11135,12 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
     return [...prev, { ...r, id: `REQ-${String(maxNum + 1).padStart(3, '0')}` }]
   }); setEditing(null) }
   const del = (id: string) => onUpdate((prev) => prev.filter((x) => x.id !== id))
+  const clearAll = () => {
+    if (records.length === 0) { alert('There are no requests to clear.'); return }
+    if (window.confirm(`Clear ALL ${records.length} request record(s)?\n\nUse this to remove a bad import. This permanently deletes every request and cannot be undone.`)) {
+      onUpdate(() => [])
+    }
+  }
 
   const openUpdate = (r: StaffRequestRecord) => {
     setUpdateAction(r.actionTaken || '')
@@ -11154,14 +11164,14 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
   // Status badge colours for requests
   const reqStatusClass = (s: string) => s === 'Open' ? 'status-badge open' : s === 'Completed' ? 'status-badge approved' : 'status-badge rejected'
 
-  const REQ_HEADERS = ['DATE', 'EMPLOYEE', 'ID', 'SECTION', 'LOCATION', 'CATEGORY', 'REQUEST', 'PRIORITY', 'ASSIGNED TO', 'ACTION', 'STATUS', 'COMPLETED', 'HANDLED BY', 'REMARKS']
+  const REQ_HEADERS = ['DATE', 'ID', 'NAME', 'SECTION', 'LOCATION', 'CATEGORY', 'DESCRIPTION', 'PRIORITY', 'ASSIGNED TO', 'ACTION', 'STATUS', 'COMPLETED', 'HANDLED BY']
   const downloadReqTemplate = () => downloadCsv('staff-requests-template.csv', [
     REQ_HEADERS,
-    ['2026-07-01', 'EXAMPLE EMPLOYEE', '12345', 'ADMINISTRATION', 'HR Office', 'Documents', 'Sample request description', 'Medium', 'HR Officer', '', 'Open', '', 'SHANTUMON', ''],
+    ['2026-07-01', '12345', 'EXAMPLE EMPLOYEE', 'ADMINISTRATION', 'HR Office', 'Documents', 'Sample request description', 'Medium', 'HR Officer', '', 'Open', '', 'SHANTUMON'],
   ])
   const exportReq = () => downloadCsv('staff-requests.csv', [
     REQ_HEADERS,
-    ...records.map(r => [r.submittedDate, r.employeeName, r.employeeId, r.section, r.location ?? '', r.requestType, r.description, r.priority, r.assignedTo ?? '', r.actionTaken, r.status, r.completedDate, r.attendedBy ?? '', r.remarks ?? '']),
+    ...records.map(r => [r.submittedDate, r.employeeId, r.employeeName, r.section, r.location ?? '', r.requestType, r.description, r.priority, r.assignedTo ?? '', r.actionTaken, r.status, r.completedDate, r.attendedBy ?? '']),
   ])
   const importReq = () => {
     const input = document.createElement('input')
@@ -11218,6 +11228,7 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
           {isAdmin && <button className="io-btn vwh" type="button" onClick={downloadReqTemplate}>Template</button>}
           {isAdmin && <button className="io-btn vwh" type="button" onClick={importReq}>Import</button>}
           {isAdmin && <button className="io-btn vwh" type="button" onClick={exportReq}>Export</button>}
+          {isAdmin && <button className="io-btn vwh req-clear-btn" type="button" onClick={clearAll}>Clear All</button>}
           {!isReadOnly && <button className="primary-button vwh" type="button" onClick={() => setEditing(newReq())}>+ Add Request</button>}
         </div>
         <div className="employee-table-shell compact-scroll">
@@ -11225,12 +11236,12 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
             <thead>
               <tr>
                 <th style={{textAlign:'center',whiteSpace:'nowrap'}}>Date</th>
-                <th>Employee</th>
                 <th style={{whiteSpace:'nowrap'}}>ID</th>
+                <th>Name</th>
                 <th>Section</th>
                 <th>Location</th>
                 <th style={{textAlign:'center',whiteSpace:'nowrap'}}>Category</th>
-                <th className="req-col-wide">Request</th>
+                <th className="req-col-wide">Description</th>
                 <th style={{textAlign:'center'}}>Priority</th>
                 <th>Assigned To</th>
                 <th className="req-col-wide">Action</th>
@@ -11246,8 +11257,8 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
                 : filtered.map((r) => (
                   <tr key={r.id} className={r.status === 'Open' ? 'req-row-open' : ''}>
                     <td style={{textAlign:'center',fontSize:'0.78rem',whiteSpace:'nowrap'}}>{formatDateDisplay(r.submittedDate)}</td>
-                    <td className="req-clamp2" style={{fontWeight:600}}>{r.employeeName}</td>
                     <td style={{whiteSpace:'nowrap', fontSize:'0.78rem'}}>{r.employeeId || '—'}</td>
+                    <td className="req-clamp2" style={{fontWeight:600}}>{r.employeeName}</td>
                     <td className="req-clamp2" style={{fontSize:'0.78rem'}}>{r.section || '—'}</td>
                     <td className="req-clamp2" style={{fontSize:'0.78rem'}}>{r.location || '—'}</td>
                     <td style={{textAlign:'center'}}><span className="req-type-chip">{r.requestType}</span></td>
@@ -11376,7 +11387,7 @@ function VisitsSection({ records, employees, onUpdate, isReadOnly = false, isAdm
     && (typeFilter === 'All' || r.visitType === typeFilter)
     && (statusFilter === 'All' || r.status === statusFilter)
     && (monthFilter === 'All' || monthKey(r.visitDate) === monthFilter)
-  ).sort((a, b) => (a.visitDate || '').localeCompare(b.visitDate || '')), [records, search, typeFilter, statusFilter, monthFilter])
+  ).sort((a, b) => (b.visitDate || '').localeCompare(a.visitDate || '')), [records, search, typeFilter, statusFilter, monthFilter])
 
   // Top cards — total + by type, scoped to the selected month (All = all-time)
   const monthVisits = useMemo(() => monthFilter === 'All' ? records : records.filter((r) => monthKey(r.visitDate) === monthFilter), [records, monthFilter])

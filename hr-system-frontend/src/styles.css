@@ -7219,16 +7219,25 @@ input::-webkit-credentials-auto-fill-button { visibility: hidden; pointer-events
   border: 1px solid rgba(91,33,182,0.18);
 }
 
+/* Clear-all (admin) — danger-tinted so it's distinct from Template/Export */
+.req-clear-btn {
+  background: #dc2626 !important;
+  border-color: #dc2626 !important;
+  color: #fff !important;
+}
+.req-clear-btn:hover { background: #b91c1c !important; border-color: #b91c1c !important; }
+
 /* ── Requests table — auto-fit, tighter, wrapping short columns ── */
 .req-table { table-layout: auto; width: 100%; }
 .req-table thead th { padding: 7px 8px; }
 .req-table tbody td { padding: 6px 8px; vertical-align: top; }
 /* Give Request & Action columns the room; cap the rest */
 .req-table .req-col-wide { min-width: 190px; }
-.req-table th:nth-child(2),  /* Employee */
+.req-table th:nth-child(3),  /* Name */
 .req-table th:nth-child(4),  /* Section */
 .req-table th:nth-child(5),  /* Location */
-.req-table th:nth-child(9) { /* Assigned To */
+.req-table th:nth-child(9),  /* Assigned To */
+.req-table th:nth-child(13) { /* Handled By */
   max-width: 120px;
 }
 /* Clamp helpers — long names/section/location wrap to 2 lines */
@@ -10747,6 +10756,61 @@ html { overflow-x: hidden; }
 
 /* Hover/soft-fill list rows that used light purple/grey */
 [data-theme="dark"] :is(.ov-list li:hover, .pending-task-row:hover, .pf-picker-row:hover, .settings-tab-btn:hover) { background: rgba(124,92,255,.12); }
+
+/* Pending Tasks modal — rows kept a light (#fafafa) fill while global dark
+   rules turn their text light, making them unreadable. */
+[data-theme="dark"] .pending-task-row {
+  background: rgba(255,255,255,.04);
+  border-color: rgba(255,255,255,.10);
+}
+[data-theme="dark"] .pending-name-text { color: var(--ink); }
+[data-theme="dark"] .pending-task-id { color: #AAB3C5; }
+[data-theme="dark"] .pending-field-chip {
+  background: rgba(220,38,38,.16);
+  color: #FCA5A5;
+  border-color: rgba(220,38,38,.34);
+}
+[data-theme="dark"] .pending-edit-btn {
+  background: rgba(124,92,255,.16);
+  border-color: rgba(124,92,255,.30);
+  color: #C4B5FD;
+}
+[data-theme="dark"] .pending-edit-btn:hover { background: rgba(124,92,255,.26); }
+
+/* ── Add/edit forms: search & autocomplete dropdowns ──────────────────────
+   Many modals (Leave, Participants, Exit-Interview, Staff Picker, etc.) give
+   their popover list a hardcoded white background with dark item text. In dark
+   mode the popover stayed white while the global rule turned item text light,
+   so the list was unreadable. Force a dark surface + readable text. Scoped to
+   modal popovers so page content is untouched. */
+[data-theme="dark"] .modal-backdrop :is([class*="search-results"],[class*="search-drop"],[class*="emp-dropdown"],[class*="emp-drop"],[class*="-dropdown"]) {
+  background: #1E2230 !important;
+  border-color: rgba(255,255,255,.12) !important;
+  box-shadow: 0 12px 32px rgba(0,0,0,.55) !important;
+  color: var(--ink) !important;
+}
+[data-theme="dark"] .modal-backdrop :is([class*="search-results"],[class*="search-drop"],[class*="emp-dropdown"],[class*="emp-drop"],[class*="-dropdown"]) :is(li,div,span,button,strong,small) {
+  color: var(--ink);
+}
+[data-theme="dark"] .modal-backdrop :is([class*="search-results"],[class*="search-drop"],[class*="emp-dropdown"],[class*="emp-drop"],[class*="-dropdown"]) :is(li,button,[class*="option"]):hover {
+  background: rgba(124,92,255,.16) !important;
+}
+/* Keep the meta/secondary text a touch muted rather than full-strength */
+[data-theme="dark"] .modal-backdrop :is(.lf-res-dept,.lf-res-id) { color: #AAB3C5; }
+[data-theme="dark"] .lf-section-label,
+[data-theme="dark"] .lf-grid span { color: #C4B5FD; }
+
+/* Add-form grouping cards that used a hardcoded white/near-white fill
+   (e.g. Passport record sections) — turn them into dark surfaces so their
+   labels and values are readable. */
+[data-theme="dark"] .modal-backdrop :is([class*="modal-section"],[class*="-form-section"],.pp-modal-section) {
+  background: #171A23 !important;
+  border-color: rgba(255,255,255,.08) !important;
+}
+[data-theme="dark"] .modal-backdrop :is(.pp-modal-section-label) {
+  color: #AAB3C5;
+  border-bottom-color: rgba(255,255,255,.08);
+}
 
 /* Soft side-accent info panels (kept their light fills) */
 [data-theme="dark"] .pp-send-section { background: rgba(245,158,11,.10); }
