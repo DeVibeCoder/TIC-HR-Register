@@ -1398,51 +1398,60 @@ function downloadCsv(filename: string, rows: string[][]) {
 function parseCsv(text: string): string[][] {
   // Strip a UTF-8 BOM so the first header (e.g. "DATE") isn't read as "﻿DATE".
   if (text.charCodeAt(0) === 0xfeff) text = text.slice(1)
+  // Normalise line endings (handles Windows \r\n and old-Mac lone \r).
+  text = text.replace(/\r\n?/g, '\n')
 
-  // Auto-detect the delimiter from the first non-empty line so files saved with
-  // semicolons (regional Excel) or tabs still import correctly, not just commas.
+  // Auto-detect the delimiter from the first line, counting only separators that
+  // sit OUTSIDE quotes, so semicolon/tab exports (regional Excel) also work.
   const detectDelimiter = (t: string): string => {
-    const firstLine = t.split(/\r?\n/).find((l) => l.trim()) ?? ''
     let inQuotes = false
     const counts: Record<string, number> = { ',': 0, ';': 0, '\t': 0 }
-    for (let k = 0; k < firstLine.length; k++) {
-      const ch = firstLine[k]
+    for (let k = 0; k < t.length; k++) {
+      const ch = t[k]
+      if (ch === '\n' && !inQuotes) break            // stop at end of first record
       if (ch === '"') inQuotes = !inQuotes
       else if (!inQuotes && ch in counts) counts[ch]++
     }
-    // Pick the delimiter with the highest count; default to comma.
-    return (Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[1] ?? 0) > 0
-      ? Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0]
-      : ','
+    const best = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]
+    return best && best[1] > 0 ? best[0] : ','
   }
   const delim = detectDelimiter(text)
 
+  // RFC-4180 state machine over the WHOLE text — a quoted field may contain the
+  // delimiter AND embedded newlines (multi-line Excel cells) without splitting
+  // the record. Splitting on newlines first (the old approach) corrupted any row
+  // whose cell held a line break, cascading every following column into the wrong
+  // field. This parser never does that.
   const rows: string[][] = []
-  for (const line of text.split(/\r?\n/)) {
-    if (!line.trim()) continue
-    const fields: string[] = []
-    let i = 0
-    while (i <= line.length) {
-      if (i === line.length) { fields.push(''); break }
-      if (line[i] === '"') {
-        // quoted field — delimiters inside are literal
-        let field = ''; i++
-        while (i < line.length) {
-          if (line[i] === '"' && line[i + 1] === '"') { field += '"'; i += 2 }
-          else if (line[i] === '"') { i++; break }
-          else { field += line[i++] }
-        }
-        fields.push(field.trim())
-        if (line[i] === delim) i++; else break
-      } else {
-        const end = line.indexOf(delim, i)
-        if (end === -1) { fields.push(line.slice(i).trim()); break }
-        fields.push(line.slice(i, end).trim()); i = end + 1
-      }
+  let field = ''
+  let row: string[] = []
+  let inQuotes = false
+  let started = false   // whether the current record has any content
+  const pushField = () => { row.push(field.trim()); field = '' }
+  const pushRow = () => { pushField(); rows.push(row); row = []; started = false }
+
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i]
+    if (inQuotes) {
+      if (ch === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++ }   // escaped quote
+        else inQuotes = false
+      } else field += ch
+    } else if (ch === '"') {
+      inQuotes = true; started = true
+    } else if (ch === delim) {
+      pushField(); started = true
+    } else if (ch === '\n') {
+      if (started || field.length || row.length) pushRow()
+    } else {
+      field += ch; started = true
     }
-    rows.push(fields)
   }
-  return rows
+  // Flush the final record if the file didn't end with a newline.
+  if (started || field.length || row.length) pushRow()
+
+  // Drop fully-blank rows (e.g. trailing empty lines).
+  return rows.filter((r) => r.some((c) => c.trim() !== ''))
 }
 
 const leaveTypeMeta: Record<LeaveTypeCode, { bg: string; border: string; color: string }> = {
@@ -11225,8 +11234,13 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
         }
       })
       if (imported.length === 0) { alert('No valid rows found in the CSV.'); return }
-      onUpdate(prev => [...imported, ...prev])
-      alert(`✓ Import successful — ${imported.length} request(s) added.`)
+      // Offer to REPLACE existing records so a fresh import of the master file
+      // lands clean instead of stacking on top of older (possibly bad) rows.
+      const replace = records.length > 0 && window.confirm(
+        `Import ${imported.length} request(s).\n\nClick OK to REPLACE all ${records.length} existing request(s) with the imported ones (recommended when importing your full master file).\n\nClick Cancel to ADD the imported ones on top of the existing records.`
+      )
+      onUpdate(prev => replace ? imported : [...imported, ...prev])
+      alert(`✓ Import successful — ${imported.length} request(s) ${replace ? 'imported (existing records replaced)' : 'added'}.`)
     }
     input.click()
   }
