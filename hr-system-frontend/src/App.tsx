@@ -1396,6 +1396,27 @@ function downloadCsv(filename: string, rows: string[][]) {
 }
 
 function parseCsv(text: string): string[][] {
+  // Strip a UTF-8 BOM so the first header (e.g. "DATE") isn't read as "﻿DATE".
+  if (text.charCodeAt(0) === 0xfeff) text = text.slice(1)
+
+  // Auto-detect the delimiter from the first non-empty line so files saved with
+  // semicolons (regional Excel) or tabs still import correctly, not just commas.
+  const detectDelimiter = (t: string): string => {
+    const firstLine = t.split(/\r?\n/).find((l) => l.trim()) ?? ''
+    let inQuotes = false
+    const counts: Record<string, number> = { ',': 0, ';': 0, '\t': 0 }
+    for (let k = 0; k < firstLine.length; k++) {
+      const ch = firstLine[k]
+      if (ch === '"') inQuotes = !inQuotes
+      else if (!inQuotes && ch in counts) counts[ch]++
+    }
+    // Pick the delimiter with the highest count; default to comma.
+    return (Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[1] ?? 0) > 0
+      ? Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0]
+      : ','
+  }
+  const delim = detectDelimiter(text)
+
   const rows: string[][] = []
   for (const line of text.split(/\r?\n/)) {
     if (!line.trim()) continue
@@ -1404,7 +1425,7 @@ function parseCsv(text: string): string[][] {
     while (i <= line.length) {
       if (i === line.length) { fields.push(''); break }
       if (line[i] === '"') {
-        // quoted field — commas inside are literal
+        // quoted field — delimiters inside are literal
         let field = ''; i++
         while (i < line.length) {
           if (line[i] === '"' && line[i + 1] === '"') { field += '"'; i += 2 }
@@ -1412,9 +1433,9 @@ function parseCsv(text: string): string[][] {
           else { field += line[i++] }
         }
         fields.push(field.trim())
-        if (line[i] === ',') i++; else break
+        if (line[i] === delim) i++; else break
       } else {
-        const end = line.indexOf(',', i)
+        const end = line.indexOf(delim, i)
         if (end === -1) { fields.push(line.slice(i).trim()); break }
         fields.push(line.slice(i, end).trim()); i = end + 1
       }
