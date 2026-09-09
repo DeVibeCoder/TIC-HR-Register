@@ -6710,7 +6710,7 @@ function TrainingSection({ records, onUpdate, employees, isReadOnly = false }: {
 
 // ── Bank Account Opening ────────────────────────────────────
 
-type BankName = 'SBI' | 'BOC' | 'CBM'
+type BankName = 'SBI' | 'BOC' | 'CBM' | 'BML'
 type AccountStatus = 'Pending' | 'Applied' | 'Completed'
 type AccountType = 'USD' | 'MVR' | 'USD & MVR'
 
@@ -6877,7 +6877,7 @@ function BankAccountModal({ record, employees, onClose, onSave }: {
                 <span className="trn-modal-field-lbl">Bank</span>
                 <select value={bank} onChange={(e) => setBank(e.target.value as BankName)}
                   style={{ padding: '7px 10px', borderRadius: '7px', border: '1.5px solid rgba(124,58,237,0.2)', fontSize: '0.85rem', background: '#fff' }}>
-                  <option>SBI</option><option>BOC</option><option>CBM</option>
+                  <option>SBI</option><option>BOC</option><option>CBM</option><option>BML</option>
                 </select>
               </label>
               <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -7074,7 +7074,7 @@ function BankAccountSection({ employees, records, onUpdate }: {
           <label><span>Bank</span>
             <select value={bankFilter} onChange={(e) => setBankFilter(e.target.value as typeof bankFilter)}>
               <option value="All">All Banks</option>
-              <option>SBI</option><option>BOC</option><option>CBM</option>
+              <option>SBI</option><option>BOC</option><option>CBM</option><option>BML</option>
             </select>
           </label>
           <label><span>Section</span>
