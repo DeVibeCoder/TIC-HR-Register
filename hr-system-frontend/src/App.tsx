@@ -11233,20 +11233,36 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
         </div>
         <div className="employee-table-shell compact-scroll">
           <table className="data-table req-table">
+            <colgroup>
+              <col style={{ width: '84px' }} />   {/* Date */}
+              <col style={{ width: '62px' }} />   {/* ID */}
+              <col style={{ width: '138px' }} />  {/* Name */}
+              <col style={{ width: '116px' }} />  {/* Section */}
+              <col style={{ width: '104px' }} />  {/* Location */}
+              <col style={{ width: '104px' }} />  {/* Category */}
+              <col style={{ width: '240px' }} />  {/* Description */}
+              <col style={{ width: '84px' }} />   {/* Priority */}
+              <col style={{ width: '116px' }} />  {/* Assigned To */}
+              <col style={{ width: '220px' }} />  {/* Action */}
+              <col style={{ width: '96px' }} />   {/* Status */}
+              <col style={{ width: '90px' }} />   {/* Completed */}
+              <col style={{ width: '116px' }} />  {/* Handled By */}
+              <col style={{ width: '104px' }} />  {/* Actions */}
+            </colgroup>
             <thead>
               <tr>
-                <th style={{textAlign:'center',whiteSpace:'nowrap'}}>Date</th>
-                <th style={{whiteSpace:'nowrap'}}>ID</th>
+                <th style={{textAlign:'center'}}>Date</th>
+                <th>ID</th>
                 <th>Name</th>
                 <th>Section</th>
                 <th>Location</th>
-                <th style={{textAlign:'center',whiteSpace:'nowrap'}}>Category</th>
-                <th className="req-col-wide">Description</th>
+                <th style={{textAlign:'center'}}>Category</th>
+                <th>Description</th>
                 <th style={{textAlign:'center'}}>Priority</th>
                 <th>Assigned To</th>
-                <th className="req-col-wide">Action</th>
+                <th>Action</th>
                 <th style={{textAlign:'center'}}>Status</th>
-                <th style={{textAlign:'center',whiteSpace:'nowrap'}}>Completed</th>
+                <th style={{textAlign:'center'}}>Completed</th>
                 <th>Handled By</th>
                 <th style={{textAlign:'center'}}>Actions</th>
               </tr>

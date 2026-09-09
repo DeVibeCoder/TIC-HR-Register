@@ -7227,19 +7227,17 @@ input::-webkit-credentials-auto-fill-button { visibility: hidden; pointer-events
 }
 .req-clear-btn:hover { background: #b91c1c !important; border-color: #b91c1c !important; }
 
-/* ── Requests table — auto-fit, tighter, wrapping short columns ── */
-.req-table { table-layout: auto; width: 100%; }
-.req-table thead th { padding: 7px 8px; }
-.req-table tbody td { padding: 6px 8px; vertical-align: top; }
-/* Give Request & Action columns the room; cap the rest */
-.req-table .req-col-wide { min-width: 190px; }
-.req-table th:nth-child(3),  /* Name */
-.req-table th:nth-child(4),  /* Section */
-.req-table th:nth-child(5),  /* Location */
-.req-table th:nth-child(9),  /* Assigned To */
-.req-table th:nth-child(13) { /* Handled By */
-  max-width: 120px;
+/* ── Requests table — fixed layout so every column stays aligned ──
+   Explicit <colgroup> widths in the markup drive the columns; the shell
+   scrolls horizontally when the total exceeds the viewport. */
+.req-table { table-layout: fixed; width: auto; min-width: 100%; }
+.req-table thead th {
+  padding: 7px 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+.req-table tbody td { padding: 6px 8px; vertical-align: top; overflow: hidden; }
 /* Clamp helpers — long names/section/location wrap to 2 lines */
 .req-clamp2 {
   display: -webkit-box;
