@@ -11176,7 +11176,10 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('All')
   const [statusFilter, setStatusFilter] = useState('All')
-  const [monthFilter, setMonthFilter] = useState<'All' | string>(() => new Date().toISOString().slice(0, 7))
+  // Default to ALL months. Defaulting to the current month hid every request
+  // whose date is in another month, so an imported dataset (often dated in past
+  // months) showed "No requests found" even though the rows were loaded.
+  const [monthFilter, setMonthFilter] = useState<'All' | string>('All')
   const [editing, setEditing] = useState<StaffRequestRecord | null>(null)
   const [updateModal, setUpdateModal] = useState<StaffRequestRecord | null>(null)
   const [updateAction, setUpdateAction] = useState('')
@@ -11196,6 +11199,17 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
     && (statusFilter === 'All' || r.status === statusFilter)
     && (monthFilter === 'All' || monthKey(r.submittedDate) === monthFilter)
   ).sort((a, b) => (b.submittedDate || '').localeCompare(a.submittedDate || '')), [records, search, typeFilter, statusFilter, monthFilter])
+
+  // Diagnostic: shows exactly where rows drop off (records -> filtered -> shown).
+  useEffect(() => {
+    const first = records[0]
+    console.info('[Requests] pipeline', {
+      recordsInState: records.length,
+      afterFilters: filtered.length,
+      activeFilters: { search: search || '(none)', type: typeFilter, status: statusFilter, month: monthFilter },
+      firstRecord: first ? { id: first.employeeId, name: first.employeeName, section: first.section, category: first.requestType, date: first.submittedDate, monthKey: monthKey(first.submittedDate) } : null,
+    })
+  }, [records, filtered, search, typeFilter, statusFilter, monthFilter])
 
   const save = (r: StaffRequestRecord) => { onUpdate((prev) => {
     const idx = prev.findIndex((x) => x.id === r.id)
