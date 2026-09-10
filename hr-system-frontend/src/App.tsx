@@ -11407,9 +11407,9 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
                   <tr key={r.id} className={r.status === 'Open' ? 'req-row-open' : ''}>
                     <td style={{textAlign:'center',fontSize:'0.78rem',whiteSpace:'nowrap'}}>{formatDateDisplay(r.submittedDate)}</td>
                     <td style={{whiteSpace:'nowrap', fontSize:'0.78rem'}}>{r.employeeId || '—'}</td>
-                    <td className="req-clamp2" style={{fontWeight:600}}>{r.employeeName}</td>
-                    <td className="req-clamp2" style={{fontSize:'0.78rem'}}>{r.section || '—'}</td>
-                    <td className="req-clamp2" style={{fontSize:'0.78rem'}}>{r.location || '—'}</td>
+                    <td className="req-cell"><div className="req-clamp2" style={{fontWeight:600}}>{r.employeeName}</div></td>
+                    <td className="req-cell"><div className="req-clamp2" style={{fontSize:'0.78rem'}}>{r.section || '—'}</div></td>
+                    <td className="req-cell"><div className="req-clamp2" style={{fontSize:'0.78rem'}}>{r.location || '—'}</div></td>
                     <td style={{textAlign:'center'}}><span className="req-type-chip">{r.requestType}</span></td>
                     <td className="req-col-wide">
                       <span className="req-clamp3" title={r.description || undefined} style={{ fontSize:'0.81rem', color:'var(--ink)' }}>
@@ -11417,7 +11417,7 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
                       </span>
                     </td>
                     <td style={{textAlign:'center'}}><span className={`req-priority-badge ${priorityColors[r.priority]}`}>{r.priority}</span></td>
-                    <td className="req-clamp2" style={{fontSize:'0.78rem'}}>{r.assignedTo || '—'}</td>
+                    <td className="req-cell"><div className="req-clamp2" style={{fontSize:'0.78rem'}}>{r.assignedTo || '—'}</div></td>
                     <td className="req-col-wide">
                       <span className="req-clamp3" title={r.actionTaken || undefined} style={{ fontSize:'0.81rem', color:'var(--ink)' }}>
                         {r.actionTaken || '—'}
@@ -11427,7 +11427,7 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
                       <span className={reqStatusClass(r.status)}>{r.status}</span>
                     </td>
                     <td style={{textAlign:'center',fontSize:'0.78rem',whiteSpace:'nowrap'}}>{r.completedDate ? formatDateDisplay(r.completedDate) : '—'}</td>
-                    <td className="req-clamp2" style={{fontSize:'0.78rem'}}>{r.attendedBy || '—'}</td>
+                    <td className="req-cell"><div className="req-clamp2" style={{fontSize:'0.78rem'}}>{r.attendedBy || '—'}</div></td>
                     <td style={{textAlign:'center',whiteSpace:'nowrap'}}>
                       <div className="row-actions" style={{ flexWrap: 'nowrap' }}>
                         {/* Status update — only for Open, non-locked, non-HOD, non-ReadOnly */}

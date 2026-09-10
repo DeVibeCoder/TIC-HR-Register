@@ -7267,23 +7267,18 @@ input::-webkit-credentials-auto-fill-button { visibility: hidden; pointer-events
   text-overflow: ellipsis;
 }
 .req-table tbody td { padding: 6px 8px; vertical-align: top; overflow: hidden; }
-/* Clamp helpers — long names/section/location wrap to 2 lines */
-.req-clamp2 {
+/* Clamp helpers — MUST be applied to an inner div/span, NEVER to the <td>.
+   `display:-webkit-box` on a <td> removes it from the table layout (it stops
+   being display:table-cell), which collapses/stacks columns. Keeping the clamp
+   on an inner block preserves the one-row/one-cell table structure. */
+.req-clamp2, .req-clamp3 {
   display: -webkit-box;
-  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  line-height: 1.3;
-  word-break: break-word;
+  overflow-wrap: anywhere;   /* wrap only when needed; no aggressive per-char breaks */
 }
-.req-clamp3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  line-height: 1.35;
-  word-break: break-word;
-}
+.req-clamp2 { -webkit-line-clamp: 2; line-height: 1.3; }
+.req-clamp3 { -webkit-line-clamp: 3; line-height: 1.35; }
 /* Highlight rows still Open */
 .req-table tbody tr.req-row-open td { background: rgba(37,99,235,0.05); }
 .req-table tbody tr.req-row-open:hover td { background: rgba(37,99,235,0.09); }
