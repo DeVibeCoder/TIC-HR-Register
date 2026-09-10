@@ -11197,11 +11197,27 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
     return [...prev, { ...r, id: `REQ-${String(maxNum + 1).padStart(3, '0')}` }]
   }); setEditing(null) }
   const del = (id: string) => onUpdate((prev) => prev.filter((x) => x.id !== id))
-  const clearAll = () => {
-    if (records.length === 0) { alert('There are no requests to clear.'); return }
-    if (window.confirm(`Clear ALL ${records.length} request record(s)?\n\nUse this to remove a bad import. This permanently deletes every request and cannot be undone.`)) {
-      onUpdate(() => [])
+
+  // Delete EVERY staff_requests row directly in the database (awaited, errors
+  // surfaced). The local diff-sync can miss legacy rows (its "previous" snapshot
+  // may not contain them), so a bad import could linger and reappear on reload.
+  // This guarantees the table can be truly purged. Returns false on failure so
+  // the caller can abort without touching local state.
+  const purgeRequestsFromDb = async (): Promise<boolean> => {
+    const { error } = await supabase.from('staff_requests').delete().neq('id', '')
+    if (error) {
+      alert(`Could not clear requests from the database:\n${error.message}\n\nNo records were changed. This is usually a permissions (RLS) issue — please report it.`)
+      return false
     }
+    return true
+  }
+
+  const clearAll = async () => {
+    if (records.length === 0) { alert('There are no requests to clear.'); return }
+    if (!window.confirm(`Clear ALL ${records.length} request record(s)?\n\nUse this to remove a bad import. This permanently deletes every request from the database and cannot be undone.`)) return
+    if (!(await purgeRequestsFromDb())) return
+    onUpdate(() => [])
+    alert('✓ All request records cleared.')
   }
 
   const openUpdate = (r: StaffRequestRecord) => {
@@ -11285,12 +11301,17 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
   }
 
   // Commit the previewed import (only reachable when required headers are present).
-  const commitImport = (replace: boolean) => {
+  // "Replace all" first purges every existing row from the database so legacy /
+  // previously-corrupted records cannot survive and reappear on reload.
+  const commitImport = async (replace: boolean) => {
     if (!importPreview || importPreview.missing.length > 0 || importPreview.records.length === 0) return
     const imported = importPreview.records
+    if (replace) {
+      if (!(await purgeRequestsFromDb())) return   // abort on DB error; nothing changed
+    }
     onUpdate((prev) => replace ? imported : [...imported, ...prev])
     setImportPreview(null)
-    alert(`✓ Import successful — ${imported.length} request(s) ${replace ? 'imported (existing records replaced)' : 'added'}.`)
+    alert(`✓ Import successful — ${imported.length} request(s) ${replace ? 'imported (all existing records replaced)' : 'added'}.`)
   }
 
   return (
