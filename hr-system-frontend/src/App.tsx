@@ -699,6 +699,7 @@ function syncTable<T>(
   current: T[], previous: T[],
   toDb: (item: T) => Record<string, unknown>,
   getPk: (item: T) => string,
+  onError?: (op: 'upsert' | 'delete', message: string) => void,
 ) {
   const prevIds = new Set(previous.map(getPk))
   const changed = current.filter(item => {
@@ -711,7 +712,7 @@ function syncTable<T>(
     supabase.from(table)
       .upsert(changed.map(toDb), { onConflict: pkField })
       .then(({ error }) => {
-        if (error) console.error(`[DB] ${table} upsert error:`, error.message, error.code)
+        if (error) { console.error(`[DB] ${table} upsert error:`, error.message, error.code); onError?.('upsert', error.message) }
       })
   }
   const curIds = new Set(current.map(getPk))
@@ -719,7 +720,7 @@ function syncTable<T>(
   if (delIds.length) {
     supabase.from(table).delete().in(pkField, delIds)
       .then(({ error }) => {
-        if (error) console.error(`[DB] ${table} delete error:`, error.message)
+        if (error) { console.error(`[DB] ${table} delete error:`, error.message); onError?.('delete', error.message) }
       })
   }
 }
@@ -12510,17 +12511,36 @@ function ActivitiesPage({
       supabase.from('staff_requests').select('*'),
       supabase.from('visit_records').select('*'),
       supabase.from('incident_records').select('*'),
-    ]).then(([sr, vr, ir]) => {
-      if (sr.data?.length) setStaffRequests(sr.data.map(staffReqFromDb))
-      if (vr.data?.length) setVisitRecords(vr.data.map(visitFromDb))
-      if (ir.data?.length) setIncidentRecords(ir.data.map(incidentFromDb))
+    ]).then(async ([sr, vr, ir]) => {
+      // ── Safe backend diagnostic (no secrets) — helps confirm every session/
+      // deployment is reading the SAME production database with a real session. ──
+      try {
+        const { data: sess } = await supabase.auth.getSession()
+        const host = (import.meta.env.VITE_SUPABASE_URL as string || '').replace(/^https?:\/\//, '').split('.')[0]
+        console.info('[Backend] staff_requests diagnostic', {
+          supabaseProject: host,
+          authenticated: !!sess.session,
+          userEmail: sess.session?.user?.email ?? null,
+          accessTokenPresent: !!sess.session?.access_token,
+          staffRequestsRead: sr.error ? `ERROR: ${sr.error.message}` : `${sr.data?.length ?? 0} row(s)`,
+        })
+      } catch { /* diagnostic only */ }
+
+      // DB is authoritative: when the read SUCCEEDS, adopt it even if empty, so a
+      // browser's stale localStorage can never diverge from the shared database.
+      // Only keep the localStorage fallback when the read actually ERRORED.
+      if (!sr.error && sr.data) { const d = sr.data.map(staffReqFromDb); prevSr.current = d; setStaffRequests(d) }
+      else if (sr.error) console.error('[DB] staff_requests read error:', sr.error.message)
+      if (!vr.error && vr.data) { const d = vr.data.map(visitFromDb); prevVr.current = d; setVisitRecords(d) }
+      if (!ir.error && ir.data) { const d = ir.data.map(incidentFromDb); prevIr.current = d; setIncidentRecords(d) }
       actLoaded.current = true
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // ── Supabase sync on change ───────────────────────────────────────────────
-  useEffect(() => { localStorage.setItem('tic_staff_req', JSON.stringify(staffRequests)); if (actLoaded.current) { syncTable('staff_requests','id',staffRequests,prevSr.current,staffReqToDb,r=>r.id); prevSr.current=staffRequests } }, [staffRequests])
+  const reqSyncErrorShown = useRef(false)
+  useEffect(() => { localStorage.setItem('tic_staff_req', JSON.stringify(staffRequests)); if (actLoaded.current) { syncTable('staff_requests','id',staffRequests,prevSr.current,staffReqToDb,r=>r.id, (op, msg) => { if (!reqSyncErrorShown.current) { reqSyncErrorShown.current = true; alert(`⚠ Requests could not be saved to the shared database (${op}).\n\n${msg}\n\nYour change is only on THIS device and other users will NOT see it. This is usually a database permission (RLS) issue — please report this message.`) } }); prevSr.current=staffRequests } }, [staffRequests])
   useEffect(() => { localStorage.setItem('tic_visit_rec', JSON.stringify(visitRecords)); if (actLoaded.current) { syncTable('visit_records','id',visitRecords,prevVr.current,visitToDb,r=>r.id); prevVr.current=visitRecords } }, [visitRecords])
   useEffect(() => { localStorage.setItem('tic_incidents', JSON.stringify(incidentRecords)); if (actLoaded.current) { syncTable('incident_records','id',incidentRecords,prevIr.current,incidentToDb,r=>r.id); prevIr.current=incidentRecords } }, [incidentRecords])
 
