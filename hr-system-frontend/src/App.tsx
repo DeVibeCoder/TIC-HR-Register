@@ -10797,14 +10797,6 @@ function StaffRequestModal({ record, employees, onClose, onSave }: {
                     <span className="trn-modal-field-lbl">Date Completed</span>
                     <input type="date" value={completedDate} onChange={(e) => setCompletedDate(e.target.value)} style={fieldStyle} />
                   </label>
-                  <label style={{ display:'flex', flexDirection:'column', gap:'4px', gridColumn:'span 2' }}>
-                    <span className="trn-modal-field-lbl">Handled By</span>
-                    <select value={attendedBy} onChange={(e) => setAttendedBy(e.target.value)} style={fieldStyle}>
-                      <option value="">— Select —</option>
-                      {REQUEST_HANDLERS.map((h) => <option key={h}>{h}</option>)}
-                      {attendedBy && !REQUEST_HANDLERS.includes(attendedBy) && <option>{attendedBy}</option>}
-                    </select>
-                  </label>
                 </div>
                 <label style={{ display:'flex', flexDirection:'column', gap:'4px', marginTop:10 }}>
                   <span className="trn-modal-field-lbl">Action Taken</span>
@@ -11201,17 +11193,6 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
     && (monthFilter === 'All' || monthKey(r.submittedDate) === monthFilter)
   ).sort((a, b) => (b.submittedDate || '').localeCompare(a.submittedDate || '')), [records, search, typeFilter, statusFilter, monthFilter])
 
-  // Diagnostic: shows exactly where rows drop off (records -> filtered -> shown).
-  useEffect(() => {
-    const first = records[0]
-    console.info('[Requests] pipeline', {
-      recordsInState: records.length,
-      afterFilters: filtered.length,
-      activeFilters: { search: search || '(none)', type: typeFilter, status: statusFilter, month: monthFilter },
-      firstRecord: first ? { id: first.employeeId, name: first.employeeName, section: first.section, category: first.requestType, date: first.submittedDate, monthKey: monthKey(first.submittedDate) } : null,
-    })
-  }, [records, filtered, search, typeFilter, statusFilter, monthFilter])
-
   const save = (r: StaffRequestRecord) => { onUpdate((prev) => {
     const idx = prev.findIndex((x) => x.id === r.id)
     if (idx >= 0) return prev.map((x) => x.id === r.id ? r : x)
@@ -11367,20 +11348,19 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
         <div className="employee-table-shell compact-scroll">
           <table className="data-table req-table">
             <colgroup>
-              <col style={{ width: '84px' }} />   {/* Date */}
-              <col style={{ width: '62px' }} />   {/* ID */}
-              <col style={{ width: '138px' }} />  {/* Name */}
-              <col style={{ width: '116px' }} />  {/* Section */}
-              <col style={{ width: '104px' }} />  {/* Location */}
-              <col style={{ width: '104px' }} />  {/* Category */}
-              <col style={{ width: '240px' }} />  {/* Description */}
-              <col style={{ width: '84px' }} />   {/* Priority */}
-              <col style={{ width: '116px' }} />  {/* Assigned To */}
+              <col style={{ width: '90px' }} />   {/* Date */}
+              <col style={{ width: '70px' }} />   {/* ID */}
+              <col style={{ width: '200px' }} />  {/* Name */}
+              <col style={{ width: '170px' }} />  {/* Section */}
+              <col style={{ width: '120px' }} />  {/* Location */}
+              <col style={{ width: '120px' }} />  {/* Category */}
+              <col style={{ width: '220px' }} />  {/* Description */}
+              <col style={{ width: '90px' }} />   {/* Priority */}
+              <col style={{ width: '120px' }} />  {/* Assigned To */}
               <col style={{ width: '220px' }} />  {/* Action */}
-              <col style={{ width: '96px' }} />   {/* Status */}
-              <col style={{ width: '90px' }} />   {/* Completed */}
-              <col style={{ width: '116px' }} />  {/* Handled By */}
-              <col style={{ width: '104px' }} />  {/* Actions */}
+              <col style={{ width: '78px' }} />   {/* Status */}
+              <col style={{ width: '108px' }} />  {/* Completed */}
+              <col style={{ width: '80px' }} />   {/* Actions */}
             </colgroup>
             <thead>
               <tr>
@@ -11396,38 +11376,35 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
                 <th>Action</th>
                 <th style={{textAlign:'center'}}>Status</th>
                 <th style={{textAlign:'center'}}>Completed</th>
-                <th>Handled By</th>
                 <th style={{textAlign:'center'}}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0
-                ? <tr><td colSpan={14} className="empty-row">No requests found</td></tr>
-                : filtered.map((r) => (
+                ? <tr><td colSpan={13} className="empty-row">No requests found</td></tr>
+                : filtered.map((r) => {
+                  const statusKind = r.status === 'Completed' ? 'done' : r.status === 'Rejected' ? 'rejected' : 'pending'
+                  const statusGlyph = r.status === 'Completed' ? '✓' : r.status === 'Rejected' ? '✕' : '◷'
+                  return (
                   <tr key={r.id} className={r.status === 'Open' ? 'req-row-open' : ''}>
-                    <td style={{textAlign:'center',fontSize:'0.78rem',whiteSpace:'nowrap'}}>{formatDateDisplay(r.submittedDate)}</td>
-                    <td style={{whiteSpace:'nowrap', fontSize:'0.78rem'}}>{r.employeeId || '—'}</td>
+                    <td style={{textAlign:'center',whiteSpace:'nowrap'}}>{formatDateDisplay(r.submittedDate)}</td>
+                    <td style={{whiteSpace:'nowrap'}}>{r.employeeId || '—'}</td>
                     <td className="req-cell"><div className="req-clamp2" style={{fontWeight:600}}>{r.employeeName}</div></td>
-                    <td className="req-cell"><div className="req-clamp2" style={{fontSize:'0.78rem'}}>{r.section || '—'}</div></td>
-                    <td className="req-cell"><div className="req-clamp2" style={{fontSize:'0.78rem'}}>{r.location || '—'}</div></td>
+                    <td className="req-cell"><div className="req-clamp2">{r.section || '—'}</div></td>
+                    <td className="req-cell"><div className="req-clamp2">{r.location || '—'}</div></td>
                     <td style={{textAlign:'center'}}><span className="req-type-chip">{r.requestType}</span></td>
                     <td className="req-col-wide">
-                      <span className="req-clamp3" title={r.description || undefined} style={{ fontSize:'0.81rem', color:'var(--ink)' }}>
-                        {r.description || '—'}
-                      </span>
+                      <span className="req-clamp3" title={r.description || undefined}>{r.description || '—'}</span>
                     </td>
                     <td style={{textAlign:'center'}}><span className={`req-priority-badge ${priorityColors[r.priority]}`}>{r.priority}</span></td>
-                    <td className="req-cell"><div className="req-clamp2" style={{fontSize:'0.78rem'}}>{r.assignedTo || '—'}</div></td>
+                    <td className="req-cell"><div className="req-clamp2">{r.assignedTo || '—'}</div></td>
                     <td className="req-col-wide">
-                      <span className="req-clamp3" title={r.actionTaken || undefined} style={{ fontSize:'0.81rem', color:'var(--ink)' }}>
-                        {r.actionTaken || '—'}
-                      </span>
+                      <span className="req-clamp3" title={r.actionTaken || undefined}>{r.actionTaken || '—'}</span>
                     </td>
-                    <td style={{textAlign:'center', whiteSpace:'nowrap'}}>
-                      <span className={reqStatusClass(r.status)}>{r.status}</span>
+                    <td style={{textAlign:'center'}}>
+                      <span className={`req-status-dot ${statusKind}`} title={r.status} aria-label={r.status} role="img">{statusGlyph}</span>
                     </td>
-                    <td style={{textAlign:'center',fontSize:'0.78rem',whiteSpace:'nowrap'}}>{r.completedDate ? formatDateDisplay(r.completedDate) : '—'}</td>
-                    <td className="req-cell"><div className="req-clamp2" style={{fontSize:'0.78rem'}}>{r.attendedBy || '—'}</div></td>
+                    <td style={{textAlign:'center',whiteSpace:'nowrap'}}>{r.completedDate ? formatDateDisplay(r.completedDate) : '—'}</td>
                     <td style={{textAlign:'center',whiteSpace:'nowrap'}}>
                       <div className="row-actions" style={{ flexWrap: 'nowrap' }}>
                         {/* Status update — only for Open, non-locked, non-HOD, non-ReadOnly */}
@@ -11441,7 +11418,8 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
                       </div>
                     </td>
                   </tr>
-              ))}
+                  )
+                })}
             </tbody>
           </table>
         </div>
@@ -11478,15 +11456,6 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
                     color: updateNewStatus==='Rejected'?'#dc2626':'var(--muted)', fontWeight:700, cursor:'pointer', fontSize:'0.88rem' }}
                 >✕ Reject</button>
               </div>
-              <label style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:12 }}>
-                <span style={{ fontSize:'0.78rem', fontWeight:700, color:'var(--ink)' }}>Handled By</span>
-                <select value={updateAttendedBy} onChange={e => setUpdateAttendedBy(e.target.value)}
-                  style={{ padding:'8px 10px', borderRadius:8, border:'1.5px solid rgba(124,58,237,0.2)', fontSize:'0.85rem', width:'100%', boxSizing:'border-box' }}>
-                  <option value="">— Select —</option>
-                  {REQUEST_HANDLERS.map((h) => <option key={h}>{h}</option>)}
-                  {updateAttendedBy && !REQUEST_HANDLERS.includes(updateAttendedBy) && <option>{updateAttendedBy}</option>}
-                </select>
-              </label>
               <label style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:16 }}>
                 <span style={{ fontSize:'0.78rem', fontWeight:700, color:'var(--ink)' }}>Action Taken <span style={{ fontWeight:400, color:'var(--muted)' }}>(required)</span></span>
                 <textarea value={updateAction} onChange={e => setUpdateAction(e.target.value)}
@@ -12536,21 +12505,7 @@ function ActivitiesPage({
       supabase.from('staff_requests').select('*'),
       supabase.from('visit_records').select('*'),
       supabase.from('incident_records').select('*'),
-    ]).then(async ([sr, vr, ir]) => {
-      // ── Safe backend diagnostic (no secrets) — helps confirm every session/
-      // deployment is reading the SAME production database with a real session. ──
-      try {
-        const { data: sess } = await supabase.auth.getSession()
-        const host = (import.meta.env.VITE_SUPABASE_URL as string || '').replace(/^https?:\/\//, '').split('.')[0]
-        console.info('[Backend] staff_requests diagnostic', {
-          supabaseProject: host,
-          authenticated: !!sess.session,
-          userEmail: sess.session?.user?.email ?? null,
-          accessTokenPresent: !!sess.session?.access_token,
-          staffRequestsRead: sr.error ? `ERROR: ${sr.error.message}` : `${sr.data?.length ?? 0} row(s)`,
-        })
-      } catch { /* diagnostic only */ }
-
+    ]).then(([sr, vr, ir]) => {
       // DB is authoritative: when the read SUCCEEDS, adopt it even if empty, so a
       // browser's stale localStorage can never diverge from the shared database.
       // When the read ERRORS, surface it (don't silently keep stale localStorage).
