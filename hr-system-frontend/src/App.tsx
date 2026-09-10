@@ -10590,6 +10590,37 @@ function OperationsPage({ employees, completedTerminations, activeLeaves, isHOD 
 // People who handle / attend requests — used in the "Handled By" dropdowns.
 const REQUEST_HANDLERS = ['SHANTUMON', 'ARUSHULLA']
 
+// ── Requests CSV import: single source of truth for CSV-header → app-field ──
+// Mapping is by HEADER NAME (never by column position). `terms` are the accepted
+// normalised header spellings (lowercased, non-alphanumerics stripped). The
+// first term found in the file's header row wins. Every field's header must be
+// present for an import to proceed (validated before any record is created).
+type ReqImportFieldDef = { key: keyof StaffRequestRecord; label: string; terms: string[] }
+const REQ_IMPORT_FIELDS: ReqImportFieldDef[] = [
+  { key: 'submittedDate', label: 'Date',        terms: ['date', 'dateraised', 'submitteddate', 'submitted'] },
+  { key: 'employeeId',    label: 'ID',          terms: ['id', 'empid', 'employeeid'] },
+  { key: 'employeeName',  label: 'Name',        terms: ['name', 'employee', 'employeename'] },
+  { key: 'section',       label: 'Section',     terms: ['section', 'department'] },
+  { key: 'location',      label: 'Location',    terms: ['location'] },
+  { key: 'requestType',   label: 'Category',    terms: ['category', 'requestcategory', 'type', 'requesttype'] },
+  { key: 'description',   label: 'Description', terms: ['description', 'request', 'requestdescription'] },
+  { key: 'priority',      label: 'Priority',    terms: ['priority'] },
+  { key: 'assignedTo',    label: 'Assigned To', terms: ['assignedto', 'assigned'] },
+  { key: 'actionTaken',   label: 'Action',      terms: ['action', 'actiontaken'] },
+  { key: 'status',        label: 'Status',      terms: ['status'] },
+  { key: 'completedDate', label: 'Completed',   terms: ['completed', 'datecompleted', 'completeddate', 'closeddate'] },
+  { key: 'attendedBy',    label: 'Handled By',  terms: ['handledby', 'attendedby', 'attended'] },
+]
+const normalizeCsvHeader = (h: string) => h.toLowerCase().replace(/[^a-z0-9]/g, '')
+
+type ReqImportPreview = {
+  columns: { key: string; label: string; header: string | null; index: number }[]
+  missing: string[]
+  unmapped: string[]
+  records: StaffRequestRecord[]
+  totalRows: number
+}
+
 function StaffRequestModal({ record, employees, onClose, onSave }: {
   record: StaffRequestRecord
   employees: Employee[]
@@ -11144,6 +11175,7 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
   const [updateAction, setUpdateAction] = useState('')
   const [updateAttendedBy, setUpdateAttendedBy] = useState('')
   const [updateNewStatus, setUpdateNewStatus] = useState<'Completed' | 'Rejected'>('Completed')
+  const [importPreview, setImportPreview] = useState<ReqImportPreview | null>(null)
 
   const reqMonths = useMemo(() => {
     const keys = new Set(records.map((r) => monthKey(r.submittedDate)).filter(Boolean))
@@ -11203,46 +11235,62 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
     REQ_HEADERS,
     ...records.map(r => [r.submittedDate, r.employeeId, r.employeeName, r.section, r.location ?? '', r.requestType, r.description, r.priority, r.assignedTo ?? '', r.actionTaken, r.status, r.completedDate, r.attendedBy ?? '']),
   ])
+  // Build a validated preview from the chosen CSV. No records are committed here —
+  // the user confirms the CSV-header → field mapping first (see the preview modal).
   const importReq = () => {
     const input = document.createElement('input')
     input.type = 'file'; input.accept = '.csv,text/csv'
     input.onchange = async () => {
       const file = input.files?.[0]; if (!file) return
       const rows = parseCsv(await file.text())
-      if (rows.length < 2) return
-      const hdr = rows[0].map(h => h.toLowerCase().replace(/[^a-z0-9]/g, ''))
-      const ci = (terms: string[]) => terms.map(t => hdr.indexOf(t)).find(i => i >= 0) ?? -1
-      const g = (row: string[], idx: number) => idx >= 0 ? (row[idx] ?? '').trim() : ''
-      const iEmp = ci(['id','empid','employeeid']); const iName = ci(['employee','name','employeename']); const iSec = ci(['section','department'])
-      const iLoc = ci(['location'])
-      const iType = ci(['category','requestcategory','type','requesttype']); const iPri = ci(['priority']); const iDesc = ci(['request','requestdescription','description'])
-      const iSub = ci(['date','dateraised','submitteddate','submitted']); const iStat = ci(['status']); const iAct = ci(['action','actiontaken']); const iAtt = ci(['handledby','attendedby','attended'])
-      const iAssign = ci(['assignedto','assigned']); const iComp = ci(['completed','datecompleted','completeddate','closeddate']); const iRem = ci(['remarks','remark'])
-      const empMap = new Map(employees.map(e => [e.employeeId, e]))
+      if (rows.length < 1) { alert('The file is empty.'); return }
+
+      // Header row → normalised tokens. Mapping is strictly by header NAME.
+      const rawHeaders = rows[0]
+      const hdr = rawHeaders.map(normalizeCsvHeader)
+      const indexOfField = (terms: string[]) => { for (const t of terms) { const i = hdr.indexOf(t); if (i >= 0) return i } return -1 }
+
+      // Resolve each app field to a header column (or -1 when absent).
+      const columns = REQ_IMPORT_FIELDS.map((f) => {
+        const index = indexOfField(f.terms)
+        return { key: f.key as string, label: f.label, header: index >= 0 ? rawHeaders[index] : null, index }
+      })
+      const missing = columns.filter((c) => c.index < 0).map((c) => c.label)
+      const usedIndexes = new Set(columns.filter((c) => c.index >= 0).map((c) => c.index))
+      const unmapped = rawHeaders.filter((_, i) => !usedIndexes.has(i)).filter((h) => h.trim() !== '')
+
+      const g = (row: string[], key: string) => { const col = columns.find((c) => c.key === key); return col && col.index >= 0 ? (row[col.index] ?? '').trim() : '' }
+      const empMap = new Map(employees.map((e) => [e.employeeId, e]))
       const types = ['Documents','Villa Metrics','Yono App','Wifi','IT','Leave','Transfer','Meals & Stay','Other']
-      const imported: StaffRequestRecord[] = rows.slice(1).filter(r => r.some(c => c.trim())).map((r, i) => {
-        const empId = g(r, iEmp); const emp = empMap.get(empId)
-        const type = types.find(t => t.toLowerCase() === g(r, iType).toLowerCase()) ?? 'Other'
-        const pri = (['Low','Medium','High'].find(p => p.toLowerCase() === g(r, iPri).toLowerCase()) ?? 'Medium') as RequestPriority
-        const status = (['Open','Completed','Rejected'].find(s => s.toLowerCase() === g(r, iStat).toLowerCase()) ?? 'Open') as StaffRequestRecord['status']
+
+      const dataRows = rows.slice(1).filter((r) => r.some((c) => c.trim()))
+      const importedRecords: StaffRequestRecord[] = dataRows.map((r, i) => {
+        const empId = g(r, 'employeeId'); const emp = empMap.get(empId)
+        const type = types.find((t) => t.toLowerCase() === g(r, 'requestType').toLowerCase()) ?? 'Other'
+        const pri = (['Low','Medium','High'].find((p) => p.toLowerCase() === g(r, 'priority').toLowerCase()) ?? 'Medium') as RequestPriority
+        const status = (['Open','Completed','Rejected'].find((s) => s.toLowerCase() === g(r, 'status').toLowerCase()) ?? 'Open') as StaffRequestRecord['status']
         return {
           id: `REQ-IMP-${Date.now()}-${i}`,
-          employeeId: empId, employeeName: g(r, iName) || emp?.fullName || '', section: g(r, iSec) || emp?.department || '',
-          department: emp?.department || g(r, iSec), requestType: type as StaffRequestRecord['requestType'], location: g(r, iLoc), priority: pri,
-          description: g(r, iDesc), submittedDate: normImportDate(g(r, iSub)) || new Date().toISOString().slice(0, 10),
-          completedDate: normImportDate(g(r, iComp)) || '', assignedTo: g(r, iAssign), status, actionTaken: g(r, iAct), attendedBy: g(r, iAtt), remarks: g(r, iRem), locked: status !== 'Open',
+          employeeId: empId, employeeName: g(r, 'employeeName') || emp?.fullName || '', section: g(r, 'section') || emp?.department || '',
+          department: emp?.department || g(r, 'section'), requestType: type as StaffRequestRecord['requestType'], location: g(r, 'location'), priority: pri,
+          description: g(r, 'description'), submittedDate: normImportDate(g(r, 'submittedDate')) || new Date().toISOString().slice(0, 10),
+          completedDate: normImportDate(g(r, 'completedDate')) || '', assignedTo: g(r, 'assignedTo'), status, actionTaken: g(r, 'actionTaken'), attendedBy: g(r, 'attendedBy'), remarks: '', locked: status !== 'Open',
         }
       })
-      if (imported.length === 0) { alert('No valid rows found in the CSV.'); return }
-      // Offer to REPLACE existing records so a fresh import of the master file
-      // lands clean instead of stacking on top of older (possibly bad) rows.
-      const replace = records.length > 0 && window.confirm(
-        `Import ${imported.length} request(s).\n\nClick OK to REPLACE all ${records.length} existing request(s) with the imported ones (recommended when importing your full master file).\n\nClick Cancel to ADD the imported ones on top of the existing records.`
-      )
-      onUpdate(prev => replace ? imported : [...imported, ...prev])
-      alert(`✓ Import successful — ${imported.length} request(s) ${replace ? 'imported (existing records replaced)' : 'added'}.`)
+
+      setImportPreview({ columns, missing, unmapped, records: importedRecords, totalRows: dataRows.length })
+      input.value = ''
     }
     input.click()
+  }
+
+  // Commit the previewed import (only reachable when required headers are present).
+  const commitImport = (replace: boolean) => {
+    if (!importPreview || importPreview.missing.length > 0 || importPreview.records.length === 0) return
+    const imported = importPreview.records
+    onUpdate((prev) => replace ? imported : [...imported, ...prev])
+    setImportPreview(null)
+    alert(`✓ Import successful — ${imported.length} request(s) ${replace ? 'imported (existing records replaced)' : 'added'}.`)
   }
 
   return (
@@ -11405,6 +11453,94 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
               <button className="primary-button" type="button" disabled={!updateAction.trim()} onClick={confirmUpdate}>
                 Confirm {updateNewStatus === 'Completed' ? 'Completion' : 'Rejection'}
               </button>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {/* ── Import Preview / Validation Modal ── */}
+      {importPreview && (
+        <div className="modal-backdrop" role="presentation">
+          <section className="registration-modal req-import-modal" role="dialog" aria-modal="true">
+            <div className="modal-header">
+              <div>
+                <p className="eyebrow">Activities · Requests</p>
+                <h2>Import Preview</h2>
+                <p style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
+                  Confirm how each CSV column maps to a field before importing.
+                </p>
+              </div>
+              <button className="icon-button" onClick={() => setImportPreview(null)} type="button">×</button>
+            </div>
+
+            {importPreview.missing.length > 0 && (
+              <div className="req-import-error">
+                <strong>⚠ Cannot import — missing required column{importPreview.missing.length > 1 ? 's' : ''}:</strong>
+                <div>{importPreview.missing.join(', ')}</div>
+                <p style={{ margin: '6px 0 0', fontWeight: 400 }}>
+                  Your file’s header row must contain every column. Download the Template to get the exact headers.
+                </p>
+              </div>
+            )}
+
+            {/* Field → CSV header mapping */}
+            <div className="req-import-map">
+              {importPreview.columns.map((c) => (
+                <div key={c.key} className={`req-import-map-row${c.index < 0 ? ' missing' : ''}`}>
+                  <span className="req-import-field">{c.label}</span>
+                  <span className="req-import-arrow">←</span>
+                  <span className="req-import-header">{c.index >= 0 ? c.header : '— not found —'}</span>
+                </div>
+              ))}
+            </div>
+
+            {importPreview.unmapped.length > 0 && (
+              <p className="req-import-note">Ignored extra column{importPreview.unmapped.length > 1 ? 's' : ''}: {importPreview.unmapped.join(', ')}</p>
+            )}
+
+            {/* Sample rows (first 5) */}
+            {importPreview.missing.length === 0 && (
+              <>
+                <p className="req-import-sample-title">Sample ({Math.min(5, importPreview.records.length)} of {importPreview.totalRows} row{importPreview.totalRows !== 1 ? 's' : ''})</p>
+                <div className="req-import-sample-wrap">
+                  <table className="data-table req-import-sample">
+                    <thead>
+                      <tr>{REQ_IMPORT_FIELDS.map((f) => <th key={f.key as string}>{f.label}</th>)}</tr>
+                    </thead>
+                    <tbody>
+                      {importPreview.records.slice(0, 5).map((rec) => (
+                        <tr key={rec.id}>
+                          <td>{formatDateDisplay(rec.submittedDate)}</td>
+                          <td>{rec.employeeId || '—'}</td>
+                          <td>{rec.employeeName || '—'}</td>
+                          <td>{rec.section || '—'}</td>
+                          <td>{rec.location || '—'}</td>
+                          <td>{rec.requestType}</td>
+                          <td>{rec.description || '—'}</td>
+                          <td>{rec.priority}</td>
+                          <td>{rec.assignedTo || '—'}</td>
+                          <td>{rec.actionTaken || '—'}</td>
+                          <td>{rec.status}</td>
+                          <td>{rec.completedDate ? formatDateDisplay(rec.completedDate) : '—'}</td>
+                          <td>{rec.attendedBy || '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+
+            <div className="modal-actions">
+              <button className="quiet-button light" onClick={() => setImportPreview(null)} type="button">Cancel</button>
+              {importPreview.missing.length === 0 && records.length > 0 && (
+                <button className="quiet-button" type="button" onClick={() => commitImport(false)}>Add to existing</button>
+              )}
+              {importPreview.missing.length === 0 && (
+                <button className="primary-button" type="button" onClick={() => commitImport(true)}>
+                  {records.length > 0 ? 'Replace all & import' : 'Import'}
+                </button>
+              )}
             </div>
           </section>
         </div>

@@ -7219,6 +7219,35 @@ input::-webkit-credentials-auto-fill-button { visibility: hidden; pointer-events
   border: 1px solid rgba(91,33,182,0.18);
 }
 
+/* ── Requests CSV import preview modal ── */
+.req-import-modal { max-width: 900px; width: min(900px, calc(100vw - 40px)); }
+.req-import-error {
+  background: #fef2f2; border: 1px solid #fecaca; color: #991b1b;
+  border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; font-size: 0.85rem;
+}
+[data-theme="dark"] .req-import-error { background: rgba(220,38,38,.14); border-color: rgba(220,38,38,.35); color: #fca5a5; }
+.req-import-map {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 18px; margin-bottom: 12px;
+}
+@media (max-width: 620px) { .req-import-map { grid-template-columns: 1fr; } }
+.req-import-map-row {
+  display: grid; grid-template-columns: 120px 18px 1fr; align-items: center; gap: 6px;
+  font-size: 0.82rem; padding: 4px 8px; border-radius: 6px; background: rgba(124,58,237,0.04);
+}
+[data-theme="dark"] .req-import-map-row { background: rgba(167,139,250,0.07); }
+.req-import-map-row.missing { background: rgba(220,38,38,0.08); }
+[data-theme="dark"] .req-import-map-row.missing { background: rgba(220,38,38,0.16); }
+.req-import-field { font-weight: 700; color: var(--ink); }
+.req-import-arrow { color: #7c3aed; text-align: center; font-weight: 700; }
+.req-import-header { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.req-import-map-row.missing .req-import-header { color: #dc2626; font-style: italic; }
+.req-import-note { font-size: 0.78rem; color: var(--muted); margin: 0 0 12px; }
+.req-import-sample-title { font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #7c3aed; margin: 4px 0 8px; }
+.req-import-sample-wrap { overflow-x: auto; border: 1px solid rgba(124,58,237,0.14); border-radius: 8px; }
+.req-import-sample { font-size: 0.74rem; white-space: nowrap; }
+.req-import-sample th, .req-import-sample td { padding: 5px 8px; }
+
 /* Clear-all (admin) — danger-tinted so it's distinct from Template/Export */
 .req-clear-btn {
   background: #dc2626 !important;
