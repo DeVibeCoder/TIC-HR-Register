@@ -11164,7 +11164,7 @@ const priorityColors: Record<RequestPriority, string> = {
   High: 'req-priority-high',
 }
 
-function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOnly = false, isAdmin = false }: {
+function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOnly = false, isAdmin = false, loadError = null }: {
   records: StaffRequestRecord[]
   employees: Employee[]
   onUpdate: (fn: (prev: StaffRequestRecord[]) => StaffRequestRecord[]) => void
@@ -11172,6 +11172,7 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
   isHOD?: boolean
   isReadOnly?: boolean
   isAdmin?: boolean
+  loadError?: string | null
 }) {
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('All')
@@ -11338,6 +11339,13 @@ function RequestsSection({ records, employees, onUpdate, isHOD = false, isReadOn
   return (
     <>
       <section className="employee-workspace">
+        {loadError && (
+          <div className="req-import-error" style={{ marginBottom: 12 }}>
+            <strong>⚠ Could not load requests from the database.</strong>
+            <div>{loadError}</div>
+            <p style={{ margin: '6px 0 0', fontWeight: 400 }}>The list below may be stale (from this device only). Reload once the connection is restored — do not rely on it as current shared data.</p>
+          </div>
+        )}
         <div className="table-toolbar activities-toolbar">
           <label className="search-field"><span>Search</span><input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Emp ID, name, description…" /></label>
           <label><span>Type</span>
@@ -12513,6 +12521,9 @@ function ActivitiesPage({
   const [staffRequests,   setStaffRequests]   = useState<StaffRequestRecord[]>(() => tryLoad('tic_staff_req'))
   const [visitRecords,    setVisitRecords]    = useState<VisitRecord[]>(() => tryLoad('tic_visit_rec'))
   const [incidentRecords, setIncidentRecords] = useState<IncidentRecord[]>(() => tryLoad('tic_incidents'))
+  // Surfaces a real backend read failure so stale localStorage is never silently
+  // presented as current production data.
+  const [requestsLoadError, setRequestsLoadError] = useState<string | null>(null)
 
   // ── Supabase load on mount ────────────────────────────────────────────────
   const actLoaded = useRef(false)
@@ -12542,13 +12553,32 @@ function ActivitiesPage({
 
       // DB is authoritative: when the read SUCCEEDS, adopt it even if empty, so a
       // browser's stale localStorage can never diverge from the shared database.
-      // Only keep the localStorage fallback when the read actually ERRORED.
-      if (!sr.error && sr.data) { const d = sr.data.map(staffReqFromDb); prevSr.current = d; setStaffRequests(d) }
-      else if (sr.error) console.error('[DB] staff_requests read error:', sr.error.message)
+      // When the read ERRORS, surface it (don't silently keep stale localStorage).
+      if (!sr.error && sr.data) { const d = sr.data.map(staffReqFromDb); prevSr.current = d; setStaffRequests(d); setRequestsLoadError(null) }
+      else if (sr.error) { console.error('[DB] staff_requests read error:', sr.error.message); setRequestsLoadError(sr.error.message) }
       if (!vr.error && vr.data) { const d = vr.data.map(visitFromDb); prevVr.current = d; setVisitRecords(d) }
       if (!ir.error && ir.data) { const d = ir.data.map(incidentFromDb); prevIr.current = d; setIncidentRecords(d) }
       actLoaded.current = true
     })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // ── Realtime: keep every session in sync with the shared database ──────────
+  // On any INSERT/UPDATE/DELETE to staff_requests, re-read the authoritative set.
+  // Setting the baseline (prevSr) before state avoids a re-sync feedback loop.
+  // Requires staff_requests to be in the `supabase_realtime` publication
+  // (migration 20260910_*). If it isn't, the channel simply receives no events
+  // and the app still works via load-on-mount — it degrades gracefully.
+  useEffect(() => {
+    const channel = supabase
+      .channel('activities-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_requests' }, () => {
+        supabase.from('staff_requests').select('*').then(({ data, error }) => {
+          if (!error && data) { const d = data.map(staffReqFromDb); prevSr.current = d; setStaffRequests(d) }
+        })
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -12574,7 +12604,7 @@ function ActivitiesPage({
         {!isHOD && !isHR && !isExecutive && <button className={activeSection === 'inventory' ? 'active' : ''} onClick={() => setActiveSection('inventory')} type="button">Inventory</button>}
         {!isHOD && !isExecutive && !isHR && <button className={activeSection === 'incidents' ? 'active' : ''} onClick={() => setActiveSection('incidents')} type="button">Incidents</button>}
       </div>
-      {activeSection === 'requests' && <RequestsSection records={scopedStaffRequests} employees={employees} onUpdate={setStaffRequests} onBack={() => {}} isHOD={isHOD} isReadOnly={isExecutive} isAdmin={isAdmin} />}
+      {activeSection === 'requests' && <RequestsSection records={scopedStaffRequests} employees={employees} onUpdate={setStaffRequests} onBack={() => {}} isHOD={isHOD} isReadOnly={isExecutive} isAdmin={isAdmin} loadError={requestsLoadError} />}
       {activeSection === 'visits' && <VisitsSection records={scopedVisitRecords} employees={employees} onUpdate={setVisitRecords} onBack={() => {}} isReadOnly={isExecutive} isAdmin={isAdmin} />}
       {!isHOD && !isExecutive && !isHR && activeSection === 'incidents' && <IncidentsSection records={incidentRecords} employees={employees} onUpdate={setIncidentRecords} onBack={() => {}} />}
       {!isHOD && !isExecutive && activeSection === 'passport' && <PassportTrackingSection records={passportHandovers} employees={employees} onUpdate={onUpdatePassport} />}
